@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.16.2 (2026-10-11)
+
+- The About box's Bench kit row in one line: the kit's version, what it is, and its link.
+
 ## 0.16.1 (2026-10-11)
 
 - The README lists everything a bench provides (versions, builds, the functions the kit calls, state, the page's elements), every setting in `SW.BENCH` with the module that reads it, and every hook (the Functional overview's, Compare's second mode, the reading edition, a language adapter, annotations in Read, tracings, Settings rows, findings checks, Help guides).

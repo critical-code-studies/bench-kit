@@ -13,7 +13,7 @@
   var SW = root.SW;
 
   var TECH = 'Plain HTML, CSS and JavaScript; no framework or build step. Runs in the browser from GitHub Pages; annotations via Hypothesis; settings and drafts in local storage; My notes in local storage and kept privately on Hypothesis; Help ▸ Back up everything saves all of it to one file.';
-  var KIT = 'the modules this bench shares with the other critical code studies research benches: annotation through Hypothesis (in Read and across the bench), My notes, findings, paratexts, compare and genealogy, tracings, settings, tours, figures and export, Markdown and themes, and this box. The bench adds its own texts, readers and views, and its settings (js/config.js).';
+  var KIT = 'the modules shared by the critical code studies research benches.';
 
   function cfg() { var B = SW.BENCH || {}; return { B: B, A: B.about || {} }; }
   function dateOf() { var dm = document.querySelector('meta[name="bench-date"]'); return dm ? dm.content : ''; }
