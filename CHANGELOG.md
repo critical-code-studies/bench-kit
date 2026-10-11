@@ -3,6 +3,7 @@
 ## 0.16.2 (2026-10-11)
 
 - The About box's Bench kit row in one line: the kit's version, what it is, and its link.
+- The README names its author and the kit's version under its title (raise the version there with each release, as in `base.js`).
 
 ## 0.16.1 (2026-10-11)
 
