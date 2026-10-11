@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## 0.2.0 (2026-10-11)
+
+- `export.js`, `tray.js`, `figures.js`, `stemma.js`, `edition.js` and `tours.js`, from the Spacewar! bench 1.18.40, made to read the bench's names, storage prefix, default group, figure colour, stemma, edition hooks and tour stops from `SW.BENCH`.
+- From Spacewar!, for both benches: PNG export within Safari's canvas limit with fallbacks (figures), the initials box when adding to My notes (tray).
+- The edition's option for supplied or support files is labelled by the bench (it read "all files tapes" on SHRDLU).
+
 ## 0.1.1 (2026-10-11)
 
 - `paratexts.css` takes the last two paratext rules (`.px .lede`, `.pxlink`) from the benches.
