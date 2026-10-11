@@ -1,4 +1,4 @@
-/* config.js - this bench's settings for bench-kit. Load it after core.js and before the kit. */
+/* config.js - this bench's settings for bench-kit. Load it after kit/base.js, before the rest of the kit and the bench's core.js. */
 (function (root) {
   'use strict';
   root.SW.BENCH = {

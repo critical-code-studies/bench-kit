@@ -131,7 +131,7 @@
         var b = e.target.closest('[data-e]'); if (!b) return;
         if (b.dataset.e === 'cancel') { ed.remove(); return; }
         var text = SW.$('textarea', ed).value.trim(); if (!text) return;
-        var fpk = SW.figpack.split(n.text); if (fpk.b64) text += '\n\n<!-- sw:fig:gz ' + fpk.b64 + ' -->';
+        var fpk = SW.figpack.split(n.text); if (fpk.b64) text += '\n\n<!-- bk:fig:gz ' + fpk.b64 + ' -->';
         var tags = keep.concat(SW.$('input', ed).value.split(',').map(function (g) { return g.trim(); }).filter(function (g) { return g && !/^(cat|level):/.test(g); }));
         tags.push('level:' + SW.$('[data-e2="lvl"]', ed).value);
         if (SW.$('[data-e2="cat"]', ed).value) tags.push('cat:' + SW.$('[data-e2="cat"]', ed).value);

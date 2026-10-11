@@ -6,6 +6,9 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 
 | File | What it does |
 |---|---|
+| `base.js` | The foundation, loaded first: the `SW` object and its helpers (`SW.$`, `SW.el`, `SW.esc`, dates, `SW.store` under the bench's prefix, `SW.on`/`SW.emit`, `SW.toast`), the side panel, popovers, dialogs closed from their backdrop, sorting tables, sharing and copying, the address bar's query, Developer mode, ghost matching, an annotation's earlier wordings and the figures packed into it (`SW.markRE` reads its hidden marks). |
+| `md.js` | Rich text in annotations: Markdown shown and as plain text, rich text back to Markdown, and the note editor (`SW.mdTools`). |
+| `themes.js` | How the bench looks: code text, the hands written into the text, colour schemes and themes, and figures and documents for export. |
 | `paratexts.js` | The Paratexts tab: a private GitHub repository of scans, documents, recordings and links, read and written with each member's own token; collections, Dublin Core, CSL-JSON, RIS and oai_dc export, ratings, comments, side by side, zoom, codes (P-XXXXX). |
 | `guides.js` | Help guides (Paratexts; Codes, links and sharing) in a box over the bench, and `SW.guideAdd(name, [title, sections])` for a bench's own. |
 | `paratexts.css` | Their styles, using the bench's colour tokens. |
@@ -34,12 +37,16 @@ The kit goes in as a git submodule at `research/kit/`:
 git submodule add https://github.com/critical-code-studies/bench-kit research/kit
 ```
 
-`index.html` loads the bench's `config.js` before the kit, and the kit after the bench's core (`SW`, `SW.store`, `SW.el`, `SW.esc`, `SW.toast`, `SW.share`, `SW.askInitials`, `SW.notes`, `SW.tray`, `SW.views`, `root.SWVersions`):
+`index.html` loads `kit/base.js` first, then the bench's `config.js`, `kit/md.js` and `kit/themes.js`, then the bench's own `core.js` (its texts, builds and references: `SW.build`, `SW.refOf`, `SW.lineKey`, `SW.docMeta` …, with `root.SWVersions`), then the rest of the kit:
 
 ```html
 <link rel="stylesheet" href="kit/paratexts.css?v=…">
 <link rel="stylesheet" href="kit/kit.css?v=…">
+<script src="kit/base.js?v=…"></script>
 <script src="js/config.js?v=…"></script>
+<script src="kit/md.js?v=…"></script>
+<script src="kit/themes.js?v=…"></script>
+<script src="js/core.js?v=…"></script>
 <script src="kit/initials.js?v=…"></script>
 <script src="kit/settings.js?v=…"></script>
 …
@@ -69,7 +76,10 @@ Further settings, used by the modules other than paratexts:
 
 ```js
   slug: 'shrdlu',                    // file names (shrdlu-my-notes-…json) and backup kinds
-  store: 'shbench.',                 // the prefix of the bench's keys in localStorage (as core.js's SW.store)
+  store: 'shbench.',                 // the prefix of the bench's keys in localStorage (SW.store)
+  theme: { label: 'Blocks world', note: '…' },   // the default colour theme's name and description
+  accent: { dark: '#e58be0', light: '#a3317a' }, // the accent of figures exported on black and on white
+  hands: [{ k: 'tw', who: 'Terry Winograd', re: /\btw\b/i, colour: '#2a9d6f' }],   // people named in the text
   group: '1Kb3vwEV',                 // the annotation group to use when none is set
   figureNum: { print: '#a3317a', paper: '#a3317a', phosphor: '#e58be0' },   // numbers in figures, per figure theme
   stemma: { root: 'jan71', lostBetween: {}, skip: [], lostOnTrunk: true },
