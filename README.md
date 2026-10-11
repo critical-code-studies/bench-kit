@@ -25,6 +25,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `findings.js` | Findings: the bench's own (from `SW.BENCH.findings`) and the group's, by category and importance, with the bench's checks (`SW.findings.addCheck`). |
 | `compare.js` | Compare (two versions: text, the bench's second mode, routines) and Genealogy (stemma, flow with forks, tree, lineage). The second mode is the bench's (`SW.BENCH.compareDefs`). |
 | `genealogy.js` | The genealogy engine: matching, matrix, tree, flows, forks, drawing. The text's language comes from an adapter. |
+| `lang-plain.js` | A language adapter for any source text: the comment mark (`SW.BENCH.comment`), the pattern for a routine's first line (`SW.BENCH.routine`), case folding (`SW.BENCH.caseFold`). The template's. |
 | `lang-macro.js`, `lang-maclisp.js` | Language adapters for genealogy and compare: how a line divides into labels, code and comment, its normalised form, titles, routines and sections. PDP-1 MACRO (Spacewar!), MacLisp (SHRDLU). A new language adds `lang-<name>.js` registering `SWLang[name]`. |
 | `tracings.js` | Naming and colour-marking the parts of a program in a view (blocks and routines, functions), kept per version in this browser, and tracings: sets of names and marks shared with the crew through the annotation group, opened read-only (Keep as mine, Link, ✕). `SW.tracings({ ns, render, open, link, hint })`. The bench reads `&tr=` into `SW.state.trace`. |
 | `readnotes.js` | Annotations in Read: threads under their lines or as cards in the margin, ghosts from other versions, the code an annotation is attached to, how notes show (with a live refresh), the selection's bar and pop, citations and links, the listing as a document, moving an annotation by dragging. `var K = SW.readNotes({ view, R, opts, isMine, showsTape, filtering, keptLines, tapeInfo, kinBar, selActs })` in the bench's `read.js`; `K.set({ build })` and `K.set({ notes })` as they change. |
@@ -32,6 +33,8 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `config.example.js` | The settings a bench gives the kit. |
 
 ## Using it in a bench
+
+A new bench starts from [bench-template](https://github.com/critical-code-studies/bench-template), which has the kit in place and runs on an invented example.
 
 The kit goes in as a git submodule at `research/kit/`:
 
