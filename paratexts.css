@@ -182,3 +182,5 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-zwrap .px-zone { height: 70vh; }
 .px-zhint { margin: 4px 0 0; font-size: 11.5px; }
 .px-pdfbox .px-pdf { height: 72vh; }
+.px .lede { max-width: 70ch; }
+.pxlink { font-style: normal; }
