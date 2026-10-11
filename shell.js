@@ -183,7 +183,8 @@
     if (q.tr) SW.state.trace = q.tr;   // a shared tracing to open (kit/tracings.js)
     if (q.tab) q.tab = (H().alias || {})[q.tab] || q.tab;
     if (q.lens && SW.setLens) { SW.setLens(q.lens); if (!q.tab) q.tab = 'analyse'; }   // a lens (kit/lenses.js)
-    if (H().query) H().query(q);   // the bench's own: a graphic, a view's settings
+    if (q.g && SW.setGraphic) { SW.setGraphic(q.g); if (!q.tab) q.tab = 'graphics'; }   // a graphic (kit/graphics.js)
+    if (H().query) H().query(q);   // the bench's own: a view's settings
     SW.state.tab = ORDER().indexOf(q.tab) >= 0 ? q.tab : 'read';
     document.body.dataset.tab = SW.state.tab;
     SW.markTabs();

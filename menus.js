@@ -1,8 +1,8 @@
 /*
  * menus.js - the drop-down menus in the tab row: a button in #tabs with data-menu="<name>" opens
  * a menu under it (a click outside, or Esc, closes it). Versions and Help are the kit's; the
- * lenses' menus are kit/lenses.js's (SW.BENCH.lenses.menus); the bench's own (graphics) it draws
- * itself. From SW.BENCH.menus:
+ * lenses' menus are kit/lenses.js's (SW.BENCH.lenses.menus) and Graphics ▾ is kit/graphics.js's;
+ * any other menu the bench draws itself. From SW.BENCH.menus:
  *   versions          [[pick, label, text]]: Versions ▾ (by default This version, Compare,
  *                     Genealogy); a pick that is a view goes to it
  *   help              [[group, [[pick, label, text]]]]: Help ▾, its groups (by default the
@@ -57,11 +57,13 @@
       return item(h, on);
     }).join('');
     var lm = SW.lenses ? SW.lenses.menuHTML(which) : null; if (lm != null) return lm;   // kit/lenses.js
+    var gm = SW.graphics ? SW.graphics.menuHTML(which) : null; if (gm != null) return gm;   // kit/graphics.js
     return H().menu ? H().menu(which) || '' : '';
   }
   function pick(which, p) {
     if (H().pick && H().pick(which, p)) return;
     if (SW.lenses && SW.lenses.pick(which, p)) return;
+    if (SW.graphics && SW.graphics.pick(which, p)) return;
     if (which === 'help') { SW.help(p); return; }
     if (which === 'versions') SW.setTab(p);
   }

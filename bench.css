@@ -997,3 +997,12 @@ ul.reading a { overflow-wrap: anywhere; }
 .hide-words .lncols .cf-show { display: block; }
 @media (max-width: 860px) { .lncols .colfold { display: none !important; } }
 .mc-where button:focus-visible, .frag-q button:focus-visible, .card-fold:focus-visible, .lncols .ann-cyc:focus-visible, .lncols .colfold:focus-visible { outline: 2px solid var(--beam); outline-offset: 1px; border-radius: 2px; }
+
+/* ---------- Graphics (graphics.js): its menus in groups, two columns, a line between the columns and between the rows ---------- */
+.lens-menu .menu-body:has(.gfx-grp) { width: min(760px, 94vw); display: grid; grid-template-columns: 1fr 1fr; gap: 0 6px; }
+.gfx-grp { display: flex; flex-direction: column; min-width: 0; }
+.gfx-grp button { text-align: left; }
+@media (max-width: 640px) { .tab-menu[data-w="graphics"], .lens-menu .menu-body:has(.gfx-grp) { grid-template-columns: 1fr; } }
+.gfx-grp:nth-child(even) { border-left: 1px solid var(--menu-line); padding-left: 6px; }
+.gfx-grp:nth-child(n+3) { border-top: 1px solid var(--menu-line); margin-top: 5px; padding-top: 3px; }
+@media (max-width: 640px) { .gfx-grp:nth-child(even) { border-left: 0; padding-left: 0; } .gfx-grp:nth-child(n+2) { border-top: 1px solid var(--menu-line); margin-top: 5px; padding-top: 3px; } }
