@@ -743,7 +743,7 @@
       N.follow({ v: n.vid, a: n.id });
     });
   };
-  // Tracings from Art's gizmo, shared with the group: a title, a note, the versions, and the names and
+  // Tracings (kit/tracings.js: Spacewar!'s Dynamic Profile, SHRDLU's Functional overview), shared with the group: a title, a note, the versions, and the names and
   // marks given to their blocks and routines. Each is an annotation of its own (tag <tag>tracing, on the
   // address ?tracings, never on a version), its data in a closing comment.
   function b64e(o) { var b = new TextEncoder().encode(JSON.stringify(o)), t = ''; for (var i = 0; i < b.length; i++) t += String.fromCharCode(b[i]); return btoa(t); }
@@ -763,7 +763,7 @@
       var me = SW.me(); if (!me.initials) return SW.askInitials('A tracing is signed with your initials, and none are set.').then(function (ini) { return ini ? N.tracings.save(t) : Promise.reject(new Error('no initials')); });
       if (!N.configured()) return Promise.reject(new Error('Tracings are shared through the annotation group: join it first (Help ▸ Joining the annotation group).'));
       var uri = SW.BASE_URI + '?tracings';
-      var text = '**Tracing: ' + t.title + '**' + (t.note ? '\n\n' + t.note : '') + '\n\n' + (t.where || 'Art’s Dynamic Profile Gizmo') + ', ' + t.vids.map(function (v) { return SW.refOf(v); }).join(' against ') + ('.\n\n<!-- ' + TAG + 'tracing ') + b64e(t) + ' -->';
+      var text = '**Tracing: ' + t.title + '**' + (t.note ? '\n\n' + t.note : '') + '\n\n' + (t.where || 'Dynamic Profile') + ', ' + t.vids.map(function (v) { return SW.refOf(v); }).join(' against ') + ('.\n\n<!-- ' + TAG + 'tracing ') + b64e(t) + ' -->';
       return hx('POST', '/annotations', { uri: uri, group: cfg().group, text: text, tags: [(TAG + 'tracing'), (TAG + 'by:') + me.initials], permissions: { read: ['group:' + cfg().group] }, document: { title: [B.name + ' research bench: tracings'] }, target: [{ source: uri }] })
         .then(function (r) { return r.id; });
     },

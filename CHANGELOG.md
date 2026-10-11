@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.8.1 (2026-10-11)
+
+- Art's Dynamic Profile Gizmo is called Dynamic Profile: a tracing made there names it so.
+
 ## 0.8.0 (2026-10-11)
 
 - `tracings.js`: naming, marking and tracings, from the Spacewar! bench's gizmo, for any view: the stored keys under the view's prefix, the drawing, opening and link the bench's. Its styles in `kit.css`.

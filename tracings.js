@@ -1,9 +1,9 @@
 /*
  * tracings.js - naming, marking and tracing the parts of a program in a graph or a table
- * (Spacewar!'s blocks and routines in Art's Dynamic Profile Gizmo, SHRDLU's functions in
+ * (Spacewar!'s blocks and routines in its Dynamic Profile, after Art Schwarz; SHRDLU's functions in
  * Functional overview): your names and colour marks, kept in this browser per version, and
  * tracings, sets of them shared with the crew through the annotation group (SW.notes.tracings),
- * opened read-only with Keep as mine, Link and ✕. From the Spacewar! bench's gizmo. Part of
+ * opened read-only with Keep as mine, Link and ✕. From the Spacewar! bench's Dynamic Profile. Part of
  * bench-kit (github.com/critical-code-studies/bench-kit).
  *
  * var T = SW.tracings({ ns: 'gz', render, open(t), link(t), hint }): ns prefixes the stored
