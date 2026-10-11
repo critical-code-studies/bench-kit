@@ -12,7 +12,7 @@
   'use strict';
   var SW = root.SW;
 
-  var TECH = 'Plain HTML, CSS and JavaScript; no framework or build step. Runs in the browser from GitHub Pages; annotations via Hypothesis; settings and drafts in local storage; My notes in local storage and kept privately on Hypothesis; Help ▸ Back up everything saves all of it to one file.';
+  var TECH = 'HTML, CSS and JavaScript, with no build step, served by GitHub Pages. Annotations through Hypothesis; your settings, drafts and My notes are kept in this browser (Help ▸ Back up everything saves them).';
   var KIT = 'the modules shared by the critical code studies research benches.';
 
   function cfg() { var B = SW.BENCH || {}; return { B: B, A: B.about || {} }; }

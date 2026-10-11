@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.17.1 (2026-10-11)
+
+- The About box's Tech stack row, shorter.
+
 ## 0.17.0 (2026-10-11)
 
 - The bench's frame, from the benches' own copies: `shell.js` (start-up, the version picker, the tabs and views, the theme, the top bar, links; the bench's parts from `SW.BENCH.shell`), `menus.js` (the tab row's menus: Versions and Help, and the bench's lenses and graphics through `SW.BENCH.menus`), `version.js` (Versions ▸ This version; the bench's rows from `SW.BENCH.version`) and `refs.js` (references, citations, the files on GitHub and their SWHIDs; from `SW.BENCH.refs`). `SW.help(name)` opens a Help item, from the menu or a link.
