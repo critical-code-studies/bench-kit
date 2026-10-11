@@ -18,6 +18,10 @@
  *   label(b, name)-> HTML for a routine's name (a reader's own name for it, a mark)
  *   note(b)       -> HTML under the start, for what the routines alone do not say
  *   word          -> what a routine is called ('function'); startTitle, startLede(b, e)
+ *   entry(b)      -> the name of the routine where the program starts (in place of SW.BENCH.entry)
+ *   fileLabel(b, p) -> how a file is named (where several parts of a build share a file name)
+ *   loadTitle, startUpLede -> the start-up card's column for load and its text (a program that is
+ *                    assembled, not loaded form by form, says what it assembles to)
  * SW.functionalOverview.render(b, el, { inline, head }) draws it into el (a bench with lenses calls
  * it from one, inline); a page with a section #view-functional has it as the view 'functional'.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -27,7 +31,8 @@
   var SW = root.SW, B = SW.BENCH, FO = SW.functionalOverview = {};
   function H() { return B.functional || {}; }
 
-  function fileName(b, p) { return b.parts[p].src.split('/').pop(); }
+  function fileName(b, p) { return H().fileLabel ? H().fileLabel(b, p) : b.parts[p].src.split('/').pop(); }
+  function entryOf(b) { return H().entry ? H().entry(b) : B.entry; }
   function card(title, lede) { var c = SW.el('div', { class: 'card' }); c.innerHTML = '<h3>' + SW.esc(title) + '</h3>' + (lede ? '<p class="lede">' + lede + '</p>' : ''); return c; }
   function wide(c) { c.style.gridColumn = '1 / -1'; return c; }
   function go(p, n, html) { return '<a href="#" data-go="' + p + ':' + n + '">' + html + '</a>'; }
@@ -112,10 +117,10 @@
     function partName(p) { return P.of[p] ? P.of[p].label : fileName(b, p); }
 
     // where it starts
-    var e = A.byName[B.entry];
+    var entry = entryOf(b), e = A.byName[entry];
     var sc = wide(card(H().startTitle || 'Where it starts', !e ? '' : H().startLede ? H().startLede(b, e) :
-      'The ' + W + ' ' + SW.esc(B.entry) + ' in ' + SW.esc(fileName(b, e.p)) + ', where the program starts: the ' + Ws + ' it calls (→)' + (H().analyse ? ' or names for something else to call (‘)' : '') + ', in the order of its lines, ' + (P.grouped ? 'with the part each belongs to, ' : '') + 'and what each of those calls in turn. Click a name to read it.'));
-    if (!e) sc.insertAdjacentHTML('beforeend', '<p class="hint">' + SW.esc(b.v.label) + ' has no ' + W + ' ' + SW.esc(B.entry || '(SW.BENCH.entry is not set)') + '.</p>');
+      'The ' + W + ' ' + SW.esc(entry) + ' in ' + SW.esc(fileName(b, e.p)) + ', where the program starts: the ' + Ws + ' it calls (→)' + (H().analyse ? ' or names for something else to call (‘)' : '') + ', in the order of its lines, ' + (P.grouped ? 'with the part each belongs to, ' : '') + 'and what each of those calls in turn. Click a name to read it.'));
+    if (!e) sc.insertAdjacentHTML('beforeend', '<p class="hint">' + SW.esc(b.v.label) + ' has no ' + W + ' ' + SW.esc(entry || '(SW.BENCH.entry is not set)') + '.</p>');
     else {
       sc.insertAdjacentHTML('beforeend', '<ol class="fo-loop">' + e.calls.map(function (c) {
         var r = A.byName[c.name], pt = P.of[r.p];
@@ -128,12 +133,13 @@
     cards.appendChild(sc);
 
     // what each file runs as it is loaded
-    var lc = wide(card('Start-up', 'The files of the version in order, with ' + (P.grouped ? 'the part each belongs to, ' : '') + 'how many ' + Ws + ' each defines, and what each runs as it is loaded. Click to read it.'));
-    var lh = '<table class="data fo-start"><thead><tr><th>#</th><th>File</th>' + (P.grouped ? '<th>Part</th>' : '') + '<th>' + W.charAt(0).toUpperCase() + Ws.slice(1) + '</th><th>Run at load</th></tr></thead><tbody>' + b.parts.map(function (pt, p) {
+    var lc = wide(card('Start-up', H().startUpLede || 'The files of the version in order, with ' + (P.grouped ? 'the part each belongs to, ' : '') + 'how many ' + Ws + ' each defines, and what each runs as it is loaded. Click to read it.'));
+    var LT = H().loadTitle || 'Run at load';
+    var lh = '<table class="data fo-start"><thead><tr><th>#</th><th>File</th>' + (P.grouped ? '<th>Part</th>' : '') + '<th>' + W.charAt(0).toUpperCase() + Ws.slice(1) + '</th><th>' + LT + '</th></tr></thead><tbody>' + b.parts.map(function (pt, p) {
       if (pt.role === 'doc') return '';
       var n = A.shown.filter(function (r) { return r.p === p; }).length, ld = A.load[p] || [], inline = ld.some(function (x) { return x.count; });
       rows.load.push([String(p + 1), fileName(b, p)].concat(P.grouped ? [partName(p)] : [], [String(n), ld.map(function (x) { return x.text + (x.count > 1 ? ' ×' + x.count : ''); }).join(inline ? ', ' : ' · ')]));
-      return '<tr><td class="num">' + (p + 1) + '</td><td class="mono">' + SW.esc(fileName(b, p)) + (pt.role !== 'program' ? ' <span class="faint">(' + SW.esc(pt.role) + ')</span>' : '') + '</td>' +
+      return '<tr><td class="num">' + (p + 1) + '</td><td class="mono">' + SW.esc(fileName(b, p)) + (pt.role !== 'program' && !H().fileLabel ? ' <span class="faint">(' + SW.esc(pt.role) + ')</span>' : '') + '</td>' +
         (P.grouped ? '<td>' + chip(P.of[p]) + SW.esc(partName(p)) + '</td>' : '') + '<td class="num">' + n + '</td><td class="mono fo-run">' +
         (ld.length ? ld.map(function (x) { return go(p, x.n, SW.esc(x.text.slice(0, 60))) + (x.count > 1 ? ' ×' + x.count : ''); }).join(inline ? ', ' : '<br>') : '<span class="faint">nothing</span>') + '</td></tr>';
     }).join('') + '</tbody></table>';
@@ -181,8 +187,8 @@
 
     function doc() {
       return { title: b.v.label + ': functional overview', subtitle: 'Read from the source', meta: SW.docMeta(b), blocks: [
-        SW.tableBlock((H().startTitle || 'Where it starts') + ': what ' + (B.entry || '') + ' calls (→) and names (‘), in order', ['Line', W.charAt(0).toUpperCase() + W.slice(1), 'How', 'Part', 'Defined at', 'Which calls'], rows.start),
-        SW.tableBlock('Start-up', ['#', 'File'].concat(P.grouped ? ['Part'] : [], [W.charAt(0).toUpperCase() + Ws.slice(1), 'Run at load']), rows.load),
+        SW.tableBlock((H().startTitle || 'Where it starts') + ': what ' + (entry || '') + ' calls (→) and names (‘), in order', ['Line', W.charAt(0).toUpperCase() + W.slice(1), 'How', 'Part', 'Defined at', 'Which calls'], rows.start),
+        SW.tableBlock('Start-up', ['#', 'File'].concat(P.grouped ? ['Part'] : [], [W.charAt(0).toUpperCase() + Ws.slice(1), H().loadTitle || 'Run at load']), rows.load),
         SW.tableBlock(What, (P.grouped ? ['Part', 'Files'] : ['File']).concat([H().defines ? 'Defines' : W.charAt(0).toUpperCase() + Ws.slice(1), 'Entry points']), rows.parts),
         SW.tableBlock('Calls between ' + what + ' (distinct calls)', ['Calling', 'Called', 'Calls'], rows.calls)] };
     }
