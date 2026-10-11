@@ -116,11 +116,17 @@
 
   // the Help items a link can open (&help=name): the kit's, and the bench's (SW.BENCH.shell.help)
   function helpItems() {
+    var repo = B.repo || (B.about || {}).code || '';
     var h = { codes: function () { SW.guide('codes'); }, paratexts: function () { SW.guide('paratexts'); }, anno: function () { SW.notes.help(); },
-              join: function () { SW.notes.joinHelp(); }, about: about, settings: function () { SW.settings.open(); } };
+              join: function () { SW.notes.joinHelp(); }, about: about, settings: function () { SW.settings.open(); },
+              tour: function () { SW.tours.start('welcome'); }, backup: function () { SW.backup.save(); }, restore: function () { SW.backup.restore(); },
+              sitemap: function () { location.href = 'sitemap.html'; },
+              code: function () { window.open(repo, '_blank', 'noopener'); }, issue: function () { window.open(repo + '/issues', '_blank', 'noopener'); } };
     var own = H().help || {}; Object.keys(own).forEach(function (k) { h[k] = own[k]; });
     return h;
   }
+  // open a Help item by name (the Help menu, a link's &help=); false if there is none
+  SW.help = function (name) { var h = helpItems()[name]; if (!h) return false; h(); return true; };
 
   function init() {
     theme(SW.store.get('theme', 'phosphor'));
@@ -193,7 +199,7 @@
     // a Help item named in the link; the welcome tour from a link (?tour=welcome), or offered on a
     // first visit; else, without initials, the box that asks for them (at most once a week)
     var HELP = helpItems();
-    if (HELP[q.help]) setTimeout(HELP[q.help], 700);
+    if (HELP[q.help] && ['code', 'issue', 'sitemap', 'backup', 'restore'].indexOf(q.help) < 0) setTimeout(HELP[q.help], 700);
     if (q.tour) setTimeout(function () { SW.tours.start(q.tour); }, 900);
     else if (!SW.store.get('tour.seen', false)) setTimeout(SW.tours.offer, 1200);
     else if (!SW.store.get('initials', '') && Date.now() - (+SW.store.get('ini.later', 0) || 0) > 7 * 864e5) setTimeout(function () { if (!document.querySelector('dialog[open]')) SW.askInitials('Welcome. Annotations, notes and findings are signed with your initials.'); }, 1200);
