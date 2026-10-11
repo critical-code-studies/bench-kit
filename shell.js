@@ -147,15 +147,19 @@
     barH();
     window.addEventListener('resize', barH);
     SW.notes.initNews();
-    // A drop-down menu near the right edge opens leftwards, so it stays on screen.
+    // A drop-down menu near the right edge opens leftwards, so it stays on screen; one too wide to
+    // open either way is moved left as far as it needs, and no further than the left edge.
     document.addEventListener('toggle', function (e) {
       var d = e.target;
       if (!d.classList || !d.classList.contains('menu') || !d.open) return;
       var body = d.querySelector('.menu-body');
       if (!body) return;
       body.style.left = ''; body.style.right = '';
-      var r = body.getBoundingClientRect();
-      if (r.right > document.documentElement.clientWidth - 4) { body.style.left = 'auto'; body.style.right = '0'; }
+      var vw = document.documentElement.clientWidth, r = body.getBoundingClientRect();
+      if (r.right <= vw - 4) return;
+      var p = (body.offsetParent || d).getBoundingClientRect();
+      if (p.right - r.width >= 4) { body.style.left = 'auto'; body.style.right = '0'; }
+      else body.style.left = (Math.max(4, vw - 4 - r.width) - p.left) + 'px';
     }, true);
     SW.tray.init();
     SW.applyCodeText();

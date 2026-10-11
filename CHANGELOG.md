@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.22.1 (2026-10-12)
+
+- A drop-down menu too wide to open either way on a narrow window (the Graphics menus) is moved left only as far as it needs, and no further than the window's left edge.
+
 ## 0.22.0 (2026-10-12)
 
 - `graphics.js`: the Graphics tab's frame, from the benches' own copies: the heading with its menu, Graphics ▾ in the tab row (in groups, two columns), `&g=` in a link, opening a graphic from the tour, stopping an animation when another is chosen, the export. The pictures stay the bench's (`SW.BENCH.graphics`).
