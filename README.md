@@ -22,6 +22,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `compare.js` | Compare (two versions: text, the bench's second mode, routines) and Genealogy (stemma, flow with forks, tree, lineage). The second mode is the bench's (`SW.BENCH.compareDefs`). |
 | `genealogy.js` | The genealogy engine: matching, matrix, tree, flows, forks, drawing. The text's language comes from an adapter. |
 | `lang-macro.js`, `lang-maclisp.js` | Language adapters for genealogy and compare: how a line divides into labels, code and comment, its normalised form, titles, routines and sections. PDP-1 MACRO (Spacewar!), MacLisp (SHRDLU). A new language adds `lang-<name>.js` registering `SWLang[name]`. |
+| `tracings.js` | Naming and colour-marking the parts of a program in a view (blocks and routines, functions), kept per version in this browser, and tracings: sets of names and marks shared with the crew through the annotation group, opened read-only (Keep as mine, Link, ✕). `SW.tracings({ ns, render, open, link, hint })`. The bench reads `&tr=` into `SW.state.trace`. |
 | `notes.js` | Shared annotation through the bench's Hypothesis group: annotations, replies, reactions, drafts, the bin, links between annotations, codes, What's new, copies kept from ghosts (`from`), tracings, the joining guide, Help ▸ Advanced annotation. Tags carry the bench's prefix (`SW.BENCH.tag`). |
 | `config.example.js` | The settings a bench gives the kit. |
 

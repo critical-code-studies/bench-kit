@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.8.0 (2026-10-11)
+
+- `tracings.js`: naming, marking and tracings, from the Spacewar! bench's gizmo, for any view: the stored keys under the view's prefix, the drawing, opening and link the bench's. Its styles in `kit.css`.
+- A tracing names where it was made (`where`, shown in its text in the group), no longer always the gizmo.
+
 ## 0.7.0 (2026-10-11)
 
 - `compare.js` and `genealogy.js`, from the Spacewar! bench 1.18.44, with the text's language in adapters: `lang-macro.js` (PDP-1 MACRO, from Spacewar!) and `lang-maclisp.js` (MacLisp, from SHRDLU), named by `SW.BENCH.lang`. Checked: for every version of both benches, with and without supplied files, the adapters give the same lines, routines and sections as the benches' own genealogy did.
