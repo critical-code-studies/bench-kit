@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.17.3
+**Version:** 0.18.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -28,6 +28,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `tours.js` | The guided tour; its stops are the bench's (`SW.BENCH.tours`). |
 | `initials.js` | The box that asks for initials (two to four letters) when something is to be signed: `SW.askInitials(why)`, `SW.withInitials(why)`. |
 | `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
+| `bench.css` | The styles every bench shares: the frame (top bar, tabs, views, dialogs, menus, the side panel) and the kit's views. Loaded before the bench's own `css/research.css`, which sets the colours (the custom properties on `:root`, and the themes) and its own parts, and can override any rule here. |
 | `kit.css` | Styles for the kit's own parts: the initials box, Settings, the About box, tracings, the Functional overview. |
 | `functional.js` | A Functional overview of a version: where the program starts and what it calls, start-up, the parts of the program and the calls between them, read from the source; with a second mode, Recorded run, where the bench can run its program. `SW.functionalOverview.render(b, el, { inline })`, or the view `functional` on a page with `#view-functional`. Its hooks: below. |
 | `findings.js` | Findings: the bench's own (from `SW.BENCH.findings`) and the group's, by category and importance, with the bench's checks (`SW.findings.addCheck`). |
@@ -53,6 +54,8 @@ git submodule add https://github.com/critical-code-studies/bench-kit research/ki
 `index.html` loads `kit/base.js` first, then the bench's `config.js`, `kit/md.js`, `kit/themes.js` and `kit/refs.js`, then the bench's own `core.js` (its texts and builds: `SW.build`, `SW.parseLine`, `SW.lineKey`, `SW.docMeta` …, with `root.SWVersions`), then the rest of the kit and the bench's views, and last the bench's `main.js` (its parts of the frame) and `kit/shell.js`:
 
 ```html
+<link rel="stylesheet" href="kit/bench.css?v=…">
+<link rel="stylesheet" href="css/research.css?v=…">
 <link rel="stylesheet" href="kit/paratexts.css?v=…">
 <link rel="stylesheet" href="kit/kit.css?v=…">
 <script src="kit/base.js?v=…"></script>

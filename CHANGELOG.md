@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.18.0 (2026-10-11)
+
+- `bench.css`: the styles every bench shares (the frame and the kit's views), 733 rules from the benches' own `css/research.css`, loaded before it. A bench's stylesheet keeps its colours (`:root` and the themes) and its own parts. Each bench was checked view by view, in a dark and a light theme and at phone width, for any change in the computed styles of what is shown.
+
 ## 0.17.3 (2026-10-11)
 
 - Genealogy's Flow with the code shown: the boxes and code in their columns again (0.17.2 put them nowhere).
