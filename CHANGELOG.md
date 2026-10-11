@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.21.0 (2026-10-12)
+
+- `read.js`: the Read view, from the benches' own copies (the template's, with what SHRDLU's and Spacewar!'s added): the listing, the toolbar (search, View, filters, ↶ ↷, the file picker, the error badge, the reading edition, Export, the notes modes), the Key, the pop-up on a name, the side panel of a line's annotations, the filter, the file headings and the column headings, the Address and Word columns with their expansions, Normalised text and Run heat, breakpoints and other selection actions, refreshing notes when Read is next opened. The bench gives its language, its files' names and its marks on its repairs (`SW.readView(H)`).
+- `bench.css`: Read's breakpoints, the Key's list and the folding of the Address and Word columns.
+
 ## 0.20.0 (2026-10-12)
 
 - `lenses.js`: the Analyse view, from the benches' own copies. The heading (the lens menu, This version or across the versions, the description and the reference), the export menu, the lens menus in the tab row and the Versions items that open a lens, `&lens=` in a link, the Functional overview and a name's history as lenses; the lenses themselves stay the bench's (`SW.BENCH.lenses`).
