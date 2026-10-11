@@ -857,16 +857,16 @@
             '<g class="g-code" data-col="' + i + '" clip-path="url(#gclip' + i + ')" pointer-events="none" font-size="' + f1(fs) + '" fill="' + COLORS.text + '">';
           // with opts.codeWindow ([y0, y1], in the chart's own coordinates) the code is written only
           // for the lines in it: a long program at full zoom is otherwise tens of thousands of texts
-          var cw = opts.code && opts.codeWindow;
+          var win = opts.code && opts.codeWindow;
           us.forEach(function (u, k) {
             var p = c.pos[k];
             if (opts.code && texts[i].lines) {
-              if (cw && (p.y > cw[1] || p.y + p.h < cw[0])) return;
+              if (win && (p.y > win[1] || p.y + p.h < win[0])) return;
               for (var j = u.start; j <= u.end; j++) {
                 var L = texts[i].lines[j];
                 if (!L) continue;
                 var ty = p.y + (j - u.start + 0.8) * scale;
-                if (cw && (ty < cw[0] || ty > cw[1])) continue;
+                if (win && (ty < win[0] || ty > win[1])) continue;
                 s += '<text x="' + f1(x + 4) + '" y="' + f1(ty) + '" xml:space="preserve">' + esc(trunc(String(L.raw).replace(/\t/g, '  '), maxCh)) + '</text>';
               }
             } else if (p.h >= 11) {
