@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.10.0 (2026-10-11)
+
+- `readnotes.js`, from the two benches' `read.js` (the 630 lines they had in common): Read's annotation layer, made by `SW.readNotes(X)` with the bench's view, options and its own parts (`isMine`, `showsTape`, `filtering`, `keptLines`, `tapeInfo`, `kinBar`, and `selActs` for buttons of its own on the selection bar, such as Spacewar!'s Breakpoint and Run to here). Load it before the bench's `js/read.js`.
+- For the SHRDLU bench, from Spacewar!: a note added, edited or binned makes the next refresh look for ghosts again.
+
 ## 0.9.1 (2026-10-11)
 
 - A Bench kit row in the bench's About box (after Tech stack): the kit's version (`SW.KIT.version`), what it holds and a link to it.
