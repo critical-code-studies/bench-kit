@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.22.2 (2026-10-12)
+
+- `lenses.js`: a version counts as having no text when none is held, not when nothing has assembled it, so that a bench reading plain text (the template) draws its lenses.
+
 ## 0.22.1 (2026-10-12)
 
 - A drop-down menu too wide to open either way on a narrow window (the Graphics menus) is moved left only as far as it needs, and no further than the window's left edge.

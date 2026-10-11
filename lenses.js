@@ -96,7 +96,7 @@
     view.appendChild(pad);
     SW.markTabs();
     var generated = [['Generated', SW.fmtDate(SW.today()) + ', ' + (B.title || 'Research Bench') + ' v' + SW.VERSION]];
-    if (!across && !b.asm && (c.anySource || []).indexOf(n) < 0) {
+    if (!across && !(b.v.build && b.lines && b.lines.length) && (c.anySource || []).indexOf(n) < 0) {   // no text held
       cards.innerHTML = '<p class="hint">' + (c.noSource ? c.noSource(b) : 'No source survives for ' + esc(b.v.label) + '.') + '</p>';
       return;
     }
