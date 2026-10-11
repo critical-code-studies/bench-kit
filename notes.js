@@ -7,8 +7,8 @@
  * note carries the author's initials and a date (the Hypothesis creation
  * time), and replies thread beneath it, so a discussion can be followed
  * line by line. Structured tags record the version, source file and lines:
- *   sw:v:3.1  sw:kind:line  sw:src:spacewar-3.1-24sep1962.txt  sw:lines:0:120-134  sw:by:DMB
- * (with the bench's own prefix, SW.BENCH.tag: sw: on the Spacewar! bench, sh: on SHRDLU's).
+ *   bk:v:3.1  bk:kind:line  bk:src:spacewar-3.1-24sep1962.txt  bk:lines:0:120-134  bk:by:DMB
+ * (bk: since bench-kit 0.5.0; annotations made before keep the bench's own prefix, sw: or sh:, and are read as well).
  * Until a group and token are configured, notes are kept as drafts in this
  * browser and can be published later. The automatic build log for each
  * version (versions.js) is shown alongside, marked as such.
@@ -16,7 +16,23 @@
 (function (root) {
   'use strict';
   // the bench's settings (config.js): its tag prefix in Hypothesis, its name, the help's examples
-  var B = root.SW.BENCH || {}, TAG = B.tag || 'bench:', AH = B.annoHelp || {}, BP = B.paratexts || {};
+  var B = root.SW.BENCH || {}, AH = B.annoHelp || {}, BP = B.paratexts || {};
+  // Tags in Hypothesis: written with the kit's prefix, bk:, and read with it or the bench's own from
+  // before the kit (SW.BENCH.tag: sw: on the Spacewar! bench, sh: on SHRDLU's), which earlier
+  // annotations keep, since only an annotation's author can change it.
+  var TAG = 'bk:', READS = B.tag && B.tag !== TAG ? [TAG, B.tag] : [TAG];
+  var ALT = '(?:' + READS.join('|') + ')';
+  function ours(t) { return READS.some(function (p) { return t.indexOf(p) === 0; }); }
+  function tv(tags, key) { for (var i = 0; i < READS.length; i++) { var v = tagVal(tags, READS[i] + key); if (v != null) return v; } return null; }
+  function has(tags, key) { return READS.some(function (p) { return (tags || []).indexOf(p + key) >= 0; }); }
+  // a search of the group by a tag, under every prefix read, the rows put together
+  function byTag(path, tag) {
+    return Promise.all(READS.map(function (p) { return hx('GET', path + '&tag=' + encodeURIComponent(p + tag)); })).then(function (rs) {
+      var seen = {}, rows = [];
+      rs.forEach(function (r) { (r.rows || []).forEach(function (a) { if (!seen[a.id]) { seen[a.id] = 1; rows.push(a); } }); });
+      return { rows: rows };
+    });
+  }
   function short(l) { var n = (B.name || '') + ' '; return l.indexOf(n) === 0 ? l.slice(n.length) : l; }
   // A tag as a reader should see it: the bench's own marks (level:, note:, chapter:, cat:) in words
   if (!root.SW.tagLabel) root.SW.tagLabel = function (g) {
@@ -82,7 +98,7 @@
   // are hidden everywhere and can be restored until the bin is emptied.
   // These record this session's moves, while the group's search catches up.
   var binnedNow = {}, restoredNow = {};
-  function isBinTag(t) { return t === (TAG + 'deleted') || t.indexOf((TAG + 'deleted-at:')) === 0; }
+  function isBinTag(t) { return READS.some(function (p) { return t === p + 'deleted' || t.indexOf(p + 'deleted-at:') === 0; }); }
   // a note binned or deleted this session (the group's search may not know yet)
   N.isGone = function (id) { return !!binnedNow[id] || !!deleted[id] || drafts().some(function (d) { return d.id === id && d.deleted; }); };
   function isBinned(n) {
@@ -91,7 +107,7 @@
   }
   // A note's tags with the bin marks taken off (user tags as last edited).
   function keptTags(note) {
-    return (note.rawTags || []).filter(function (t) { return t.indexOf(TAG) === 0 && !isBinTag(t); }).concat(note.tags || []);
+    return (note.rawTags || []).filter(function (t) { return ours(t) && !isBinTag(t); }).concat(note.tags || []);
   }
 
   N.test = function () {
@@ -110,23 +126,23 @@
   // Hypothesis row -> note
   function fromH(a) {
     var tags = a.tags || [];
-    var lines = tagVal(tags, (TAG + 'lines:'));
+    var lines = tv(tags, 'lines:');
     var anchor = null;
     if (lines) {
       var m = /^(\d+):(\d+)(?:-(\d+))?$/.exec(lines);
-      if (m) anchor = { p: +m[1], n0: +m[2], n1: +(m[3] || m[2]), src: tagVal(tags, (TAG + 'src:')) };
-      var ch = anchor && /^(\d+)-(\d+)$/.exec(tagVal(tags, (TAG + 'chars:')) || '');
+      if (m) anchor = { p: +m[1], n0: +m[2], n1: +(m[3] || m[2]), src: tv(tags, 'src:') };
+      var ch = anchor && /^(\d+)-(\d+)$/.exec(tv(tags, 'chars:') || '');
       if (ch) { anchor.c0 = +ch[1]; anchor.c1 = +ch[2]; }
     }
     var qsel = ((a.target && a.target[0] && a.target[0].selector) || []).filter(function (x) { return x.type === 'TextQuoteSelector'; })[0];
-    var by = tagVal(tags, (TAG + 'by:')) || (a.user_info && a.user_info.display_name) ||
+    var by = tv(tags, 'by:') || (a.user_info && a.user_info.display_name) ||
              String(a.user || '').replace(/^acct:|@.*$/g, '');
     return {
-      id: a.id, vid: tagVal(tags, (TAG + 'v:')), kind: tagVal(tags, (TAG + 'kind:')) || (anchor ? 'line' : 'version'),
+      id: a.id, vid: tv(tags, 'v:'), kind: tv(tags, 'kind:') || (anchor ? 'line' : 'version'),
       anchor: anchor, text: a.text || '', by: by, name: (a.user_info && a.user_info.display_name) || '',
       date: a.created, updated: a.updated, parent: (a.references || []).slice(-1)[0] || null,
-      tags: tags.filter(function (t) { return t.indexOf(TAG) !== 0; }), source: 'hypothesis', user: a.user || '', rawTags: tags,
-      binned: tags.indexOf((TAG + 'deleted')) >= 0, dev: tags.indexOf((TAG + 'dev')) >= 0, binnedAt: tagVal(tags, (TAG + 'deleted-at:')), from: tagVal(tags, (TAG + 'from:')) || null,
+      tags: tags.filter(function (t) { return !ours(t); }), source: 'hypothesis', user: a.user || '', rawTags: tags,
+      binned: has(tags, 'deleted'), dev: has(tags, 'dev'), binnedAt: tv(tags, 'deleted-at:'), from: tv(tags, 'from:') || null,
       link: a.links && (a.links.incontext || a.links.html), quote: qsel ? qsel.exact : ''
     };
   }
@@ -198,7 +214,7 @@
   // note travels whole, gzipped, on a closing line of the text; the first line
   // says what it is, for anyone looking in Hypothesis's own sidebar.
   var MYNOTES_URI = SW.BASE_URI + '?mynotes';
-  var NOTE_RE = new RegExp('<!-- ' + TAG + 'note:gz ([A-Za-z0-9+\\/=]+) -->\\s*$');
+  var NOTE_RE = new RegExp('<!-- ' + ALT + 'note:gz ([A-Za-z0-9+\\/=]+) -->\\s*$');
   N.mynotes = {
     ready: function () { return N.configured() ? N.whoami().then(function (me) { return !!me; }) : Promise.resolve(false); },
     push: function (item) {
@@ -441,8 +457,8 @@
     var remote = N.configured()
       ? N.whoami().then(function (me) {
           if (!me) return [];
-          return hx('GET', '/search?limit=200&sort=updated&order=desc&group=' + encodeURIComponent(cfg().group) +
-                    ('&tag=' + TAG + 'deleted&user=') + encodeURIComponent(me)).then(function (r) {
+          return byTag('/search?limit=200&sort=updated&order=desc&group=' + encodeURIComponent(cfg().group) +
+                    '&user=' + encodeURIComponent(me), 'deleted').then(function (r) {
             var rows = (r.rows || []).map(fromH).filter(function (n) { return !deleted[n.id] && !restoredNow[n.id]; });
             var have = {};
             rows.forEach(function (n) { have[n.id] = 1; });
@@ -525,14 +541,14 @@
   // dev (true or false, or undefined to leave it): Developer only, the <tag>dev tag
   N.update = function (note, text, tags, dev) {
     text = SW.noteHistory.compose(text, note.text, note.updated || note.date);   // the wording replaced is kept
-    function withDev(ts) { ts = ts.filter(function (t) { return t !== (TAG + 'dev'); }); return dev ? ts.concat([(TAG + 'dev')]) : ts; }
+    function withDev(ts) { ts = ts.filter(function (t) { return !READS.some(function (p) { return t === p + 'dev'; }); }); return dev ? ts.concat([(TAG + 'dev')]) : ts; }
     var now = new Date().toISOString();
     if (note.source === 'draft') {
       saveDrafts(drafts().map(function (d) {
         if (d.id !== note.id) return d;
         d.text = text; d.updated = now;
-        if (tags) { d.tags = tags; d.hTags = (d.hTags || []).filter(function (t) { return t.indexOf(TAG) === 0; }).concat(tags); }
-        if (dev !== undefined) { d.dev = !!dev; d.hTags = withDev((d.hTags || []).filter(function (t) { return t.indexOf(TAG) === 0; })).concat(d.tags || []); }
+        if (tags) { d.tags = tags; d.hTags = (d.hTags || []).filter(ours).concat(tags); }
+        if (dev !== undefined) { d.dev = !!dev; d.hTags = withDev((d.hTags || []).filter(ours)).concat(d.tags || []); }
         return d;
       }));
       N.invalidate(note.vid);
@@ -541,7 +557,7 @@
     if (note.source !== 'hypothesis') return Promise.resolve();
     var body = { text: text };
     if (tags || dev !== undefined) {
-      var sw = (note.rawTags || []).filter(function (t) { return t.indexOf(TAG) === 0; });
+      var sw = (note.rawTags || []).filter(ours);
       body.tags = (dev !== undefined ? withDev(sw) : sw).concat(tags || note.tags || []);
     }
     return hx('PATCH', '/annotations/' + note.id, body).then(function (r) {
@@ -735,11 +751,11 @@
   N.tracings = {
     list: function () {
       if (!N.configured()) return Promise.resolve([]);
-      return hx('GET', ('/search?limit=200&sort=created&order=desc&tag=' + TAG + 'tracing&group=') + encodeURIComponent(cfg().group)).then(function (r) {
+      return byTag('/search?limit=200&sort=created&order=desc&group=' + encodeURIComponent(cfg().group), 'tracing').then(function (r) {
         return (r.rows || []).map(function (a) {
-          var m = new RegExp('<!-- ' + TAG + 'tracing ([A-Za-z0-9+\\/=]+) -->').exec(a.text || ''), d = null;
+          var m = new RegExp('<!-- ' + ALT + 'tracing ([A-Za-z0-9+\\/=]+) -->').exec(a.text || ''), d = null;
           try { d = m ? b64d(m[1]) : null; } catch (e) { d = null; }
-          return d && { id: a.id, by: tagVal(a.tags || [], (TAG + 'by:')) || '', date: a.created, user: a.user, title: d.title || 'A tracing', note: d.note || '', mode: d.mode, v: d.v, cmp: d.cmp || null, split: !!d.split, vids: d.vids || [], names: d.names || {}, marks: d.marks || {} };
+          return d && { id: a.id, by: tv(a.tags || [], 'by:') || '', date: a.created, user: a.user, title: d.title || 'A tracing', note: d.note || '', mode: d.mode, v: d.v, cmp: d.cmp || null, split: !!d.split, vids: d.vids || [], names: d.names || {}, marks: d.marks || {} };
         }).filter(Boolean);
       });
     },
@@ -1573,7 +1589,7 @@
       if (a.c0 != null && a.n0 === n0 && a.n1 === n1) { an.c0 = a.c0; an.c1 = a.c1; }
       var quote = a.quote != null ? a.quote : lines.slice(n0 - 1, n1).map(function (L) { return L.raw; }).join('\n');
       var place = [(TAG + 'lines:') + an.p + ':' + n0 + (n1 !== n0 ? '-' + n1 : ''), (TAG + 'src:') + an.src].concat(an.c0 != null ? [(TAG + 'chars:') + an.c0 + '-' + an.c1] : []);
-      function swOf(ts) { return (ts || []).filter(function (t) { return t.indexOf(TAG) === 0 && !new RegExp('^' + TAG + '(lines|src|chars):').test(t); }); }
+      function swOf(ts) { return (ts || []).filter(function (t) { return ours(t) && !new RegExp('^' + ALT + '(lines|src|chars):').test(t); }); }
       if (note.source === 'draft') {
         saveDrafts(drafts().map(function (d) {
           if (d.id !== note.id) return d;

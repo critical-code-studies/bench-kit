@@ -77,7 +77,7 @@ Further settings, used by the modules other than paratexts:
   }
 ```
 
-Annotations: `tag` (the prefix of the bench's tags in Hypothesis: `sw:`, `sh:`; never change it for a bench in use, or its annotations are no longer read), `joinCard` (HTML shown at the top of the joining guide), `annoHelp` (the worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`).
+Annotations: `tag` (the prefix the bench's tags had in Hypothesis before the kit, `sw:` or `sh:`: still read, so annotations made then keep working; new tags are written `bk:` on every bench, and a new bench needs no `tag`). The bench's core should hide `<!-- bk:… -->` data comments in annotation text, as it hides its own. `joinCard` (HTML shown at the top of the joining guide), `annoHelp` (the worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`).
 
 Settings texts (`settings`): `tour` (the hint beside the tour button), `groupHint` (HTML: how the bench's annotation group is set), `groupPlaceholder`, `themeHint`.
 
