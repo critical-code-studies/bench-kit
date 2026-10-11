@@ -1006,3 +1006,25 @@ ul.reading a { overflow-wrap: anywhere; }
 .gfx-grp:nth-child(even) { border-left: 1px solid var(--menu-line); padding-left: 6px; }
 .gfx-grp:nth-child(n+3) { border-top: 1px solid var(--menu-line); margin-top: 5px; padding-top: 3px; }
 @media (max-width: 640px) { .gfx-grp:nth-child(even) { border-left: 0; padding-left: 0; } .gfx-grp:nth-child(n+2) { border-top: 1px solid var(--menu-line); margin-top: 5px; padding-top: 3px; } }
+
+/* ---------- the repairs in Read (kintsugi.js): the stepper, the bar, the list, the squiggle ---------- */
+.rp-line { cursor: help; }
+.ln.rp-sq { position: relative; }
+.listing.no-repairs .ln.rp-sq::after { display: none; }
+.toolbar .kin-nav { display: inline-flex; gap: 2px; margin-left: 4px; }
+.toolbar .kin-nav[hidden] { display: none; }
+.toolbar .kin-nav .btn { padding-left: 7px; padding-right: 7px; }
+.ln.kin-flash { animation: kin-flash 1.8s ease-out; }
+.kin-list { display: grid; gap: 2px; max-height: 50vh; overflow: auto; max-width: 460px; }
+.kin-list a { display: grid; grid-template-columns: auto 1fr; gap: 1px 8px; padding: 4px 6px; border-radius: 4px; color: var(--text); text-decoration: none; }
+.kin-list a:hover { background: var(--sel); }
+.kin-list .kin-w { grid-column: 1 / -1; font-size: 12px; color: var(--text-dim); }
+.toolbar .kin-chev { display: inline-block; font-size: 15px; line-height: 0.6; vertical-align: 3px; margin-left: 2px; transition: transform .15s; }
+.toolbar .kin-tog.open .kin-chev { transform: rotate(180deg) translateY(-3px); }
+.toolbar .kin-bar { flex-basis: 100%; display: flex; align-items: center; gap: 2px; margin: -2px -14px -8px; padding: 3px 14px; border-top: 1px solid var(--line-soft); background: var(--bg); font-size: 12px; min-width: 0; }
+.toolbar .kin-bar[hidden] { display: none; }
+.kin-bar .kb[disabled] { opacity: .4; cursor: default; }
+.kin-bar .kb .ki { display: block; }
+.kin-bar .kbs { width: 1px; height: 16px; background: var(--line); margin: 0 5px; flex: none; }
+.kin-bar .kin-cur { flex: 1 1 auto; min-width: 0; max-width: 40em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font: inherit; color: var(--text-dim); background: none; border: 0; padding: 0 6px; cursor: pointer; }
+.kin-bar .kin-cur:hover { color: var(--text); }

@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## 0.23.0 (2026-10-12)
+
+- `kintsugi.js`: the repairs in Read, from the benches' own copies: the ◆ ‹ › stepper, the repairs bar and its list, Only the repaired lines, My notes, Copy, the cards, View ▸ Repairs (gold), the squiggle and its measuring. The bench gives its repairs as stops, its marks, and its own buttons on the bar (`SW.kintsugi(cfg)`, given to `SW.readView` as `repairs`).
+- `read.js`: Read hands its own parts to the repairs (`repairs.init(ctx)`).
+- `bench.css`: the stepper, the bar, the list and the squiggle.
+
 ## 0.22.2 (2026-10-12)
 
 - `lenses.js`: a version counts as having no text when none is held, not when nothing has assembled it, so that a bench reading plain text (the template) draws its lenses.

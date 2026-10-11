@@ -23,7 +23,8 @@
  *                     data-bio to SW.biography)
  *   selActs()         more actions on the selection bar (readnotes.js)
  *   lost              a line under a version with no text
- *   repairs           the bench's marks on its repairs: { nav (HTML in the toolbar), view (HTML in
+ *   repairs           the bench's marks on its repairs, usually SW.kintsugi(...) (kintsugi.js):
+ *                     { init(ctx), nav (HTML in the toolbar), view (HTML in
  *                     View), wire(tb), paint(box, b) once a listing is drawn, click(e, b) (true
  *                     when it was theirs), bar() (redrawn with the selection), kept() (the lines
  *                     kept by opts.onlyRepaired), relayout() }
@@ -536,7 +537,9 @@
     window.addEventListener('resize', function () { clearTimeout(relay); relay = setTimeout(function () { if (build && marginOn()) layoutMargin(); }, 120); });
     SW.on('codetext', function () { if (build && marginOn()) setTimeout(function () { layoutMargin(); }, 50); });
 
-    return { view: view, opts: opts, R: R, K: K, build: function () { return build; }, render: render, renderListing: renderListing,
-             applyFilter: applyFilter, paintSel: paintSel, listingDoc: listingDoc, selLines: K.selLines, setWords: setWords };
+    var ctx = { view: view, opts: opts, R: R, K: K, build: function () { return build; }, render: render, renderListing: renderListing,
+                applyFilter: applyFilter, paintSel: paintSel, listingDoc: listingDoc, selLines: K.selLines, setWords: setWords };
+    if (X.init) X.init(ctx);   // the repairs (kit/kintsugi.js) work through Read's own
+    return ctx;
   };
 })(typeof window !== 'undefined' ? window : globalThis);
