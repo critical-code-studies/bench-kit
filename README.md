@@ -19,6 +19,9 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
 | `kit.css` | Styles for the initials box and Settings. |
 | `findings.js` | Findings: the bench's own (from `SW.BENCH.findings`) and the group's, by category and importance, with the bench's checks (`SW.findings.addCheck`). |
+| `compare.js` | Compare (two versions: text, the bench's second mode, routines) and Genealogy (stemma, flow with forks, tree, lineage). The second mode is the bench's (`SW.BENCH.compareDefs`). |
+| `genealogy.js` | The genealogy engine: matching, matrix, tree, flows, forks, drawing. The text's language comes from an adapter. |
+| `lang-macro.js`, `lang-maclisp.js` | Language adapters for genealogy and compare: how a line divides into labels, code and comment, its normalised form, titles, routines and sections. PDP-1 MACRO (Spacewar!), MacLisp (SHRDLU). A new language adds `lang-<name>.js` registering `SWLang[name]`. |
 | `notes.js` | Shared annotation through the bench's Hypothesis group: annotations, replies, reactions, drafts, the bin, links between annotations, codes, What's new, copies kept from ghosts (`from`), tracings, the joining guide, Help ▸ Advanced annotation. Tags carry the bench's prefix (`SW.BENCH.tag`). |
 | `config.example.js` | The settings a bench gives the kit. |
 
@@ -79,6 +82,8 @@ Further settings, used by the modules other than paratexts:
 ```
 
 Annotations: `tag` (the prefix the bench's tags had in Hypothesis before the kit, `sw:` or `sh:`: still read, so annotations made then keep working; new tags are written `bk:` on every bench, and a new bench needs no `tag`). The bench's core should hide `<!-- bk:… -->` data comments in annotation text, as it hides its own. `joinCard` (HTML shown at the top of the joining guide), `annoHelp` (the worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`).
+
+Compare and genealogy: `lang` (`macro`, `maclisp`: load `kit/lang-<lang>.js` before `kit/genealogy.js`), `compare` (`comment`, the comment character for the hover; `normalised`, offer the normalised text; `supplied`, [label, hover] of the supplied-files option; `reading`, the word for building versions), `comparePrefix` (before an export's title), `genealogy` (`set`, the versions first shown; `line`, the line of descent first shown; `lineNames`), `compareDefs` (`label`, `render(el, A, B, h)`, `doc(A, B, r, h)`; conventionally `js/compare-defs.js`).
 
 Findings: `findings` (the list), `findingCats`, `findingsTitle`, `findingsSubtitle`, `findingsIntro` (HTML), `findingsSide` (`crew` or `bench`), `findingsRecheck`; conventionally in the bench's `js/findings-data.js`, loaded before the kit, with its checks in `js/findings-checks.js`, loaded after.
 
