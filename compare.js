@@ -663,9 +663,17 @@
     var maxLines = Math.max.apply(null, ts.map(function (t) { return t.lines.length; }).concat([1]));
     var fitZ = 560 / maxLines;
     function z() { return gst.zoom || fitZ; }
+    // With the code shown, it is drawn only for a window around what is on screen (a screen's
+    // height either side), and drawn again as the chart scrolls out of it.
+    var lastWin = null;
+    function codeWin() {
+      var h = box ? box.clientHeight || 800 : 800, t = box ? box.scrollTop : 0;
+      lastWin = [t - h - 60, t + 2 * h + 60];
+      return lastWin;
+    }
     function flowOpts() {
       var k = z(), code = k >= CODE_AT_G, names = !code && k >= NAMES_AT;
-      return { granularity: gst.gran, perLine: gst.zoom ? k : null, names: names, code: code,
+      return { granularity: gst.gran, perLine: gst.zoom ? k : null, names: names, code: code, codeWindow: code ? codeWin() : null,
                boxWidth: code ? 330 : names ? 130 : 14, colWidth: code ? 450 : names ? 240 : 110 };
     }
     // Whose hand: each box signed (initials in its comments), inherited from
@@ -690,7 +698,7 @@
       if (gst.boxes === 'hand') { o.boxFill = handFill; o.boxTip = handTip; o.extraLegend = handLegend(); }
       return o;
     };
-    var svg = function () { return G.svgAlluvial(ts, fl, flowOpts()); };
+    var svg = function (o) { return G.svgAlluvial(ts, fl, o || flowOpts()); };
     var help = SW.$('#gn-help');
     if (help) help.title = 'Each column is a version in date order; each box a ' + gst.gran + ', stacked in source order with height by length. ' +
       'Ribbons join a ' + gst.gran + ' to its ancestor in the previous column: retained in place, moved, edited (with similarity), and stubs for what is added or dropped. With Detail at forks (the default) they are drawn from the lines themselves: code re-cut between versions forks or joins (a paler ribbon, as wide as the lines it carries), and only ribbons carrying 5 lines and a fifth of a ' + gst.gran + ' are drawn; a small dot on a box lists, in its hover, the few lines that went elsewhere.\n\n' +
@@ -699,9 +707,28 @@
     body.innerHTML = '';
     var zbar = SW.el('div', { class: 'toolbar flow-bar', style: 'position:static;padding-left:0' });
     var box = SW.el('div', { class: 'svgbox flow', style: 'margin-top:4px;max-height:80vh' });
+    var codeTick = 0;
+    box.addEventListener('scroll', function () {
+      if (!lastWin || z() < CODE_AT_G || codeTick) return;
+      codeTick = requestAnimationFrame(function () {
+        codeTick = 0;
+        var h = box.clientHeight, t = box.scrollTop;
+        if (t - h / 2 < lastWin[0] || t + 1.5 * h > lastWin[1]) codeOnly();
+      });
+    }, { passive: true });
     var slider = SW.el('input', { type: 'range', min: '0', max: '100', title: 'Zoom' });
     var readout = SW.el('span', { class: 'hint' });
     slider.style.width = '160px';
+    // the code text alone, for the window now on screen, put in place of what was drawn
+    function codeOnly() {
+      var main = box.querySelectorAll('svg'); main = main[main.length - 1]; if (!main) return drawFlow();
+      var o = flowOpts(); o.codeOnly = true;
+      var str = SW.displaySVG(svg(o)), doc = new DOMParser().parseFromString(str, 'image/svg+xml');
+      Array.prototype.forEach.call(doc.querySelectorAll('g.g-code'), function (g) {
+        var cur = main.querySelector('g.g-code[data-col="' + g.getAttribute('data-col') + '"]');
+        if (cur) cur.replaceWith(document.importNode(g, true));
+      });
+    }
     function drawFlow() {
       box.innerHTML = SW.displaySVG(svg());
       pinLabels(box, ts.map(function (t) { return t.id; }));

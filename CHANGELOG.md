@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.17.2 (2026-10-11)
+
+- Genealogy's Flow, zoomed in far enough to show the code: the code text is drawn only for the part of the chart on screen and a screen either side, and scrolling redraws only that text (the ribbons and boxes stay). At full zoom on a long program the chart had tens of thousands of lines of text, which made the page slow, the About box over it included.
+
 ## 0.17.1 (2026-10-11)
 
 - The About box's Tech stack row, shorter.

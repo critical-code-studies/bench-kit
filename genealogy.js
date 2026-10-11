@@ -736,6 +736,8 @@
     var totalH = Math.max.apply(null, cols.map(function (c) { return c.bottom; })) + 34 + (opts.extraLegend ? 18 : 0);
     var s = svgOpen(W, totalH, 'g-alluvial', opts.title || ('Genealogy flow (' + fl.granularity + ')'));
     // ribbons
+    // opts.codeOnly: only the code text is wanted (the chart redrawing it as it scrolls), so no ribbons
+    if (!opts.codeOnly) {
     s += '<g class="g-ribbons" fill-opacity="0.55">';
     if (opts.forks) fl.steps.forEach(function (st, si) {
       var xa = left + st.from * cw + bw, xb = left + st.to * cw, fk = opts.forks[si];
@@ -828,6 +830,7 @@
       });
     });
     s += '</g>';
+    }
     // columns
     var maxBoxes = opts.maxBoxes || 400;
     fl.units.forEach(function (us, i) {
@@ -851,14 +854,19 @@
         if (opts.names || opts.code) {
           var fs = opts.code ? Math.min(12, Math.max(6, scale - 1.5)) : 10, cpx = fs * 0.6, maxCh = Math.floor((bw - 8) / cpx);
           s += '<clipPath id="gclip' + i + '"><rect x="' + f1(x) + '" y="' + top + '" width="' + bw + '" height="' + f1(c.bottom - top) + '"/></clipPath>' +
-            '<g clip-path="url(#gclip' + i + ')" pointer-events="none" font-size="' + f1(fs) + '" fill="' + COLORS.text + '">';
+            '<g class="g-code" data-col="' + i + '" clip-path="url(#gclip' + i + ')" pointer-events="none" font-size="' + f1(fs) + '" fill="' + COLORS.text + '">';
+          // with opts.codeWindow ([y0, y1], in the chart's own coordinates) the code is written only
+          // for the lines in it: a long program at full zoom is otherwise tens of thousands of texts
+          var cw = opts.code && opts.codeWindow;
           us.forEach(function (u, k) {
             var p = c.pos[k];
             if (opts.code && texts[i].lines) {
+              if (cw && (p.y > cw[1] || p.y + p.h < cw[0])) return;
               for (var j = u.start; j <= u.end; j++) {
                 var L = texts[i].lines[j];
                 if (!L) continue;
                 var ty = p.y + (j - u.start + 0.8) * scale;
+                if (cw && (ty < cw[0] || ty > cw[1])) continue;
                 s += '<text x="' + f1(x + 4) + '" y="' + f1(ty) + '" xml:space="preserve">' + esc(trunc(String(L.raw).replace(/\t/g, '  '), maxCh)) + '</text>';
               }
             } else if (p.h >= 11) {
