@@ -46,3 +46,12 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .gz-tro:hover { border-color: var(--text-dim); }
 .gz-tro .faint { display: block; font-size: 11.5px; }
 .gz-trsub { margin: 6px 0 2px; }
+
+/* The About box (about.js) */
+#dlg-about { max-width: 640px; max-height: 92vh; overflow: auto; }
+.about-head { display: flex; align-items: center; gap: 14px; }
+.about-head h2 { margin: 0; }
+.about-meta { border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+.about-meta td { padding: 4px 8px; border-top: 1px solid var(--line-soft); vertical-align: top; line-height: 1.4; }
+.about-meta td:first-child { color: var(--text-dim); white-space: nowrap; width: 7em; }
+.about-cite { font-family: var(--serif, Georgia, serif); }

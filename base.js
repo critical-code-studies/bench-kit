@@ -15,8 +15,8 @@
 
   SW.state = { v: null, tab: 'read', sel: null, b: null };
   SW.views = {};
-  // The kit's own version, raised with each release (CHANGELOG.md), shown in the About box
-  SW.KIT = { version: '0.10.0', url: 'https://github.com/critical-code-studies/bench-kit' };
+  // The kit's own version, raised with each release (CHANGELOG.md), shown in the About box (about.js)
+  SW.KIT = { version: '0.11.0', url: 'https://github.com/critical-code-studies/bench-kit' };
   // The bench's version: the ?v= on the script tags in index.html (set there for every
   // script), shown beside the title and recorded in exports.
   SW.VERSION = ((document.currentScript && /[?&]v=([^&#]+)/.exec(document.currentScript.src)) || [])[1] || 'dev';
@@ -348,21 +348,6 @@
     if (need === 1 && best.ctx === 0 && (index[src[s0].k] || []).length > 1) return -1;
     return best.st;
   };
-  // ---------- the About box: a row on the kit ----------
-  // Put after the bench's Tech stack row (or last) in its About table (table.about-meta).
-  function aboutKit() {
-    var t = document.querySelector('table.about-meta');
-    if (!t || t.querySelector('tr[data-kit]')) return;
-    var tr = document.createElement('tr'); tr.setAttribute('data-kit', '');
-    tr.innerHTML = '<td>Bench kit</td><td>bench-kit ' + SW.esc(SW.KIT.version) + ', the modules this bench shares with the other critical code studies research benches: ' +
-      'annotation through Hypothesis, My notes, findings, paratexts, compare and genealogy, tracings, settings, tours, figures and export, Markdown and themes. ' +
-      'The bench adds its own texts, readers and views, and its settings (js/config.js). ' +
-      '<a href="' + SW.KIT.url + '" target="_blank" rel="noopener">github.com/critical-code-studies/bench-kit ↗</a></td>';
-    var rows = Array.prototype.slice.call(t.rows), tech = rows.filter(function (r) { return /^Tech stack$/.test(r.cells[0] && r.cells[0].textContent.trim()); })[0];
-    if (tech) tech.insertAdjacentElement('afterend', tr); else (t.tBodies[0] || t).appendChild(tr);
-  }
-  document.addEventListener('DOMContentLoaded', aboutKit);
-
   // ---------- an annotation's hidden marks ----------
   // Closing lines <!-- bk:… -->, and before bench-kit 0.5.0
   // under the bench's own prefix (SW.BENCH.tag: sh:, sw:), still read. rest follows the prefix.

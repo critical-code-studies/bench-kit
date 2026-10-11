@@ -9,6 +9,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `base.js` | The foundation, loaded first: the `SW` object and its helpers (`SW.$`, `SW.el`, `SW.esc`, dates, `SW.store` under the bench's prefix, `SW.on`/`SW.emit`, `SW.toast`), the side panel, popovers, dialogs closed from their backdrop, sorting tables, sharing and copying, the address bar's query, Developer mode, ghost matching, an annotation's earlier wordings and the figures packed into it (`SW.markRE` reads its hidden marks). |
 | `md.js` | Rich text in annotations: Markdown shown and as plain text, rich text back to Markdown, and the note editor (`SW.mdTools`). |
 | `themes.js` | How the bench looks: code text, the hands written into the text, colour schemes and themes, and figures and documents for export. |
+| `about.js` | The About box (`SW.about.open()`): name, author, version and release date (the `bench-date` meta), purpose, tech stack, the kit, what is inside, sources, the catalogue of versions, code and citation, with the welcome tour; the bench's rows from `SW.BENCH.about`. |
 | `paratexts.js` | The Paratexts tab: a private GitHub repository of scans, documents, recordings and links, read and written with each member's own token; collections, Dublin Core, CSL-JSON, RIS and oai_dc export, ratings, comments, side by side, zoom, codes (P-XXXXX). |
 | `guides.js` | Help guides (Paratexts; Codes, links and sharing) in a box over the bench, and `SW.guideAdd(name, [title, sections])` for a bench's own. |
 | `paratexts.css` | Their styles, using the bench's colour tokens. |
@@ -80,6 +81,8 @@ Further settings, used by the modules other than paratexts:
   store: 'shbench.',                 // the prefix of the bench's keys in localStorage (SW.store)
   theme: { label: 'Blocks world', note: '…' },   // the default colour theme's name and description
   accent: { dark: '#e58be0', light: '#a3317a' }, // the accent of figures exported on black and on white
+  about: { icon: '<svg …>', author: 'David M. Berry', citeAuthor: 'Berry, D. M.', purpose: '…', techMore: '…', inside: '…',
+           sources: '…', code: 'https://github.com/…', catalogue: { skip: [], held: 'held as source' } },   // the About box (HTML in purpose, inside, sources)
   hands: [{ k: 'tw', who: 'Terry Winograd', re: /\btw\b/i, colour: '#2a9d6f' }],   // people named in the text
   group: '1Kb3vwEV',                 // the annotation group to use when none is set
   figureNum: { print: '#a3317a', paper: '#a3317a', phosphor: '#e58be0' },   // numbers in figures, per figure theme
