@@ -15,6 +15,9 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `stemma.js` | The stemma of the bench's versions, from `SWVersions`. |
 | `edition.js` | A reading edition of a version, to read, print or save as Word. |
 | `tours.js` | The guided tour; its stops are the bench's (`SW.BENCH.tours`). |
+| `initials.js` | The box that asks for initials (two to four letters) when something is to be signed: `SW.askInitials(why)`, `SW.withInitials(why)`. |
+| `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
+| `kit.css` | Styles for the initials box and Settings. |
 | `config.example.js` | The settings a bench gives the kit. |
 
 ## Using it in a bench
@@ -29,7 +32,10 @@ git submodule add https://github.com/critical-code-studies/bench-kit research/ki
 
 ```html
 <link rel="stylesheet" href="kit/paratexts.css?v=…">
+<link rel="stylesheet" href="kit/kit.css?v=…">
 <script src="js/config.js?v=…"></script>
+<script src="kit/initials.js?v=…"></script>
+<script src="kit/settings.js?v=…"></script>
 …
 <script src="kit/paratexts.js?v=…"></script>
 <script src="kit/guides.js?v=…"></script>
@@ -69,6 +75,8 @@ Further settings, used by the modules other than paratexts:
     files: ['all files', 'Include the support and documentation files']   // the label and hover of that option
   }
 ```
+
+Settings texts (`settings`): `tour` (the hint beside the tour button), `groupHint` (HTML: how the bench's annotation group is set), `groupPlaceholder`, `themeHint`.
 
 `paratexts.tokenName` may set the name given to members' GitHub tokens (by default "<name> research bench").
 

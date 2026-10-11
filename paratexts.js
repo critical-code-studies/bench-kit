@@ -253,7 +253,7 @@
         '<li>Under <b>Repository access</b>, choose <b>Only select repositories</b>, then <b>' + RNAME + '</b>: the one choice the link cannot make. If GitHub asks for a reason, “the ' + BNAME + ' research bench” will do.</li>' +
         '<li><b>Generate token</b>, copy it, and paste it into ⚙ Settings, Paratexts. It stays in this browser only; on another computer, paste it there too.</li></ol>' +
         '<p><button class="btn" data-px="settings">Open ⚙ Settings</button> <button class="btn ghost" data-copy="' + SW.esc(STEPS) + '" title="These steps as text, to send to someone joining the crew">Copy the steps</button></p></div>';
-      body.onclick = function (e) { if (e.target.closest('[data-px="settings"]')) SW.$('#btn-settings') ? SW.$('#btn-settings').click() : null; };
+      body.onclick = function (e) { if (e.target.closest('[data-px="settings"]')) SW.settings ? SW.settings.open('px') : SW.$('#btn-settings') && SW.$('#btn-settings').click(); };
       return;
     }
     body.innerHTML = '<p class="hint">Opening the catalogue…</p>';

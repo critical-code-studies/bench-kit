@@ -35,7 +35,7 @@
 
   // Take the bench to a stop.
   function goTo(s) {
-    if (SW.$('#dlg-settings').open) SW.$('#dlg-settings').close();
+    var sd = SW.$('#dlg-settings'); if (sd && sd.open) sd.close();
     if (SW.$('#dlg-about') && SW.$('#dlg-about').open) SW.$('#dlg-about').close();
     SW.closeDrawer && document.body.classList.contains('drawer-open') && SW.closeDrawer();
     if (s.v && s.v !== SW.state.v) SW.select(s.v);

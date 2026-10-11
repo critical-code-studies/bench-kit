@@ -1,0 +1,23 @@
+/* bench-kit: the initials box and ⚙ Settings. Loaded after the bench's own research.css (whose
+   .settings, .token-row, .check-row, .tour-row, .theme-swatches and .dev-warn styles it builds on). */
+
+/* the initials box */
+dialog.ini-dlg { width: min(92vw, 380px); }
+dialog.ini-dlg .ini-in { text-transform: uppercase; letter-spacing: .08em; width: 7em; }
+dialog.ini-dlg .ini-in::placeholder { text-transform: none; letter-spacing: 0; }
+dialog.ini-dlg .ini-msg:empty { display: none; }
+.ini-need { font: inherit; color: var(--red); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.ini-need:hover { color: var(--text); }
+
+/* ⚙ Settings, in tabs */
+dialog.set-dlg { width: min(94vw, 600px); }
+.set-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); margin: 4px 0 6px; }
+.set-tabs button { font: 500 13px var(--sans); color: var(--text-dim); background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 11px 7px; margin-bottom: -1px; cursor: pointer; }
+.set-tabs button:hover { color: var(--text); }
+.set-tabs button.on { color: var(--text); border-bottom-color: var(--amber); }
+.set-pane { display: grid; gap: 8px; min-height: 300px; align-content: start; }
+.set-pane[hidden] { display: none; }
+.set-pane h2:first-child { margin-top: 2px; }
+.set-pane .row-l { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0; }
+.set-dlg .set-msg { color: var(--red); margin: 0; }
+.set-dlg .set-msg:empty { display: none; }
