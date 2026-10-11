@@ -21,8 +21,8 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `tours.js` | The guided tour; its stops are the bench's (`SW.BENCH.tours`). |
 | `initials.js` | The box that asks for initials (two to four letters) when something is to be signed: `SW.askInitials(why)`, `SW.withInitials(why)`. |
 | `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
-| `kit.css` | Styles for the initials box and Settings. |
-| `functional.js` | A Functional overview of a version, read from the source: where the program starts (`SW.BENCH.entry`) and what it calls, in order; what each file runs as it is loaded; the parts of the program (each file by default) with their routines and entry points; the calls between the parts. `SW.functionalOverview.render(b, el, { inline })`, or the view `functional` on a page with `#view-functional`. For any language by default (routines by `SW.BENCH.routine`, calls as a name and `(`); a bench gives its own reading with `SW.BENCH.functional`: `analyse(b)` (routines, calls and names, what loading runs, which to show), `partOf(b, p)`, `defines(b, ps)`, `label(b, name)`, `note(b)`, `word`, `startTitle`, `startLede(b, e)`, `entry(b)`, `fileLabel(b, p)`, `loadTitle`, `startUpLede`. A bench that can run its program adds `recorded: { label, title, render(b, el) }`: the overview then has two modes, Recorded run and Read from the source, with a switch (`SW.functionalOverview.switchEl(redraw)` for a lens's heading), the choice kept in the browser. Examples: the SHRDLU bench's `js/functional.js` (MacLisp, from its index) and the Spacewar! bench's (PDP-1 MACRO, from the assembled words, beside its recorded overview). |
+| `kit.css` | Styles for the kit's own parts: the initials box, Settings, the About box, tracings, the Functional overview. |
+| `functional.js` | A Functional overview of a version: where the program starts and what it calls, start-up, the parts of the program and the calls between them, read from the source; with a second mode, Recorded run, where the bench can run its program. `SW.functionalOverview.render(b, el, { inline })`, or the view `functional` on a page with `#view-functional`. Its hooks: below. |
 | `findings.js` | Findings: the bench's own (from `SW.BENCH.findings`) and the group's, by category and importance, with the bench's checks (`SW.findings.addCheck`). |
 | `compare.js` | Compare (two versions: text, the bench's second mode, routines) and Genealogy (stemma, flow with forks, tree, lineage). The second mode is the bench's (`SW.BENCH.compareDefs`). |
 | `genealogy.js` | The genealogy engine: matching, matrix, tree, flows, forks, drawing. The text's language comes from an adapter. |
@@ -64,51 +64,96 @@ Each kit module takes the place of the bench file of the same name (`js/tray.js`
 
 To take a newer kit: `git submodule update --remote research/kit`, test, and commit the new pointer. A clone needs `git clone --recurse-submodules` (or `git submodule update --init`). GitHub Pages fetches public submodules when it builds.
 
-## The settings (`SW.BENCH`)
+## What a bench provides
+
+**Versions** (`js/versions.js`, `root.SWVersions`): `VERSIONS` (each `{ id, label, date, sort, authors, fork, status, medium, summary, build: [{ src, role }], parent, witnessOf, also, influence }`; `role` is `program`, `support` or `doc`; a lost version has no `build`), `byId(id)`, `load(v, fetchText)`, `SRC` (where the sources are), `LINES` (lines of descent: `{ id, label, tip, ids }`), `ancestry(id)`, `DIALECTS`, `TRANSFORMS`.
+
+**Builds** (`SW.build(id)`, in the bench's `js/core.js`, a promise): `{ v, parts: [{ src, role, raw }], lines: [[{ p, n, raw, norm }] per file], errorsAt: { 'p:n': [...] }, kind: { 'p:n': 'def' | 'com' | … }, asm }` (`asm` is null where the bench neither assembles nor indexes; Read, the edition and the figures show addresses and words where it holds `byLine`).
+
+**Functions** the kit calls (the bench's `js/core.js` and `js/main.js`): `SW.BASE_URI`, `SW.build`, `SW.parseLine(raw)` (`{ labels, loc, code, comment }`), `SW.lineKey`, `SW.refOf`, `SW.refText`, `SW.refTag`, `SW.nparts`, `SW.cite`, `SW.docMeta(b)`, `SW.oct`, `SW.sourceURL`, `SW.permalinkOf`, `SW.swhidCite`, `SW.openAt`, `SW.select(id)`, `SW.setTab(tab)`, `SW.forget(tab)`, `SW.setTheme(t)`. Used where present: `SW.anLens`, `SW.anLensName`, `SW.openLens`, `SW.openGraphic`, `SW.gfxItem`, `SW.gzQuery`, `SW.tape`, `SW.beam`. `SW.views.read` (the bench's Read) gives `build`, `goto`, and through `readnotes.js` `notesMenu` and `listingDoc`.
+
+**State** (`SW.state`): `v` (the version open), `tab`, `sel` (`{ p, n0, n1 }`), `b` (Compare's other version), `trace` (a tracing to open, from `?tr=`).
+
+**The page** (`index.html`): `#bench-ver`, `#status`, `#toast`, `#btn-settings`, `#btn-news` with `#news-n`, the side panel (`#drawer`, `#drawer-title`, `#drawer-body`), the note dialog (`#dlg-note`: `#note-form`, `#note-title`, `#note-anchor`, `#note-text`, `#note-tags`, `#note-dev`, `#note-who`), and a section for each of the kit's views: `#view-compare`, `#view-genealogy`, `#view-findings`, `#view-notes`, `#view-paratexts`, `#view-functional` (optional). The bench's Read makes `#rd-selbar` and `#rd-notes-mode`. The kit makes its own dialogs (Settings, About, initials, figures, findings). The template's `index.html` has all of these.
+
+## The settings (`SW.BENCH`, the bench's `js/config.js`)
+
+The bench and its files:
 
 ```js
 SW.BENCH = {
   name: 'SHRDLU',                    // as in "the SHRDLU research bench"
-  title: 'SHRDLU Research Bench',
+  title: 'SHRDLU Research Bench',    // the page and the About box
+  slug: 'shrdlu',                    // file names of exports and backups
+  store: 'shbench.',                 // the prefix of the bench's keys in localStorage (SW.store)
+  group: '1Kb3vwEV',                 // the Hypothesis group to use when none is set
   relation: 'SHRDLU, ',              // put before a version's label in Dublin Core relation
   topShare: false,                   // the bench has a share button in its top bar
-  paratexts: { org: 'critical-code-studies', repo: 'shrdlu_paratexts', cache: 'shrdlu-paratexts' },
-  examples: { date: 'e.g. 1971-01-15, or 1971', archive: 'e.g. MIT Museum', versions: 'e.g. mit, stanford',
-              refs: 'e.g. [REF: SHI, plnr.182:120]', publisher: 'e.g. MIT Press', finding: 'F2' }
+  tag: 'sh:',                        // the prefix its tags had before bench-kit 0.5.0 (still read; new tags are bk:). A new bench: 'bk:'
+  // the bench template's core.js also reads base (SW.BASE_URI), repo, ref, refPrefix, forks, start
 };
 ```
 
-Further settings, used by the modules other than paratexts:
+| Setting | Read by | What it is |
+|---|---|---|
+| `about` | `about.js` | The About box's own rows: `icon` (HTML), `author`, `citeAuthor`, `purpose`, `techMore`, `inside`, `sources` (HTML), `code` (the repository), `catalogue: { skip: [ids], held: 'held as source' }`. |
+| `theme` | `themes.js` | The default colour theme's `label` and `note`. |
+| `accent` | `themes.js` | `{ dark, light }`: the accent of figures exported on black and on white. |
+| `hands` | `themes.js`, `compare.js` | People named in the text: `[{ k, who, re, colour }]`. |
+| `figureNum` | `figures.js` | Numbers in figures, by figure theme: `{ print, paper, phosphor }`. |
+| `settings` | `settings.js` | Texts in ⚙ Settings: `tour`, `groupHint` (HTML), `groupPlaceholder`, `themeHint`. |
+| `joinCard` | `notes.js` | HTML at the top of the joining guide. |
+| `annoHelp` | `notes.js` | The worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`. |
+| `paratexts` | `paratexts.js`, `guides.js`, `settings.js` | `{ org, repo, cache, tokenName }`: the private repository of scans and documents, the name of the browser cache, and the name given to members' GitHub tokens (by default "<name> research bench"). |
+| `examples` | `paratexts.js`, `guides.js` | Placeholders in the paratext forms: `date`, `archive`, `versions`, `refs`, `publisher`, `finding`. |
+| `lang` | `genealogy.js`, `compare.js` | The language of the texts: `macro`, `maclisp`, `plain`, or a bench's own (load `kit/lang-<lang>.js` before `kit/genealogy.js`). |
+| `comment`, `routine`, `caseFold` | `lang-plain.js`, `functional.js` | For `lang: 'plain'`: the comment mark (a string or a list), a regular expression for a routine's first line (its name in the first group), case meaning nothing. |
+| `compare` | `compare.js` | `comment` (the comment mark, for the hover), `normalised` (offer the normalised text), `supplied` ([label, hover] of the supplied-files option), `reading` (the word for building versions). |
+| `comparePrefix` | `compare.js` | Before an export's title. |
+| `genealogy` | `compare.js` | `set` (the versions first shown), `line` (the line of descent first shown), `lineNames`. |
+| `compareDefs` | `compare.js` | Compare's second mode (hooks, below). |
+| `stemma` | `stemma.js` | `root` (the first version, lost or not), `lostBetween`, `skip`, `lostOnTrunk`. |
+| `edition` | `edition.js` | The reading edition (hooks, below). |
+| `findings`, `findingCats`, `findingsTitle`, `findingsSubtitle`, `findingsIntro`, `findingsSide`, `findingsRecheck` | `findings.js` | The bench's own findings (below), their categories, the view's texts (`findingsIntro` is HTML), the side shown first (`crew` or `bench`), the hover of Check again. Conventionally in `js/findings-data.js`, loaded before the kit. |
+| `tours`, `tourOffer` | `tours.js` | The guided tours and the offer made on a first visit (below). Conventionally in `js/tour.js`, loaded before the kit. |
+| `entry` | `functional.js` | The routine where the program starts. |
+| `functional` | `functional.js` | The Functional overview's hooks (below). |
 
-```js
-  slug: 'shrdlu',                    // file names (shrdlu-my-notes-…json) and backup kinds
-  store: 'shbench.',                 // the prefix of the bench's keys in localStorage (SW.store)
-  theme: { label: 'Blocks world', note: '…' },   // the default colour theme's name and description
-  accent: { dark: '#e58be0', light: '#a3317a' }, // the accent of figures exported on black and on white
-  about: { icon: '<svg …>', author: 'David M. Berry', citeAuthor: 'Berry, D. M.', purpose: '…', techMore: '…', inside: '…',
-           sources: '…', code: 'https://github.com/…', catalogue: { skip: [], held: 'held as source' } },   // the About box (HTML in purpose, inside, sources)
-  hands: [{ k: 'tw', who: 'Terry Winograd', re: /\btw\b/i, colour: '#2a9d6f' }],   // people named in the text
-  group: '1Kb3vwEV',                 // the annotation group to use when none is set
-  figureNum: { print: '#a3317a', paper: '#a3317a', phosphor: '#e58be0' },   // numbers in figures, per figure theme
-  stemma: { root: 'jan71', lostBetween: {}, skip: [], lostOnTrunk: true },
-  edition: {
-    source: function (p) { return ''; },              // a note after each source file
-    built: function (b) { return ['Read as', '…']; }, // the row saying how the text was read or assembled
-    layout: function (raw, pad) { return raw; },      // a line as set on the page
-    words: false,                                     // offer "addresses & words"
-    files: ['all files', 'Include the support and documentation files']   // the label and hover of that option
-  }
-```
+**Findings** (`findings`): `[{ no, kind, cat, level, title, text, ev }]`; `level` is `key`, `notable` or `minor`; each piece of evidence in `ev` is `{ v, re, label }` (a line found by pattern in a version's text, so it survives renumbering) or `{ v, tab, lens, b, tape, label }` (a view). `findingCats`: `[[id, label, regex]]`, a finding's category being the one whose words it has most of, unless a `cat:` tag sets it.
 
-Annotations: `tag` (the prefix the bench's tags had in Hypothesis before the kit, `sw:` or `sh:`: still read, so annotations made then keep working; new tags are written `bk:` on every bench, and a new bench needs no `tag`). The bench's core should hide `<!-- bk:… -->` data comments in annotation text, as it hides its own. `joinCard` (HTML shown at the top of the joining guide), `annoHelp` (the worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`).
+**Tours** (`tours`): `{ welcome: { title, stops: [{ title, text, v, tab, find, b, lens, graphic, gen, tape, focus }] } }`: each stop's version, view, a pattern for the line to select in Read, Compare's other version, a lens, a graphic, a genealogy view, a tape, and a selector to outline.
 
-Compare and genealogy: `lang` (`macro`, `maclisp`: load `kit/lang-<lang>.js` before `kit/genealogy.js`), `compare` (`comment`, the comment character for the hover; `normalised`, offer the normalised text; `supplied`, [label, hover] of the supplied-files option; `reading`, the word for building versions), `comparePrefix` (before an export's title), `genealogy` (`set`, the versions first shown; `line`, the line of descent first shown; `lineNames`), `compareDefs` (`label`, `render(el, A, B, h)`, `doc(A, B, r, h)`; conventionally `js/compare-defs.js`).
+## Hooks
 
-Findings: `findings` (the list), `findingCats`, `findingsTitle`, `findingsSubtitle`, `findingsIntro` (HTML), `findingsSide` (`crew` or `bench`), `findingsRecheck`; conventionally in the bench's `js/findings-data.js`, loaded before the kit, with its checks in `js/findings-checks.js`, loaded after.
+**The Functional overview** (`SW.BENCH.functional`, every part optional; by default it reads any language by `routine` and calls as a name followed by `(`):
 
-Settings texts (`settings`): `tour` (the hint beside the tour button), `groupHint` (HTML: how the bench's annotation group is set), `groupPlaceholder`, `themeHint`.
+| Hook | What it gives |
+|---|---|
+| `analyse(b)` | The bench's reading: `{ rs: [{ name, p, n, calls: [{ name, line, named }] }], load: [[{ n, text, count }] per file], show(r) }`. `named`: quoted or passed, for something else to call (marked ‘, not counted as a call). `load`: what each file runs as it is loaded. `show`: which routines are listed (the rest only call). |
+| `entry(b)` | The routine where the program starts, where it differs by version (in place of `entry`). |
+| `partOf(b, p)` | `{ id, label, short, colour }`: the part of the program a file belongs to (by default each file is one). |
+| `defines(b, ps)` | Text: what the files `ps` define (in place of the list of their routines). |
+| `label(b, name)` | HTML for a routine's name (a reader's own name for it, a mark). |
+| `fileLabel(b, p)` | How a file is named, where several parts of a build share a file name. |
+| `word` | What a routine is called (`function`). |
+| `startTitle`, `startLede(b, e)` | The first card's title and text. |
+| `loadTitle`, `startUpLede` | The start-up card's column for load and its text. |
+| `note(b)` | HTML under the start, for what the routines alone do not say. |
+| `recorded` | `{ label, title, render(b, el) }`: a view of the program running, for a bench that can run it. The overview then has two modes, the recording first, with a switch; `render` returns a function giving its blocks for export, or null. |
 
-`paratexts.tokenName` may set the name given to members' GitHub tokens (by default "<name> research bench").
+A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline: true })` (the cards go into the lens's grid) and puts `SW.functionalOverview.switchEl(redraw)` in the lens's heading. Examples: the SHRDLU bench's `js/functional.js` (MacLisp, from its index) and the Spacewar! bench's (PDP-1 MACRO, from the assembled words, with the recording of `js/overview.js`).
+
+**Compare's second mode** (`SW.BENCH.compareDefs`): `{ label, render(el, A, B, h), doc(A, B, r, h) }`; `render` draws the two builds' comparison into `el` and returns `{ crow, mrow, srow }`, `doc` gives the export; `h.vl(b)` names a version. Conventionally `js/compare-defs.js`.
+
+**The reading edition** (`SW.BENCH.edition`): `source(p)` (a note after each source file), `built(b)` (the row saying how the text was read or assembled: `[label, text]`), `layout(raw, pad)` (a line as set on the page), `words` (offer addresses and words), `files` ([label, hover] of the option for support and documentation files).
+
+**A language** (`kit/lang-<name>.js`, registering `root.SWLang[name]`): `normalize(s)`, `parseLine(s)` → `{ labels, code, comment, kind }`, `prepareLine(t, p)`, `stem(src)`, `skipPart(part, opts)`, `routineUnits(text, o, h)`, `sectionUnits(text, o, h)` (`h` gives the genealogy's helpers: `headerStart`, `unitsFromStarts`, `words`, `firstWords`). `lang-plain.js` is the shortest example.
+
+**Annotations in Read** (`kit/readnotes.js`): `var K = SW.readNotes({ view, R, opts, isMine, showsTape, filtering, keptLines, tapeInfo, kinBar, selActs })` in the bench's `read.js`, then `K.set({ build })` and `K.set({ notes })` as they change; `selActs()` gives buttons of the bench's own for the selection bar (`[[label, fn]]`), `kinBar` the bench's repairs bar.
+
+**Naming, marking and tracings** (`kit/tracings.js`): `SW.tracings({ ns, render, open(t), link(t), hint })` returns the names, marks, pen, tracing tools and their wiring for a view (`ns` prefixes the stored keys).
+
+**Settings rows**: `SW.settings.add({ tab, html, load(), save() })`, before Settings is first opened. **Findings checks**: `SW.findings.addCheck({ title, run(box), doc() })`, run each time the Bench side is shown and exported with it. **Help guides**: `SW.guideAdd(name, [title, sections])`, opened with `SW.guide(name)`.
 
 ## Changes
 
