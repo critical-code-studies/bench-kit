@@ -22,11 +22,15 @@
                   ['genealogy', 'Genealogy', 'How the versions descend']];
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
+    var ex = (B.refHelp || {}).example;
     return [['Getting started', [['tour', 'Take the welcome tour', 'A few stops through the bench'],
-                                 ['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
-                                 ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
-                                 ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
-                                 ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']]],
+                                 ['refs', 'Referencing and versions', ex ? 'How the bench cites a source, as ' + ex : 'How the bench cites a source']]
+                                .concat(B.reading ? [['reading', 'What you should read', (B.reading || {}).menu || 'The reading behind the bench']] : [])
+                                .concat(B.cards ? [['cards', 'Reconstruction cards', (B.cards || {}).menu || 'What the bench does to each version to read and run it']] : [])
+                                .concat([['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
+                                         ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
+                                         ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
+                                         ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']])],
             ['Your bench', [['settings', 'Settings', 'Initials, group, theme, fonts'],
                             ['backup', 'Back up everything', 'Notes, drafts, settings and findings in one file'],
                             ['restore', 'Restore from a backup…', 'Brings back notes and drafts beside those here']]],

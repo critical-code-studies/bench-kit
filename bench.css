@@ -921,3 +921,48 @@ a.swcode { font-size: .92em; }
 .joinhelp .js-ok.warn { color: var(--amber); }
 .joinhelp .js-ok.err { color: var(--red); }
 @media (max-width: 520px) { .joinhelp .js-form label { grid-template-columns: 1fr; gap: 2px; } }
+
+/* ---------- Help pages (helppages.js): Referencing and versions, What you should read, Reconstruction cards ---------- */
+.refhelp { max-width: 1180px; }
+.refhelp .tray-bighead { display: flex; align-items: center; gap: 8px; }
+.refhelp .tray-bighead > b { flex: 1; white-space: nowrap; }
+.refhelp-ex { font-size: 18px; margin: 6px 0 10px; color: var(--beam); }
+.refhelp h4 { margin: 14px 0 6px; }
+.refhelp-t td { vertical-align: top; }
+.refhelp-t a.ref-more { font-size: 10.5px; white-space: nowrap; }
+.refhelp-t .swhid-row.tiny { font-size: 10px; white-space: nowrap; }
+.refhelp-t .swhid-row.tiny .swhid { font-size: 10px; padding: 0 3px; }
+.swref, .swref-c { cursor: pointer; }
+.swref:hover, .swref-c:hover { color: var(--beam); text-decoration: underline dotted; text-underline-offset: 2px; }
+.refhelp-ports > summary { list-style: none; cursor: pointer; }
+.refhelp-ports > summary::-webkit-details-marker { display: none; }
+.refhelp-ports > summary h4 { display: inline-block; margin: 14px 0 6px; }
+.refhelp-ports > summary h4::before { content: '▸'; display: inline-block; margin-right: 6px; color: var(--text-dim); transition: transform .15s; }
+.refhelp-ports[open] > summary h4::before { transform: rotate(90deg); }
+/* the Copy and Export ▾ buttons beside a page's title */
+.refhelp-acts .card-acts { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.refhelp-acts details { position: relative; }
+.refhelp-acts details > summary { list-style: none; }
+.refhelp-acts details > summary::-webkit-details-marker { display: none; }
+.refhelp-acts .menu-body { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 200px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+.refhelp-acts .menu-body .btn { display: block; width: 100%; text-align: left; }
+ul.reading { padding-left: 1.2em; }
+ul.reading li { margin: 0 0 6px; text-indent: -0.4em; padding-left: 0.4em; }
+ul.reading a { overflow-wrap: anywhere; }
+/* a reconstruction card, in its bench's gold (--kin, or --gold) */
+.kin-card { border: 1px solid var(--kin, var(--gold)); border-left-width: 3px; border-radius: 4px; padding: 10px 14px; margin: 16px 0; background: color-mix(in srgb, var(--kin, var(--gold)) 10%, transparent); }
+.kin-card h3 { color: var(--kin, var(--gold)); margin: 0 0 6px; }
+.kin-card h3 .swref-sm { font-size: 11px; font-weight: 400; color: var(--text-faint); margin-left: 6px; }
+.kin-card .hint { margin: 0 0 8px; }
+.kin-card .kin-t td { font-size: 12.5px; }
+.kin-card .kin-t td:first-child { white-space: nowrap; }
+.kin-card .rp-chip, .kin-key .rp-chip { font: 600 9.5px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; border: 1px solid var(--kin, var(--gold)); color: var(--kin, var(--gold)); margin-left: 0; white-space: nowrap; cursor: help; }
+.kin-card .rp-chip.rp-m-yobitsugi, .kin-key .rp-chip.rp-m-yobitsugi { background: color-mix(in srgb, var(--kin, var(--gold)) 14%, transparent); }
+.kin-card .rp-chip.rp-m-kake, .kin-key .rp-chip.rp-m-kake { background: color-mix(in srgb, var(--kin, var(--gold)) 22%, transparent); }
+.kin-card .rp-chip.rp-m-mount, .kin-key .rp-chip.rp-m-mount { border-color: color-mix(in srgb, var(--kin, var(--gold)) 50%, transparent); color: color-mix(in srgb, var(--kin, var(--gold)) 70%, var(--text-faint)); }
+.kin-card .rp-chip.rp-m-unc, .kin-key .rp-chip.rp-m-unc { border-color: var(--text-faint); color: var(--text-faint); }
+.cardshelp .kin-key { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 16px; font-size: 12.5px; margin: 6px 0 12px; }
+.cardshelp .kin-key div { margin: 3px 0; display: flex; align-items: center; gap: 8px; }
+.kin-pick { display: flex; gap: 6px; align-items: center; margin: 10px 0 0; }
+.kin-pick select { flex: 1; min-width: 0; max-width: 36em; font: 13px var(--mono); padding: 4px 6px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+.kin-pick + .kin-one .kin-card { margin-top: 10px; }

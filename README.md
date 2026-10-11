@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.18.0
+**Version:** 0.19.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -18,6 +18,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `refs.js` | References to the sources (`SW.refOf`, `SW.refText`, `SW.refTag`, `SW.cite`, `SW.nparts`), the files on GitHub (`SW.sourceURL`, `SW.sourceLink`, `SW.permalinkOf`), and their SWHIDs (`SW.swhidOf`, `SW.swhidCite`, `SW.swhidList`, `SW.swhidTiny`, `SW.filesOf`, `SW.ownFilesOf`), from `SW.BENCH.refs`. |
 | `about.js` | The About box (`SW.about.open()`): name, author, version and release date (the `bench-date` meta), purpose, tech stack, the kit, what is inside, sources, the catalogue of versions, code and citation, with the welcome tour; the bench's rows from `SW.BENCH.about`. |
 | `paratexts.js` | The Paratexts tab: a private GitHub repository of scans, documents, recordings and links, read and written with each member's own token; collections, Dublin Core, CSL-JSON, RIS and oai_dc export, ratings, comments, side by side, zoom, codes (P-XXXXX). |
+| `helppages.js` | Three Help pages from the bench's data: Referencing and versions (`SW.refHelp`, `SW.refList`: the form of reference, the versions and ports, to copy or export with their SWHIDs), What you should read (`SW.readingHelp`), and Reconstruction cards (`SW.cardsHelp`, `SW.cardsOne(vid)`, `SW.cardHTML(v, { about })`: what the bench does to each version to read and run it, to copy, export as Word, Markdown, PNG or SVG, or keep in My notes). From `SW.BENCH.refHelp`, `reading` and `cards`. |
 | `guides.js` | Help guides (Paratexts; Codes, links and sharing) in a box over the bench, and `SW.guideAdd(name, [title, sections])` for a bench's own. |
 | `paratexts.css` | Their styles, using the bench's colour tokens. |
 | `export.js` | Word (.docx), Markdown and file downloads (`root.SWExport`). |
@@ -69,6 +70,7 @@ git submodule add https://github.com/critical-code-studies/bench-kit research/ki
 …
 <script src="kit/paratexts.js?v=…"></script>
 <script src="kit/guides.js?v=…"></script>
+<script src="kit/helppages.js?v=…"></script>
 <script src="kit/about.js?v=…"></script>
 <script src="js/main.js?v=…"></script>
 <script src="kit/shell.js?v=…"></script>
@@ -135,6 +137,9 @@ SW.BENCH = {
 | `menus` | `menus.js` | Versions ▾ and Help ▾, and the bench's own menus (hooks, below). |
 | `version` | `version.js` | The bench's rows on This version (hooks, below). |
 | `refs` | `refs.js` | `repo` (or `SW.BENCH.repo`), `dir` (the sources' folder in it, `source`), `names` (`{ version id: short name }`), `prefix` (before a version's id without one), `supplied` (a pattern for the roles of supplied files), `refOf(vid, p, n0, n1, nparts)` (where the bench writes references otherwise). |
+| `refHelp` | `helppages.js`, `menus.js` | Help ▸ Referencing and versions: `example` (a reference in full), `about` (HTML: what each part is), `letters` (`[[letter, witness]]`), `more` (HTML: shorter forms and the rest), `form` (the form in one line, for the list and the export), `versions: { title, hint, all }` (`all`: lost versions too), `ports: { title, head, fold, hint }` (`head`: names for the five columns of `SW.PORTS`). The versions are `SWVersions`, what each text is `SW.MADE`, the ports `SW.PORTS` (`[ref, name, in, where, date, files, [catalogue label, href]]`). |
+| `reading` | `helppages.js`, `menus.js` | Help ▸ What you should read: `intro` (HTML), `groups` (`[[heading, [entry HTML]]]`), `menu` (its line in the Help menu). |
+| `cards` | `helppages.js`, `menus.js` | Help ▸ Reconstruction cards (hooks, below). |
 | `entry` | `functional.js` | The routine where the program starts. |
 | `functional` | `functional.js` | The Functional overview's hooks (below). |
 
@@ -161,6 +166,8 @@ SW.BENCH = {
 | `recorded` | `{ label, title, render(b, el) }`: a view of the program running, for a bench that can run it. The overview then has two modes, the recording first, with a switch; `render` returns a function giving its blocks for export, or null. |
 
 A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline: true })` (the cards go into the lens's grid) and puts `SW.functionalOverview.switchEl(redraw)` in the lens's heading. Examples: the SHRDLU bench's `js/functional.js` (MacLisp, from its index) and the Spacewar! bench's (PDP-1 MACRO, from the assembled words, with the recording of `js/overview.js`).
+
+**Reconstruction cards** (`SW.BENCH.cards`, for a bench that repairs its texts to read or run them, after Berry 2025): `about` (the principle, in plain text), `kinds` (`{ key: [class, label, note] }`, or a function giving them: the kinds of repair, shown as chips; `legend`, the keys in the dialog's key), `head` (`[[key, label]]`: the columns, from `id`, `kind`, `where`, `what`, `why`, `evidence`, `by`; by default where, kind, what, evidence, by), `rows(v)` (the repairs to version `v`, or a promise of them: `{ id, kind, kindNote, where, title, what, why, evidence, by, mono }`), `note(v)` (plain text before the table), `after(v)` (`{ title, head, rows }`: a table after it, such as the machine the version runs on), `empty`, `subtitle`, `menu`. A card on This version: `after: function (v) { return SW.cardHTML(v, { about: true }); }` in `SW.BENCH.version`.
 
 **The frame** (`SW.BENCH.shell`): `views` (the views in the order of the tabs; each has a section `#view-<name>` and registers `SW.views[name] = { show(b), hide(), enter(b) }`), `alias` (old view names: `{ sky: 'graphics' }`), `redraw` (views drawn again when the theme changes), `lang(v)` (`{ text, title }` beside the picker), `versionTitle` (the window's title names the version), `onSelect(b)`, `onTheme(t)`, `query(q)` (the bench's own parts of a link: a lens, a graphic; may set `q.tab`), `help` (`{ name: fn }`: the bench's Help items, opened from Help ▾ and by `&help=name`).
 
