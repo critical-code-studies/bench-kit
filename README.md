@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.16.2
+**Version:** 0.17.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -12,6 +12,10 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `base.js` | The foundation, loaded first: the `SW` object and its helpers (`SW.$`, `SW.el`, `SW.esc`, dates, `SW.store` under the bench's prefix, `SW.on`/`SW.emit`, `SW.toast`), the side panel, popovers, dialogs closed from their backdrop, sorting tables, sharing and copying, the address bar's query, Developer mode, ghost matching, an annotation's earlier wordings and the figures packed into it (`SW.markRE` reads its hidden marks). |
 | `md.js` | Rich text in annotations: Markdown shown and as plain text, rich text back to Markdown, and the note editor (`SW.mdTools`). |
 | `themes.js` | How the bench looks: code text, the hands written into the text, colour schemes and themes, and figures and documents for export. |
+| `shell.js` | The bench's frame, loaded last: start-up, the version picker, the tabs and the views drawn in them, the colour theme, the top bar's buttons, and what a link asks for (`?v=`, `&tab=`, `&l=`, `&b=`, `&a=`, `&code=`, `&help=`, `&tour=`, `&join=`, `&tr=`). `SW.setTab`, `SW.select`, `SW.forget`, `SW.setTheme`, `SW.markTabs`, `SW.help(name)`. The bench's parts from `SW.BENCH.shell`. |
+| `menus.js` | The drop-down menus in the tab row: Versions ▾ and Help ▾, and the bench's own (lenses, graphics), from `SW.BENCH.menus`. |
+| `version.js` | Versions ▸ This version (the view `about`): a version's record, its place in the variorum, its annotations and build log, the bin, every annotation on every version; the bench's own rows from `SW.BENCH.version`. |
+| `refs.js` | References to the sources (`SW.refOf`, `SW.refText`, `SW.refTag`, `SW.cite`, `SW.nparts`), the files on GitHub (`SW.sourceURL`, `SW.sourceLink`, `SW.permalinkOf`), and their SWHIDs (`SW.swhidOf`, `SW.swhidCite`, `SW.swhidList`, `SW.swhidTiny`, `SW.filesOf`, `SW.ownFilesOf`), from `SW.BENCH.refs`. |
 | `about.js` | The About box (`SW.about.open()`): name, author, version and release date (the `bench-date` meta), purpose, tech stack, the kit, what is inside, sources, the catalogue of versions, code and citation, with the welcome tour; the bench's rows from `SW.BENCH.about`. |
 | `paratexts.js` | The Paratexts tab: a private GitHub repository of scans, documents, recordings and links, read and written with each member's own token; collections, Dublin Core, CSL-JSON, RIS and oai_dc export, ratings, comments, side by side, zoom, codes (P-XXXXX). |
 | `guides.js` | Help guides (Paratexts; Codes, links and sharing) in a box over the bench, and `SW.guideAdd(name, [title, sections])` for a bench's own. |
@@ -46,7 +50,7 @@ The kit goes in as a git submodule at `research/kit/`:
 git submodule add https://github.com/critical-code-studies/bench-kit research/kit
 ```
 
-`index.html` loads `kit/base.js` first, then the bench's `config.js`, `kit/md.js` and `kit/themes.js`, then the bench's own `core.js` (its texts, builds and references: `SW.build`, `SW.refOf`, `SW.lineKey`, `SW.docMeta` …, with `root.SWVersions`), then the rest of the kit:
+`index.html` loads `kit/base.js` first, then the bench's `config.js`, `kit/md.js`, `kit/themes.js` and `kit/refs.js`, then the bench's own `core.js` (its texts and builds: `SW.build`, `SW.parseLine`, `SW.lineKey`, `SW.docMeta` …, with `root.SWVersions`), then the rest of the kit and the bench's views, and last the bench's `main.js` (its parts of the frame) and `kit/shell.js`:
 
 ```html
 <link rel="stylesheet" href="kit/paratexts.css?v=…">
@@ -55,12 +59,16 @@ git submodule add https://github.com/critical-code-studies/bench-kit research/ki
 <script src="js/config.js?v=…"></script>
 <script src="kit/md.js?v=…"></script>
 <script src="kit/themes.js?v=…"></script>
+<script src="kit/refs.js?v=…"></script>
 <script src="js/core.js?v=…"></script>
 <script src="kit/initials.js?v=…"></script>
 <script src="kit/settings.js?v=…"></script>
 …
 <script src="kit/paratexts.js?v=…"></script>
 <script src="kit/guides.js?v=…"></script>
+<script src="kit/about.js?v=…"></script>
+<script src="js/main.js?v=…"></script>
+<script src="kit/shell.js?v=…"></script>
 ```
 
 Each kit module takes the place of the bench file of the same name (`js/tray.js` becomes `kit/tray.js`, and so on), in the same position. The bench's tour stops go in its own `js/tour.js`, loaded before `kit/tours.js`.
@@ -73,7 +81,7 @@ To take a newer kit: `git submodule update --remote research/kit`, test, and com
 
 **Builds** (`SW.build(id)`, in the bench's `js/core.js`, a promise): `{ v, parts: [{ src, role, raw }], lines: [[{ p, n, raw, norm }] per file], errorsAt: { 'p:n': [...] }, kind: { 'p:n': 'def' | 'com' | … }, asm }` (`asm` is null where the bench neither assembles nor indexes; Read, the edition and the figures show addresses and words where it holds `byLine`).
 
-**Functions** the kit calls (the bench's `js/core.js` and `js/main.js`): `SW.BASE_URI`, `SW.build`, `SW.parseLine(raw)` (`{ labels, loc, code, comment }`), `SW.lineKey`, `SW.refOf`, `SW.refText`, `SW.refTag`, `SW.nparts`, `SW.cite`, `SW.docMeta(b)`, `SW.oct`, `SW.sourceURL`, `SW.permalinkOf`, `SW.swhidCite`, `SW.openAt`, `SW.select(id)`, `SW.setTab(tab)`, `SW.forget(tab)`, `SW.setTheme(t)`. Used where present: `SW.anLens`, `SW.anLensName`, `SW.openLens`, `SW.openGraphic`, `SW.gfxItem`, `SW.gzQuery`, `SW.tape`, `SW.beam`. `SW.views.read` (the bench's Read) gives `build`, `goto`, and through `readnotes.js` `notesMenu` and `listingDoc`.
+**Functions** the kit calls (the bench's `js/core.js`): `SW.BASE_URI`, `SW.build`, `SW.parseLine(raw)` (`{ labels, loc, code, comment }`), `SW.lineKey`, `SW.docMeta(b)`, `SW.oct`, `SW.openAt`, and `SW.REF` (the versions' short names, where `SW.BENCH.refs.names` does not give them). The references, the frame (`SW.select`, `SW.setTab`, `SW.forget`, `SW.setTheme`) and the menus are the kit's. Used where present: `SW.anLens`, `SW.anLensName`, `SW.openLens`, `SW.openGraphic`, `SW.gfxItem`, `SW.gzQuery`, `SW.tape`, `SW.beam`. `SW.views.read` (the bench's Read) gives `build`, `goto`, and through `readnotes.js` `notesMenu` and `listingDoc`.
 
 **State** (`SW.state`): `v` (the version open), `tab`, `sel` (`{ p, n0, n1 }`), `b` (Compare's other version), `trace` (a tracing to open, from `?tr=`).
 
@@ -119,6 +127,11 @@ SW.BENCH = {
 | `edition` | `edition.js` | The reading edition (hooks, below). |
 | `findings`, `findingCats`, `findingsTitle`, `findingsSubtitle`, `findingsIntro`, `findingsSide`, `findingsRecheck` | `findings.js` | The bench's own findings (below), their categories, the view's texts (`findingsIntro` is HTML), the side shown first (`crew` or `bench`), the hover of Check again. Conventionally in `js/findings-data.js`, loaded before the kit. |
 | `tours`, `tourOffer` | `tours.js` | The guided tours and the offer made on a first visit (below). Conventionally in `js/tour.js`, loaded before the kit. |
+| `forks`, `start` | `shell.js` | The version picker's groups (`[[fork, label]]`, by each version's `fork`) and the version shown first. |
+| `shell` | `shell.js` | The bench's parts of the frame (hooks, below). |
+| `menus` | `menus.js` | Versions ▾ and Help ▾, and the bench's own menus (hooks, below). |
+| `version` | `version.js` | The bench's rows on This version (hooks, below). |
+| `refs` | `refs.js` | `repo` (or `SW.BENCH.repo`), `dir` (the sources' folder in it, `source`), `names` (`{ version id: short name }`), `prefix` (before a version's id without one), `supplied` (a pattern for the roles of supplied files), `refOf(vid, p, n0, n1, nparts)` (where the bench writes references otherwise). |
 | `entry` | `functional.js` | The routine where the program starts. |
 | `functional` | `functional.js` | The Functional overview's hooks (below). |
 
@@ -145,6 +158,12 @@ SW.BENCH = {
 | `recorded` | `{ label, title, render(b, el) }`: a view of the program running, for a bench that can run it. The overview then has two modes, the recording first, with a switch; `render` returns a function giving its blocks for export, or null. |
 
 A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline: true })` (the cards go into the lens's grid) and puts `SW.functionalOverview.switchEl(redraw)` in the lens's heading. Examples: the SHRDLU bench's `js/functional.js` (MacLisp, from its index) and the Spacewar! bench's (PDP-1 MACRO, from the assembled words, with the recording of `js/overview.js`).
+
+**The frame** (`SW.BENCH.shell`): `views` (the views in the order of the tabs; each has a section `#view-<name>` and registers `SW.views[name] = { show(b), hide(), enter(b) }`), `alias` (old view names: `{ sky: 'graphics' }`), `redraw` (views drawn again when the theme changes), `lang(v)` (`{ text, title }` beside the picker), `versionTitle` (the window's title names the version), `onSelect(b)`, `onTheme(t)`, `query(q)` (the bench's own parts of a link: a lens, a graphic; may set `q.tab`), `help` (`{ name: fn }`: the bench's Help items, opened from Help ▾ and by `&help=name`).
+
+**The menus** (`SW.BENCH.menus`): `versions` (`[[pick, label, text]]`), `help` (`[[group, [[pick, label, text]]]]`), `menu(which)` (HTML for a menu of the bench's own, its items buttons with `data-pick`), `pick(which, p)` (true where the bench has handled the pick: a lens, a graphic, a Versions item that is not a view), `on(which, p)` (whether a Versions item that is not a view is open). A Help pick opens the Help item of that name; a Versions pick that is a view goes to it.
+
+**This version** (`SW.BENCH.version`): `rows(b)` (`[[label, html]]` after Date, Authors, Descends from, Status and Survives as: by default the files and how they are read), `after(v)` (HTML after the record), `notesHint` (the text above the version's annotations).
 
 **Compare's second mode** (`SW.BENCH.compareDefs`): `{ label, render(el, A, B, h), doc(A, B, r, h) }`; `render` draws the two builds' comparison into `el` and returns `{ crow, mrow, srow }`, `doc` gives the export; `h.vl(b)` names a version. Conventionally `js/compare-defs.js`.
 
