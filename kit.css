@@ -12,7 +12,7 @@ dialog.ini-dlg .ini-msg:empty { display: none; }
 /* ⚙ Settings, in tabs */
 dialog.set-dlg { width: min(94vw, 600px); }
 .set-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); margin: 4px 0 6px; }
-.set-tabs button { font: 500 13px var(--sans); color: var(--text-dim); background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 11px 7px; margin-bottom: -1px; cursor: pointer; }
+.set-tabs button { font: 500 13px var(--sans); color: var(--text-dim); background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 9px 7px; margin-bottom: -1px; cursor: pointer; white-space: nowrap; }
 .set-tabs button:hover { color: var(--text); }
 .set-tabs button.on { color: var(--text); border-bottom-color: var(--amber); }
 .set-pane { display: grid; gap: 8px; min-height: 300px; align-content: start; }
@@ -21,3 +21,5 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .set-pane .row-l { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0; }
 .set-dlg .set-msg { color: var(--red); margin: 0; }
 .set-dlg .set-msg:empty { display: none; }
+.set-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.set-foot .set-gap { flex: 1; }

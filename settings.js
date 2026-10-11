@@ -19,7 +19,6 @@
     var B = SW.BENCH || {}, ST = B.settings || {}, BP = B.paratexts || {}, esc = SW.esc;
     var d = SW.el('dialog', { id: 'dlg-settings', class: 'set-dlg' });
     d.innerHTML = '<form method="dialog" class="settings">' +
-      '<div class="tour-row"><button type="button" class="btn" id="set-tour">Take the welcome tour</button><span class="hint">' + esc(ST.tour || '') + '</span></div>' +
       '<div class="set-tabs" role="tablist">' + TABS.map(function (t) { return '<button type="button" role="tab" data-st="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
 
       '<section class="set-pane" data-sp="you">' +
@@ -55,7 +54,7 @@
       '<section class="set-pane" data-sp="dev"><p class="dev-warn">Only use if you are developing this software.</p>' +
       '<label class="check-row"><span><input type="checkbox" id="set-dev"> Developer mode</span><span class="hint">Shows annotations marked Developer only, and features still being built. This allows you to see Beta software and may affect your ability to use the software.</span></label>' + rows('dev') + '</section>' +
 
-      '<div class="row"><button value="cancel" class="btn ghost">Cancel</button><button value="save" id="set-save" class="btn">Save</button></div></form>';
+      '<div class="row set-foot"><button type="button" class="btn ghost" id="set-tour" title="' + esc(ST.tour || 'A guided tour of the bench') + '">Take the welcome tour</button><span class="set-gap"></span><button value="cancel" class="btn ghost">Cancel</button><button value="save" id="set-save" class="btn">Save</button></div></form>';
     document.body.appendChild(d);
     // tabs
     function show(t) {

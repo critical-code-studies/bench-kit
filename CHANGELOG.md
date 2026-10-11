@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.3.1 (2026-10-11)
+
+- Settings: the tour button sits at the foot beside Cancel and Save (its note in its hover), so the tabs keep one row in a narrow window.
+
 ## 0.3.0 (2026-10-11)
 
 - `initials.js`: one initials box for every bench, from the two benches' own: two to four letters, capitals as you type, Not now (remembered as `ini.later`), and Save, Not now and Esc finishing it at once rather than on its close event. `SW.withInitials`; any `[data-ask-initials]` button opens it.
