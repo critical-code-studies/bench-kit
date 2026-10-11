@@ -22,8 +22,10 @@
  *   fileLabel(b, p) -> how a file is named (where several parts of a build share a file name)
  *   loadTitle, startUpLede -> the start-up card's column for load and its text (a program that is
  *                    assembled, not loaded form by form, says what it assembles to)
+ *   recorded      -> { label, title, render(b, el) } a view of the program running (a bench that can
+ *                    run it): the overview then has two modes, with a switch (FO.switchEl)
  * SW.functionalOverview.render(b, el, { inline, head }) draws it into el (a bench with lenses calls
- * it from one, inline); a page with a section #view-functional has it as the view 'functional'.
+ * it from one, inline, and puts FO.switchEl(redraw) in the lens's heading); a page with a section #view-functional has it as the view 'functional'.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
@@ -98,20 +100,51 @@
     return { list: list, of: of, grouped: !!H().partOf };
   }
 
+  // ---------- the two modes ----------
+  // A bench that can run its program gives a recorded view (SW.BENCH.functional.recorded:
+  // { label, title, render(b, el) -> a function giving its blocks for export, or null }); the
+  // overview then has two modes, the recording and the reading of the source, the choice kept
+  // in this browser (fo.mode). Without one there is only the reading, and no switch.
+  function rec() { return H().recorded || null; }
+  FO.mode = function () { return rec() && SW.store.get('fo.mode', 'run') === 'run' ? 'run' : 'src'; };
+  // the switch, for a heading (the view's own, or a lens's); redraw is called on a change
+  FO.switchEl = function (redraw) {
+    var R = rec(); if (!R) return null;
+    var m = FO.mode(), w = SW.el('span', { class: 'seg-btns fo-modes' });
+    w.innerHTML = '<button class="btn' + (m === 'run' ? ' on' : '') + '" data-fo="run" title="' + SW.esc(R.title || '') + '">' + SW.esc(R.label || 'Recorded run') + '</button>' +
+      '<button class="btn' + (m === 'src' ? ' on' : '') + '" data-fo="src" title="Read from the source, without running: where the program starts, start-up, the parts and the calls between them">Read from the source</button>';
+    w.addEventListener('click', function (e) { var f = e.target.closest('[data-fo]'); if (f && f.dataset.fo !== FO.mode()) { SW.store.set('fo.mode', f.dataset.fo); redraw(); } });
+    return w;
+  };
+
   // ---------- drawing ----------
   // o.inline: el is a grid of cards already (a lens's), the cards go straight into it, with no
-  // title or export of their own (the lens has them); o.head false: no title or export either
+  // title, switch or export of their own (the lens has them; FO.switchEl gives it the switch);
+  // o.head false: no title or export either. Draws the mode chosen; returns a function giving
+  // its blocks for export, or null.
   FO.render = function (b, view, o) {
     o = o || {};
-    var W = H().word || 'routine', Ws = W + 's';
     view.innerHTML = '';
     if (!view._fo) { view._fo = true; view.addEventListener('click', goClick); }
     var pad = SW.el('div', { class: 'pad', style: 'max-width:none' });
     var head = SW.el('div', { class: 'toolbar', style: 'position:static;padding:0 0 10px' });
-    head.innerHTML = '<b>Functional overview</b> <span class="hint">Read from the source: where the program starts, what each file runs as it loads, the ' + Ws + ' of each part and the calls between them.</span> ' + SW.refTag(b.v.id);
+    var run = FO.mode() === 'run';
+    head.innerHTML = '<b>Functional overview</b> <span class="hint">' + (run ? SW.esc(rec().title || '') : 'Read from the source: where the program starts, what each file runs as it loads, the parts and the calls between them.') + '</span> ';
+    var sw = FO.switchEl(function () { FO.render(b, view, o); }); if (sw) head.appendChild(sw);
+    head.insertAdjacentHTML('beforeend', ' ' + SW.refTag(b.v.id));
     if (o.head !== false && !o.inline) pad.appendChild(head);
     var cards = o.inline ? view : SW.el('div', { class: 'cards' });
     if (!o.inline) { pad.appendChild(cards); view.appendChild(pad); }
+    var blocks = run ? rec().render(b, cards) : source(b, cards);
+    if (blocks && o.head !== false && !o.inline) head.appendChild(SW.exportButtons(function () {
+      return { title: b.v.label + ': functional overview' + (run ? '' : ', read from the source'), meta: SW.docMeta(b), blocks: blocks() };
+    }, B.slug + '-' + b.v.id + '-functional-overview' + (run ? '' : '-source')));
+    return blocks;
+  };
+
+  // the reading of the source, drawn into a grid of cards
+  function source(b, cards) {
+    var W = H().word || 'routine', Ws = W + 's';
     if (!b.v.build) { cards.innerHTML = '<p class="hint">The bench holds no text of ' + SW.esc(b.v.label) + '.</p>'; return null; }
     var A = analyse(b), P = partsOf(b), rows = { start: [], load: [], parts: [], calls: [] };
     function partName(p) { return P.of[p] ? P.of[p].label : fileName(b, p); }
@@ -192,9 +225,8 @@
         SW.tableBlock(What, (P.grouped ? ['Part', 'Files'] : ['File']).concat([H().defines ? 'Defines' : W.charAt(0).toUpperCase() + Ws.slice(1), 'Entry points']), rows.parts),
         SW.tableBlock('Calls between ' + what + ' (distinct calls)', ['Calling', 'Called', 'Calls'], rows.calls)] };
     }
-    head.appendChild(SW.exportButtons(doc, B.slug + '-' + b.v.id + '-functional-overview'));
     return function () { return doc().blocks; };
-  };
+  }
 
   // a name or line clicked: to it in Read
   function goClick(ev) {
