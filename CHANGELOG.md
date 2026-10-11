@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.20.0 (2026-10-12)
+
+- `lenses.js`: the Analyse view, from the benches' own copies. The heading (the lens menu, This version or across the versions, the description and the reference), the export menu, the lens menus in the tab row and the Versions items that open a lens, `&lens=` in a link, the Functional overview and a name's history as lenses; the lenses themselves stay the bench's (`SW.BENCH.lenses`).
+- `bench.css`: the Analyse view's heading and the lens menus.
+
 ## 0.19.0 (2026-10-12)
 
 - `helppages.js`: Help ▸ Referencing and versions, What you should read and Reconstruction cards, from the benches' own copies, drawn from the bench's data (`SW.BENCH.refHelp`, `reading`, `cards`). The versions table links each text on GitHub and gives its SWHIDs wherever the bench has them; a card can be copied, exported as Word, Markdown, PNG or SVG, or kept in My notes as text or as a figure, on every bench. The Help menu and links (`&help=refs`, `reading`, `cards`) open them.

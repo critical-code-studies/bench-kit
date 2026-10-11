@@ -1,13 +1,14 @@
 /*
  * menus.js - the drop-down menus in the tab row: a button in #tabs with data-menu="<name>" opens
  * a menu under it (a click outside, or Esc, closes it). Versions and Help are the kit's; the
- * bench's own (lenses on the code, graphics) it draws itself. From SW.BENCH.menus:
+ * lenses' menus are kit/lenses.js's (SW.BENCH.lenses.menus); the bench's own (graphics) it draws
+ * itself. From SW.BENCH.menus:
  *   versions          [[pick, label, text]]: Versions ▾ (by default This version, Compare,
  *                     Genealogy); a pick that is a view goes to it
  *   help              [[group, [[pick, label, text]]]]: Help ▾, its groups (by default the
  *                     template's); a pick opens the Help item of that name (SW.help, kit/shell.js)
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
- *   pick(which, p)    a pick the bench handles itself (a lens, a graphic, a Versions item that
+ *   pick(which, p)    a pick the bench handles itself (a graphic, a Versions item that
  *                     is not a view); true when it has
  *   on(which, p)      whether a Versions item is the one open, where it is not a view
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -52,13 +53,15 @@
       }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }
     if (which === 'versions') return (H().versions || VERSIONS).map(function (h) {
-      var on = H().on && H().on(which, h[0]); if (on == null) on = SW.state.tab === h[0];
+      var on = H().on && H().on(which, h[0]); if (on == null && SW.lenses) on = SW.lenses.on(which, h[0]); if (on == null) on = SW.state.tab === h[0];
       return item(h, on);
     }).join('');
+    var lm = SW.lenses ? SW.lenses.menuHTML(which) : null; if (lm != null) return lm;   // kit/lenses.js
     return H().menu ? H().menu(which) || '' : '';
   }
   function pick(which, p) {
     if (H().pick && H().pick(which, p)) return;
+    if (SW.lenses && SW.lenses.pick(which, p)) return;
     if (which === 'help') { SW.help(p); return; }
     if (which === 'versions') SW.setTab(p);
   }

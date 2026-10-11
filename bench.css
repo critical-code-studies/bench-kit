@@ -966,3 +966,16 @@ ul.reading a { overflow-wrap: anywhere; }
 .kin-pick { display: flex; gap: 6px; align-items: center; margin: 10px 0 0; }
 .kin-pick select { flex: 1; min-width: 0; max-width: 36em; font: 13px var(--mono); padding: 4px 6px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
 .kin-pick + .kin-one .kin-card { margin-top: 10px; }
+
+/* ---------- the Analyse view (lenses.js): its heading and the lens menus ---------- */
+.an-head { flex-wrap: nowrap; gap: 8px; }
+.an-head .an-desc { font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lens-menu > summary { font-weight: 600; }
+.lens-g h5 { margin: 8px 6px 2px; font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-faint); }
+.an-title { font-size: 15px; margin-right: 6px; }
+.lens-menu .menu-body .menu-group { font-size: 10.5px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-faint); padding: 6px 8px 2px; grid-column: 1 / -1; }
+.lens-menu .menu-body .menu-rule { border: 0; border-top: 1px solid var(--line-soft); margin: 4px 2px; width: auto; grid-column: 1 / -1; }
+.tab-menu, .toolbar .menu-body, .lens-menu .menu-body { background: var(--menu-bg); border-color: var(--menu-line); box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.25); }
+.tab-menu .menu-group, .lens-menu .menu-body .menu-group, .lens-list .lens-g > h5 { background: none; color: var(--text-faint); font-weight: 400; padding: 6px 8px 2px; margin: 0; border-radius: 0; }
+.tab-menu .menu-rule, .lens-menu .menu-body .menu-rule { border: 0; border-top: 1px solid var(--menu-line); margin: 5px 4px; }
+.lens-list .lens-g + .lens-g { border-top: 1px solid var(--menu-line); margin-top: 5px; padding-top: 3px; }

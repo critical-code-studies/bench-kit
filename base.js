@@ -16,7 +16,7 @@
   SW.state = { v: null, tab: 'read', sel: null, b: null };
   SW.views = {};
   // The kit's own version, raised with each release (CHANGELOG.md), shown in the About box (about.js)
-  SW.KIT = { version: '0.19.0', url: 'https://github.com/critical-code-studies/bench-kit' };
+  SW.KIT = { version: '0.20.0', url: 'https://github.com/critical-code-studies/bench-kit' };
   // The bench's version: the ?v= on the script tags in index.html (set there for every
   // script), shown beside the title and recorded in exports.
   SW.VERSION = ((document.currentScript && /[?&]v=([^&#]+)/.exec(document.currentScript.src)) || [])[1] || 'dev';
