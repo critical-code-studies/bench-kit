@@ -18,6 +18,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `initials.js` | The box that asks for initials (two to four letters) when something is to be signed: `SW.askInitials(why)`, `SW.withInitials(why)`. |
 | `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
 | `kit.css` | Styles for the initials box and Settings. |
+| `findings.js` | Findings: the bench's own (from `SW.BENCH.findings`) and the group's, by category and importance, with the bench's checks (`SW.findings.addCheck`). |
 | `notes.js` | Shared annotation through the bench's Hypothesis group: annotations, replies, reactions, drafts, the bin, links between annotations, codes, What's new, copies kept from ghosts (`from`), tracings, the joining guide, Help ▸ Advanced annotation. Tags carry the bench's prefix (`SW.BENCH.tag`). |
 | `config.example.js` | The settings a bench gives the kit. |
 
@@ -78,6 +79,8 @@ Further settings, used by the modules other than paratexts:
 ```
 
 Annotations: `tag` (the prefix the bench's tags had in Hypothesis before the kit, `sw:` or `sh:`: still read, so annotations made then keep working; new tags are written `bk:` on every bench, and a new bench needs no `tag`). The bench's core should hide `<!-- bk:… -->` data comments in annotation text, as it hides its own. `joinCard` (HTML shown at the top of the joining guide), `annoHelp` (the worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`).
+
+Findings: `findings` (the list), `findingCats`, `findingsTitle`, `findingsSubtitle`, `findingsIntro` (HTML), `findingsSide` (`crew` or `bench`), `findingsRecheck`; conventionally in the bench's `js/findings-data.js`, loaded before the kit, with its checks in `js/findings-checks.js`, loaded after.
 
 Settings texts (`settings`): `tour` (the hint beside the tour button), `groupHint` (HTML: how the bench's annotation group is set), `groupPlaceholder`, `themeHint`.
 
