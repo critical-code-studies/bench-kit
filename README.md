@@ -18,6 +18,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `initials.js` | The box that asks for initials (two to four letters) when something is to be signed: `SW.askInitials(why)`, `SW.withInitials(why)`. |
 | `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
 | `kit.css` | Styles for the initials box and Settings. |
+| `notes.js` | Shared annotation through the bench's Hypothesis group: annotations, replies, reactions, drafts, the bin, links between annotations, codes, What's new, copies kept from ghosts (`from`), tracings, the joining guide, Help ▸ Advanced annotation. Tags carry the bench's prefix (`SW.BENCH.tag`). |
 | `config.example.js` | The settings a bench gives the kit. |
 
 ## Using it in a bench
@@ -75,6 +76,8 @@ Further settings, used by the modules other than paratexts:
     files: ['all files', 'Include the support and documentation files']   // the label and hover of that option
   }
 ```
+
+Annotations: `tag` (the prefix of the bench's tags in Hypothesis: `sw:`, `sh:`; never change it for a bench in use, or its annotations are no longer read), `joinCard` (HTML shown at the top of the joining guide), `annoHelp` (the worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`).
 
 Settings texts (`settings`): `tour` (the hint beside the tour button), `groupHint` (HTML: how the bench's annotation group is set), `groupPlaceholder`, `themeHint`.
 

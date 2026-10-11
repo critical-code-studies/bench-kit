@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.4.0 (2026-10-11)
+
+- `notes.js`, from the Spacewar! bench 1.18.42, reading the bench's tag prefix, name, default group, invitation card and Help examples from `SW.BENCH`. The SHRDLU bench gains Spacewar!'s: copies kept from ghosts tracked by their original (`from`), so a ghost returns when its copy is deleted; tracings shared through the group; the bench's own marks (level:, note:, cat:, chapter:) kept out of the edit box and kept on saving, and shown in words (`SW.tagLabel`, defined here when the bench has none).
+- Where initials are missing, the annotation and reply boxes offer the initials box (`data-ask-initials`).
+
 ## 0.3.1 (2026-10-11)
 
 - Settings: the tour button sits at the foot beside Cancel and Save (its note in its hover), so the tabs keep one row in a narrow window.
