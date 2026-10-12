@@ -1,29 +1,29 @@
 # Changelog: bench-kit
 
-## 0.32.0 (2026-10-13)
+## 0.32.0 (2026-10-12)
 
 - `tools/sitemap.js` and `sitemap.js`: a bench's `sitemap.html`, made from the bench as it runs in headless Chrome: the tab row, each menu with its headings (lenses, graphics, Versions, Help), every version with its reference, Read, Run and Record, its files and scans on GitHub, and a closing list for reading without the bench. Settings in `SW.BENCH.sitemap` (`site`, `sitePages`, `intro`, `opens`, `files`, `lost`, `links`). No packages: Node 22 and Chrome.
 - `tools/release.js`: the closing hint names the files it changed (`git add …`), the kit and a README outside the bench's folder among them.
 
-## 0.31.1 (2026-10-13)
+## 0.31.1 (2026-10-12)
 
 - `tools/release.js`: tags are fetched with `--force`, so a tag moved in the kit's repository (as v0.25.0 was) is taken rather than stopping the release; git's own message is shown when a git step fails.
 
-## 0.31.0 (2026-10-13)
+## 0.31.0 (2026-10-12)
 
 - `tests/run.js` runs the kit's tests in a bench's tests page (`T.group`, `T.eq`, `T.yes`, `T.later` for checks that fetch), loading the kit modules they need; a bench's `tests/annotations.html` loads it in place of `tests/annotations.test.js`.
 - `tests/kit.test.js`: 37 checks of the version list, the bench's own versions and references, builds, Help menu changes, the beam, octal and a name's pop-up.
 - `tools/release.js`: a bench's release in one command (`next "What changed." --kit <tag>`), with `--check`, `--dry-run` and `--no-changelog`.
 - `menus.js`: `SW.helpList()`, the Help menu as the bench has it.
 
-## 0.30.0 (2026-10-13)
+## 0.30.0 (2026-10-12)
 
 - `tests/annotations.test.js`: the annotation tests the benches each held, with the bench's values (a link, a non-ASCII phrase, a line and its key) in its own `tests/annotations.test.js` as `window.BENCH_TESTS`, and its old tag prefix from `SW.BENCH.tag`.
 - `base.js` makes the side panel, the annotate dialog and the toast after the page's `<main>`, where every bench had the same markup; the tags' example is `SW.BENCH.tagsHint`.
 - `bench.css`: the KWIC lens, the Key's text colours, page-break marks, small bars (`.ov-bar`), the repairs bar and chips and the repair flash, the shading of annotated lines, and the small-screen rules, from the benches' stylesheets.
 - `figures.js`: `SW.beam(s)`, from the benches' `core.js`.
 
-## 0.29.0 (2026-10-13)
+## 0.29.0 (2026-10-12)
 
 - `versionlist.js`: a bench's list of versions from its records, in the browser and Node: links, descent (`parent`, `witness`, `also`, `influence`), `byId`, `ancestry`, the lines of descent, and a default `load` (each file as held; documentation not indexed as code), from each bench's `js/versions.js`, which now keeps its records and calls `SWVersionList({ … })`. Load it before the bench's `js/versions.js`.
 - `read.js`: `SW.symbolRefs(b, s, o)`, the list in a name's pop-up of where it is defined and used (`o.file`, `o.width`).
