@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.29.0
+**Version:** 0.30.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -27,7 +27,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `paratexts.css` | Their styles, using the bench's colour tokens. |
 | `export.js` | Word (.docx), Markdown and file downloads (`root.SWExport`). |
 | `tray.js` | My notes: notes, figures and excerpts gathered for writing, shared to Findings, exported; backup and restore of the bench. |
-| `figures.js` | Figures of code and of the screen, as SVG and PNG. |
+| `figures.js` | Figures of code and of the screen, as SVG and PNG; `SW.beam(s)`, a display intensity as an opacity (a bench may set its own). |
 | `stemma.js` | The stemma of the bench's versions, from `SWVersions`. |
 | `edition.js` | A reading edition of a version, to read, print or save as Word. |
 | `tours.js` | The guided tour; its stops are the bench's (`SW.BENCH.tours`). |
@@ -101,7 +101,7 @@ To take a newer kit: `git submodule update --remote research/kit`, test, and com
 
 **State** (`SW.state`): `v` (the version open), `tab`, `sel` (`{ p, n0, n1 }`), `b` (Compare's other version), `trace` (a tracing to open, from `?tr=`).
 
-**The page** (`index.html`): `#bench-ver`, `#status`, `#toast`, `#btn-settings`, `#btn-news` with `#news-n`, the side panel (`#drawer`, `#drawer-title`, `#drawer-body`), the note dialog (`#dlg-note`: `#note-form`, `#note-title`, `#note-anchor`, `#note-text`, `#note-tags`, `#note-dev`, `#note-who`), and a section for each of the kit's views: `#view-compare`, `#view-genealogy`, `#view-findings`, `#view-notes`, `#view-paratexts`, `#view-functional` (optional). The bench's Read makes `#rd-selbar` and `#rd-notes-mode`. The kit makes its own dialogs (Settings, About, initials, figures, findings). The template's `index.html` has all of these.
+**The page** (`index.html`): `#bench-ver`, `#status`, `#btn-settings`, `#btn-news` with `#news-n`, and a section for each of the kit's views: `#view-compare`, `#view-genealogy`, `#view-findings`, `#view-notes`, `#view-paratexts`, `#view-functional` (optional). The bench's Read makes `#rd-selbar` and `#rd-notes-mode`. The kit makes the side panel (`#drawer`), the annotate dialog (`#dlg-note`, its tags' example from `SW.BENCH.tagsHint`) and the toast (`#toast`), after the page's `<main>`, and its own dialogs (Settings, About, initials, figures, findings). The template's `index.html` has all of these.
 
 ## The settings (`SW.BENCH`, the bench's `js/config.js`)
 
@@ -130,6 +130,7 @@ SW.BENCH = {
 | `figureNum` | `figures.js` | Numbers in figures, by figure theme: `{ print, paper, phosphor }`. |
 | `settings` | `settings.js` | Texts in ⚙ Settings: `tour`, `groupHint` (HTML), `groupPlaceholder`, `themeHint`. |
 | `joinCard` | `notes.js` | HTML at the top of the joining guide. |
+| `tagsHint` | `shell.js` | Examples of tags, shown in the annotate dialog's Tags field. |
 | `annoHelp` | `notes.js` | The worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`. |
 | `paratexts` | `paratexts.js`, `guides.js`, `settings.js` | `{ org, repo, cache, tokenName }`: the private repository of scans and documents, the name of the browser cache, and the name given to members' GitHub tokens (by default "<name> research bench"). |
 | `examples` | `paratexts.js`, `guides.js` | Placeholders in the paratext forms: `date`, `archive`, `versions`, `refs`, `publisher`, `finding`. |
@@ -208,6 +209,10 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 **Naming, marking and tracings** (`kit/tracings.js`): `SW.tracings({ ns, render, open(t), link(t), hint })` returns the names, marks, pen, tracing tools and their wiring for a view (`ns` prefixes the stored keys).
 
 **Settings rows**: `SW.settings.add({ tab, html, load(), save() })`, before Settings is first opened. **Findings checks**: `SW.findings.addCheck({ title, run(box), doc() })`, run each time the Bench side is shown and exported with it. **Help guides**: `SW.guideAdd(name, [title, sections])`, opened with `SW.guide(name)`.
+
+## Tests
+
+`tests/annotations.test.js` checks the annotation system's pure parts. A bench runs it from its own `tests/annotations.html`, after its values (`window.BENCH_TESTS = { link: { v, l, name }, text, lineKey }` in its `tests/annotations.test.js`); the template has both.
 
 ## Licence
 

@@ -16,12 +16,35 @@
   SW.state = { v: null, tab: 'read', sel: null, b: null };
   SW.views = {};
   // The kit's own version, raised with each release (CHANGELOG.md), shown in the About box (about.js)
-  SW.KIT = { version: '0.29.0', url: 'https://github.com/critical-code-studies/bench-kit' };
+  SW.KIT = { version: '0.30.0', url: 'https://github.com/critical-code-studies/bench-kit' };
   // The bench's version: the ?v= on the script tags in index.html (set there for every
   // script), shown beside the title and recorded in exports.
   SW.VERSION = ((document.currentScript && /[?&]v=([^&#]+)/.exec(document.currentScript.src)) || [])[1] || 'dev';
   var verEl = document.getElementById('bench-ver');
   if (verEl) { verEl.textContent = 'v' + SW.VERSION; verEl.title = 'Research bench version ' + SW.VERSION; }
+
+  // The parts of the page every bench has, after its <main>: the side panel, the annotate
+  // dialog (its tags' example from SW.BENCH.tagsHint, set by kit/shell.js) and the toast.
+  if (!document.getElementById('drawer')) {
+    var frameHTML =
+      '<aside class="drawer" id="drawer" aria-label="Details">' +
+        '<div class="drawer-head"><h2 id="drawer-title">Annotations</h2><button class="icon-btn" id="drawer-close" title="Close">✕</button></div>' +
+        '<div class="drawer-body" id="drawer-body"></div>' +
+      '</aside>' +
+      '<dialog id="dlg-note" data-keep><form method="dialog" class="settings" id="note-form">' +
+        '<h2 id="note-title">Annotate</h2>' +
+        '<p class="keep-hint" hidden>Unsaved annotation. Save it, or Cancel to discard it.</p>' +
+        '<p class="hint" id="note-anchor"></p>' +
+        '<textarea id="note-text" rows="7" placeholder="Your annotation. Markdown is fine."></textarea>' +
+        '<label>Tags <input id="note-tags" placeholder="e.g. provenance, revision" autocomplete="off"></label>' +
+        '<label class="check-row dev-check" id="note-dev" hidden><span><input type="checkbox"> Developer only</span></label>' +
+        '<p class="hint" id="note-who"></p>' +
+        '<div class="row"><button value="cancel" class="btn ghost">Cancel</button><button value="save" class="btn">Save annotation</button></div>' +
+      '</form></dialog>' +
+      '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
+    var mainEl = document.querySelector('main');
+    if (mainEl) mainEl.insertAdjacentHTML('afterend', frameHTML); else document.body.insertAdjacentHTML('beforeend', frameHTML);
+  }
 
   // ---------- small helpers ----------
   SW.$ = function (sel, el) { return (el || document).querySelector(sel); };

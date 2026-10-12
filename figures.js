@@ -5,6 +5,12 @@
 (function (root) {
   'use strict';
   var SW = root.SW;
+
+  // The beam's brightness for a display intensity s (-4 to 3: DEC's order 4 5 6 7 0 1 2 3,
+  // PDP-35-2): 4 is seen by a photomultiplier only, 7 barely, 0 is normal, 3 brightest.
+  // As an opacity: 0 for s = -4, 0.62 for s = 0. A bench may set its own after this.
+  var BEAM = [0, 0.12, 0.22, 0.34, 0.62, 0.75, 0.88, 1];
+  SW.beam = function (s) { s = s == null ? 0 : s; return BEAM[Math.max(-4, Math.min(3, s)) + 4]; };
   var F = SW.figures = {};
 
   // the colour of numbers in a figure, per figure theme (the bench's accent)

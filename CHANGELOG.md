@@ -1,5 +1,12 @@
 # Changelog: bench-kit
 
+## 0.30.0 (2026-10-13)
+
+- `tests/annotations.test.js`: the annotation tests the benches each held, with the bench's values (a link, a non-ASCII phrase, a line and its key) in its own `tests/annotations.test.js` as `window.BENCH_TESTS`, and its old tag prefix from `SW.BENCH.tag`.
+- `base.js` makes the side panel, the annotate dialog and the toast after the page's `<main>`, where every bench had the same markup; the tags' example is `SW.BENCH.tagsHint`.
+- `bench.css`: the KWIC lens, the Key's text colours, page-break marks, small bars (`.ov-bar`), the repairs bar and chips and the repair flash, the shading of annotated lines, and the small-screen rules, from the benches' stylesheets.
+- `figures.js`: `SW.beam(s)`, from the benches' `core.js`.
+
 ## 0.29.0 (2026-10-13)
 
 - `versionlist.js`: a bench's list of versions from its records, in the browser and Node: links, descent (`parent`, `witness`, `also`, `influence`), `byId`, `ancestry`, the lines of descent, and a default `load` (each file as held; documentation not indexed as code), from each bench's `js/versions.js`, which now keeps its records and calls `SWVersionList({ … })`. Load it before the bench's `js/versions.js`.

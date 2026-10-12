@@ -22,6 +22,7 @@
   var SW = root.SW, V = root.SWVersions, B = SW.BENCH;
   function H() { return B.shell || {}; }
   function ORDER() { return H().views || ['read']; }
+  if (B.tagsHint) SW.$('#note-tags').placeholder = B.tagsHint;
 
   function fillPicker() {
     var sel = SW.$('#pick-a');
