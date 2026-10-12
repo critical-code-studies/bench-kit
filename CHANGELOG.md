@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.34.1 (2026-10-12)
+
+- `paratexts.js`: PDFs are opened with `isEvalSupported: false`. PDF.js 3.11.174 can be made to run a crafted PDF's script through its font handling (CVE-2024-4367, fixed in PDF.js 4.2.67), in the page that holds the reader's Hypothesis and GitHub tokens; this turns that path off without changing how PDFs are drawn. Moving to PDF.js 4.10.38 (ES modules) is left for a later release.
+
 ## 0.34.0 (2026-10-12)
 
 - `tests/run.js` loads the bench's scripts from its `index.html` (all but `kit/shell.js`) and draws the page's heading, summary and list; a bench's `tests/annotations.html` is now its values and the runner, and its script list no longer repeats the page's. A script that fails to load is reported by name.

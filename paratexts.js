@@ -679,8 +679,11 @@
     zoomBox(pv, it.title, '<button class="btn ghost" data-zz="fit" title="Fit (0)">Fit</button><button class="btn ghost" data-zz="one" title="Actual size, a pixel of the scan to a pixel of the screen">1:1</button>',
       'Drag to move; wheel or pinch to zoom where the pointer is; double-click to zoom in.').show(u);
   }
-  // PDF.js (Mozilla), fetched from cdnjs the first time a PDF is opened
+  // PDF.js (Mozilla), fetched from cdnjs the first time a PDF is opened. Documents are opened with
+  // isEvalSupported false: 3.11.174 can be made to run a crafted PDF's script through its font code
+  // (CVE-2024-4367, fixed in 4.2.67), and this turns that path off.
   var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/', pdfjsP = null;
+  function pdfOpen(lib, u) { return lib.getDocument({ url: u, isEvalSupported: false }).promise; }
   function pdfjs() {
     if (!pdfjsP) pdfjsP = new Promise(function (ok, no) {
       if (root.pdfjsLib) { ok(root.pdfjsLib); return; }
@@ -722,7 +725,7 @@
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
       if (e.key === 'PageDown') { e.preventDefault(); page(n + 1); } else if (e.key === 'PageUp') { e.preventDefault(); page(n - 1); }
     });
-    pdfjs().then(function (lib) { return lib.getDocument(u).promise; }).then(function (d) { doc = d; page(1); }, function (e) {
+    pdfjs().then(function (lib) { return pdfOpen(lib, u); }).then(function (d) { doc = d; page(1); }, function (e) {
       pn.textContent = '';
       zone.innerHTML = '<p class="hint" style="padding:12px">The PDF could not be drawn here (' + esc(e.message) + '). Open ↗ shows it in the browser\'s own viewer.</p>';
     });
@@ -982,7 +985,7 @@
         } else if (it.kind === 'pdf') {   // a page at a time, drawn as a picture (PDF.js)
           box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false"><div class="px-cover"></div>'; v.img = SW.$('img', box);
           v.img.onload = function () { v.laid = 0; place(v); };
-          pdfjs().then(function (lib) { return lib.getDocument(u).promise; }).then(function (doc) { v.doc = doc; turn(v, 1); }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; v.img = null; });
+          pdfjs().then(function (lib) { return pdfOpen(lib, u); }).then(function (doc) { v.doc = doc; turn(v, 1); }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; v.img = null; });
         }
         else if (/^text\//.test(it.mime || '')) { box.classList.add('px-free'); fetch(u).then(function (r) { return r.text(); }).then(function (t) { box.innerHTML = '<pre class="px-text">' + esc(t) + '</pre>'; }); }
         else box.innerHTML = '<p class="hint">No preview for this kind of file.</p>';
