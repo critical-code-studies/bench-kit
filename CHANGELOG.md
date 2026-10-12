@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.37.1 (2026-10-12)
+
+- `versionlist.js`: a line of descent may list its versions (`ids`, in order) in place of a `tip`, where no descent is known: the ELIZA bench's DOCTOR copies, two tapes printed the same day and not ordered.
+
 ## 0.37.0 (2026-10-12)
 
 - `lang-mad.js` reads FAP decks (a label, the operation, its address, a comment; * for a comment card), decks headed by a sequence number, and remark and continuation marks in column 11, 12 or 13; the genealogy reads a FAP deck's lines as FAP. For SLIP, under ELIZA.

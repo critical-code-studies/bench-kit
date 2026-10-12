@@ -13,7 +13,8 @@
  *     parent       { id: id }: the version each was made from
  *     witness      { id: id }: another copy or reading of a version, not a step of its own
  *     also         { id: [id] }: other versions it draws on; influence the same, more loosely
- *     lines        [{ id, label, tip }]: the lines of descent, each to its last version
+ *     lines        [{ id, label, tip }]: the lines of descent, each to its last version; or
+ *                  { id, label, ids }: versions in the order given, where no descent is known
  *     load(v, fetchText, splitLines, fetchBytes)   by default each file read as it is held,
  *                  documentation ('doc') shown but not indexed as code
  *     findTitle(lines)   the line a file's text begins on (1 by default)
@@ -57,7 +58,8 @@
       return chain;
     }
     var LINES = o.lines || [];
-    LINES.forEach(function (l) { l.ids = ancestry(l.tip); });
+    // a line is its tip's ancestry, or the versions it lists (ids), where the descent is not known
+    LINES.forEach(function (l) { l.ids = l.ids ? l.ids.slice() : ancestry(l.tip); });
 
     function load(v, fetchText) {
       if (!v.build) return Promise.resolve({ version: v, parts: [], files: [] });
