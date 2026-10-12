@@ -206,6 +206,10 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 
 **Settings rows**: `SW.settings.add({ tab, html, load(), save() })`, before Settings is first opened. **Findings checks**: `SW.findings.addCheck({ title, run(box), doc() })`, run each time the Bench side is shown and exported with it. **Help guides**: `SW.guideAdd(name, [title, sections])`, opened with `SW.guide(name)`.
 
+## Licence
+
+GNU Affero General Public License v3.0: see [`LICENSE`](LICENSE).
+
 ## Changes
 
 The kit's own changes are in `CHANGELOG.md`. A change is made here first; each bench then takes it by moving its submodule.
