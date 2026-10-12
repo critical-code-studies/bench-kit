@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.26.0 (2026-10-12)
+
+- `themes.css`: the six colour themes (paper, white, sepia, green, amber, contrast), the type (`--mono`, `--sans`, `--serif`, `--code-font`, `--code-size`), the menus' panel, gold (`--gold`, `--gold-bg`), the annotation marks (`--anno-line`, `--anno-block`) and the genealogy figures' colour schemes (`data-gpal`), from the benches' own `css/research.css`. The accent in each theme is the template's; a bench changes any token of a theme by repeating its selector. Load it after `kit/bench.css`, before the bench's `css/research.css`, which keeps its default colours on `:root`.
+
 ## 0.25.0 (2026-10-12)
 
 - `builds.js`: fetching (`SW.fetchText`, `SW.fetchBytes`), the cache of builds (`SW.build(id, extra)`, `SW.current()`), opening a version at a line (`SW.openAt`), an export's details (`SW.docMeta`) and `SW.oct`, from the benches' own `core.js`. The bench says how a version is read: `SW.builds({ read(v, L, extra), split, key(v, extra), meta(b) })`. Load it after `kit/refs.js`, before the bench's `js/core.js`.

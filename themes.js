@@ -68,7 +68,8 @@
   };
 
   // ---------- colour themes ----------
-  // Each is a set of CSS custom properties (css/research.css, :root[data-theme]).
+  // Each is a set of CSS custom properties (kit/themes.css, :root[data-theme]; a bench's
+  // css/research.css may change any of them).
   // 'dark' says whether its ground is dark, for figures that draw their own. The first is the
   // bench's own, named by SW.BENCH.theme { label, note }.
   SW.THEMES = [

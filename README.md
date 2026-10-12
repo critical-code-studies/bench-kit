@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.25.0
+**Version:** 0.26.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -32,7 +32,8 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `tours.js` | The guided tour; its stops are the bench's (`SW.BENCH.tours`). |
 | `initials.js` | The box that asks for initials (two to four letters) when something is to be signed: `SW.askInitials(why)`, `SW.withInitials(why)`. |
 | `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
-| `bench.css` | The styles every bench shares: the frame (top bar, tabs, views, dialogs, menus, the side panel) and the kit's views. Loaded before the bench's own `css/research.css`, which sets the colours (the custom properties on `:root`, and the themes) and its own parts, and can override any rule here. |
+| `bench.css` | The styles every bench shares: the frame (top bar, tabs, views, dialogs, menus, the side panel) and the kit's views. Loaded before `themes.css` and the bench's own `css/research.css`, which sets the bench's default colours (the custom properties on `:root`) and its own parts, and can override any rule here. |
+| `themes.css` | The colour themes offered in Settings (listing paper, white, sepia, green and amber terminal, high contrast) as sets of custom properties, with the type, the menus' panel, gold, the annotation marks and the genealogy figures' colour schemes. A bench changes a token of a theme by repeating its selector in `css/research.css` (Spacewar sets its own accent: `--amber`, `--hl`, `--noted-bg`). |
 | `kit.css` | Styles for the kit's own parts: the initials box, Settings, the About box, tracings, the Functional overview. |
 | `functional.js` | A Functional overview of a version: where the program starts and what it calls, start-up, the parts of the program and the calls between them, read from the source; with a second mode, Recorded run, where the bench can run its program. `SW.functionalOverview.render(b, el, { inline })`, or the view `functional` on a page with `#view-functional`. Its hooks: below. |
 | `findings.js` | Findings: the bench's own (from `SW.BENCH.findings`) and the group's, by category and importance, with the bench's checks (`SW.findings.addCheck`). |
@@ -61,6 +62,7 @@ git submodule add https://github.com/critical-code-studies/bench-kit research/ki
 
 ```html
 <link rel="stylesheet" href="kit/bench.css?v=…">
+<link rel="stylesheet" href="kit/themes.css?v=…">
 <link rel="stylesheet" href="css/research.css?v=…">
 <link rel="stylesheet" href="kit/paratexts.css?v=…">
 <link rel="stylesheet" href="kit/kit.css?v=…">
