@@ -53,15 +53,19 @@ async function withBench(o, fn) {
   const port = server.address().port, dport = 9300 + Math.floor(Math.random() * 600);
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-tool-'));
   const ch = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--user-data-dir=' + prof,
-    '--remote-debugging-port=' + dport, '--window-size=' + (o.size || '1440,900')].concat(process.env.CI ? ['--no-sandbox'] : [], ['about:blank']), { stdio: 'ignore' });
+    '--remote-debugging-port=' + dport, '--window-size=' + (o.size || '1440,900')].concat(process.env.CI ? ['--no-sandbox'] : [], ['about:blank']), { stdio: ['ignore', 'ignore', 'pipe'] });
+  let chromeErr = '', exited = null;
+  ch.stderr.on('data', (d) => { chromeErr = (chromeErr + d).slice(-2000); });
+  ch.on('exit', (code) => { exited = code; });
   const cleanup = () => { try { ch.kill('SIGKILL'); } catch (e) {} server.close(); try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) {} };
   try {
     let ws = null;
-    for (let i = 0; i < 60 && !ws; i++) {
+    // a fresh CI machine can take a while over Chrome's first start
+    for (let i = 0; i < 240 && !ws && exited === null; i++) {
       try { const pg = (await (await fetch('http://127.0.0.1:' + dport + '/json')).json()).find((t) => t.type === 'page'); if (pg) ws = new WebSocket(pg.webSocketDebuggerUrl); }
       catch (e) { await sleep(250); }
     }
-    if (!ws) throw new Error('Chrome did not start');
+    if (!ws) throw new Error('Chrome did not start' + (exited !== null ? ' (it exited, code ' + exited + ')' : ' within a minute') + (chromeErr.trim() ? ': ' + chromeErr.trim().split('\n').slice(-3).join(' / ') : ''));
     let id = 0; const pending = {}, errors = [];
     ws.onmessage = (m) => {
       const d = JSON.parse(m.data);

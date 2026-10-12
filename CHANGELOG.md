@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.35.1 (2026-10-12)
+
+- `tools/chrome.js`: up to a minute for Chrome to start (a fresh GitHub machine took longer than the 15 seconds allowed), and when it does not, Chrome's own last words.
+
 ## 0.35.0 (2026-10-12)
 
 - `tools/test.js`: a bench's test pages run in headless Chrome, with each page's count and every failure printed; exits 1 on a failure. For GitHub Actions and for use by hand.
