@@ -623,13 +623,17 @@
     pv.innerHTML = zoomBar(extra) + '<div class="px-zoom px-zone"><img alt="' + esc(alt) + '" draggable="false"></div><p class="hint px-zhint">' + hint + '</p>';
     var box = SW.$('.px-zone', pv), img = SW.$('img', box), pc = SW.$('.px-zpc', pv), w = 0, h = 0, st = { z: 1, cx: 0.5, cy: 0.5 };
     function fitSc() { return Math.min(box.clientWidth / w, box.clientHeight / h); }
+    // the picture laid out once at its fitted size; a zoom or a move is a transform alone, drawn at
+    // most once a frame (sizing a large picture at each step made both lag)
+    var laid = 0, raf = 0;
     function place() {
       if (!w || !box.clientWidth) return;
-      var W = box.clientWidth, H = box.clientHeight, sc = fitSc() * st.z;
-      img.style.width = w * sc + 'px'; img.style.height = h * sc + 'px';
-      img.style.transform = 'translate(' + (W / 2 - st.cx * w * sc) + 'px,' + (H / 2 - st.cy * h * sc) + 'px)';
+      var W = box.clientWidth, H = box.clientHeight, f = fitSc(), sc = f * st.z;
+      if (laid !== w * f) { laid = w * f; img.style.width = w * f + 'px'; img.style.height = h * f + 'px'; }
+      img.style.transform = 'translate(' + (W / 2 - st.cx * w * sc) + 'px,' + (H / 2 - st.cy * h * sc) + 'px) scale(' + st.z + ')';
       pc.textContent = Math.round(sc * 100) + '%';
     }
+    function soon() { if (!raf) raf = requestAnimationFrame(function () { raf = 0; place(); }); }
     function zoomAt(f, mx, my) {
       if (!w) return;
       var W = box.clientWidth, H = box.clientHeight, sc = fitSc() * st.z;
@@ -637,7 +641,7 @@
       var px = st.cx + (mx - W / 2) / (w * sc), py = st.cy + (my - H / 2) / (h * sc);
       st.z = Math.max(0.5, Math.min(40, st.z * f)); var sc2 = fitSc() * st.z;
       st.cx = px - (mx - W / 2) / (w * sc2); st.cy = py - (my - H / 2) / (h * sc2);
-      place();
+      soon();
     }
     function fit() { st = { z: 1, cx: 0.5, cy: 0.5 }; place(); }
     var size = null;   // the picture's size where it is not its pixels (a PDF page's own, in points)
@@ -650,11 +654,13 @@
     box.addEventListener('wheel', function (e) { e.preventDefault(); var rc = box.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0025)), e.clientX - rc.left, e.clientY - rc.top); }, { passive: false });
     box.addEventListener('dblclick', function (e) { var rc = box.getBoundingClientRect(); zoomAt(2, e.clientX - rc.left, e.clientY - rc.top); });
     var drag = null, over = false;
-    box.addEventListener('pointerdown', function (e) { if (e.button) return; drag = { x: e.clientX, y: e.clientY }; box.setPointerCapture(e.pointerId); box.classList.add('dragging'); });
+    // a drag moves the picture, and selects nothing (the browser's blue selection)
+    box.addEventListener('selectstart', function (e) { e.preventDefault(); });
+    box.addEventListener('pointerdown', function (e) { if (e.button) return; e.preventDefault(); drag = { x: e.clientX, y: e.clientY }; box.setPointerCapture(e.pointerId); box.classList.add('dragging'); });
     box.addEventListener('pointermove', function (e) {
       if (!drag || !w) return;
       var sc = fitSc() * st.z; st.cx -= (e.clientX - drag.x) / (w * sc); st.cy -= (e.clientY - drag.y) / (h * sc);
-      drag = { x: e.clientX, y: e.clientY }; place();
+      drag = { x: e.clientX, y: e.clientY }; soon();
     });
     box.addEventListener('pointerup', function () { drag = null; box.classList.remove('dragging'); });
     box.addEventListener('pointerenter', function () { over = true; });
@@ -666,7 +672,7 @@
     }
     if (dlg) { dlg.addEventListener('keydown', key); dlg.addEventListener('close', function () { window.removeEventListener('resize', place); }); }
     window.addEventListener('resize', place);
-    return { show: function (src, sz) { st = { z: 1, cx: 0.5, cy: 0.5 }; size = sz || null; img.src = src; } };
+    return { show: function (src, sz) { st = { z: 1, cx: 0.5, cy: 0.5 }; size = sz || null; laid = 0; img.src = src; } };
   }
   function zoomImage(it, pv, u) {
     zoomBox(pv, it.title, '<button class="btn ghost" data-zz="fit" title="Fit (0)">Fit</button><button class="btn ghost" data-zz="one" title="Actual size, a pixel of the scan to a pixel of the screen">1:1</button>',
@@ -974,7 +980,7 @@
           v.img.src = u;
         } else if (it.kind === 'pdf') {   // a page at a time, drawn as a picture (PDF.js)
           box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false">'; v.img = SW.$('img', box);
-          v.img.onload = function () { place(v); };
+          v.img.onload = function () { v.laid = 0; place(v); };
           pdfjs().then(function (lib) { return lib.getDocument(u).promise; }).then(function (doc) { v.doc = doc; turn(v, 1); }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; v.img = null; });
         }
         else if (/^text\//.test(it.mime || '')) { box.classList.add('px-free'); fetch(u).then(function (r) { return r.text(); }).then(function (t) { box.innerHTML = '<pre class="px-text">' + esc(t) + '</pre>'; }); }
@@ -990,13 +996,16 @@
       pdfPicture(v.doc, v.n, v.box.clientWidth).then(function (pic) { if (v.url) URL.revokeObjectURL(v.url); v.url = pic.url; v.w = pic.w; v.h = pic.h; v.img.src = pic.url; });
     }
     function cur(v) { return linked ? st : v.st; }
+    // laid out once at its fitted size, then moved and zoomed by a transform, at most once a frame
     function place(v) {
       if (!v.img || !v.w) return;
-      var W = v.box.clientWidth, H = v.box.clientHeight, s0 = cur(v), sc = Math.min(W / v.w, H / v.h) * s0.z;
-      v.img.style.width = v.w * sc + 'px'; v.img.style.height = v.h * sc + 'px';
-      v.img.style.transform = 'translate(' + (W / 2 - s0.cx * v.w * sc) + 'px,' + (H / 2 - s0.cy * v.h * sc) + 'px)';
+      var W = v.box.clientWidth, H = v.box.clientHeight, s0 = cur(v), f = Math.min(W / v.w, H / v.h), sc = f * s0.z;
+      if (v.laid !== v.w * f) { v.laid = v.w * f; v.img.style.width = v.w * f + 'px'; v.img.style.height = v.h * f + 'px'; }
+      v.img.style.transform = 'translate(' + (W / 2 - s0.cx * v.w * sc) + 'px,' + (H / 2 - s0.cy * v.h * sc) + 'px) scale(' + s0.z + ')';
     }
     function all() { views.forEach(place); }
+    var raf = 0;
+    function soon(v) { if (!raf) raf = requestAnimationFrame(function () { raf = 0; if (linked || !v) all(); else place(v); }); }
     function zoomAt(v, f, mx, my) {   // zoom by f, keeping the point under (mx, my) where it is
       if (!v.img || !v.w) return;
       var s0 = cur(v), W = v.box.clientWidth, H = v.box.clientHeight, fit = Math.min(W / v.w, H / v.h), sc = fit * s0.z;
@@ -1004,7 +1013,7 @@
       var px = s0.cx + (mx - W / 2) / (v.w * sc), py = s0.cy + (my - H / 2) / (v.h * sc);
       s0.z = Math.max(0.5, Math.min(40, s0.z * f)); var sc2 = fit * s0.z;
       s0.cx = px - (mx - W / 2) / (v.w * sc2); s0.cy = py - (my - H / 2) / (v.h * sc2);
-      linked ? all() : place(v);
+      soon(linked ? null : v);
     }
     function fit() { st = { z: 1, cx: 0.5, cy: 0.5 }; views.forEach(function (v) { v.st = { z: 1, cx: 0.5, cy: 0.5 }; }); all(); }
     function paneOf(t) { var p = t.closest && t.closest('.px-pane'); return p ? views[+p.dataset.i] : null; }
@@ -1035,13 +1044,14 @@
     }, { passive: false });
     d.addEventListener('dblclick', function (e) { var v = paneOf(e.target); if (!v || !v.img) return; var r = v.box.getBoundingClientRect(); zoomAt(v, 2, e.clientX - r.left, e.clientY - r.top); });
     var drag = null;
-    d.addEventListener('pointerdown', function (e) { var v = paneOf(e.target); if (!v || !v.img || e.button || !v.box.contains(e.target)) return; drag = { v: v, x: e.clientX, y: e.clientY }; v.box.setPointerCapture(e.pointerId); v.box.classList.add('dragging'); });
+    d.addEventListener('selectstart', function (e) { if (paneOf(e.target) && e.target.closest('.px-zoom')) e.preventDefault(); });
+    d.addEventListener('pointerdown', function (e) { var v = paneOf(e.target); if (!v || !v.img || e.button || !v.box.contains(e.target)) return; e.preventDefault(); drag = { v: v, x: e.clientX, y: e.clientY }; v.box.setPointerCapture(e.pointerId); v.box.classList.add('dragging'); });
     d.addEventListener('pointermove', function (e) {
       if (!drag) return;
       var v = drag.v, s0 = cur(v), sc = Math.min(v.box.clientWidth / v.w, v.box.clientHeight / v.h) * s0.z;
       s0.cx -= (e.clientX - drag.x) / (v.w * sc); s0.cy -= (e.clientY - drag.y) / (v.h * sc);
       drag.x = e.clientX; drag.y = e.clientY;
-      linked ? all() : place(v);
+      soon(linked ? null : v);
     });
     d.addEventListener('pointerup', function () { if (drag) drag.v.box.classList.remove('dragging'); drag = null; });
     d.addEventListener('keydown', function (e) {

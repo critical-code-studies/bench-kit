@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.24.2 (2026-10-12)
+
+- Paratexts, a picture or a PDF page, alone or side by side: zooming and dragging are smooth (the picture laid out once at its fitted size, then moved and zoomed by a transform, at most once a frame), and a drag no longer selects (the blue box).
+
 ## 0.24.1 (2026-10-12)
 
 - Paratexts side by side: a PDF is drawn a page at a time too (PDF.js), so that it zooms and moves as a picture does, with the other pane when Together is on; ‹ › in each PDF's heading for its pages, and Page Up and Down for every PDF shown, each kept at the same zoom and place on the page.
