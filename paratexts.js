@@ -608,8 +608,9 @@
   }
   // Zoom in a single item's box. A picture: a bar (− ＋ Fit 1:1 and the scale), the wheel or a
   // pinch zooming where the pointer is, a double-click zooming in, a drag moving it, and the keys
-  // + − 0 while the pointer is over it. A PDF: − ＋ and Fit page or width, given to the browser's
-  // own viewer by the address (#zoom=, #view=), the frame made again at each step.
+  // + − 0 while the pointer is over it. A PDF: Fit page or width, given to the browser's own viewer
+  // by the address (#view=), and − ＋, the frame made wider or narrower than the box; the frame is
+  // made again at each step.
   function zoomBar(extra) {
     return '<div class="px-zbar"><button class="btn ghost" data-zz="out" title="Zoom out (−)">−</button><span class="px-zpc mono">100%</span><button class="btn ghost" data-zz="in" title="Zoom in (+)">＋</button>' +
       extra + '</div>';
@@ -671,9 +672,12 @@
     pv.innerHTML = zoomBar('<button class="btn ghost" data-zz="page" title="The whole page">Fit page</button><button class="btn ghost" data-zz="width" title="The page across the width">Fit width</button><a class="btn ghost" href="' + u + '" target="_blank" rel="noopener" title="In a tab of its own, with the browser\'s own tools">Open ↗</a>') +
       '<div class="px-pdfbox"></div>';
     var box = SW.$('.px-pdfbox', pv), pc = SW.$('.px-zpc', pv);
+    // a zoom is the frame made wider than the box (the page fitted to its width, the box scrolling
+    // across), not the viewer's own #zoom=, which browsers' PDF viewers do not all honour
     function frame() {
-      var frag = mode === 'page' ? '#view=Fit' : mode === 'width' ? '#view=FitH' : '#zoom=' + steps[z];
+      var frag = mode === 'page' ? '#view=Fit' : '#view=FitH';
       box.innerHTML = '<iframe class="px-pdf" title="' + esc(it.title) + '" src="' + u + frag + '"></iframe>';
+      if (mode === 'zoom') box.firstChild.style.width = steps[z] + '%';
       pc.textContent = mode === 'page' ? 'page' : mode === 'width' ? 'width' : steps[z] + '%';
     }
     pv.addEventListener('click', function (e) {

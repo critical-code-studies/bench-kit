@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.23.1 (2026-10-12)
+
+- Paratexts: zooming a PDF (− ＋) makes its frame wider or narrower than the box, the page fitted to the frame's width and the box scrolling across, in place of the viewer's own `#zoom=`, which the browser's PDF viewer no longer honoured. Fit page and Fit width are as before.
+
 ## 0.23.0 (2026-10-12)
 
 - `kintsugi.js`: the repairs in Read, from the benches' own copies: the ◆ ‹ › stepper, the repairs bar and its list, Only the repaired lines, My notes, Copy, the cards, View ▸ Repairs (gold), the squiggle and its measuring. The bench gives its repairs as stops, its marks, and its own buttons on the bar (`SW.kintsugi(cfg)`, given to `SW.readView` as `repairs`).
