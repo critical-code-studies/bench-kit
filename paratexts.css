@@ -158,6 +158,7 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-zoom { position: relative; height: 72vh; overflow: hidden; background: var(--bg); border-radius: 6px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .px-zoom.dragging { cursor: grabbing; }
 .px-zoom img { position: absolute; left: 0; top: 0; transform-origin: 0 0; max-width: none; user-select: none; -webkit-user-drag: none; }
+.px-zoom .px-cover { position: absolute; inset: 0; }   /* over the picture: a drag moves it, and Live Text cannot select in it */
 .px-zoom.px-free { cursor: auto; overflow: auto; touch-action: auto; }
 .px-zoom.px-free .px-pdf { height: 100%; }
 .px-sbs .refhelp-acts .check { font-size: 13px; margin-right: 6px; }

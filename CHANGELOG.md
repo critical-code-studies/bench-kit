@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.24.3 (2026-10-12)
+
+- Paratexts: a drag over a picture or a PDF page no longer selects the words the system finds in it (Live Text, the blue boxes): a transparent cover over the picture takes the pointer.
+
 ## 0.24.2 (2026-10-12)
 
 - Paratexts, a picture or a PDF page, alone or side by side: zooming and dragging are smooth (the picture laid out once at its fitted size, then moved and zoomed by a transform, at most once a frame), and a drag no longer selects (the blue box).

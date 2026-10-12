@@ -620,7 +620,7 @@
   function zoomBox(pv, alt, extra, hint) {
     var esc = SW.esc;
     pv.classList.add('px-zwrap');
-    pv.innerHTML = zoomBar(extra) + '<div class="px-zoom px-zone"><img alt="' + esc(alt) + '" draggable="false"></div><p class="hint px-zhint">' + hint + '</p>';
+    pv.innerHTML = zoomBar(extra) + '<div class="px-zoom px-zone"><img alt="' + esc(alt) + '" draggable="false"><div class="px-cover"></div></div><p class="hint px-zhint">' + hint + '</p>';
     var box = SW.$('.px-zone', pv), img = SW.$('img', box), pc = SW.$('.px-zpc', pv), w = 0, h = 0, st = { z: 1, cx: 0.5, cy: 0.5 };
     function fitSc() { return Math.min(box.clientWidth / w, box.clientHeight / h); }
     // the picture laid out once at its fitted size; a zoom or a move is a transform alone, drawn at
@@ -654,7 +654,8 @@
     box.addEventListener('wheel', function (e) { e.preventDefault(); var rc = box.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0025)), e.clientX - rc.left, e.clientY - rc.top); }, { passive: false });
     box.addEventListener('dblclick', function (e) { var rc = box.getBoundingClientRect(); zoomAt(2, e.clientX - rc.left, e.clientY - rc.top); });
     var drag = null, over = false;
-    // a drag moves the picture, and selects nothing (the browser's blue selection)
+    // a drag moves the picture, and selects nothing: not the page's text, and not the words the
+    // system finds in a picture (Live Text), which a cover over the picture keeps the pointer from
     box.addEventListener('selectstart', function (e) { e.preventDefault(); });
     box.addEventListener('pointerdown', function (e) { if (e.button) return; e.preventDefault(); drag = { x: e.clientX, y: e.clientY }; box.setPointerCapture(e.pointerId); box.classList.add('dragging'); });
     box.addEventListener('pointermove', function (e) {
@@ -975,11 +976,11 @@
       var v = { box: box, img: null, w: 0, h: 0, st: { z: 1, cx: 0.5, cy: 0.5 } };
       blobOf(it).then(function (u) {
         if (it.kind === 'image') {
-          box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false">'; v.img = SW.$('img', box);
+          box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false"><div class="px-cover"></div>'; v.img = SW.$('img', box);
           v.img.onload = function () { v.w = v.img.naturalWidth; v.h = v.img.naturalHeight; place(v); };
           v.img.src = u;
         } else if (it.kind === 'pdf') {   // a page at a time, drawn as a picture (PDF.js)
-          box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false">'; v.img = SW.$('img', box);
+          box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false"><div class="px-cover"></div>'; v.img = SW.$('img', box);
           v.img.onload = function () { v.laid = 0; place(v); };
           pdfjs().then(function (lib) { return lib.getDocument(u).promise; }).then(function (doc) { v.doc = doc; turn(v, 1); }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; v.img = null; });
         }
