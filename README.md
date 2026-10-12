@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.30.0
+**Version:** 0.31.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -190,7 +190,7 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 
 **The frame** (`SW.BENCH.shell`): `views` (the views in the order of the tabs; each has a section `#view-<name>` and registers `SW.views[name] = { show(b), hide(), enter(b) }`), `alias` (old view names: `{ sky: 'graphics' }`), `redraw` (views drawn again when the theme changes), `lang(v)` (`{ text, title }` beside the picker), `versionTitle` (the window's title names the version), `onSelect(b)`, `onTheme(t)`, `query(q)` (the bench's own parts of a link: a lens, a graphic; may set `q.tab`), `help` (`{ name: fn }`: the bench's Help items, opened from Help ▾ and by `&help=name`).
 
-**The menus** (`SW.BENCH.menus`): `versions` (`[[pick, label, text]]`), `help` (Help ▾: changes to the kit's list, `{ text: { pick: text }, add: [[where, item]], drop: [pick] }`, where an item `[pick, label, text]` goes after the item picked as `where` or first in the group named `where`, and an item given as a pick alone moves the kit's item there; or the whole list, `[[group, [[pick, label, text]]]]`), `menu(which)` (HTML for a menu of the bench's own, its items buttons with `data-pick`), `pick(which, p)` (true where the bench has handled the pick: a lens, a graphic, a Versions item that is not a view), `on(which, p)` (whether a Versions item that is not a view is open). A Help pick opens the Help item of that name; a Versions pick that is a view goes to it.
+**The menus** (`SW.BENCH.menus`): `versions` (`[[pick, label, text]]`), `help` (Help ▾: changes to the kit's list, `{ text: { pick: text }, add: [[where, item]], drop: [pick] }`, where an item `[pick, label, text]` goes after the item picked as `where` or first in the group named `where`, and an item given as a pick alone moves the kit's item there; or the whole list, `[[group, [[pick, label, text]]]]`; `SW.helpList()` gives the list as the bench has it), `menu(which)` (HTML for a menu of the bench's own, its items buttons with `data-pick`), `pick(which, p)` (true where the bench has handled the pick: a lens, a graphic, a Versions item that is not a view), `on(which, p)` (whether a Versions item that is not a view is open). A Help pick opens the Help item of that name; a Versions pick that is a view goes to it.
 
 **This version** (`SW.BENCH.version`): `rows(b)` (`[[label, html]]` after Date, Authors, Descends from, Status and Survives as: by default the files and how they are read), `after(v)` (HTML after the record), `notesHint` (the text above the version's annotations).
 
@@ -212,7 +212,15 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 
 ## Tests
 
-`tests/annotations.test.js` checks the annotation system's pure parts. A bench runs it from its own `tests/annotations.html`, after its values (`window.BENCH_TESTS = { link: { v, l, name }, text, lineKey }` in its `tests/annotations.test.js`); the template has both.
+A bench's `tests/annotations.html` loads its scripts and its values (`window.BENCH_TESTS = { link: { v, l, name }, text, lineKey }`, in its `tests/annotations.test.js`), then the kit's `tests/run.js`, which runs the kit's tests and reports. `tests/annotations.test.js` checks the annotation system's pure parts (Markdown, links, ghosts, open and resolved, mentions); `tests/kit.test.js` checks the version list (on a made-up list, and the bench's own for consistency: ids, descent, chains, lines, files, references), builds (the bench's first version with files, fetched), changes to the Help menu, the beam, octal and a name's pop-up. A new test file goes in `tests/` and in run.js's list; the benches need no change. The template has the page and the values.
+
+## Tools
+
+`tools/release.js` makes a bench's release, run from the bench's repository: the version raised on every script and stylesheet in its pages, a line in its changelog, its README's version, and the kit moved to a release (`--kit v0.31.0`); it stops on conflict markers, pages that disagree, or a kit with changes not in a release, and leaves committing to you. `--check` reports without changing anything, `--dry-run` says what it would do, `--no-changelog` leaves a changelog kept in groups.
+
+```bash
+node research/kit/tools/release.js next "What changed." --kit v0.31.0
+```
 
 ## Licence
 

@@ -1,7 +1,7 @@
 /*
  * tests/annotations.test.js - checks of the annotation system's pure parts (Markdown, rich
  * text back to Markdown, plain text for print, earlier wordings, bench links, ghosts, open and
- * resolved, mentions), run in the browser by a bench's tests/annotations.html after the
+ * resolved, mentions), run by tests/run.js in a bench's tests/annotations.html, after the
  * bench's own values (its tests/annotations.test.js):
  *   window.BENCH_TESTS = { link: { v, l, name }, text, lineKey: [line, key] }
  *     link     a version and lines for a bench link, and a RegExp for its name in print
@@ -13,16 +13,11 @@
  */
 (function () {
   'use strict';
-  var SW = window.SW, N = SW.notes, results = [], group = '';
+  var SW = window.SW, N = SW.notes, eq = window.T.eq, yes = window.T.yes;
   var T = window.BENCH_TESTS || {}, TAG = SW.BENCH.tag || 'bk:';
-  function eq(name, got, want) {
-    var ok = JSON.stringify(got) === JSON.stringify(want);
-    results.push({ name: (group ? group + ': ' : '') + name, ok: ok, got: got, want: want });
-  }
-  function yes(name, cond) { eq(name, !!cond, true); }
   function html(md) { var d = document.createElement('div'); d.innerHTML = SW.md(md); return d; }
 
-  group = 'Markdown';
+  window.T.group('Markdown');
   eq('bold, italic, code, struck', SW.md('**b** *i* `c` ~~s~~'), '<p><b>b</b> <i>i</i> <code>c</code> <s>s</s></p>');
   eq('a line break inside a paragraph', SW.md('a\nb'), '<p>a<br>b</p>');
   eq('paragraphs', SW.md('a\n\nb'), '<p>a</p><p>b</p>');
@@ -42,7 +37,7 @@
   eq('an email address is not a mention', SW.md('me@x.org'), '<p>me@x.org</p>');
   eq('hidden lines stay hidden', SW.md('text\n\n<!-- ' + TAG + 'was 2026-09-30T10:00:00Z dGV4dA== -->'), '<p>text</p>');
 
-  group = 'Rich text to Markdown';
+  window.T.group('Rich text to Markdown');
   ['Plain **bold** and *italic* and `lac nx1` and ~~gone~~.\nNext line.',
    'See [Graetz](https://example.com/g) and snake_case and 2\\*3\\*4.',
    'Intro:\n\n- one\n- two',
@@ -57,11 +52,11 @@
   eq('a bench link written bare stays bare', SW.htmlToMd(html('see ' + SW.BASE_URI + '?v=4.1&a=Xy')), 'see ' + SW.BASE_URI + '?v=4.1&a=Xy');
   eq('marks typed as text are escaped', SW.htmlToMd((function () { var d = document.createElement('div'); d.textContent = 'a*b*c'; return d; })()), 'a\\*b\\*c');
 
-  group = 'Plain text';
+  window.T.group('Plain text');
   eq('marks out, links as text (url)', SW.mdPlain('**b** [F](https://x.org) `c`'), 'b F (https://x.org) c');
   eq('hidden lines out', SW.mdPlain('t\n\n<!-- ' + TAG + 'was 2026 dA== -->'), 't');
 
-  group = 'Earlier wordings';
+  window.T.group('Earlier wordings');
   var H = SW.noteHistory, fig = '\n\n<!-- ' + TAG + 'fig:gz H4sIAAAA -->';
   var v2 = H.compose('second', 'first', '2026-09-30T10:00:00Z');
   eq('the replaced wording is kept', H.list(v2).map(function (h) { return h.text; }), ['first']);
@@ -73,7 +68,7 @@
   eq('no change, no new wording', H.list(H.compose('second', v2, 'x')).length, 1);
   eq('non-ASCII survives', H.list(H.compose('b', T.text, 'x'))[0].text, T.text);
 
-  group = 'Bench links';
+  window.T.group('Bench links');
   var LK = T.link, u = SW.BASE_URI + '?v=' + LK.v + '&l=' + LK.l + '&a=AbC-12_x';
   eq('a bench link is read', N.parseLink(u), { v: LK.v, l: LK.l, a: 'AbC-12_x' });
   eq('another site is not', N.parseLink('https://example.com/?v=' + LK.v), null);
@@ -81,7 +76,7 @@
   yes('a bench link is drawn in place, not in a new tab', /class="swlink"/.test(SW.md(u)) && !/_blank/.test(SW.md(u)));
   yes('for print, a bench link becomes its name', LK.name.test(N.linksAsNames('see ' + u)));
 
-  group = 'Ghosts';
+  window.T.group('Ghosts');
   function keys(lines) { return lines.map(function (t) { return { k: SW.lineKey(t) }; }); }
   function indexOf(h) { var ix = {}; h.forEach(function (x, j) { if (x.k) (ix[x.k] = ix[x.k] || []).push(j); }); return ix; }
   var src = keys(['define listen', '\tcla+cli+clf 1-opr-opr', '\tszf i 1', '\tjmp .-1', '\ttyi', '\tterm', '', 'define swap', '\trcl 9s', '\trcl 9s', '\tterm']);
@@ -95,7 +90,7 @@
   eq('a single common line with no context: no ghost', SW.ghostMatch(one, 1, 1, common, indexOf(common)), -1);
   eq('comments and spacing set aside', SW.lineKey(T.lineKey[0]), T.lineKey[1]);
 
-  group = 'Open and resolved';
+  window.T.group('Open and resolved');
   eq('none', N.statusOf([]).state, '');
   eq('🔓 opens', N.statusOf([{ text: '🔓', date: '2026-09-30T10:00' }]).state, 'open');
   eq('a later ✅ resolves', N.statusOf([{ text: '🔓', date: '2026-09-30T10:00' }, { text: '✅', date: '2026-09-30T11:00' }, { text: '👍', date: '2026-09-30T12:00' }]).state, 'resolved');
@@ -104,17 +99,9 @@
   yes('help counts as open in filters', N.isOpen('help') && N.isOpen('open') && !N.isOpen('resolved'));
   eq('the old status marks are ignored', N.statusOf([{ text: 'status:open', date: '2026-09-30T10:00' }]).state, '');
 
-  group = 'Mentions';
+  window.T.group('Mentions');
   yes('a mention of CL', N.mentions({ text: 'ask @CL here' }, 'CL'));
   yes('@CLX is not CL', !N.mentions({ text: 'ask @CLX here' }, 'CL'));
   yes('a mention in an earlier wording does not count', !N.mentions({ text: 'now\n\n' + H.was('ask @CL', 'x').trim() }, 'CL'));
 
-  // report
-  var bad = results.filter(function (r) { return !r.ok; });
-  document.getElementById('sum').innerHTML = bad.length ? '<span class="bad">' + bad.length + ' of ' + results.length + ' failed</span>' : '<span class="ok">All ' + results.length + ' passed</span>';
-  document.getElementById('out').innerHTML = results.map(function (r) {
-    return '<li class="' + (r.ok ? 'ok' : 'bad') + '">' + (r.ok ? '✓ ' : '✗ ') + SW.esc(r.name) +
-      (r.ok ? '' : '<pre>got:  ' + SW.esc(JSON.stringify(r.got)) + '\nwant: ' + SW.esc(JSON.stringify(r.want)) + '</pre>') + '</li>';
-  }).join('');
-  window.__results = { passed: results.length - bad.length, failed: bad.length, failures: bad };
 })();

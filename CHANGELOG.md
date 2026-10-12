@@ -1,5 +1,12 @@
 # Changelog: bench-kit
 
+## 0.31.0 (2026-10-13)
+
+- `tests/run.js` runs the kit's tests in a bench's tests page (`T.group`, `T.eq`, `T.yes`, `T.later` for checks that fetch), loading the kit modules they need; a bench's `tests/annotations.html` loads it in place of `tests/annotations.test.js`.
+- `tests/kit.test.js`: 37 checks of the version list, the bench's own versions and references, builds, Help menu changes, the beam, octal and a name's pop-up.
+- `tools/release.js`: a bench's release in one command (`next "What changed." --kit <tag>`), with `--check`, `--dry-run` and `--no-changelog`.
+- `menus.js`: `SW.helpList()`, the Help menu as the bench has it.
+
 ## 0.30.0 (2026-10-13)
 
 - `tests/annotations.test.js`: the annotation tests the benches each held, with the bench's values (a link, a non-ASCII phrase, a line and its key) in its own `tests/annotations.test.js` as `window.BENCH_TESTS`, and its old tag prefix from `SW.BENCH.tag`.
