@@ -208,7 +208,7 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 
 ## Licence
 
-GNU Affero General Public License v3.0: see [`LICENSE`](LICENSE).
+GNU General Public License v3.0: see [`LICENSE`](LICENSE).
 
 ## Changes
 
