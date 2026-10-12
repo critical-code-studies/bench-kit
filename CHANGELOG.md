@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.24.4 (2026-10-12)
+
+- `bench.css`: the rules for what the kit draws under names it builds as it runs, which the benches still carried: Read's kinds of line and their swatches in the Key, My notes' sync states, Findings' levels, and the site-map link in the tab row.
+
 ## 0.24.3 (2026-10-12)
 
 - Paratexts: a drag over a picture or a PDF page no longer selects the words the system finds in it (Live Text, the blue boxes): a transparent cover over the picture takes the pointer.
