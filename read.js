@@ -25,6 +25,8 @@
  *                     ([{ file, line }]); o.file names each line's file, o.width (44) the
  *                     characters of the line shown
  *   selActs()         more actions on the selection bar (readnotes.js)
+ *   toolbar           { html(b) (HTML at the head of the toolbar), wire(tb), after(view, b) (adds
+ *                     what goes under the toolbar) }: the bench's own tools, as layers' navigation
  *   lost              a line under a version with no text
  *   repairs           the bench's marks on its repairs, usually SW.kintsugi(...) (kintsugi.js):
  *                     { init(ctx), nav (HTML in the toolbar), view (HTML in
@@ -55,7 +57,7 @@
     var N = SW.notes, B = SW.BENCH, esc = SW.esc;
     var view = SW.$('#view-read');
     var R = SW.views.read = {};
-    var F = H.files || {}, X = H.repairs || {}, T = H.titles || {}, word = F.word || 'File';
+    var F = H.files || {}, X = H.repairs || {}, T = H.titles || {}, TB = H.toolbar || {}, word = F.word || 'File';
     var build = null, notes = [], counts = {}, noted = {}, anchorSel = null;
     // tapes: which of the version's files to show: 'all', or a single file's index
     var opts = { repairs: SW.store.get('read.repairs', true), kinBar: SW.store.get('read.kinBar', false), words: H.words ? SW.store.get('read.words', true) : false, norm: false,
@@ -149,7 +151,7 @@
       var b = build;
       view.innerHTML = '';
       var tb = SW.el('div', { class: 'toolbar' });
-      tb.innerHTML =
+      tb.innerHTML = (TB.html ? TB.html(b) : '') +
         '<input type="search" id="rd-find" placeholder="Find text or /regex/ …">' +
         '<button class="btn" id="rd-prev" title="Previous match">↑</button><button class="btn" id="rd-next" title="Next match">↓</button>' +
         '<span class="hint" id="rd-hits"></span><span class="sep"></span>' +
@@ -198,6 +200,7 @@
         setNotes(MODES[(i + 1) % MODES.length][0]);
       } }));
       view.appendChild(tb);
+      if (TB.after) TB.after(view, b);
 
       if (!b.v.build) {
         var lost = SW.el('div', { class: 'pad prose' });
@@ -348,6 +351,7 @@
 
     function wireTb(tb) {
       if (X.wire) X.wire(tb);
+      if (TB.wire) TB.wire(tb);
       SW.$('#rd-undo', tb).onclick = function () { N.undo(); };
       SW.$('#rd-redo', tb).onclick = function () { N.redo(); };
       setTimeout(paintUndo, 0);

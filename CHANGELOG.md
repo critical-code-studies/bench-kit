@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.37.0 (2026-10-12)
+
+- `lang-mad.js` reads FAP decks (a label, the operation, its address, a comment; * for a comment card), decks headed by a sequence number, and remark and continuation marks in column 11, 12 or 13; the genealogy reads a FAP deck's lines as FAP. For SLIP, under ELIZA.
+- `read.js`: `toolbar: { html(b), wire(tb), after(view, b) }`, a bench's own tools at the head of Read's toolbar (the ELIZA bench's layers: ◀ ▶ and the breadcrumb).
+
 ## 0.36.0 (2026-10-12)
 
 - `lang-mad.js`: MAD-SLIP and the ELIZA scripts, for the ELIZA bench: cards (label, remark, continuation, sequence number), decks, MAD's keywords whole and short, text, relations and calls; a script's lists, comments, references and classes. Routines are decks, internal functions and a script's keyword entries; sections are files.
