@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.32.0
+**Version:** 0.33.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -227,6 +227,14 @@ node research/kit/tools/release.js next "What changed." --kit v0.32.0
 ```bash
 node research/kit/tools/sitemap.js
 ```
+
+`tools/styles.js` checks a change to the stylesheets, the bench's or the kit's: in each colour theme and each state of the page (every tab, the Key, every menu open, every menu item, the genealogy's figures) it reads every visible element's computed style with the stylesheets on disk and again with them as committed (`--ref`, HEAD by default; the kit's as that commit pointed to it), and lists the elements that differ, with the properties. Only stylesheets change between the two readings, so nothing else can account for a difference. Use it before releasing a move of CSS between a bench and the kit: it should report that nothing differs. `--themes all` checks every theme (two by default), `--only` named states; it exits 1 when anything differs, and takes a few minutes.
+
+```bash
+node research/kit/tools/styles.js --themes all
+```
+
+`tools/chrome.js` is what these tools share: the repository served as GitHub Pages serves it, and the bench in headless Chrome (Node 22 and Chrome or Chromium, `CHROME=` to name it; no packages).
 
 ## Licence
 

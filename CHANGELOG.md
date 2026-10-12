@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.33.0 (2026-10-12)
+
+- `tools/styles.js` and `tools/styles-page.js`: a change to the stylesheets checked against the last commit (or `--ref`), element by element, in every state of the page and each colour theme asked for (`--themes all`); the kit's stylesheets as the bench's commit pointed to them. A state read twice with the stylesheets on disk sets aside what changes by itself (an animation). Exits 1 when anything differs.
+- `tools/chrome.js`: the server and headless Chrome the tools share; `tools/sitemap.js` uses it.
+
 ## 0.32.0 (2026-10-12)
 
 - `tools/sitemap.js` and `sitemap.js`: a bench's `sitemap.html`, made from the bench as it runs in headless Chrome: the tab row, each menu with its headings (lenses, graphics, Versions, Help), every version with its reference, Read, Run and Record, its files and scans on GitHub, and a closing list for reading without the bench. Settings in `SW.BENCH.sitemap` (`site`, `sitePages`, `intro`, `opens`, `files`, `lost`, `links`). No packages: Node 22 and Chrome.
