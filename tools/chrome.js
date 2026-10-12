@@ -4,10 +4,13 @@
  * scripts run in it. Node 22 or later and Google Chrome or Chromium (CHROME=<path>); no packages.
  *   const C = require('./chrome.js');
  *   C.benchDir(argv)                                 the bench's folder (--dir, or research, or .)
- *   C.withBench({ dir, route, url }, async (page) => { … await page.evaluate(js) … })
+ *   C.withBench({ dir, route, url, ready }, async (page) => { … await page.evaluate(js) … })
+ *     url (index.html by default) the page to open; ready, a JS expression true once it is ready
+ *     (by default, a version open and the tab row drawn)
  *     route(pathname) -> { type, data } | null       a tool's own answers before the files
  *     page.evaluate(js) runs js in the bench (awaiting a promise) and gives its value;
  *     page.errors, the page's uncaught errors so far
+ * On a CI machine (CI set) Chrome runs without its sandbox, which such machines may not allow.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 'use strict';
@@ -50,7 +53,7 @@ async function withBench(o, fn) {
   const port = server.address().port, dport = 9300 + Math.floor(Math.random() * 600);
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-tool-'));
   const ch = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--user-data-dir=' + prof,
-    '--remote-debugging-port=' + dport, '--window-size=' + (o.size || '1440,900'), 'about:blank'], { stdio: 'ignore' });
+    '--remote-debugging-port=' + dport, '--window-size=' + (o.size || '1440,900')].concat(process.env.CI ? ['--no-sandbox'] : [], ['about:blank']), { stdio: 'ignore' });
   const cleanup = () => { try { ch.kill('SIGKILL'); } catch (e) {} server.close(); try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) {} };
   try {
     let ws = null;
@@ -79,10 +82,11 @@ async function withBench(o, fn) {
     await send('Runtime.enable');
     const rel = path.relative(root, path.resolve(o.dir)).split(path.sep).filter(Boolean).join('/');
     await send('Page.navigate', { url: 'http://127.0.0.1:' + port + '/' + (rel ? rel + '/' : '') + (o.url || 'index.html') });
-    // the bench is ready when a version is open and its tab row is drawn
+    // the bench is ready when a version is open and its tab row is drawn (or as the tool says)
+    const test = o.ready || '!!(window.SW && SW.state && SW.state.v && document.querySelector("#tabs button"))';
     let ready = false;
-    for (let i = 0; i < 120 && !ready; i++) { await sleep(250); try { ready = await page.evaluate('!!(window.SW && SW.state && SW.state.v && document.querySelector("#tabs button"))'); } catch (e) {} }
-    if (!ready) throw new Error('the bench did not start' + (errors.length ? ': ' + errors[0] : ''));
+    for (let i = 0; i < (o.wait || 120) && !ready; i++) { await sleep(250); try { ready = await page.evaluate('!!(' + test + ')'); } catch (e) {} }
+    if (!ready) throw new Error((o.url || 'the bench') + ' did not ' + (o.ready ? 'finish' : 'start') + (errors.length ? ': ' + errors[0] : ''));
     await sleep(500);
     return await fn(page);
   } finally { cleanup(); }

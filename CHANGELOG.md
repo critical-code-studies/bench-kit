@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## 0.35.0 (2026-10-12)
+
+- `tools/test.js`: a bench's test pages run in headless Chrome, with each page's count and every failure printed; exits 1 on a failure. For GitHub Actions and for use by hand.
+- `.github/workflows/tests.yml`: on every push to the kit, its tests run in the template, SHRDLU and Spacewar with the kit as pushed.
+- `tools/chrome.js`: `ready` (when the page is done) and `wait`; on a CI machine Chrome runs without its sandbox.
+
 ## 0.34.1 (2026-10-12)
 
 - `paratexts.js`: PDFs are opened with `isEvalSupported: false`. PDF.js 3.11.174 can be made to run a crafted PDF's script through its font handling (CVE-2024-4367, fixed in PDF.js 4.2.67), in the page that holds the reader's Hypothesis and GitHub tokens; this turns that path off without changing how PDFs are drawn. Moving to PDF.js 4.10.38 (ES modules) is left for a later release.

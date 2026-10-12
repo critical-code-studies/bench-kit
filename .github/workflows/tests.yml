@@ -1,0 +1,32 @@
+# The kit's tests, run in each bench with the kit as pushed in place of the bench's own copy,
+# so a change that would break a bench shows here before the bench moves to it.
+name: Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        bench: [critical-code-studies/bench-template, critical-code-studies/SHRDLU, spacewar1962/spacewar]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.bench }}
+          path: bench
+      - uses: actions/checkout@v4
+        with:
+          path: bench/research/kit
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        working-directory: bench
+        run: node research/kit/tools/test.js

@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.34.1
+**Version:** 0.35.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -232,6 +232,12 @@ node research/kit/tools/sitemap.js
 
 ```bash
 node research/kit/tools/styles.js --themes all
+```
+
+`tools/test.js` runs the bench's test pages (every `tests/*.html`) in headless Chrome and prints each page's count and every failure, with what it got and wanted; it exits 1 when a test fails. GitHub Actions runs it on every push to a bench (`.github/workflows/tests.yml` in the bench: check out with the kit, Node 22, `node research/kit/tools/test.js`), and the kit's own workflow runs it in each bench with the kit as pushed, so a kit change that would break a bench shows before the bench moves to it. A new bench copies the template's workflow; the kit's list of benches is in its own `.github/workflows/tests.yml`.
+
+```bash
+node research/kit/tools/test.js
 ```
 
 `tools/chrome.js` is what these tools share: the repository served as GitHub Pages serves it, and the bench in headless Chrome (Node 22 and Chrome or Chromium, `CHROME=` to name it; no packages).
