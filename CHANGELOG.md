@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.37.3 (2026-10-12)
+
+- `versionlist.js`: the default loader asks the bench's `findTitle(lines, b)` where each file's text begins, so the comparisons and the genealogy leave out a note set at a file's head (the ELIZA bench's transcribers' headers).
+
 ## 0.37.2 (2026-10-12)
 
 - The tests: a line of descent that lists its versions has no tip to reach.

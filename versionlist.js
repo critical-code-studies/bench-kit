@@ -17,7 +17,8 @@
  *                  { id, label, ids }: versions in the order given, where no descent is known
  *     load(v, fetchText, splitLines, fetchBytes)   by default each file read as it is held,
  *                  documentation ('doc') shown but not indexed as code
- *     findTitle(lines)   the line a file's text begins on (1 by default)
+ *     findTitle(lines, b)   the line a file's text begins on (1 by default): the comparisons and
+ *                  the genealogy start there, so a transcriber's note at a file's head is left out
  *     extra        anything else the bench's views read from SWVersions
  *   The bench then sets SWVersions to api (module.exports in Node).
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -66,7 +67,9 @@
       return Promise.all(v.build.map(function (b) { return fetchText(b.src); })).then(function (texts) {
         var parts = v.build.map(function (b, i) {
           var raw = texts[i];
-          return { src: b.src, role: b.role, raw: raw, text: raw, patch: null, title: 1, end: null };
+          // title: the line the text begins on, past any note set at its head (o.findTitle)
+          var title = o.findTitle ? o.findTitle(String(raw).replace(/\r\n?/g, '\n').split('\n'), b) || 1 : 1;
+          return { src: b.src, role: b.role, raw: raw, text: raw, patch: null, title: title, end: null };
         });
         // the files read as code: program and support, not documentation
         var fs = parts.map(function (p) { return { name: p.src.split('/').pop(), text: p.role === 'doc' ? '' : p.text, doc: p.role === 'doc' }; });
