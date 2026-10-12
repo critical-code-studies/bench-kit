@@ -51,7 +51,10 @@ if (seen.length > 1) problems.push('the pages disagree on the version: ' + seen.
 // the kit's version, from kit/base.js
 const kitDir = path.join(dir, 'kit');
 const kitVersion = () => { try { return /version: '([^']+)'/.exec(fs.readFileSync(path.join(kitDir, 'base.js'), 'utf8'))[1]; } catch (e) { return null; } };
-const git = (args, cwd) => execFileSync('git', args, { cwd, encoding: 'utf8' }).replace(/\s+$/, '');
+const git = (args, cwd) => {
+  try { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).replace(/\s+$/, ''); }
+  catch (e) { fail('git ' + args.join(' ') + ' (in ' + cwd + ') failed: ' + String(e.stderr || e.message).trim()); }
+};
 
 // conflict markers anywhere in the bench but the kit
 function markers(d, out) {
@@ -86,7 +89,7 @@ const write = (p, s) => { if (!DRY) fs.writeFileSync(p, s); };
 if (KIT) {
   if (DRY) changes.push('kit: would check out ' + KIT);
   else {
-    git(['fetch', '--quiet', '--tags', 'origin'], kitDir);
+    git(['fetch', '--quiet', '--tags', '--force', 'origin'], kitDir);   // --force: a tag moved upstream is taken, not refused
     git(['checkout', '--quiet', KIT], kitDir);
     changes.push('kit: ' + KIT + ' (' + git(['rev-parse', '--short', 'HEAD'], kitDir) + ')');
   }

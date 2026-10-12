@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.31.1 (2026-10-13)
+
+- `tools/release.js`: tags are fetched with `--force`, so a tag moved in the kit's repository (as v0.25.0 was) is taken rather than stopping the release; git's own message is shown when a git step fails.
+
 ## 0.31.0 (2026-10-13)
 
 - `tests/run.js` runs the kit's tests in a bench's tests page (`T.group`, `T.eq`, `T.yes`, `T.later` for checks that fetch), loading the kit modules they need; a bench's `tests/annotations.html` loads it in place of `tests/annotations.test.js`.
