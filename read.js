@@ -20,7 +20,10 @@
  *   rowClass(b, L, k), rowTitle(b, L, k)   a line's further classes, and its hover
  *   key()             HTML: the Key's pop-up
  *   symbol(name, b)   HTML: the pop-up on a name (links data-p/data-n go to a line,
- *                     data-bio to SW.biography)
+ *                     data-bio to SW.biography); SW.symbolRefs(b, s, o) gives its list of
+ *                     where a name is defined (◆) and used (·), from s.defs and s.refs
+ *                     ([{ file, line }]); o.file names each line's file, o.width (44) the
+ *                     characters of the line shown
  *   selActs()         more actions on the selection bar (readnotes.js)
  *   lost              a line under a version with no text
  *   repairs           the bench's marks on its repairs, usually SW.kintsugi(...) (kintsugi.js):
@@ -36,6 +39,16 @@
 (function (root) {
   'use strict';
   var SW = root.SW;
+
+  SW.symbolRefs = function (b, s, o) {
+    o = o || {};
+    var list = s.defs.map(function (d) { return ['def', d]; }).concat(s.refs.map(function (r) { return ['ref', r]; }));
+    return '<div class="refs">' + list.slice(0, 200).map(function (x) {
+      var L = b.lines[x[1].file][x[1].line - 1];
+      return '<a href="#" data-p="' + x[1].file + '" data-n="' + x[1].line + '">' + (x[0] === 'def' ? '◆ ' : '· ') +
+        (o.file ? SW.esc(b.parts[x[1].file].src.split('/').pop()) + ':' : '') + x[1].line + '  ' + SW.esc((L ? L.raw : '').trim().slice(0, o.width || 44)) + '</a>';
+    }).join('') + '</div>';
+  };
 
   SW.readView = function (H) {
     H = H || {};

@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.28.0
+**Version:** 0.29.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -15,6 +15,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `shell.js` | The bench's frame, loaded last: start-up, the version picker, the tabs and the views drawn in them, the colour theme, the top bar's buttons, and what a link asks for (`?v=`, `&tab=`, `&l=`, `&b=`, `&a=`, `&code=`, `&help=`, `&tour=`, `&join=`, `&tr=`). `SW.setTab`, `SW.select`, `SW.forget`, `SW.setTheme`, `SW.markTabs`, `SW.help(name)`. The bench's parts from `SW.BENCH.shell`. |
 | `menus.js` | The drop-down menus in the tab row: Versions ▾ and Help ▾, and the bench's own (lenses, graphics), from `SW.BENCH.menus`. |
 | `version.js` | Versions ▸ This version (the view `about`): a version's record, its place in the variorum, its annotations and build log, the bin, every annotation on every version; the bench's own rows from `SW.BENCH.version`. |
+| `versionlist.js` | A bench's list of versions from its records (`js/versions.js`): each version's link, its descent (parent, witness, also, influence), the chain to any version, the lines of descent, and loading a version's files (`SWVersionList`, in the browser and Node). |
 | `builds.js` | A bench's texts fetched and built, the unit every view reads: `SW.fetchText`, `SW.fetchBytes`, `SW.build(id, extra)` (cached), `SW.current()`, `SW.openAt(vid, a)`, `SW.docMeta(b)`, `SW.oct`. The bench says how a version is read: `SW.builds({ read, split, key, meta })` in its `js/core.js`. |
 | `refs.js` | References to the sources (`SW.refOf`, `SW.refText`, `SW.refTag`, `SW.cite`, `SW.nparts`), the files on GitHub (`SW.sourceURL`, `SW.sourceLink`, `SW.permalinkOf`), and their SWHIDs (`SW.swhidOf`, `SW.swhidCite`, `SW.swhidList`, `SW.swhidTiny`, `SW.filesOf`, `SW.ownFilesOf`), from `SW.BENCH.refs`. |
 | `about.js` | The About box (`SW.about.open()`): name, author, version and release date (the `bench-date` meta), purpose, tech stack, the kit, what is inside, sources, the catalogue of versions, code and citation, with the welcome tour; the bench's rows from `SW.BENCH.about`. |
@@ -42,7 +43,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `lang-plain.js` | A language adapter for any source text: the comment mark (`SW.BENCH.comment`), the pattern for a routine's first line (`SW.BENCH.routine`), case folding (`SW.BENCH.caseFold`). The template's. |
 | `lang-macro.js`, `lang-maclisp.js` | Language adapters for genealogy and compare: how a line divides into labels, code and comment, its normalised form, titles, routines and sections. PDP-1 MACRO (Spacewar!), MacLisp (SHRDLU). A new language adds `lang-<name>.js` registering `SWLang[name]`. |
 | `tracings.js` | Naming and colour-marking the parts of a program in a view (blocks and routines, functions), kept per version in this browser, and tracings: sets of names and marks shared with the crew through the annotation group, opened read-only (Keep as mine, Link, ✕). `SW.tracings({ ns, render, open, link, hint })`. The bench reads `&tr=` into `SW.state.trace`. |
-| `read.js` | Read: a version's files line by line, with the group's annotations (`readnotes.js`), a search, the file picker, the View options and filters, ↶ ↷, the Key, the pop-up on a name, the side panel of a line's annotations and the export. `var ctx = SW.readView(H)` in the bench's `js/read.js`, with what is the bench's (hooks, below). |
+| `read.js` | Read: a version's files line by line, with the group's annotations (`readnotes.js`), a search, the file picker, the View options and filters, ↶ ↷, the Key, the pop-up on a name (`SW.symbolRefs` lists where a name is defined and used), the side panel of a line's annotations and the export. `var ctx = SW.readView(H)` in the bench's `js/read.js`, with what is the bench's (hooks, below). |
 | `kintsugi.js` | The repairs in Read, in gold, after kintsugi (Berry 2025), for a bench that reads a version otherwise than it is held: the ◆ ‹ › stepper, the repairs bar (the list, Only the repaired lines, My notes, Copy, the cards, what the marks mean), View ▸ Repairs (gold), and the squiggle under a repaired line. `SW.kintsugi(cfg)` gives `SW.readView` its `repairs`; `SW.kintsugi.wrapChars`, `diffSpan`, `squiggle`, `measure` for the bench's marks (hooks, below). |
 | `readnotes.js` | Annotations in Read: threads under their lines or as cards in the margin, ghosts from other versions, the code an annotation is attached to, how notes show (with a live refresh), the selection's bar and pop, citations and links, the listing as a document, moving an annotation by dragging. `var K = SW.readNotes({ view, R, opts, isMine, showsTape, filtering, keptLines, tapeInfo, kinBar, selActs })` in the bench's `read.js`; `K.set({ build })` and `K.set({ notes })` as they change. |
 | `notes.js` | Shared annotation through the bench's Hypothesis group: annotations, replies, reactions, drafts, the bin, links between annotations, codes, What's new, copies kept from ghosts (`from`), tracings, the joining guide, Help ▸ Advanced annotation. Tags carry the bench's prefix (`SW.BENCH.tag`). |
@@ -58,7 +59,7 @@ The kit goes in as a git submodule at `research/kit/`:
 git submodule add https://github.com/critical-code-studies/bench-kit research/kit
 ```
 
-`index.html` loads `kit/base.js` first, then the bench's `config.js`, `kit/md.js`, `kit/themes.js`, `kit/refs.js` and `kit/builds.js`, then the bench's own `core.js` (how it reads its texts: `SW.builds({ read … })`, `SW.parseLine`, `SW.lineKey` …, with `root.SWVersions`), then the rest of the kit and the bench's views, and last the bench's `main.js` (its parts of the frame) and `kit/shell.js`:
+`index.html` loads the version list first (`kit/versionlist.js`, then the bench's `js/versions.js`, which sets `root.SWVersions`), then `kit/base.js`, then the bench's `config.js`, `kit/md.js`, `kit/themes.js`, `kit/refs.js` and `kit/builds.js`, then the bench's own `core.js` (how it reads its texts: `SW.builds({ read … })`, `SW.parseLine`, `SW.lineKey` …), then the rest of the kit and the bench's views, and last the bench's `main.js` (its parts of the frame) and `kit/shell.js`:
 
 ```html
 <link rel="stylesheet" href="kit/bench.css?v=…">
@@ -66,6 +67,8 @@ git submodule add https://github.com/critical-code-studies/bench-kit research/ki
 <link rel="stylesheet" href="css/research.css?v=…">
 <link rel="stylesheet" href="kit/paratexts.css?v=…">
 <link rel="stylesheet" href="kit/kit.css?v=…">
+<script src="kit/versionlist.js?v=…"></script>
+<script src="js/versions.js?v=…"></script>
 <script src="kit/base.js?v=…"></script>
 <script src="js/config.js?v=…"></script>
 <script src="kit/md.js?v=…"></script>
@@ -90,7 +93,7 @@ To take a newer kit: `git submodule update --remote research/kit`, test, and com
 
 ## What a bench provides
 
-**Versions** (`js/versions.js`, `root.SWVersions`): `VERSIONS` (each `{ id, label, date, sort, authors, fork, status, medium, summary, build: [{ src, role }], parent, witnessOf, also, influence }`; `role` is `program`, `support` or `doc`; a lost version has no `build`), `byId(id)`, `load(v, fetchText)`, `SRC` (where the sources are), `LINES` (lines of descent: `{ id, label, tip, ids }`), `ancestry(id)`, `DIALECTS`, `TRANSFORMS`.
+**Versions** (`js/versions.js`, `root.SWVersions`): `VERSIONS` (each `{ id, label, date, sort, authors, fork, status, medium, summary, build: [{ src, role }], parent, witnessOf, also, influence }`; `role` is `program`, `support` or `doc`; a lost version has no `build`), `byId(id)`, `load(v, fetchText)`, `SRC` (where the sources are), `LINES` (lines of descent: `{ id, label, tip, ids }`), `ancestry(id)`, `DIALECTS`, `TRANSFORMS`. These come from `kit/versionlist.js`, which the bench gives its records: `SWVersionList({ versions, src, dialects, transforms, parent, witness, also, influence, lines, load, findTitle, extra })`, with `parent` and `witness` as `{ id: id }`, `also` and `influence` as `{ id: [id] }`, and `load` and `findTitle` only where the bench reads its files otherwise; `SWVersionList.files(dir, list)` makes a version's `build`. In Node the bench's `js/versions.js` requires `../kit/versionlist.js`.
 
 **Builds** (`SW.build(id)`, a promise; `kit/builds.js` fetches and caches them, the bench's `js/core.js` reads them through `SW.builds({ read(v, L, extra), split, key(v, extra), meta(b) })`): `{ v, parts: [{ src, role, raw }], lines: [[{ p, n, raw, norm }] per file], errorsAt: { 'p:n': [...] }, kind: { 'p:n': 'def' | 'com' | … }, asm }` (`asm` is null where the bench neither assembles nor indexes; Read, the edition and the figures show addresses and words where it holds `byLine`).
 

@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.29.0 (2026-10-13)
+
+- `versionlist.js`: a bench's list of versions from its records, in the browser and Node: links, descent (`parent`, `witness`, `also`, `influence`), `byId`, `ancestry`, the lines of descent, and a default `load` (each file as held; documentation not indexed as code), from each bench's `js/versions.js`, which now keeps its records and calls `SWVersionList({ … })`. Load it before the bench's `js/versions.js`.
+- `read.js`: `SW.symbolRefs(b, s, o)`, the list in a name's pop-up of where it is defined and used (`o.file`, `o.width`).
+
 ## 0.28.0 (2026-10-12)
 
 - The tab row: a menu's button is lit by the lenses `SW.BENCH.lenses.menus` puts in it; the buttons' `data-lenses` attribute, which repeated that list, is no longer read.
