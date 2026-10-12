@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.27.0 (2026-10-12)
+
+- The gold of repairs has one name, `--kin` (with `--kin-bg`), where the benches had `--gold` (SHRDLU, the template) or `--kin` (Spacewar) and the kit read both. A bench that set `--gold` sets `--kin`. In a bench that had only `--gold`, the chosen rating in Findings is now drawn in gold (it read `--kin`, which was unset).
+
 ## 0.26.0 (2026-10-12)
 
 - `themes.css`: the six colour themes (paper, white, sepia, green, amber, contrast), the type (`--mono`, `--sans`, `--serif`, `--code-font`, `--code-size`), the menus' panel, gold (`--gold`, `--gold-bg`), the annotation marks (`--anno-line`, `--anno-block`) and the genealogy figures' colour schemes (`data-gpal`), from the benches' own `css/research.css`. The accent in each theme is the template's; a bench changes any token of a theme by repeating its selector. Load it after `kit/bench.css`, before the bench's `css/research.css`, which keeps its default colours on `:root`.

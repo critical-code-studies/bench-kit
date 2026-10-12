@@ -949,17 +949,17 @@ a.swcode { font-size: .92em; }
 ul.reading { padding-left: 1.2em; }
 ul.reading li { margin: 0 0 6px; text-indent: -0.4em; padding-left: 0.4em; }
 ul.reading a { overflow-wrap: anywhere; }
-/* a reconstruction card, in its bench's gold (--kin, or --gold) */
-.kin-card { border: 1px solid var(--kin, var(--gold)); border-left-width: 3px; border-radius: 4px; padding: 10px 14px; margin: 16px 0; background: color-mix(in srgb, var(--kin, var(--gold)) 10%, transparent); }
-.kin-card h3 { color: var(--kin, var(--gold)); margin: 0 0 6px; }
+/* a reconstruction card, in its bench's gold (--kin) */
+.kin-card { border: 1px solid var(--kin); border-left-width: 3px; border-radius: 4px; padding: 10px 14px; margin: 16px 0; background: color-mix(in srgb, var(--kin) 10%, transparent); }
+.kin-card h3 { color: var(--kin); margin: 0 0 6px; }
 .kin-card h3 .swref-sm { font-size: 11px; font-weight: 400; color: var(--text-faint); margin-left: 6px; }
 .kin-card .hint { margin: 0 0 8px; }
 .kin-card .kin-t td { font-size: 12.5px; }
 .kin-card .kin-t td:first-child { white-space: nowrap; }
-.kin-card .rp-chip, .kin-key .rp-chip { font: 600 9.5px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; border: 1px solid var(--kin, var(--gold)); color: var(--kin, var(--gold)); margin-left: 0; white-space: nowrap; cursor: help; }
-.kin-card .rp-chip.rp-m-yobitsugi, .kin-key .rp-chip.rp-m-yobitsugi { background: color-mix(in srgb, var(--kin, var(--gold)) 14%, transparent); }
-.kin-card .rp-chip.rp-m-kake, .kin-key .rp-chip.rp-m-kake { background: color-mix(in srgb, var(--kin, var(--gold)) 22%, transparent); }
-.kin-card .rp-chip.rp-m-mount, .kin-key .rp-chip.rp-m-mount { border-color: color-mix(in srgb, var(--kin, var(--gold)) 50%, transparent); color: color-mix(in srgb, var(--kin, var(--gold)) 70%, var(--text-faint)); }
+.kin-card .rp-chip, .kin-key .rp-chip { font: 600 9.5px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; border: 1px solid var(--kin); color: var(--kin); margin-left: 0; white-space: nowrap; cursor: help; }
+.kin-card .rp-chip.rp-m-yobitsugi, .kin-key .rp-chip.rp-m-yobitsugi { background: color-mix(in srgb, var(--kin) 14%, transparent); }
+.kin-card .rp-chip.rp-m-kake, .kin-key .rp-chip.rp-m-kake { background: color-mix(in srgb, var(--kin) 22%, transparent); }
+.kin-card .rp-chip.rp-m-mount, .kin-key .rp-chip.rp-m-mount { border-color: color-mix(in srgb, var(--kin) 50%, transparent); color: color-mix(in srgb, var(--kin) 70%, var(--text-faint)); }
 .kin-card .rp-chip.rp-m-unc, .kin-key .rp-chip.rp-m-unc { border-color: var(--text-faint); color: var(--text-faint); }
 .cardshelp .kin-key { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 16px; font-size: 12.5px; margin: 6px 0 12px; }
 .cardshelp .kin-key div { margin: 3px 0; display: flex; align-items: center; gap: 8px; }

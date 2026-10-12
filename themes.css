@@ -3,7 +3,7 @@
  * listing paper, plain white, sepia, green and amber terminal, high contrast. Each is a set of
  * the custom properties that kit/bench.css and the bench's own styles draw with. Also here: the
  * type (--mono, --sans, --serif, --code-font, --code-size), the menus' panel, the gold of
- * repairs (--gold; a bench may set --kin instead), the annotation marks, and the colour
+ * repairs (--kin, --kin-bg), the annotation marks, and the colour
  * schemes of the genealogy figures (data-gpal, chosen in the Genealogy toolbar).
  *
  * Loaded after kit/bench.css and before the bench's css/research.css, which sets the bench's
@@ -170,6 +170,6 @@
    column, and a span within the lines dotted underneath; both stronger on hover */
 :root { --anno-line: var(--amber); --anno-block: color-mix(in srgb, var(--amber) 60%, var(--red)); }
 
-/* gold, for repairs and ratings (kit/bench.css and kit/paratexts.css read --kin first) */
-:root { --gold: #d4af37; --gold-bg: rgba(212, 175, 55, 0.13); }
-:root[data-theme="paper"], :root[data-theme="white"], :root[data-theme="sepia"] { --gold: #9a7400; --gold-bg: rgba(170, 128, 0, 0.12); }
+/* gold, for repairs and ratings */
+:root { --kin: #d4af37; --kin-bg: rgba(212, 175, 55, 0.13); }
+:root[data-theme="paper"], :root[data-theme="white"], :root[data-theme="sepia"] { --kin: #9a7400; --kin-bg: rgba(170, 128, 0, 0.12); }
