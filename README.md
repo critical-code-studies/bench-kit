@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.35.1
+**Version:** 0.36.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -42,6 +42,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `genealogy.js` | The genealogy engine: matching, matrix, tree, flows, forks, drawing. The text's language comes from an adapter. |
 | `lang-plain.js` | A language adapter for any source text: the comment mark (`SW.BENCH.comment`), the pattern for a routine's first line (`SW.BENCH.routine`), case folding (`SW.BENCH.caseFold`). The template's. |
 | `lang-macro.js`, `lang-maclisp.js` | Language adapters for genealogy and compare: how a line divides into labels, code and comment, its normalised form, titles, routines and sections. PDP-1 MACRO (Spacewar!), MacLisp (SHRDLU). A new language adds `lang-<name>.js` registering `SWLang[name]`. |
+| `lang-mad.js` | MAD with SLIP (CTSS, the IBM 7094) and the ELIZA scripts written for it, for genealogy, compare and a bench's Read: a card's label, remark (R in column 12), continuation and sequence number; a deck's head; MAD's keywords whole and short (W'R, T'O), `$text$`, dotted relations, `NAME.(…)` calls (`tokens`); a script's lists, comments, `=` references and `/` classes (`scriptTokens`). A routine is a deck, an internal function or a script's keyword entry. A file not named `.mad` is read as a script. From the ELIZA bench; `SW.BENCH.lang = 'mad'`. |
 | `tracings.js` | Naming and colour-marking the parts of a program in a view (blocks and routines, functions), kept per version in this browser, and tracings: sets of names and marks shared with the crew through the annotation group, opened read-only (Keep as mine, Link, ✕). `SW.tracings({ ns, render, open, link, hint })`. The bench reads `&tr=` into `SW.state.trace`. |
 | `read.js` | Read: a version's files line by line, with the group's annotations (`readnotes.js`), a search, the file picker, the View options and filters, ↶ ↷, the Key, the pop-up on a name (`SW.symbolRefs` lists where a name is defined and used), the side panel of a line's annotations and the export. `var ctx = SW.readView(H)` in the bench's `js/read.js`, with what is the bench's (hooks, below). |
 | `kintsugi.js` | The repairs in Read, in gold, after kintsugi (Berry 2025), for a bench that reads a version otherwise than it is held: the ◆ ‹ › stepper, the repairs bar (the list, Only the repaired lines, My notes, Copy, the cards, what the marks mean), View ▸ Repairs (gold), and the squiggle under a repaired line. `SW.kintsugi(cfg)` gives `SW.readView` its `repairs`; `SW.kintsugi.wrapChars`, `diffSpan`, `squiggle`, `measure` for the bench's marks (hooks, below). |

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.36.0 (2026-10-12)
+
+- `lang-mad.js`: MAD-SLIP and the ELIZA scripts, for the ELIZA bench: cards (label, remark, continuation, sequence number), decks, MAD's keywords whole and short, text, relations and calls; a script's lists, comments, references and classes. Routines are decks, internal functions and a script's keyword entries; sections are files.
+
 ## 0.35.1 (2026-10-12)
 
 - `tools/chrome.js`: up to a minute for Chrome to start (a fresh GitHub machine took longer than the 15 seconds allowed), and when it does not, Chrome's own last words.
