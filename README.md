@@ -235,7 +235,7 @@ node research/kit/tools/sitemap.js
 node research/kit/tools/styles.js --themes all
 ```
 
-`tools/test.js` runs the bench's test pages (every `tests/*.html`) in headless Chrome and prints each page's count and every failure, with what it got and wanted; it exits 1 when a test fails. GitHub Actions runs it on every push to a bench (`.github/workflows/tests.yml` in the bench: check out with the kit, Node 22, `node research/kit/tools/test.js`), and the kit's own workflow runs it in each bench with the kit as pushed, so a kit change that would break a bench shows before the bench moves to it. A new bench copies the template's workflow; the kit's list of benches is in its own `.github/workflows/tests.yml`.
+`tools/test.js` runs the bench's test pages (every `tests/*.html`) in headless Chrome and prints each page's count and every failure, with what it got and wanted; it exits 1 when a test fails. GitHub Actions runs it on every push to a bench (`.github/workflows/tests.yml` in the bench: check out with the kit, Node 22, `node research/kit/tools/test.js`), and the kit's own workflow runs it in each bench with the kit as pushed, so a kit change that would break a bench shows before the bench moves to it. A new bench copies the template's workflow; the kit's list of benches (the template, SHRDLU, Spacewar, ELIZA) is in its own `.github/workflows/tests.yml`.
 
 ```bash
 node research/kit/tools/test.js
