@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.25.0 (2026-10-12)
+
+- `builds.js`: fetching (`SW.fetchText`, `SW.fetchBytes`), the cache of builds (`SW.build(id, extra)`, `SW.current()`), opening a version at a line (`SW.openAt`), an export's details (`SW.docMeta`) and `SW.oct`, from the benches' own `core.js`. The bench says how a version is read: `SW.builds({ read(v, L, extra), split, key(v, extra), meta(b) })`. Load it after `kit/refs.js`, before the bench's `js/core.js`.
+
 ## 0.24.4 (2026-10-12)
 
 - `bench.css`: the rules for what the kit draws under names it builds as it runs, which the benches still carried: Read's kinds of line and their swatches in the Key, My notes' sync states, Findings' levels, and the site-map link in the tab row.
