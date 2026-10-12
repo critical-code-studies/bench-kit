@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.34.0 (2026-10-12)
+
+- `tests/run.js` loads the bench's scripts from its `index.html` (all but `kit/shell.js`) and draws the page's heading, summary and list; a bench's `tests/annotations.html` is now its values and the runner, and its script list no longer repeats the page's. A script that fails to load is reported by name.
+
 ## 0.33.0 (2026-10-12)
 
 - `tools/styles.js` and `tools/styles-page.js`: a change to the stylesheets checked against the last commit (or `--ref`), element by element, in every state of the page and each colour theme asked for (`--themes all`); the kit's stylesheets as the bench's commit pointed to them. A state read twice with the stylesheets on disk sets aside what changes by itself (an animation). Exits 1 when anything differs.

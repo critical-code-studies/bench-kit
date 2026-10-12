@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.33.0
+**Version:** 0.34.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -212,7 +212,7 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 
 ## Tests
 
-A bench's `tests/annotations.html` loads its scripts and its values (`window.BENCH_TESTS = { link: { v, l, name }, text, lineKey }`, in its `tests/annotations.test.js`), then the kit's `tests/run.js`, which runs the kit's tests and reports. `tests/annotations.test.js` checks the annotation system's pure parts (Markdown, links, ghosts, open and resolved, mentions); `tests/kit.test.js` checks the version list (on a made-up list, and the bench's own for consistency: ids, descent, chains, lines, files, references), builds (the bench's first version with files, fetched), changes to the Help menu, the beam, octal and a name's pop-up. A new test file goes in `tests/` and in run.js's list; the benches need no change. The template has the page and the values.
+A bench's `tests/annotations.html` loads its values (`window.BENCH_TESTS = { link: { v, l, name }, text, lineKey }`, in its `tests/annotations.test.js`) and the kit's `tests/run.js`, nothing else: the runner reads the bench's `index.html` and loads its scripts in their order, all but `kit/shell.js`, so a script added to the page is in the tests too; then it runs the kit's tests and reports, a script that fails to load among the failures. `tests/annotations.test.js` checks the annotation system's pure parts (Markdown, links, ghosts, open and resolved, mentions); `tests/kit.test.js` checks the version list (on a made-up list, and the bench's own for consistency: ids, descent, chains, lines, files, references), builds (the bench's first version with files, fetched), changes to the Help menu, the beam, octal and a name's pop-up. A new test file goes in `tests/` and in run.js's list; the benches need no change. The template has the page and the values.
 
 ## Tools
 
