@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.37.2 (2026-10-12)
+
+- The tests: a line of descent that lists its versions has no tip to reach.
+
 ## 0.37.1 (2026-10-12)
 
 - `versionlist.js`: a line of descent may list its versions (`ids`, in order) in place of a `tip`, where no descent is known: the ELIZA bench's DOCTOR copies, two tapes printed the same day and not ordered.

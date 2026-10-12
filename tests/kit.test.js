@@ -44,7 +44,7 @@
   eq('descent names only versions there are', dangling, []);
   var broken = V.VERSIONS.filter(function (v) { var c = V.ancestry(v.id); return c[c.length - 1] !== v.id || V.byId(c[0]).parent; });
   eq('every chain begins at a first version and ends at its own', ids(broken), []);
-  eq('every line of descent reaches its tip', V.LINES.filter(function (l) { return !l.ids.length || l.ids[l.ids.length - 1] !== l.tip; }).map(function (l) { return l.id; }), []);
+  eq('every line of descent reaches its tip', V.LINES.filter(function (l) { return !l.ids.length || (l.tip != null && l.ids[l.ids.length - 1] !== l.tip); }).map(function (l) { return l.id; }), []);   // a line that lists its versions has no tip
   eq('every file named', V.VERSIONS.filter(function (v) { return (v.build || []).some(function (b) { return !(b.src || b.tape); }); }).map(function (v) { return v.id; }), []);
   if (SW.refOf) {
     var refs = {}, twice = [];
