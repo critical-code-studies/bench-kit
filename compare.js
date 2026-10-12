@@ -396,6 +396,8 @@
   // Open Genealogy on a given view (stemma, alluvial, matrix, lineage), from elsewhere (the welcome tour).
   SW.genealogyShow = function (m) { gst.show = m; SW.forget('genealogy'); SW.setTab('genealogy'); };
   var gst = { line: SW.store.get('gen.line', GB.line || ''), set: SW.store.get('gen.set', DEFAULT_SET), gran: 'routine', supplied: true, show: 'alluvial', boxes: SW.store.get('gen.boxes', 'change'), zoom: +SW.store.get('gen.zoom', 0) || 0 };
+  // Turn the flow to a line of descent (V.LINES id), from elsewhere (the ELIZA bench's subsets).
+  SW.genealogyLine = function (id) { gst.line = id; SW.store.set('gen.line', id); SW.forget('genealogy'); };
 
   function texts(ids) {
     var vs = buildable().filter(function (v) { return ids.indexOf(v.id) >= 0; });

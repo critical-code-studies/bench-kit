@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.37.4 (2026-10-12)
+
+- `compare.js`: `SW.genealogyLine(id)` turns the genealogy's flow to a line of descent from elsewhere (the ELIZA bench's named subsets).
+
 ## 0.37.3 (2026-10-12)
 
 - `versionlist.js`: the default loader asks the bench's `findTitle(lines, b)` where each file's text begins, so the comparisons and the genealogy leave out a note set at a file's head (the ELIZA bench's transcribers' headers).
