@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.32.0 (2026-10-13)
+
+- `tools/sitemap.js` and `sitemap.js`: a bench's `sitemap.html`, made from the bench as it runs in headless Chrome: the tab row, each menu with its headings (lenses, graphics, Versions, Help), every version with its reference, Read, Run and Record, its files and scans on GitHub, and a closing list for reading without the bench. Settings in `SW.BENCH.sitemap` (`site`, `sitePages`, `intro`, `opens`, `files`, `lost`, `links`). No packages: Node 22 and Chrome.
+- `tools/release.js`: the closing hint names the files it changed (`git add …`), the kit and a README outside the bench's folder among them.
+
 ## 0.31.1 (2026-10-13)
 
 - `tools/release.js`: tags are fetched with `--force`, so a tag moved in the kit's repository (as v0.25.0 was) is taken rather than stopping the release; git's own message is shown when a git step fails.

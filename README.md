@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.31.1
+**Version:** 0.32.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -146,7 +146,7 @@ SW.BENCH = {
 | `tours`, `tourOffer` | `tours.js` | The guided tours and the offer made on a first visit (below). Conventionally in `js/tour.js`, loaded before the kit. |
 | `forks`, `start` | `shell.js` | The version picker's groups (`[[fork, label]]`, by each version's `fork`) and the version shown first. |
 | `shell` | `shell.js` | The bench's parts of the frame (hooks, below). |
-| `sitemap` | `menus.js` | `true` where the bench has a `sitemap.html`: Help ▸ Site map. |
+| `sitemap` | `menus.js`, `sitemap.js` | Where the bench has a `sitemap.html` (Help ▸ Site map): `true`, or how `tools/sitemap.js` writes it: `site` ([href, label], the project's site), `sitePages` ([[href, label]]), `intro` (HTML), `opens` (what a link opens when it names no version), `files` (a sentence on the files), `lost` (the line for a version with no text), `links` ({ pick: href } for a menu item that opens a page of its own). |
 | `menus` | `menus.js` | Versions ▾ and Help ▾, and the bench's own menus (hooks, below). |
 | `version` | `version.js` | The bench's rows on This version (hooks, below). |
 | `refs` | `refs.js` | `repo` (or `SW.BENCH.repo`), `dir` (the sources' folder in it, `source`), `names` (`{ version id: short name }`), `prefix` (before a version's id without one), `supplied` (a pattern for the roles of supplied files), `refOf(vid, p, n0, n1, nparts)` (where the bench writes references otherwise). |
@@ -219,7 +219,13 @@ A bench's `tests/annotations.html` loads its scripts and its values (`window.BEN
 `tools/release.js` makes a bench's release, run from the bench's repository: the version raised on every script and stylesheet in its pages, a line in its changelog, its README's version, and the kit moved to a release (`--kit v0.31.0`); it stops on conflict markers, pages that disagree, or a kit with changes not in a release, and leaves committing to you. `--check` reports without changing anything, `--dry-run` says what it would do, `--no-changelog` leaves a changelog kept in groups.
 
 ```bash
-node research/kit/tools/release.js next "What changed." --kit v0.31.0
+node research/kit/tools/release.js next "What changed." --kit v0.32.0
+```
+
+`tools/sitemap.js` writes the bench's `sitemap.html`: every tab, menu item and version as a plain link, each version's source files and scans on GitHub, and the sources, the project's site and the repository for reading without the bench. It opens the bench in headless Chrome and reads it as it runs (the tab row, each menu, the version list, the references), through `sitemap.js`, which benches do not load; it needs Chrome or Chromium (`CHROME=` to name it) and Node 22. Run it after a change to the versions or the menus; `--dry-run` prints the page.
+
+```bash
+node research/kit/tools/sitemap.js
 ```
 
 ## Licence

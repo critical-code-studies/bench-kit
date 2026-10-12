@@ -83,8 +83,8 @@ if (problems.length) fail(problems.join('\n'));
 const next = want === 'next' ? cur.replace(/(\d+)$/, (n) => String(+n + 1)) : want;
 if (next === cur) fail('the version is already ' + cur);
 const today = new Date().toISOString().slice(0, 10);
-const changes = [];
-const write = (p, s) => { if (!DRY) fs.writeFileSync(p, s); };
+const changes = [], touched = [];
+const write = (p, s) => { touched.push(p); if (!DRY) fs.writeFileSync(p, s); };
 
 if (KIT) {
   if (DRY) changes.push('kit: would check out ' + KIT);
@@ -92,6 +92,7 @@ if (KIT) {
     git(['fetch', '--quiet', '--tags', '--force', 'origin'], kitDir);   // --force: a tag moved upstream is taken, not refused
     git(['checkout', '--quiet', KIT], kitDir);
     changes.push('kit: ' + KIT + ' (' + git(['rev-parse', '--short', 'HEAD'], kitDir) + ')');
+    touched.push(kitDir);
   }
 }
 const kv = kitVersion();
@@ -118,4 +119,4 @@ if (!NOLOG) {
 });
 
 console.log((DRY ? 'would release ' : 'released ') + cur + ' → ' + next + ', bench-kit ' + kv + ':\n' + changes.map((c) => '  ' + c).join('\n'));
-if (!DRY) console.log('\nNext: look over git diff, then commit and push (git add -A ' + dir + ').');
+if (!DRY) console.log('\nNext: look over git diff, then commit and push:\n  git add ' + touched.filter((p, i, a) => a.indexOf(p) === i).join(' '));
