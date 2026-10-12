@@ -684,6 +684,17 @@
     });
     return pdfjsP;
   }
+  // a page of a PDF drawn as a picture, at about two and a half times the width it is shown at so
+  // that it stays sharp when zoomed: { url, w, h }, w and h the page's own size (in points)
+  function pdfPicture(doc, n, width) {
+    return doc.getPage(n).then(function (pg) {
+      var v1 = pg.getViewport({ scale: 1 }), want = Math.min(4000, Math.max(1600, (width || 800) * 2.5)), vp = pg.getViewport({ scale: want / v1.width });
+      var cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      return pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise.then(function () {
+        return new Promise(function (ok) { cv.toBlob(function (bl) { ok({ url: URL.createObjectURL(bl), w: v1.width, h: v1.height }); }); });
+      });
+    });
+  }
   // a PDF as pictures, a page at a time, in the box images use (moved and zoomed the same way)
   function zoomPdf(it, pv, u) {
     var esc = SW.esc, n = 1, doc = null, last = null;
@@ -696,14 +707,7 @@
     function page(k) {
       if (!doc) return;
       n = Math.max(1, Math.min(doc.numPages, k)); pn.textContent = n + ' / ' + doc.numPages;
-      doc.getPage(n).then(function (pg) {
-        // drawn at about two and a half times the box's width, so that it stays sharp when zoomed
-        var v1 = pg.getViewport({ scale: 1 }), want = Math.min(4000, Math.max(1600, (zone.clientWidth || 800) * 2.5)), vp = pg.getViewport({ scale: want / v1.width });
-        var cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
-        return pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise.then(function () {
-          cv.toBlob(function (bl) { if (last) URL.revokeObjectURL(last); last = URL.createObjectURL(bl); Z.show(last, [v1.width, v1.height]); });
-        });
-      });
+      pdfPicture(doc, n, zone.clientWidth).then(function (pic) { if (last) URL.revokeObjectURL(last); last = pic.url; Z.show(pic.url, [pic.w, pic.h]); });
     }
     pv.addEventListener('click', function (e) { var b = e.target.closest('[data-pg]'); if (b) page(n + +b.dataset.pg); });
     var dlg = pv.closest('dialog');
@@ -947,14 +951,16 @@
     var d = SW.el('dialog', { class: 'tray-big px-dlg px-sbs' }), linked = SW.store.get('px.sbsLinked', true);
     function paneHTML(it, i) {
       return '<div class="px-pane" data-i="' + i + '"><div class="px-ph"><span class="px-code mono">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +
-        '<span class="faint">' + esc([it.date, it.archive, it.archiveId].filter(Boolean).join(' · ')) + '</span></div><div class="px-zoom"><p class="hint">Opening…</p></div></div>';
+        '<span class="faint">' + esc([it.date, it.archive, it.archiveId].filter(Boolean).join(' · ')) + '</span>' +
+        (it.kind === 'pdf' ? '<span class="px-zpg"><button class="btn ghost" data-pg="-1" title="The previous page (Page Up)">‹</button><span class="px-zpn mono">…</span><button class="btn ghost" data-pg="1" title="The next page (Page Down)">›</button></span>' : '') +
+        '</div><div class="px-zoom"><p class="hint">Opening…</p></div></div>';
     }
     function draw() {
       d.innerHTML = '<div class="tray-bighead"><b>Side by side</b><span class="refhelp-acts">' +
         '<label class="check" title="Zoom and pan both pictures together"><input type="checkbox" class="px-link"' + (linked ? ' checked' : '') + '> Together</label>' +
         '<button class="btn ghost" data-z="fit" title="Fit both (0)">Fit</button><button class="btn ghost" data-z="in" title="Zoom in (+)">＋</button><button class="btn ghost" data-z="out" title="Zoom out (−)">−</button>' +
         '<button class="btn ghost" data-z="swap" title="Swap the two round">⇄ Swap</button><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
-        '<div class="px-panes">' + items.map(paneHTML).join('') + '</div><p class="hint">Drag to move; wheel or pinch to zoom where the pointer is; double-click to zoom in. With Together on, both follow, matched by their place on the page.</p>';
+        '<div class="px-panes">' + items.map(paneHTML).join('') + '</div><p class="hint">Drag to move; wheel or pinch to zoom where the pointer is; double-click to zoom in; ‹ › or Page Up and Down for a PDF’s pages. With Together on, both follow, matched by their place on the page.</p>';
       views = items.map(function (it, i) { return view(it, SW.$('.px-pane[data-i="' + i + '"] .px-zoom', d)); });
     }
     // a picture's view: z (zoom over fit), and cx, cy (the point of the picture at the pane's centre, 0 to 1)
@@ -966,11 +972,22 @@
           box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false">'; v.img = SW.$('img', box);
           v.img.onload = function () { v.w = v.img.naturalWidth; v.h = v.img.naturalHeight; place(v); };
           v.img.src = u;
-        } else if (it.kind === 'pdf') { box.innerHTML = '<iframe class="px-pdf" title="' + esc(it.title) + '" src="' + u + '"></iframe>'; box.classList.add('px-free'); }
+        } else if (it.kind === 'pdf') {   // a page at a time, drawn as a picture (PDF.js)
+          box.innerHTML = '<img alt="' + esc(it.title) + '" draggable="false">'; v.img = SW.$('img', box);
+          v.img.onload = function () { place(v); };
+          pdfjs().then(function (lib) { return lib.getDocument(u).promise; }).then(function (doc) { v.doc = doc; turn(v, 1); }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; v.img = null; });
+        }
         else if (/^text\//.test(it.mime || '')) { box.classList.add('px-free'); fetch(u).then(function (r) { return r.text(); }).then(function (t) { box.innerHTML = '<pre class="px-text">' + esc(t) + '</pre>'; }); }
         else box.innerHTML = '<p class="hint">No preview for this kind of file.</p>';
       }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
       return v;
+    }
+    // a PDF's page n, in its pane, at the same zoom and place on the page
+    function turn(v, n) {
+      if (!v.doc) return;
+      v.n = Math.max(1, Math.min(v.doc.numPages, n));
+      var pn = SW.$('.px-zpn', v.box.closest('.px-pane')); if (pn) pn.textContent = v.n + ' / ' + v.doc.numPages;
+      pdfPicture(v.doc, v.n, v.box.clientWidth).then(function (pic) { if (v.url) URL.revokeObjectURL(v.url); v.url = pic.url; v.w = pic.w; v.h = pic.h; v.img.src = pic.url; });
     }
     function cur(v) { return linked ? st : v.st; }
     function place(v) {
@@ -998,6 +1015,7 @@
     window.addEventListener('resize', all);
     d.addEventListener('click', function (e) {
       if (e.target === d || e.target.closest('[data-x]')) { d.close(); return; }
+      var pg = e.target.closest('[data-pg]'); if (pg) { var pv = paneOf(pg); if (pv) turn(pv, pv.n + +pg.dataset.pg); return; }
       var z = e.target.closest('[data-z]'); if (!z) return;
       if (z.dataset.z === 'fit') fit();
       else if (z.dataset.z === 'swap') { items.reverse(); draw(); }
@@ -1017,7 +1035,7 @@
     }, { passive: false });
     d.addEventListener('dblclick', function (e) { var v = paneOf(e.target); if (!v || !v.img) return; var r = v.box.getBoundingClientRect(); zoomAt(v, 2, e.clientX - r.left, e.clientY - r.top); });
     var drag = null;
-    d.addEventListener('pointerdown', function (e) { var v = paneOf(e.target); if (!v || !v.img || e.button) return; drag = { v: v, x: e.clientX, y: e.clientY }; v.box.setPointerCapture(e.pointerId); v.box.classList.add('dragging'); });
+    d.addEventListener('pointerdown', function (e) { var v = paneOf(e.target); if (!v || !v.img || e.button || !v.box.contains(e.target)) return; drag = { v: v, x: e.clientX, y: e.clientY }; v.box.setPointerCapture(e.pointerId); v.box.classList.add('dragging'); });
     d.addEventListener('pointermove', function (e) {
       if (!drag) return;
       var v = drag.v, s0 = cur(v), sc = Math.min(v.box.clientWidth / v.w, v.box.clientHeight / v.h) * s0.z;
@@ -1031,6 +1049,7 @@
       if (e.key === '+' || e.key === '=') { views.forEach(function (v, i) { if (!linked || i === 0) zoomAt(v, 1.5); }); }
       else if (e.key === '-' || e.key === '−') { views.forEach(function (v, i) { if (!linked || i === 0) zoomAt(v, 1 / 1.5); }); }
       else if (e.key === '0') fit();
+      else if (e.key === 'PageDown' || e.key === 'PageUp') { e.preventDefault(); views.forEach(function (v) { if (v.doc) turn(v, v.n + (e.key === 'PageDown' ? 1 : -1)); }); }
     });
   };
   // To a paratext by its code (P-XXXXX): Paratexts opened, the item shown
