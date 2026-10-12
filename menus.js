@@ -5,8 +5,15 @@
  * any other menu the bench draws itself. From SW.BENCH.menus:
  *   versions          [[pick, label, text]]: Versions ▾ (by default This version, Compare,
  *                     Genealogy); a pick that is a view goes to it
- *   help              [[group, [[pick, label, text]]]]: Help ▾, its groups (by default the
- *                     template's); a pick opens the Help item of that name (SW.help, kit/shell.js)
+ *   help              Help ▾: changes to the kit's list (below), or the whole list as
+ *                     [[group, [[pick, label, text]]]]; a pick opens the Help item of that name
+ *                     (SW.help, kit/shell.js). The changes:
+ *                       text  { pick: text }: a new line under an item's name
+ *                       add   [[where, item]]: an item [pick, label, text] put after the item
+ *                             picked as `where`, or first in the group named `where`; an item
+ *                             given as a pick alone moves the kit's item there
+ *                       drop  [pick]: items left out
+ *                     Site map is in the list when SW.BENCH.sitemap is set (a sitemap.html).
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
  *   pick(which, p)    a pick the bench handles itself (a graphic, a Versions item that
  *                     is not a view); true when it has
@@ -31,13 +38,37 @@
                                 .concat([['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
                                          ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
                                          ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
-                                         ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']])],
+                                         ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']])
+                                .concat(B.sitemap ? [['sitemap', 'Site map', 'Every view and version as a plain link']] : [])],
             ['Your bench', [['settings', 'Settings', 'Initials, group, theme, fonts'],
                             ['backup', 'Back up everything', 'Notes, drafts, settings and findings in one file'],
                             ['restore', 'Restore from a backup…', 'Brings back notes and drafts beside those here']]],
             ['The project', [['code', 'Source code on GitHub ↗', repo],
                              ['issue', 'Report a problem ↗', 'GitHub issues'],
                              ['about', 'About the bench', 'Version, sources, citation']]]];
+  }
+
+  // Help ▾ as the bench has it: the kit's list with the bench's changes, or the bench's own list
+  function helpList() {
+    var h = H().help;
+    if (Array.isArray(h)) return h;
+    var G = HELP().map(function (g) { return [g[0], g[1].slice()]; });
+    if (!h) return G;
+    function find(p) {
+      for (var i = 0; i < G.length; i++) for (var j = 0; j < G[i][1].length; j++) if (G[i][1][j][0] === p) return { g: G[i][1], j: j };
+      return null;
+    }
+    (h.drop || []).forEach(function (p) { var f = find(p); if (f) f.g.splice(f.j, 1); });
+    (h.add || []).forEach(function (a) {
+      var it = a[1];
+      if (typeof it === 'string') { var m = find(it); if (!m) return; it = m.g.splice(m.j, 1)[0]; }
+      var grp = G.filter(function (g) { return g[0] === a[0]; })[0];
+      if (grp) { grp[1].unshift(it); return; }
+      var f = find(a[0]); if (f) f.g.splice(f.j + 1, 0, it); else G[G.length - 1][1].push(it);
+    });
+    var T = h.text || {};
+    G.forEach(function (g) { g[1] = g[1].map(function (it) { return T[it[0]] != null ? [it[0], it[1], T[it[0]]] : it; }); });
+    return G;
   }
 
   var tabMenu = null;
@@ -48,7 +79,7 @@
     if (which === 'help') {
       var dm = document.querySelector('meta[name="bench-date"]');
       // grouped, with a divider and a small heading between the groups; About the bench last
-      return (H().help || HELP()).map(function (g, i) {
+      return helpList().map(function (g, i) {
         return (i ? '<hr class="menu-rule">' : '') + '<div class="menu-group">' + SW.esc(g[0]) + '</div>' + g[1].map(function (h) { return item(h); }).join('');
       }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }

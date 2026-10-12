@@ -38,12 +38,15 @@
     sel.onchange = function () { select(sel.value); };
   }
 
-  // A menu in the tab row is lit when the view open is one of its items
-  // (data-tabs; for the analyse view, data-lenses too).
+  // A menu in the tab row is lit when the view open is one of its items (data-tabs; for the
+  // analyse view, the lenses SW.BENCH.lenses.menus puts in that menu).
+  function lensesIn(menu) {
+    return (((B.lenses || {}).menus || {})[menu] || []).reduce(function (a, g) { return a.concat(g[1].map(String)); }, []);
+  }
   SW.markTabs = function () {
     var tab = SW.state.tab, lens = String(SW.anLens ? SW.anLens() : '');
     SW.$$('#tabs button').forEach(function (b) {
-      var on = b.dataset.tabs ? b.dataset.tabs.split(' ').indexOf(tab) >= 0 && (tab !== 'analyse' || (b.dataset.lenses || '').split(' ').indexOf(lens) >= 0) : b.dataset.tab === tab;
+      var on = b.dataset.tabs ? b.dataset.tabs.split(' ').indexOf(tab) >= 0 && (tab !== 'analyse' || lensesIn(b.dataset.menu).indexOf(lens) >= 0) : b.dataset.tab === tab;
       b.classList.toggle('on', on);
     });
   };

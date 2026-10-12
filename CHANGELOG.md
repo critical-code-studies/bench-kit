@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## 0.28.0 (2026-10-12)
+
+- The tab row: a menu's button is lit by the lenses `SW.BENCH.lenses.menus` puts in it; the buttons' `data-lenses` attribute, which repeated that list, is no longer read.
+- Help ▾: `SW.BENCH.menus.help` may give changes to the kit's list (`text`, `add`, `drop`) in place of the whole list, which still works. Site map is in the kit's list where `SW.BENCH.sitemap` is set.
+
 ## 0.27.0 (2026-10-12)
 
 - The gold of repairs has one name, `--kin` (with `--kin-bg`), where the benches had `--gold` (SHRDLU, the template) or `--kin` (Spacewar) and the kit read both. A bench that set `--gold` sets `--kin`. In a bench that had only `--gold`, the chosen rating in Findings is now drawn in gold (it read `--kin`, which was unset).
