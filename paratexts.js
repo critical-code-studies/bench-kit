@@ -608,18 +608,19 @@
   }
   // Zoom in a single item's box. A picture: a bar (− ＋ Fit 1:1 and the scale), the wheel or a
   // pinch zooming where the pointer is, a double-click zooming in, a drag moving it, and the keys
-  // + − 0 while the pointer is over it. A PDF: Fit page or width, given to the browser's own viewer
-  // by the address (#view=), and − ＋, the frame made wider or narrower than the box; the frame is
-  // made again at each step.
+  // + − 0 while the pointer is over it. A PDF the same, a page at a time, drawn by PDF.js, with
+  // ‹ › for its pages and Open ↗ for the browser's own viewer.
   function zoomBar(extra) {
     return '<div class="px-zbar"><button class="btn ghost" data-zz="out" title="Zoom out (−)">−</button><span class="px-zpc mono">100%</span><button class="btn ghost" data-zz="in" title="Zoom in (+)">＋</button>' +
       extra + '</div>';
   }
-  function zoomImage(it, pv, u) {
+  // A picture in a box, to zoom and move: the bar's own buttons (extra) and the hint under it.
+  // Returns show(src, size), which puts a picture in the box, fitted (size: [w, h] where 1:1 is
+  // not the picture's own pixels).
+  function zoomBox(pv, alt, extra, hint) {
     var esc = SW.esc;
     pv.classList.add('px-zwrap');
-    pv.innerHTML = zoomBar('<button class="btn ghost" data-zz="fit" title="Fit (0)">Fit</button><button class="btn ghost" data-zz="one" title="Actual size, a pixel of the scan to a pixel of the screen">1:1</button>') +
-      '<div class="px-zoom px-zone"><img alt="' + esc(it.title) + '" draggable="false"></div><p class="hint px-zhint">Drag to move; wheel or pinch to zoom where the pointer is; double-click to zoom in.</p>';
+    pv.innerHTML = zoomBar(extra) + '<div class="px-zoom px-zone"><img alt="' + esc(alt) + '" draggable="false"></div><p class="hint px-zhint">' + hint + '</p>';
     var box = SW.$('.px-zone', pv), img = SW.$('img', box), pc = SW.$('.px-zpc', pv), w = 0, h = 0, st = { z: 1, cx: 0.5, cy: 0.5 };
     function fitSc() { return Math.min(box.clientWidth / w, box.clientHeight / h); }
     function place() {
@@ -639,8 +640,8 @@
       place();
     }
     function fit() { st = { z: 1, cx: 0.5, cy: 0.5 }; place(); }
-    img.onload = function () { w = img.naturalWidth; h = img.naturalHeight; place(); };
-    img.src = u;
+    var size = null;   // the picture's size where it is not its pixels (a PDF page's own, in points)
+    img.onload = function () { w = size ? size[0] : img.naturalWidth; h = size ? size[1] : img.naturalHeight; place(); };
     pv.addEventListener('click', function (e) {
       var b = e.target.closest('[data-zz]'); if (!b) return;
       var k = b.dataset.zz;
@@ -665,29 +666,55 @@
     }
     if (dlg) { dlg.addEventListener('keydown', key); dlg.addEventListener('close', function () { window.removeEventListener('resize', place); }); }
     window.addEventListener('resize', place);
+    return { show: function (src, sz) { st = { z: 1, cx: 0.5, cy: 0.5 }; size = sz || null; img.src = src; } };
   }
-  function zoomPdf(it, pv, u) {
-    var esc = SW.esc, z = 0, steps = [50, 67, 80, 100, 125, 150, 200, 300, 400], mode = 'page';
-    pv.classList.add('px-zwrap');
-    pv.innerHTML = zoomBar('<button class="btn ghost" data-zz="page" title="The whole page">Fit page</button><button class="btn ghost" data-zz="width" title="The page across the width">Fit width</button><a class="btn ghost" href="' + u + '" target="_blank" rel="noopener" title="In a tab of its own, with the browser\'s own tools">Open ↗</a>') +
-      '<div class="px-pdfbox"></div>';
-    var box = SW.$('.px-pdfbox', pv), pc = SW.$('.px-zpc', pv);
-    // a zoom is the frame made wider than the box (the page fitted to its width, the box scrolling
-    // across), not the viewer's own #zoom=, which browsers' PDF viewers do not all honour
-    function frame() {
-      var frag = mode === 'page' ? '#view=Fit' : '#view=FitH';
-      box.innerHTML = '<iframe class="px-pdf" title="' + esc(it.title) + '" src="' + u + frag + '"></iframe>';
-      if (mode === 'zoom') box.firstChild.style.width = steps[z] + '%';
-      pc.textContent = mode === 'page' ? 'page' : mode === 'width' ? 'width' : steps[z] + '%';
-    }
-    pv.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-zz]'); if (!b) return;
-      var k = b.dataset.zz;
-      if (k === 'page' || k === 'width') mode = k;
-      else { if (mode !== 'zoom') { z = 3; mode = 'zoom'; } z = Math.max(0, Math.min(steps.length - 1, z + (k === 'in' ? 1 : -1))); }
-      frame();
+  function zoomImage(it, pv, u) {
+    zoomBox(pv, it.title, '<button class="btn ghost" data-zz="fit" title="Fit (0)">Fit</button><button class="btn ghost" data-zz="one" title="Actual size, a pixel of the scan to a pixel of the screen">1:1</button>',
+      'Drag to move; wheel or pinch to zoom where the pointer is; double-click to zoom in.').show(u);
+  }
+  // PDF.js (Mozilla), fetched from cdnjs the first time a PDF is opened
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/', pdfjsP = null;
+  function pdfjs() {
+    if (!pdfjsP) pdfjsP = new Promise(function (ok, no) {
+      if (root.pdfjsLib) { ok(root.pdfjsLib); return; }
+      var sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js';
+      sc.onload = function () { root.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(root.pdfjsLib); };
+      sc.onerror = function () { pdfjsP = null; no(new Error('PDF.js could not be fetched')); };
+      document.head.appendChild(sc);
     });
-    frame();
+    return pdfjsP;
+  }
+  // a PDF as pictures, a page at a time, in the box images use (moved and zoomed the same way)
+  function zoomPdf(it, pv, u) {
+    var esc = SW.esc, n = 1, doc = null, last = null;
+    var Z = zoomBox(pv, it.title,
+      '<button class="btn ghost" data-zz="fit" title="Fit (0)">Fit</button><button class="btn ghost" data-zz="one" title="The page at its own size (100%)">1:1</button>' +
+      '<span class="px-zpg"><button class="btn ghost" data-pg="-1" title="The previous page (Page Up)">‹</button><span class="px-zpn mono">…</span><button class="btn ghost" data-pg="1" title="The next page (Page Down)">›</button></span>' +
+      '<a class="btn ghost" href="' + u + '" target="_blank" rel="noopener" title="In a tab of its own, with the browser\'s own tools">Open ↗</a>',
+      'Drag to move; wheel or pinch to zoom where the pointer is; double-click to zoom in; ‹ › or Page Up and Down for the pages.');
+    var pn = SW.$('.px-zpn', pv), zone = SW.$('.px-zone', pv);
+    function page(k) {
+      if (!doc) return;
+      n = Math.max(1, Math.min(doc.numPages, k)); pn.textContent = n + ' / ' + doc.numPages;
+      doc.getPage(n).then(function (pg) {
+        // drawn at about two and a half times the box's width, so that it stays sharp when zoomed
+        var v1 = pg.getViewport({ scale: 1 }), want = Math.min(4000, Math.max(1600, (zone.clientWidth || 800) * 2.5)), vp = pg.getViewport({ scale: want / v1.width });
+        var cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+        return pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise.then(function () {
+          cv.toBlob(function (bl) { if (last) URL.revokeObjectURL(last); last = URL.createObjectURL(bl); Z.show(last, [v1.width, v1.height]); });
+        });
+      });
+    }
+    pv.addEventListener('click', function (e) { var b = e.target.closest('[data-pg]'); if (b) page(n + +b.dataset.pg); });
+    var dlg = pv.closest('dialog');
+    if (dlg) dlg.addEventListener('keydown', function (e) {
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+      if (e.key === 'PageDown') { e.preventDefault(); page(n + 1); } else if (e.key === 'PageUp') { e.preventDefault(); page(n - 1); }
+    });
+    pdfjs().then(function (lib) { return lib.getDocument(u).promise; }).then(function (d) { doc = d; page(1); }, function (e) {
+      pn.textContent = '';
+      zone.innerHTML = '<p class="hint" style="padding:12px">The PDF could not be drawn here (' + esc(e.message) + '). Open ↗ shows it in the browser\'s own viewer.</p>';
+    });
   }
   function showFile(it, pv, dl) {
     var esc = SW.esc;

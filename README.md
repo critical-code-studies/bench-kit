@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.23.1
+**Version:** 0.24.0
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -17,7 +17,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `version.js` | Versions ▸ This version (the view `about`): a version's record, its place in the variorum, its annotations and build log, the bin, every annotation on every version; the bench's own rows from `SW.BENCH.version`. |
 | `refs.js` | References to the sources (`SW.refOf`, `SW.refText`, `SW.refTag`, `SW.cite`, `SW.nparts`), the files on GitHub (`SW.sourceURL`, `SW.sourceLink`, `SW.permalinkOf`), and their SWHIDs (`SW.swhidOf`, `SW.swhidCite`, `SW.swhidList`, `SW.swhidTiny`, `SW.filesOf`, `SW.ownFilesOf`), from `SW.BENCH.refs`. |
 | `about.js` | The About box (`SW.about.open()`): name, author, version and release date (the `bench-date` meta), purpose, tech stack, the kit, what is inside, sources, the catalogue of versions, code and citation, with the welcome tour; the bench's rows from `SW.BENCH.about`. |
-| `paratexts.js` | The Paratexts tab: a private GitHub repository of scans, documents, recordings and links, read and written with each member's own token; collections, Dublin Core, CSL-JSON, RIS and oai_dc export, ratings, comments, side by side, zoom, codes (P-XXXXX). |
+| `paratexts.js` | The Paratexts tab: a private GitHub repository of scans, documents, recordings and links (a PDF drawn a page at a time by Mozilla's PDF.js, fetched from cdnjs the first time one is opened, to zoom and move as a picture is), read and written with each member's own token; collections, Dublin Core, CSL-JSON, RIS and oai_dc export, ratings, comments, side by side, zoom, codes (P-XXXXX). |
 | `graphics.js` | The Graphics tab: pictures of the program, one at a time, chosen from the view's heading and from Graphics ▾ in the tab row (in groups, two columns); `&g=` in a link; an animation stopped when another graphic is chosen; an export where the picture gives one. `SW.setGraphic(id)`, `SW.openGraphic(id)`, `SW.gfxItem()`, `SW.graphics.render()`. The pictures are the bench's, from `SW.BENCH.graphics` (hooks, below). |
 | `lenses.js` | The Analyse view: lenses on a version, each a set of cards with its own export and a stable number; a second mode across the versions where the bench gives one; the lens menus in the tab row (Text ▾, Program ▾ …) and the Versions items that open a lens; the Functional overview and a name's history as lenses. `SW.openLens(n)`, `SW.setLens(n)` (a link's `&lens=`), `SW.anLens()`, `SW.anLensName()`, `SW.lenses.render()`, and the cards' parts `SW.lenses.card(title, lede)`, `wide`, `bars`, `expMenu`. The lenses themselves are the bench's, from `SW.BENCH.lenses` (hooks, below). |
 | `helppages.js` | Three Help pages from the bench's data: Referencing and versions (`SW.refHelp`, `SW.refList`: the form of reference, the versions and ports, to copy or export with their SWHIDs), What you should read (`SW.readingHelp`), and Reconstruction cards (`SW.cardsHelp`, `SW.cardsOne(vid)`, `SW.cardHTML(v, { about })`: what the bench does to each version to read and run it, to copy, export as Word, Markdown, PNG or SVG, or keep in My notes). From `SW.BENCH.refHelp`, `reading` and `cards`. |

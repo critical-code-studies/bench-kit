@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.24.0 (2026-10-12)
+
+- Paratexts: a PDF is drawn a page at a time by Mozilla's PDF.js (3.11.174, fetched from cdnjs the first time a PDF is opened), in the box a picture is shown in: drag to move, the wheel or a pinch to zoom where the pointer is, a double-click to zoom in, Fit, 1:1 (the page at its own size), ‹ › or Page Up and Down for the pages, and Open ↗ for the browser's own viewer. In place of 0.23.1's wider frame, which could not be moved across.
+
 ## 0.23.1 (2026-10-12)
 
 - Paratexts: zooming a PDF (− ＋) makes its frame wider or narrower than the box, the page fitted to the frame's width and the box scrolling across, in place of the viewer's own `#zoom=`, which the browser's PDF viewer no longer honoured. Fit page and Fit width are as before.
