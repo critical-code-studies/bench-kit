@@ -25,12 +25,12 @@ dialog.px-dlg { width: min(96vw, 1200px); }
 .px-img { max-width: 100%; max-height: 76vh; display: block; }
 .px-pdf { width: 100%; height: 76vh; border: 0; background: #fff; }
 .px-text { white-space: pre-wrap; font: 12.5px var(--mono); padding: 10px; margin: 0; align-self: start; justify-self: stretch; }
-.px-fields { display: grid; gap: 6px; }
+.px-fields { display: grid; gap: 3px; }
 .px-fields label { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; align-items: start; font-size: 12.5px; color: var(--text-dim); }
 .px-fields input, .px-fields textarea { font: 13px var(--sans); padding: 4px 7px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
-.px-acts { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.px-acts { display: flex; align-items: center; gap: 8px; margin: 6px 0 4px; }
 .px-acts .px-wd { margin-left: auto; }
-.px-talk { border-top: 1px solid var(--line-soft); margin-top: 8px; padding-top: 6px; }
+.px-talk { border-top: 1px solid var(--line-soft); margin-top: 6px; padding-top: 4px; }
 .px-talk .fd-rxbar button { font-size: 12.5px; padding: 0 6px; line-height: 1.6; }
 .px-cbox { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
 .px-cbox > :not(textarea):not(.btn) { grid-column: 1 / -1; }
@@ -97,12 +97,12 @@ dialog.px-dlg { width: min(96vw, 1200px); }
 .px-row.sel { background: color-mix(in srgb, var(--beam) 14%, transparent); }
 .px-thumb.px-mini { width: 44px; height: 32px; font-size: 18px; border-radius: 3px; }
 .px-code-c { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
-.px-colls { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; font-size: 12.5px; color: var(--text-dim); margin: 8px 0 0; align-items: center; }
+.px-colls { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; font-size: 12.5px; color: var(--text-dim); margin: 5px 0 0; align-items: center; }
 .px-cchip { display: inline-flex; align-items: center; gap: 2px; }
 .px-cchip button { border: 0; background: none; color: var(--text-faint); cursor: pointer; padding: 0 0 0 3px; font-size: 13px; }
 .px-cchip button:hover { color: var(--text); }
 .px-addc { font-size: 12px; }
-.px-linkline { font-size: 12.5px; color: var(--text-dim); margin: 4px 0 0; line-height: 1.6; }
+.px-linkline { font-size: 12.5px; color: var(--text-dim); margin: 2px 0 0; line-height: 1.45; }
 .px-linkline b { color: var(--text); margin-right: 4px; }
 .px-linkline .btn { font-size: 12px; padding: 0 7px; }
 .px-into { margin: 8px 0 0; font-size: 13px; }
@@ -186,3 +186,16 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-zpg { display: inline-flex; align-items: center; gap: 2px; margin: 0 6px; }
 .px .lede { max-width: 70ch; }
 .pxlink { font-style: normal; }
+
+/* the record's own provenance, as a field row like the rest */
+.px-by { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; font-size: 12.5px; color: var(--text-dim); margin: 5px 0 0; }
+/* reactions: only the ones chosen are shown; the rest fold behind + */
+.px-talk .fd-rxbar { margin: 4px 0; gap: 3px; }
+.px-rxmore { display: inline-block; }
+.px-rxmore > summary { list-style: none; cursor: pointer; }
+.px-rxmore > summary::-webkit-details-marker { display: none; }
+.px-rxmenu { display: flex; flex-wrap: wrap; gap: 3px; padding: 5px; min-width: 0; }
+.px-rxmenu button { font-size: 14px; }
+.px-talk .px-cfold { margin-top: 2px; }
+.px-cited:empty { display: none; }
+.px-cited h4 { margin: 8px 0 4px; }

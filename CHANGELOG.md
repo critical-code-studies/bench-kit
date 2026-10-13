@@ -1,5 +1,16 @@
 # Changelog: bench-kit
 
+## 0.39.2 (2026-10-13)
+
+- Paratexts, the item panel: the reactions fold away. Only the emoji someone has actually chosen
+  are shown, with the rest behind a `+` menu; the stars stay in view and now fill as you click,
+  before the save returns, so a rating no longer feels laggy.
+- "Catalogued by" is a field row like the others rather than a line of prose under Collections.
+- "Cited in" is left out entirely when nothing cites the paratext, instead of printing a notice
+  saying so.
+- The panel is tighter: less space between the fields, the collections, the action row and the
+  reaction bar.
+
 ## 0.39.1 (2026-10-13)
 
 - `SW.mainPart(part)`: a version's main file, its program or a witness read as text; Compare, the reading edition, the tours, the functional overview and the records count a `text` part as main (0.39.0 left it out of Compare's text view).

@@ -579,11 +579,12 @@
   function citedIn(code, box) {
     if (!box || !SW.notes || !SW.notes.citing) return;
     var esc = SW.esc;
-    box.innerHTML = '<h4 class="fd-rh">Cited in</h4><p class="hint">Looking…</p>';
+    box.innerHTML = '';
     SW.notes.citing(code).then(function (l) {
-      box.innerHTML = '<h4 class="fd-rh">Cited in' + (l.length ? ' <span class="faint">' + l.length + '</span>' : '') + '</h4>' + (l.length ? '<ul class="px-citelist">' + l.map(function (c) {
+      if (!l.length) return;   // nothing cites it: the section stays out of the way
+      box.innerHTML = '<h4 class="fd-rh">Cited in <span class="faint">' + l.length + '</span></h4>' + ('<ul class="px-citelist">' + l.map(function (c) {
         return '<li><button class="px-cite" data-go="' + esc(c.code) + '" title="Go to it"><span class="px-code mono">' + esc(c.code || '?') + '</span> <b>' + esc(c.what) + '</b>' + (c.by && c.by !== 'bench' ? ' by ' + esc(c.by) : '') + (c.where ? ' · ' + esc(c.where) : '') + (c.date ? ' · <span class="faint">' + esc(SW.fmtDate(c.date)) + '</span>' : '') + (c.text ? '<span class="px-citetext">' + esc(c.text) + '</span>' : '') + '</button></li>';
-      }).join('') + '</ul>' : '<p class="hint">Not yet: write ' + esc(code) + ' in an annotation, note or finding to cite it.</p>');
+      }).join('') + '</ul>');
     });
   }
   // a click on a citation: the box (or boxes) closed, and on to it
@@ -751,7 +752,7 @@
       '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + (it.file ? '<a class="btn ghost" data-a="dl" download="' + esc(it.name || it.code) + '">⤓ Download</a><a class="btn ghost" href="' + esc(gh0) + '" target="_blank" rel="noopener" title="On GitHub, with its history">GitHub ↗</a>' : okURL(it.url) ? '<a class="btn ghost" href="' + esc(it.url.trim()) + '" target="_blank" rel="noopener" title="Where it is held">Open ↗</a>' : '') + (okURL(it.archiveUrl) ? '<a class="btn ghost" href="' + esc(it.archiveUrl.trim()) + '" target="_blank" rel="noopener" title="The original, in ' + esc(it.archive || 'its archive') + '">Source ↗</a>' : '') + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
       '<div class="px-cols"><div class="px-view"><p class="hint">Opening…</p></div><div class="px-side">' + fieldsHTML(it) +
       '<div class="px-colls">' + collsHTML(it) + '</div>' +
-      '<p class="hint">Catalogued by ' + esc(it.addedBy || '?') + (it.updated && it.updated !== it.added ? '; changed ' + esc(SW.fmtDate(it.updated)) + ' by ' + esc(it.updatedBy || '?') : '') + '.</p>' +
+      '<div class="px-by"><span>Catalogued by</span><span>' + esc(it.addedBy || '?') + (it.updated && it.updated !== it.added ? ', changed ' + esc(SW.fmtDate(it.updated)) + ' by ' + esc(it.updatedBy || '?') : '') + '</span></div>' +
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
       (it.withdrawn ? '<p class="badge px-wdnote">Withdrawn ' + esc(SW.fmtDate(it.withdrawn)) + (it.withdrawnBy ? ' by ' + esc(it.withdrawnBy) : '') + (it.withdrawnWhy ? ': ' + esc(it.withdrawnWhy) : '') + '</p>' : '') +
       '<div class="px-linkline">Use the code <span class="mono">' + esc(it.code) + '</span> in an annotation to link it. <button class="btn ghost" data-copy="' + esc(it.code) + '">Copy the code</button></div>' +
@@ -783,6 +784,12 @@
       if (uc) { var pr = outOf([code], uc.dataset.uncoll); colls0(); pr.then(colls0); return; }
       var rb = e.target.closest('[data-rate]');
       if (rb) { var k = +rb.dataset.rate; rb.disabled = true; talk('rated', function (x, who) { x.rates = x.rates || {}; if (x.rates[who] === k) delete x.rates[who]; else x.rates[who] = k; }); return; }
+      var sb = e.target.closest('[data-rate]');
+      if (sb) {   // show the change at once; the save follows
+        var want = +sb.dataset.rate, row = sb.parentNode, have = SW.$$('[data-rate]', row);
+        var off = sb.classList.contains('on') && !SW.$$('[data-rate].on', row).slice(want).length;
+        have.forEach(function (b) { b.classList.toggle('on', !off && +b.dataset.rate <= want); });
+      }
       var eb = e.target.closest('[data-emoji]');
       if (eb) { var em = eb.dataset.emoji; eb.disabled = true; talk(em, function (x, who) { x.rx = x.rx || {}; var l = x.rx[em] = x.rx[em] || [], i = l.indexOf(who); if (i >= 0) l.splice(i, 1); else l.push(who); if (!l.length) delete x.rx[em]; }); return; }
       var a = e.target.closest('[data-a]'); if (!a) return;
@@ -830,7 +837,7 @@
     return '<div class="fd-rxbar px-rx"><span class="fd-rate" title="Your rating, one to three stars (again to take it back); the crew’s average beside it">' +
       [1, 2, 3].map(function (k) { return '<button data-rate="' + k + '" class="' + ((r[mine] || 0) >= k ? 'on' : '') + '">★</button>'; }).join('') +
       (a ? ' <span class="hint" title="' + esc(a.who.join('; ')) + '">' + (Math.round(a.avg * 10) / 10) + ' from ' + a.n + '</span>' : '') + '</span>' +
-      EM.map(function (e) { var by = rx[e] || []; return '<button class="fd-emo' + (by.indexOf(mine) >= 0 ? ' on' : '') + '" data-emoji="' + e + '" title="' + esc(by.join(', ') || 'React') + '">' + e + (by.length ? '<sup>' + by.length + '</sup>' : '') + '</button>'; }).join('') + '</div>' +
+      EM.filter(function (e) { return (rx[e] || []).length; }).map(function (e) { var by = rx[e]; return '<button class="fd-emo' + (by.indexOf(mine) >= 0 ? ' on' : '') + '" data-emoji="' + e + '" title="' + esc(by.join(', ')) + '">' + e + (by.length > 1 ? '<sup>' + by.length + '</sup>' : '') + '</button>'; }).join('') + '<details class="px-more px-rxmore"><summary class="fd-emo" title="React">+</summary><div class="px-menu px-rxmenu">' + EM.map(function (e) { var by = rx[e] || []; return '<button class="fd-emo' + (by.indexOf(mine) >= 0 ? ' on' : '') + '" data-emoji="' + e + '" title="' + esc(by.join(', ') || 'React') + '">' + e + (by.length ? '<sup>' + by.length + '</sup>' : '') + '</button>'; }).join('') + '</div></details></div>' +
       '<details class="px-cfold"><summary class="fd-rh">Comments' + ((it.comments || []).length ? ' <span class="faint">' + it.comments.length + '</span>' : ' <span class="faint">none yet</span>') + '</summary>' +
       ((it.comments || []).length ? it.comments.map(function (c) { return '<div class="fd-reply"><div class="fd-rhead"><b>' + esc(c.by) + '</b> <span class="faint">' + esc(SW.fmtDate(c.date)) + '</span></div><div class="note-md">' + SW.md(c.text) + '</div></div>'; }).join('') : '') +
       '<div class="fd-replybox px-cbox"><textarea rows="2" placeholder="A comment, signed ' + esc(mine) + '"></textarea><button class="btn" data-a="comment">Comment</button></div></details>';
