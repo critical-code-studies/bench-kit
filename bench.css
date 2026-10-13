@@ -39,7 +39,7 @@ code, .mono { font-family: var(--mono); }
 /* the top bar's small print (the bench's version, the reference and language of the version open)
    in the bar's own ink, dimmed: the page's faint grey is drawn for the page, and on a coloured bar
    (paper's blue) it all but vanished */
-header.bar .bench-ver, header.bar .vlang, header.bar #vref { color: color-mix(in srgb, var(--bar-fg) 80%, var(--bar-2)); }
+header.bar .bench-ver, header.bar .vlang, header.bar #vref { color: color-mix(in srgb, var(--bar-fg) 90%, var(--bar-2)); }
 .pick { display: flex; align-items: center; gap: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; flex: 0 1 auto; min-width: 0; }
 .pick select { min-width: 12em; }
 .pick { flex-shrink: 0; }
