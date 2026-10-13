@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: ☰ Download and GitHub ↗ follow the reading showing. Reading a transcript, Download gave the recording, under the recording's name; it now gives the transcript, under its own file name, and says which (⤓ Download transcript, ⤓ Download audio). A download started as one reading loads never lands on the reading switched away from.
+
 ## 0.53.1 (2026-10-13)
 
 - Paratexts, the grid: each thing in the same place on every card, for scanning. The code and the rating on the top line (the rating at its right, with reactions and comments), the title (three lines at most, the whole in the card's tooltip), the type and the date on one line (a date never broken), the tags (two lines at most), the collections at the foot. The rating had sat among the tags, wherever the title's length put it, and a date could break across lines.

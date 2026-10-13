@@ -176,7 +176,7 @@
   // the item's file and where it is held, under ☰: Download, GitHub ↗ (its history), Open ↗ (a
   // linked item, where it is held), Source ↗ (the original, in its archive)
   function fileMenu(it, gh0) {
-    var esc = SW.esc, items = (it.file ? '<a data-a="dl" download="' + esc(it.name || it.code) + '">⤓ Download</a><a href="' + esc(gh0) + '" target="_blank" rel="noopener" title="On GitHub, with its history">GitHub ↗</a>' :
+    var esc = SW.esc, items = (it.file ? '<a data-a="dl" download="' + esc(it.name || it.code) + '">⤓ Download' + (altList(it).length ? ' ' + esc(altLabels(it)[0].toLowerCase()) : '') + '</a><a data-a="gh" href="' + esc(gh0) + '" target="_blank" rel="noopener" title="On GitHub, with its history">GitHub ↗</a>' :
       okURL(it.url) ? '<a href="' + esc(it.url.trim()) + '" target="_blank" rel="noopener" title="Where it is held">Open ↗</a>' : '') +
       (okURL(it.archiveUrl) ? '<a href="' + esc(it.archiveUrl.trim()) + '" target="_blank" rel="noopener" title="The original, in ' + esc(it.archive || 'its archive') + '">Source ↗</a>' : '');
     return items ? '<details class="px-more px-filemenu"><summary class="btn ghost" title="Download it, see it on GitHub, or go to the original" aria-label="The file and where it is held">☰</summary><div class="px-menu">' + items + '</div></details>' : '';
@@ -1085,7 +1085,7 @@
       return;
     }
     blobOf(it).then(function (u) {
-      if (dl) dl.href = u;
+      if (dl && pv.__gapIt === it) dl.href = u;   // the reading still showing, not one switched away from
       if (it.kind === 'audio' || /^audio\//.test(it.mime || '')) { pv.innerHTML = strip + '<audio class="px-audio" controls preload="metadata" src="' + u + '"></audio>'; mediaGaps(it, pv); done(); }
       else if (it.kind === 'video' || /^video\//.test(it.mime || '')) { pv.innerHTML = strip + '<video class="px-video" controls preload="metadata" src="' + u + '"></video>'; mediaGaps(it, pv); done(); }
       else if (it.kind === 'image') { zoomImage(it, pv, u); done(); }
@@ -1120,7 +1120,11 @@
       var n = +ab.dataset.alt, list = altList(it), cap = SW.$('.px-altcap', d);
       SW.$$('[data-alt]', d).forEach(function (b) { b.classList.toggle('on', b === ab); b.setAttribute('aria-pressed', b === ab ? 'true' : 'false'); });
       if (cap) { cap.innerHTML = altCaption(it, n); cap.hidden = !cap.innerHTML; }
-      showFile(n < 0 ? it : altItem(it, list[n]), SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
+      // ☰ Download and GitHub follow the reading showing: its own file, under its own name
+      var f = n < 0 ? it.file : list[n].file, dl = SW.$('[data-a="dl"]', d), gh = SW.$('[data-a="gh"]', d);
+      if (dl) { dl.removeAttribute('href'); dl.download = n < 0 ? it.name || it.code : f.split('/').pop(); dl.textContent = '⤓ Download ' + altLabels(it)[n + 1].toLowerCase(); }
+      if (gh) gh.href = 'https://github.com/' + REPO + '/blob/main/' + f.split('/').map(encodeURIComponent).join('/');
+      showFile(n < 0 ? it : altItem(it, list[n]), SW.$('.px-pv', d), dl);
     });
     citedIn(code, SW.$('.px-cited', d));
     var kept = JSON.stringify(readFields(SW.$('.px-side', d)));
