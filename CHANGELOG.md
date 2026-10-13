@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.50.1 (2026-10-13)
 
 - Paratexts: the switchers above an item's view stay at its top left. The view centres what it shows, and the bar, sized to its own width, had moved with each reading: centred over a scan, at the left over a short text, pushed right by a long one.
 
