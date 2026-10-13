@@ -844,17 +844,17 @@
   }
   // Ratings coalesce. Each save is a fetch of the catalogue and a write back, so three quick
   // clicks used to mean six round trips in a queue; now the last one within the window wins.
-  // What the reader asked for (wanted: code -> stars, 0 for none) is shown at once, on the card
+  // What the reader asked for (pendingRates: code -> stars, 0 for none) is shown at once, on the card
   // and in the open panel, and held until its own save is written: a save that returns while a
   // later click waits must not paint the earlier rating back, and the catalogue each save
   // fetches afresh does not know the clicks still waiting.
-  var wanted = {}, rateTimer = null;
+  var pendingRates = {}, rateTimer = null;
   function applyWanted() {
     var who = me();
-    Object.keys(wanted).forEach(function (code) {
+    Object.keys(pendingRates).forEach(function (code) {
       var it0 = byCode(code); if (!it0) return;
       it0.rates = it0.rates || {};
-      if (wanted[code]) it0.rates[who] = wanted[code]; else delete it0.rates[who];
+      if (pendingRates[code]) it0.rates[who] = pendingRates[code]; else delete it0.rates[who];
     });
   }
   function showRating(code) {
@@ -871,12 +871,12 @@
     var who = me();
     if (who === '?') return SW.askInitials('Ratings are signed with your initials, and none are set.')
       .then(function (ini) { return ini ? rateIt(code, k) : null; });
-    wanted[code] = k || 0;
+    pendingRates[code] = k || 0;
     applyWanted(); showRating(code);
     clearTimeout(rateTimer);
     rateTimer = setTimeout(function () {
       rateTimer = null;
-      var want = {}; Object.keys(wanted).forEach(function (c) { want[c] = wanted[c]; });
+      var want = {}; Object.keys(pendingRates).forEach(function (c) { want[c] = pendingRates[c]; });
       var codes = Object.keys(want); if (!codes.length) return;
       save('Paratext ' + codes.join(', ') + ': rated, by ' + who, function (c) {
         c.items.forEach(function (x) {
@@ -887,13 +887,13 @@
           x.updated = now(); x.updatedBy = who;
         });
       }).then(function () {
-        codes.forEach(function (c) { if (wanted[c] === want[c]) delete wanted[c]; });   // written, unless clicked again since
+        codes.forEach(function (c) { if (pendingRates[c] === want[c]) delete pendingRates[c]; });   // written, unless clicked again since
         settle();
-      }, function (err) { SW.toast(err.message, 5000); codes.forEach(function (c) { if (wanted[c] === want[c]) delete wanted[c]; }); settle(); });
+      }, function (err) { SW.toast(err.message, 5000); codes.forEach(function (c) { if (pendingRates[c] === want[c]) delete pendingRates[c]; }); settle(); });
     }, 700);
   }
   // after a save: the list and the open panel from the catalogue, with any rating still waiting
-  function settle() { applyWanted(); if (!rateTimer) refresh(); Object.keys(wanted).length ? Object.keys(wanted).forEach(showRating) : redrawTalk(); }
+  function settle() { applyWanted(); if (!rateTimer) refresh(); Object.keys(pendingRates).length ? Object.keys(pendingRates).forEach(showRating) : redrawTalk(); }
   function summary(it) {
     var a = avg(it), rx = it.rx || {}, em = Object.keys(rx).filter(function (e) { return (rx[e] || []).length; }), nc = (it.comments || []).length;
     var mine = me(), mr = (it.rates || {})[mine] || 0;
