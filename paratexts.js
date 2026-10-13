@@ -839,10 +839,19 @@
     [it].concat(it.alts || []).forEach(function (x) { gapsOf(x).forEach(function (g, i) { var k = g.id || (x.file || '') + '#' + i; if (!seen[k]) { seen[k] = 1; n++; } }); });
     return n;
   }
+  // each loss once; a loss shared by several witnesses is placed in each ("after line 20 of the
+  // text; printed p. 219 (page 29 of the scan)")
   function gapsAll(it) {
     var seen = {}, out = [];
-    [it].concat(it.alts || []).forEach(function (x) { gapsOf(x).forEach(function (g, i) { var k = g.id || (x.file || '') + '#' + i; if (!seen[k]) { seen[k] = 1; out.push(g); } }); });
-    return out;
+    [it].concat(it.alts || []).forEach(function (x, xi) {
+      var whose = xi ? (x.label || x.lang || 'alternate') : 'the original';
+      gapsOf(x).forEach(function (g, i) {
+        var k = g.id || (x.file || '') + '#' + i;
+        if (seen[k] == null) { seen[k] = out.length; out.push({ g: g, places: [gapWhere(g) + ', ' + whose] }); }
+        else out[seen[k]].places.push(gapWhere(g) + ', ' + whose);
+      });
+    });
+    return out.map(function (o) { return o.places.length > 1 ? Object.assign({}, o.g, { label: o.places.join('; ') }) : o.g; });
   }
   // what a search reads of the gaps: the place, the kind, the cause and note (fill: the restorations)
   function gapHay(it, fill) {
