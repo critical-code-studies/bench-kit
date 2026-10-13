@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.53.2 (2026-10-13)
 
 - Paratexts: ☰ Download and GitHub ↗ follow the reading showing. Reading a transcript, Download gave the recording, under the recording's name; it now gives the transcript, under its own file name, and says which (⤓ Download transcript, ⤓ Download audio). A download started as one reading loads never lands on the reading switched away from.
 
