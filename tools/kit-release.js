@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * tools/kit-release.js - a release of the kit itself: the version in base.js (SW.KIT, which the
- * benches show and tools/release.js reports), a heading in CHANGELOG.md over the notes already
+ * benches show and tools/release.js reports) and README.md, a heading in CHANGELOG.md over the notes already
  * written under "## Unreleased", and a tag. It commits and tags; pushing stays with you.
  * Run from the kit's repository:
  *
@@ -42,7 +42,11 @@ const base2 = base.replace(m[0], m[0].replace(cur.join('.'), next));
 const log2 = log.replace(/^## Unreleased[ \t]*$/m, '## ' + next + ' (' + date + ')');
 if (DRY) { console.log('would release ' + cur.join('.') + ' → ' + next + ' (base.js, CHANGELOG.md, tag v' + next + ')'); process.exit(0); }
 fs.writeFileSync(basePath, base2); fs.writeFileSync(logPath, log2);
-git(['add', 'base.js', 'CHANGELOG.md']);
+// the README's version line follows
+const readmePath = path.join(dir, 'README.md');
+const readme = fs.readFileSync(readmePath, 'utf8'), readme2 = readme.replace(/^(\*\*Version:\*\* )\S+/m, '$1' + next);
+if (readme2 !== readme) fs.writeFileSync(readmePath, readme2);
+git(['add', 'base.js', 'CHANGELOG.md', 'README.md']);
 git(['commit', '-q', '-m', 'bench-kit ' + next].concat(AUTHOR ? ['--author', AUTHOR] : []));
 git(['tag', 'v' + next]);
 console.log('released bench-kit ' + cur.join('.') + ' → ' + next + ', tagged v' + next + '\nNext: git push && git push origin v' + next);
