@@ -1,5 +1,12 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `layers.js` (from the ELIZA bench): code in layers, with Read ▾ by layer, the stack of versions chosen, names looked up down the layers, ◀ ▶ history, the breadcrumb and a layer's forms. `read.js` takes its toolbar from it where the bench gives none. Its styles, and the name pop-up's hover-card classes (`.pop-what`, `.pop-sec`, `.pop-row`, `.pop-go`), are in `bench.css`.
+- `read.js`: a version opened at a line is drawn there: the listing goes to the selection before the browser paints, so it is never seen at the place the last version was scrolled to; a version opened with no line selected starts at its head.
+- `read.js`: a row in a name's pop-up selects its line, as a click on the line does, so the link follows.
+- `tools/kit-release.js`: a release of the kit itself, the version in `base.js`, a changelog heading over the notes under "Unreleased", and a tag; `tools/release.js` warns when the kit's tag and `base.js` disagree (0.37.1 to 0.37.4 left `base.js` at 0.37.0).
+
 ## 0.37.4 (2026-10-12)
 
 - `compare.js`: `SW.genealogyLine(id)` turns the genealogy's flow to a line of descent from elsewhere (the ELIZA bench's named subsets).

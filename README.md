@@ -45,6 +45,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `lang-mad.js` | MAD with SLIP (CTSS, the IBM 7094), FAP (the 7094's assembler) and the ELIZA scripts written for them, for genealogy, compare and a bench's Read: a card's label, remark (R in column 11, 12 or 13), continuation and sequence number; a deck's head, MAD or FAP; a FAP card's label, operation and address (`parseFap`, `fapTokens`); MAD's keywords whole and short (W'R, T'O), `$text$`, dotted relations, `NAME.(…)` calls (`tokens`); a script's lists, comments, `=` references and `/` classes (`scriptTokens`). A routine is a deck, an internal function or a script's keyword entry. A file not named `.mad` is read as a script. From the ELIZA bench; `SW.BENCH.lang = 'mad'`. |
 | `tracings.js` | Naming and colour-marking the parts of a program in a view (blocks and routines, functions), kept per version in this browser, and tracings: sets of names and marks shared with the crew through the annotation group, opened read-only (Keep as mine, Link, ✕). `SW.tracings({ ns, render, open, link, hint })`. The bench reads `&tr=` into `SW.state.trace`. |
 | `read.js` | Read: a version's files line by line, with the group's annotations (`readnotes.js`), a search, the file picker, the View options and filters, ↶ ↷, the Key, the pop-up on a name (`SW.symbolRefs` lists where a name is defined and used), the side panel of a line's annotations and the export. `var ctx = SW.readView(H)` in the bench's `js/read.js`, with what is the bench's (hooks, below). |
+| `layers.js` | Code in layers, for a bench whose texts run on or call others (`SW.BENCH.layers`: ELIZA's scripts run on ELIZA, which calls SLIP): the version chosen in each layer, names looked up down the layers, Read ▾ listing each layer and its versions (with a layer's own items, `more`, and the bench's choice of them, `shown`), ◀ ▶ through where Read has been (`SW.nav`), the breadcrumb, and the words of a layer that the layer below acts on (`forms`). Loaded after the bench's `main.js`, before `shell.js`; a bench without `layers` is left as it is. |
 | `kintsugi.js` | The repairs in Read, in gold, after kintsugi (Berry 2025), for a bench that reads a version otherwise than it is held: the ◆ ‹ › stepper, the repairs bar (the list, Only the repaired lines, My notes, Copy, the cards, what the marks mean), View ▸ Repairs (gold), and the squiggle under a repaired line. `SW.kintsugi(cfg)` gives `SW.readView` its `repairs`; `SW.kintsugi.wrapChars`, `diffSpan`, `squiggle`, `measure` for the bench's marks (hooks, below). |
 | `readnotes.js` | Annotations in Read: threads under their lines or as cards in the margin, ghosts from other versions, the code an annotation is attached to, how notes show (with a live refresh), the selection's bar and pop, citations and links, the listing as a document, moving an annotation by dragging. `var K = SW.readNotes({ view, R, opts, isMine, showsTape, filtering, keptLines, tapeInfo, kinBar, selActs })` in the bench's `read.js`; `K.set({ build })` and `K.set({ notes })` as they change. |
 | `notes.js` | Shared annotation through the bench's Hypothesis group: annotations, replies, reactions, drafts, the bin, links between annotations, codes, What's new, copies kept from ghosts (`from`), tracings, the joining guide, Help ▸ Advanced annotation. Tags carry the bench's prefix (`SW.BENCH.tag`). |
@@ -133,6 +134,7 @@ SW.BENCH = {
 | `joinCard` | `notes.js` | HTML at the top of the joining guide. |
 | `tagsHint` | `shell.js` | Examples of tags, shown in the annotate dialog's Tags field. |
 | `annoHelp` | `notes.js` | The worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`. |
+| `layers` | `layers.js` | `{ list: [{ id, label, below, relation, start, more, note }], forms, pick(p), shown(id, versions) }`: the layers, top first, and how Read ▾ lists them; see the head of `layers.js`. |
 | `paratexts` | `paratexts.js`, `guides.js`, `settings.js` | `{ org, repo, cache, tokenName }`: the private repository of scans and documents, the name of the browser cache, and the name given to members' GitHub tokens (by default "<name> research bench"). |
 | `examples` | `paratexts.js`, `guides.js` | Placeholders in the paratext forms: `date`, `archive`, `versions`, `refs`, `publisher`, `finding`. |
 | `lang` | `genealogy.js`, `compare.js` | The language of the texts: `macro`, `maclisp`, `plain`, or a bench's own (load `kit/lang-<lang>.js` before `kit/genealogy.js`). |
@@ -221,6 +223,12 @@ A bench's `tests/annotations.html` loads its values (`window.BENCH_TESTS = { lin
 
 ```bash
 node research/kit/tools/release.js next "What changed." --kit v0.32.0
+```
+
+`tools/kit-release.js` releases the kit itself, run from the kit's repository: the version in `base.js` (`SW.KIT`, which the benches show and `release.js` reports), a dated heading in `CHANGELOG.md` over the notes written under `## Unreleased`, a commit and a tag. `next` raises the last number, `minor` the middle one; pushing stays with you.
+
+```bash
+node tools/kit-release.js minor --author "Name <address>"
 ```
 
 `tools/sitemap.js` writes the bench's `sitemap.html`: every tab, menu item and version as a plain link, each version's source files and scans on GitHub, and the sources, the project's site and the repository for reading without the bench. It opens the bench in headless Chrome and reads it as it runs (the tab row, each menu, the version list, the references), through `sitemap.js`, which benches do not load; it needs Chrome or Chromium (`CHROME=` to name it) and Node 22. Run it after a change to the versions or the menus; `--dry-run` prints the page.

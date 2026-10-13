@@ -57,7 +57,9 @@
     var N = SW.notes, B = SW.BENCH, esc = SW.esc;
     var view = SW.$('#view-read');
     var R = SW.views.read = {};
-    var F = H.files || {}, X = H.repairs || {}, T = H.titles || {}, TB = H.toolbar || {}, word = F.word || 'File';
+    var F = H.files || {}, X = H.repairs || {}, T = H.titles || {}, TB0 = H.toolbar, word = F.word || 'File';
+    // the toolbar's own tools: the bench's (H.toolbar), else the layers' ◀ ▶ and breadcrumb (kit/layers.js)
+    function TB() { return TB0 || (SW.layers && SW.layers.toolbar) || {}; }
     var build = null, notes = [], counts = {}, noted = {}, anchorSel = null;
     // tapes: which of the version's files to show: 'all', or a single file's index
     var opts = { repairs: SW.store.get('read.repairs', true), kinBar: SW.store.get('read.kinBar', false), words: H.words ? SW.store.get('read.words', true) : false, norm: false,
@@ -151,7 +153,7 @@
       var b = build;
       view.innerHTML = '';
       var tb = SW.el('div', { class: 'toolbar' });
-      tb.innerHTML = (TB.html ? TB.html(b) : '') +
+      tb.innerHTML = (TB().html ? TB().html(b) : '') +
         '<input type="search" id="rd-find" placeholder="Find text or /regex/ …">' +
         '<button class="btn" id="rd-prev" title="Previous match">↑</button><button class="btn" id="rd-next" title="Next match">↓</button>' +
         '<span class="hint" id="rd-hits"></span><span class="sep"></span>' +
@@ -200,7 +202,7 @@
         setNotes(MODES[(i + 1) % MODES.length][0]);
       } }));
       view.appendChild(tb);
-      if (TB.after) TB.after(view, b);
+      if (TB().after) TB().after(view, b);
 
       if (!b.v.build) {
         var lost = SW.el('div', { class: 'pad prose' });
@@ -351,7 +353,7 @@
 
     function wireTb(tb) {
       if (X.wire) X.wire(tb);
-      if (TB.wire) TB.wire(tb);
+      if (TB().wire) TB().wire(tb);
       SW.$('#rd-undo', tb).onclick = function () { N.undo(); };
       SW.$('#rd-redo', tb).onclick = function () { N.redo(); };
       setTimeout(paintUndo, 0);
@@ -404,7 +406,10 @@
         if (!a) return;
         e.preventDefault();
         SW.unpop();
-        R.goto(+a.dataset.p, +a.dataset.n, true);
+        // a row is a place: select its line, as a click on the line would, so the link follows
+        var p = +a.dataset.p, n = +a.dataset.n;
+        SW.state.sel = { p: p, n0: n, n1: n }; anchorSel = { p: p, n: n };
+        R.goto(p, n, true); paintSel(); SW.writeQuery();
       });
     }
 
@@ -527,7 +532,8 @@
     }
 
     R.show = function (b) {
-      if (build !== b) { if (!F.remember) opts.tapes = 'all'; else if (!(b.parts[+opts.tapes] || opts.tapes === 'all')) opts.tapes = '0'; }
+      var fresh = build !== b;
+      if (fresh) { if (!F.remember) opts.tapes = 'all'; else if (!(b.parts[+opts.tapes] || opts.tapes === 'all')) opts.tapes = '0'; }
       build = b; K.set({ build: b });
       R.build = b;
       if (H.onShow) H.onShow(b);
@@ -535,8 +541,12 @@
       render();
       refreshNotes();
       live();
+      // the listing is drawn by now: go to the selection before the browser paints, so a version
+      // newly opened is never seen at the place the last one was scrolled to; again once the
+      // margin's cards have settled. A version opened with no line selected starts at its head.
       var s = SW.state.sel;
-      if (s) setTimeout(function () { R.goto(s.p, s.n0, false); }, 0);
+      if (s) { R.goto(s.p, s.n0, false); setTimeout(function () { if (build === b) R.goto(s.p, s.n0, false); }, 0); }
+      else if (fresh) view.scrollTop = 0;
     };
     // a note added, edited or binned: look again (ghosts too), now if Read is open, else when it is next opened
     var stale = false;

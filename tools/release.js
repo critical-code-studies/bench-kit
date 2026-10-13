@@ -96,6 +96,11 @@ if (KIT) {
   }
 }
 const kv = kitVersion();
+// the kit's own version (base.js) should be the release it is checked out at
+{
+  let tag = ''; try { tag = git(['describe', '--tags', '--exact-match'], kitDir); } catch (e) { /* between releases */ }
+  if (tag && kv && tag.replace(/^v/, '') !== kv) console.warn('warning: the kit is at ' + tag + ' but its base.js says ' + kv + '; release the kit with tools/kit-release.js');
+}
 
 pages.forEach((p) => {
   const s = fs.readFileSync(p, 'utf8'), n = s.split('?v=' + cur + '"').length - 1;
