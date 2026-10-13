@@ -234,7 +234,8 @@
       if (F.v && (it.versions || []).indexOf(F.v) < 0) return false;
       if (F.kind && it.kind !== F.kind) return false;
       if (F.genre && it.genre !== F.genre) return false;
-      if (F.q) { var t = [it.code, it.title, (genreOf(it) || [])[1], it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' '), gapHay(it), gapHay(it, true)].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
+      if (F.lang && langOfRec(it) !== F.lang) return false;
+      if (F.q) { var t = [it.code, it.title, (genreOf(it) || [])[1], langOfRec(it) ? langLabel(langOfRec(it)) : '', it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' '), gapHay(it), gapHay(it, true)].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
       return true;
     }).sort(function (a, b) {
       var x = sortKey(a, k), y = sortKey(b, k); if (x < y) return -d; if (x > y) return d;
@@ -271,6 +272,8 @@
     items.forEach(function (it) { (it.tags || []).forEach(function (g) { if (tags.indexOf(g) < 0) tags.push(g); }); (it.versions || []).forEach(function (v) { if (vids.indexOf(v) < 0) vids.push(v); }); if (kinds.indexOf(it.kind) < 0) kinds.push(it.kind); });
     tags.sort(); vids.sort(function (a, b) { return ((V.byId(a) || {}).sort || 0) - ((V.byId(b) || {}).sort || 0); });
     function opt(v, l, cur0) { return '<option value="' + esc(v) + '"' + (v === cur0 ? ' selected' : '') + '>' + esc(l) + '</option>'; }
+    // the languages the catalogue has, by name
+    function languagesIn() { var have = {}; items.forEach(function (it) { var l = langOfRec(it); if (l) have[l] = 1; }); return Object.keys(have).map(function (l) { return [l, langLabel(l)]; }).sort(function (a, b) { return a[1].localeCompare(b[1]); }); }
     // the types the catalogue has, in the vocabulary's order
     function genresIn() { var have = {}; items.forEach(function (it) { if (it.genre) have[it.genre] = 1; }); return Object.keys(GENRE_BY).filter(function (g) { return have[g]; }).map(function (g) { return GENRE_BY[g]; }).concat(Object.keys(have).filter(function (g) { return !GENRE_BY[g]; }).map(function (g) { return [g, g]; })); }
     function seg(act, v, label, on, tip) { return '<button class="' + (on ? 'on' : '') + '" data-px="' + act + '" data-v="' + v + '" title="' + tip + '">' + label + '</button>'; }
@@ -280,6 +283,7 @@
       '<label class="check">Tag <select data-f="tag">' + opt('', 'All', F.tag || '') + tags.map(function (g) { return opt(g, g, F.tag); }).join('') + '</select></label>' +
       '<label class="check">Version <select data-f="v">' + opt('', 'All', F.v || '') + vids.map(function (v) { return opt(v, vShort(v), F.v); }).join('') + '</select></label>' +
       '<label class="check" title="What the items are">Type <select data-f="genre">' + opt('', 'All', F.genre || '') + genresIn().map(function (g) { return opt(g[0], g[1], F.genre); }).join('') + '</select></label>' +
+      (languagesIn().length > 1 || F.lang ? '<label class="check" title="The language of the item itself (a translation beside it is not counted)">Language <select data-f="lang">' + opt('', 'All', F.lang || '') + languagesIn().map(function (l) { return opt(l[0], l[1], F.lang); }).join('') + '</select></label>' : '') +
       '<label class="check" title="The format of the file, or how a link shows">Kind <select data-f="kind">' + opt('', 'All', F.kind || '') + kinds.map(function (k) { return opt(k, k, F.kind); }).join('') + '</select></label>' +
       '<label class="check">Sort <select data-px="sort">' + SORTS.map(function (s) { return opt(s[0], s[1], VW.sort); }).join('') + '</select></label>' +
       '<span class="px-seg">' + seg('view', 'grid', '▦', VW.mode !== 'list', 'Grid') + seg('view', 'list', '☰', VW.mode === 'list', 'List') + '</span>' +
@@ -518,6 +522,14 @@
     var have = GENRES.filter(function (x) { return x[0] === g[0]; })[0];
     if (have) have[1] = have[1].concat(g[1]); else GENRES.splice(GENRES.length - 1, 0, [g[0], g[1].slice()]);
   });
+  // ---------- languages, by name ----------
+  // a record's language (BCP 47) by its name; SW.BENCH.paratexts.languages { code: name } adds a
+  // bench's. A filter on language reads the record's own, not an alternate's: a German item with an
+  // English translation is a German item.
+  var LANGS = Object.assign({ en: 'English', de: 'German', fr: 'French', ja: 'Japanese', pl: 'Polish', it: 'Italian', es: 'Spanish', ru: 'Russian', nl: 'Dutch',
+    sv: 'Swedish', pt: 'Portuguese', zh: 'Chinese', la: 'Latin', da: 'Danish', no: 'Norwegian', fi: 'Finnish', cs: 'Czech', hu: 'Hungarian', he: 'Hebrew', ko: 'Korean' }, (B.paratexts || {}).languages || {});
+  function langOfRec(it) { return String(it && it.language || '').trim().toLowerCase().split(/[-_]/)[0]; }
+  function langLabel(code) { return LANGS[code] || code; }
   var GENRE_BY = {}; GENRES.forEach(function (g) { g[1].forEach(function (e) { GENRE_BY[e[0]] = e; }); });
   function genreOf(it) { return it && it.genre ? GENRE_BY[it.genre] || [it.genre, it.genre, null, 'document', 'GEN'] : null; }
   function genreOpts(cur) {
