@@ -861,39 +861,40 @@
   function langOf(it) { return it.lang || it.language || ''; }
   function preHTML(it, t) { return '<pre class="px-text"' + (langOf(it) ? ' lang="' + SW.esc(langOf(it)) + '"' : '') + '>' + SW.esc(t) + '</pre>'; }
   function altNote(a) { return a.note || (a.by ? 'working translation, by ' + a.by + (a.date ? ', ' + a.date : '') : ''); }
-  // The switcher between a record and its alternates. One alternate: a two-state flip, as Normal |
-  // Expand and Kintsugi | Leiden are (Original | Translated where its language differs from the
-  // record's, Text | Scan and the like where it does not). More than one: a row of short labels,
-  // each a language among translations, or the kind of thing (Scan, Text). An alternate's own
-  // `short` names it in either. Its label (often a title) and note are a caption under the
-  // switcher, never inside it: "machine translation, unchecked" has to be seen where the text is.
+  // The switcher between a record and its alternates: a row of buttons, one for each reading, all
+  // in view, the one showing marked. Each is named for what it is: the record by its kind (Scan,
+  // Audio, Text), Original where it is a text with only translations beside it; an alternate in
+  // the record's language as a Transcript or Subtitles of a recording, a Scan, or a Text; one in
+  // another language as the Translation, or by its language where there are several. An
+  // alternate's own `short` names it instead. Its label (often a title) and note are a caption
+  // under the row, never in a button: "machine translation, unchecked" has to be seen where the
+  // text is.
   function isTr(it, a) { var b = function (l) { return String(l || '').toLowerCase().split('-')[0]; }; return !!(a.lang && it.language && b(a.lang) !== b(it.language)); }
   function kindWord(x) { return x.kind === 'pdf' || x.kind === 'image' ? 'Scan' : x.kind === 'audio' ? 'Audio' : x.kind === 'video' ? 'Video' : x.kind === 'text' || x.kind === 'software' || /^text\//.test(x.mime || '') ? 'Text' : 'File'; }
   function altLabels(it) {
-    var list = altList(it), alts = list.map(function (a) { return altItem(it, a); }), anyTr = list.some(function (a) { return isTr(it, a); }), L;
-    if (list.length === 1) {
-      L = isTr(it, list[0]) ? ['Original', 'Translated'] : [kindWord(it), kindWord(alts[0])];
-      if (L[0] === L[1]) L = ['Original', list[0].label && list[0].label.length <= 24 ? list[0].label : 'Alternate'];
-    } else {
-      var lang = function (x, l) { return /^Text$/.test(kindWord(x)) && l ? l.toUpperCase() : kindWord(x); };
-      L = [anyTr ? lang(it, it.language) : kindWord(it)].concat(alts.map(function (x, i) { return anyTr ? lang(x, list[i].lang) : kindWord(x); }));
-      if (!anyTr) L = L.map(function (l, i) { return L.indexOf(l) !== L.lastIndexOf(l) ? (i ? (list[i - 1].label && list[i - 1].label.length <= 24 ? list[i - 1].label : l) : 'Original') : l; });
-    }
+    var list = altList(it), trs = list.filter(function (a) { return isTr(it, a); }).length, rec = it.kind === 'audio' || it.kind === 'video';
+    var L = [kindWord(it) === 'Text' && trs === list.length ? 'Original' : kindWord(it)].concat(list.map(function (a) {
+      var x = altItem(it, a);
+      if (isTr(it, a)) return trs > 1 ? String(a.lang).toUpperCase() : 'Translation';
+      if (rec && kindWord(x) === 'Text') return /\.(srt|vtt)$/i.test(a.file) || /subrip|vtt/.test(a.mime || '') ? 'Subtitles' : 'Transcript';
+      return kindWord(x);
+    }));
+    var dup = function (l) { return L.indexOf(l) !== L.lastIndexOf(l); };
+    L = L.map(function (l, i) { return !dup(l) ? l : i ? (list[i - 1].label && list[i - 1].label.length <= 24 ? list[i - 1].label : l) : 'Original'; });
     L = L.map(function (l, i) { return i && list[i - 1].short ? list[i - 1].short : l; });
     return L.map(function (l, i) { return L.indexOf(l) !== i ? l + ' ' + (i + 1) : l; });
   }
   function altCaption(it, n) {
     var a = altList(it)[n]; if (!a) return '';
-    var t = a.label ? '<i>' + SW.esc(a.label) + '</i>' : '', note = altNote(a);
+    var t = a.label && a.label !== altLabels(it)[n + 1] ? '<i>' + SW.esc(a.label) + '</i>' : '', note = altNote(a);   // a title the button already gives, once
     return t + (t && note ? ': ' : '') + SW.esc(note);
   }
   function altBar(it) {
     var esc = SW.esc, list = altList(it); if (!list.length) return '';
     var L = altLabels(it), tip = function (n) { var a = list[n]; return a ? (a.label ? a.label + (altNote(a) ? ': ' : '') : '') + altNote(a) : 'The record’s own file'; };
-    if (list.length === 1) return '<button class="btn flip px-altflip" data-altflip data-v="-1" data-l0="' + esc(L[0]) + '" data-l1="' + esc(L[1]) + '" aria-pressed="false" title="' + esc(tip(-1)) + '. Click for ' + esc(L[1]) + '."><span class="flip-dot" aria-hidden="true"></span>' + esc(L[0]) + '</button>';
     return '<span class="seg-btns px-alts" role="group" aria-label="Readings">' + L.map(function (l, i) {
       var a = list[i - 1], lg = i ? a.lang : it.language;
-      return '<button class="btn ghost' + (i ? '' : ' on') + '" data-alt="' + (i - 1) + '"' + (lg ? ' lang="' + esc(lg) + '"' : '') + ' title="' + esc(tip(i - 1)) + '">' + esc(l) + '</button>';
+      return '<button class="btn ghost' + (i ? '' : ' on') + '" aria-pressed="' + !i + '" data-alt="' + (i - 1) + '"' + (lg ? ' lang="' + esc(lg) + '"' : '') + ' title="' + esc(tip(i - 1)) + '">' + esc(l) + '</button>';
     }).join('') + '</span>';
   }
 
@@ -1099,13 +1100,9 @@
       SW.$$('details.px-filemenu[open]', d).forEach(function (x) { if (!x.contains(e.target) || e.target.closest('.px-menu a')) setTimeout(function () { x.open = false; }, 0); });
     });
     d.addEventListener('click', function (e) {   // data-alt, never data-c: the list reads [data-c] as a collection row
-      var fb = e.target.closest && e.target.closest('[data-altflip]'), ab = !fb && e.target.closest && e.target.closest('[data-alt]'); if (!fb && !ab) return;
-      var n = fb ? (fb.dataset.v === '-1' ? 0 : -1) : +ab.dataset.alt, list = altList(it), cap = SW.$('.px-altcap', d);
-      if (fb) {
-        fb.dataset.v = n; fb.setAttribute('aria-pressed', n < 0 ? 'false' : 'true');
-        fb.innerHTML = '<span class="flip-dot" aria-hidden="true"></span>' + SW.esc(fb.dataset[n < 0 ? 'l0' : 'l1']);
-        fb.title = (n < 0 ? 'The record’s own file. ' : '') + 'Click for ' + fb.dataset[n < 0 ? 'l1' : 'l0'] + '.';
-      } else SW.$$('[data-alt]', d).forEach(function (b) { b.classList.toggle('on', b === ab); });
+      var ab = e.target.closest && e.target.closest('[data-alt]'); if (!ab) return;
+      var n = +ab.dataset.alt, list = altList(it), cap = SW.$('.px-altcap', d);
+      SW.$$('[data-alt]', d).forEach(function (b) { b.classList.toggle('on', b === ab); b.setAttribute('aria-pressed', b === ab ? 'true' : 'false'); });
       if (cap) { cap.innerHTML = altCaption(it, n); cap.hidden = !cap.innerHTML; }
       showFile(n < 0 ? it : altItem(it, list[n]), SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
     });

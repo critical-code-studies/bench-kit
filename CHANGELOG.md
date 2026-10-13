@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: an item's readings are a row of buttons, one each, all in view, the one showing marked; the two-reading flip of 0.50.0 showed only the reading you were on (an audio record read **Audio**, its transcript out of sight). Names: the record by its kind (Scan, Audio, Video, Text), **Original** where it is a text with only translations beside it; an alternate in the record's language a **Transcript** of a recording (**Subtitles** for .srt or .vtt), a **Scan** or a **Text**; one in another language the **Translation**, or by its language where there are several. ELIZA's broadcasts: Audio · Transcript · Translation. The caption leaves out a title the button already gives.
+
 ## 0.50.1 (2026-10-13)
 
 - Paratexts: the switchers above an item's view stay at its top left. The view centres what it shows, and the bar, sized to its own width, had moved with each reading: centred over a scan, at the left over a short text, pushed right by a long one.
