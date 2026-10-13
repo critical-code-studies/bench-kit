@@ -85,7 +85,7 @@
       (text ? '<span>' + text + '</span>' : '') + '<i class="menu-subcaret" aria-hidden="true">▸</i></button><div class="menu-subbody" role="menu" hidden>' + inner + '</div></div>';
   };
   function subOpen(sub, focus) {
-    var body = sub.querySelector(':scope > .menu-subbody'), btn = sub.querySelector(':scope > .menu-subopen'); if (!body || !body.hidden) { if (focus && body) { var f0 = body.querySelector('button'); if (f0) f0.focus(); } return; }
+    var body = sub.querySelector(':scope > .menu-subbody'), btn = sub.querySelector(':scope > .menu-subopen'); if (!body || !body.hidden) { if (focus && body) { var f0 = body.querySelector('button'); if (f0) f0.focus({ preventScroll: true }); } return; }
     // the others at this level close
     SW.$$(':scope > .menu-sub', sub.parentNode).forEach(function (o) { if (o !== sub) subClose(o); });
     body.hidden = false; btn.setAttribute('aria-expanded', 'true'); sub.classList.add('open');
@@ -97,7 +97,7 @@
       var top = Math.max(6, Math.min(r.top - 6, window.innerHeight - h - 6));
       body.style.left = left + 'px'; body.style.top = top + 'px';
     }
-    if (focus) { var f = body.querySelector('button'); if (f) f.focus(); }
+    if (focus) { var f = body.querySelector('button'); if (f) f.focus({ preventScroll: true }); }
   }
   function subClose(sub) {
     var body = sub.querySelector(':scope > .menu-subbody'), btn = sub.querySelector(':scope > .menu-subopen'); if (!body || body.hidden) return;
@@ -123,10 +123,10 @@
       var b = document.activeElement, inSub = b && b.closest && b.closest('.menu-subbody');
       if (e.key === 'ArrowRight' && b.classList.contains('menu-subopen')) { e.preventDefault(); subOpen(b.parentNode, true); }
       else if ((e.key === 'ArrowLeft' || e.key === 'Escape') && inSub) {   // back out one level, to the item that opened it
-        var own = inSub.parentNode; e.preventDefault(); e.stopPropagation(); subClose(own); own.querySelector(':scope > .menu-subopen').focus();
+        var own = inSub.parentNode; e.preventDefault(); e.stopPropagation(); subClose(own); own.querySelector(':scope > .menu-subopen').focus({ preventScroll: true });
       } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         var list = b.closest('.menu-subbody') || el, items = SW.$$(':scope > button, :scope > .menu-sub > .menu-subopen', list), i = items.indexOf(b);
-        if (i >= 0) { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus(); }
+        if (i >= 0) { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus({ preventScroll: true }); }
       }
     });
   }
