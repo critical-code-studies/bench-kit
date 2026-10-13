@@ -74,8 +74,11 @@
       throw e;
     });
   }
+  // One blob URL per file, not per record: an alternate carries its record's code, so keying the
+  // cache by code alone handed every translation the original's text.
+  function ukey(it) { return it.code + '|' + (it.file || ''); }
   function blobOf(it) {
-    if (urls[it.code]) return Promise.resolve(urls[it.code]);
+    if (urls[ukey(it)]) return Promise.resolve(urls[ukey(it)]);
     if (!it.file) return Promise.reject(new Error('A linked item: nothing held here.'));
     var key = 'files/' + it.file + '?' + (it.size || 0);
     return cacheGet(key).then(function (hit) { return hit ? hit.blob() : null; }).then(function (b) {
@@ -85,7 +88,7 @@
       });
     }).then(function (b) {
       if (it.mime && b.type !== it.mime) b = b.slice(0, b.size, it.mime);
-      return (urls[it.code] = URL.createObjectURL(b));
+      return (urls[ukey(it)] = URL.createObjectURL(b));
     });
   }
   function newCode() {
@@ -237,7 +240,7 @@
     });
   }
   var ICON = { pdf: '📄', image: '🖼', text: '📝', audio: '🔊', video: '🎞', link: '🔗', file: '📎' };
-  function thumb(it) { return it.kind === 'image' && urls[it.code] ? '<img alt="" src="' + urls[it.code] + '">' : ICON[it.kind] || ICON.file; }
+  function thumb(it) { return it.kind === 'image' && urls[ukey(it)] ? '<img alt="" src="' + urls[ukey(it)] + '">' : ICON[it.kind] || ICON.file; }
   function fmtSize(n) { return !n ? '' : n < 1e6 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; }
   function render() {
     view = SW.$('#view-paratexts'); if (!view) return;
@@ -767,7 +770,7 @@
       else if (it.kind === 'video' || /^video\//.test(it.mime || '')) pv.innerHTML = '<video class="px-video" controls preload="metadata" src="' + u + '"></video>';
       else if (it.kind === 'image') zoomImage(it, pv, u);
       else if (it.kind === 'pdf') zoomPdf(it, pv, u);
-      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = '<pre class="px-text"' + (it.lang ? ' lang="' + esc(it.lang) + '"' : '') + '>' + esc(t) + '</pre>'; });
+      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = '<pre class="px-text"' + (it.lang || it.language ? ' lang="' + esc(it.lang || it.language) + '"' : '') + '>' + esc(t) + '</pre>'; });
       else pv.innerHTML = '<p class="hint">No preview for this kind of file: ⤓ Download to open it.</p>';
     }, function (e) { pv.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
   }

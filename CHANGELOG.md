@@ -1,5 +1,13 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: switching to an alternate shows the alternate. The blob-URL cache was keyed by the
+  record's code, and an alternate carries its record's code, so every translation was handed the
+  original's bytes and no request for its own file was made; the cache is now keyed by code and
+  file. Caught by the SHRDLU bench against a stubbed GitHub.
+- Paratexts: the original's rendered text carries the record's `language` as its `lang`.
+
 ## 0.41.0 (2026-10-13)
 
 - Paratexts: a paratext can carry **alternates**, a translation, a transcription or an OCR reading,
