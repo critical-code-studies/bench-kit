@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.44.2 (2026-10-13)
 
 - No made-up Hypothesis address in the kit: the joining guide and ⚙ Settings showed a made-up group address as an example, which was taken for a real, out-of-date link. They now ask for the group link from the invitation.
 
