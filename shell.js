@@ -222,8 +222,10 @@
   // ---------- a newer release live ----------
   // A browser may keep the bench's page for a while (GitHub Pages lets it for ten minutes), and
   // so run an older release than the one published. The page is asked for again, past the
-  // browser's copy, a few seconds after opening and every half hour; where its ?v= is a later
-  // release, a bar offers to reload. SW.BENCH.freshness: false turns this off.
+  // browser's copy: a few seconds after opening, every five minutes, and on coming back to the
+  // tab (at most once a minute). Where its ?v= is a later release, a bar offers to reload; a later
+  // release still updates the bar. ✕ puts off that release, not the next. SW.BENCH.freshness:
+  // false turns this off.
   function newer(a, b) {
     var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
     for (var i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
@@ -231,23 +233,28 @@
   }
   function freshness() {
     if (B.freshness === false || SW.VERSION === 'dev' || !/^https?:$/.test(location.protocol) || !root.fetch) return;
-    var told = false;
+    var shown = SW.VERSION, put = SW.VERSION, last = 0, bar = null;
     function look() {
-      if (told) return;
+      if (Date.now() - last < 60000) return;
+      last = Date.now();
       fetch(location.pathname + '?fresh=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
         // the version on the kit's own base.js, which SW.VERSION is read from: a page's other ?v=
         // (an image's, a stylesheet of the site's) is not the bench's release
-        var m = /kit\/base\.js\?v=([0-9][0-9.]*)"/.exec(t || '');
-        if (!m || !newer(m[1], SW.VERSION) || told) return;
-        told = true;
-        var bar = SW.el('div', { class: 'fresh-bar', role: 'status' });
-        bar.innerHTML = 'A newer release of the bench is live (v' + SW.esc(m[1]) + '; this page is v' + SW.esc(SW.VERSION) + '). <button class="btn">Reload</button> <button class="icon-btn" aria-label="Not now" title="Not now">✕</button>';
+        var m = /kit\/base\.js\?v=([0-9][0-9.]*)"/.exec(t || ''), v = m && m[1];
+        if (!v || !newer(v, SW.VERSION) || !newer(v, put) || (bar && !newer(v, shown))) return;
+        shown = v;
+        if (!bar) {
+          bar = SW.el('div', { class: 'fresh-bar', role: 'status' });
+          document.body.appendChild(bar);
+        }
+        bar.innerHTML = 'A newer release of the bench is live (v' + SW.esc(v) + '; this page is v' + SW.esc(SW.VERSION) + '). <button class="btn">Reload</button> <button class="icon-btn" aria-label="Not now" title="Not now">✕</button>';
         bar.querySelector('.btn').onclick = function () { location.reload(); };
-        bar.querySelector('.icon-btn').onclick = function () { bar.remove(); };
-        document.body.appendChild(bar);
+        bar.querySelector('.icon-btn').onclick = function () { put = shown; bar.remove(); bar = null; };
       }).catch(function () { /* offline: no matter */ });
     }
-    setTimeout(look, 5000); setInterval(look, 30 * 60 * 1000);
+    setTimeout(look, 5000); setInterval(look, 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') look(); });
+    root.addEventListener('focus', look);
   }
   SW.newerRelease = newer;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

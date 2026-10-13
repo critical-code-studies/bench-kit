@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- The newer-release bar looks again every five minutes (it was every half hour) and on coming back to the tab, at most once a minute; a page left open through a release had gone without it for up to half an hour, longer in a background tab. A later release still updates the bar; ✕ puts off that release, not the next (it had silenced the bar for the life of the page).
+
 ## 0.51.0 (2026-10-13)
 
 - Paratexts: an item's readings are a row of buttons, one each, all in view, the one showing marked; the two-reading flip of 0.50.0 showed only the reading you were on (an audio record read **Audio**, its transcript out of sight). Names: the record by its kind (Scan, Audio, Video, Text), **Original** where it is a text with only translations beside it; an alternate in the record's language a **Transcript** of a recording (**Subtitles** for .srt or .vtt), a **Scan** or a **Text**; one in another language the **Translation**, or by its language where there are several. ELIZA's broadcasts: Audio · Transcript · Translation. The caption leaves out a title the button already gives.
