@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: **a type for every item** (`genre`), what the thing is beside its file's kind (a memo scanned to PDF is a memo): 51 types in seven groups (texts, from article, book, thesis and working paper to memo, letter, electronic mail, minutes, patent, finding aid and press release; computing, from program listing and printout to punched cards, paper tape, magnetic tape, software, repository and dataset; images; sound and moving image, oral history among them; objects; the web; other), each mapped to its DCMI, CSL and RIS types for export. Chosen when adding (guessed from the file or the link where none is chosen) and in the record; a Type column, sort and filter in the list, a chip on the card, read by the search. `SW.BENCH.paratexts.genres` adds a bench's own. A link shows as video, audio, an image, a PDF or a page.
+- Paratexts: the list's rows in alternate shades.
+- Two-state switches on the toolbars (`SW.flip`): Normal / Expand for the card lens's contractions in Read, in step with View's choice; Kintsugi / Leiden for a paratext's gaps, reading the page in the notation a quotation carries. Each shows only where it has something to switch, and keeps its state for the bench.
+
 ## 0.43.1 (2026-10-13)
 
 - The card lens, written short: a spelled-out statement is matched on the whole line (its words are drawn apart, so VECTOR VALUES and END OF FUNCTION had never matched) and only where a statement begins, after the label or a comma, so a mode such as INTEGER in NORMAL MODE IS INTEGER is not taken for the INTEGER statement.

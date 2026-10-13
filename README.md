@@ -9,7 +9,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 
 | File | What it does |
 |---|---|
-| `base.js` | The foundation, loaded first: the `SW` object and its helpers (`SW.$`, `SW.el`, `SW.esc`, dates, `SW.store` under the bench's prefix, `SW.on`/`SW.emit`, `SW.toast`), the side panel, popovers, dialogs closed from their backdrop, sorting tables, sharing and copying, the address bar's query, Developer mode, ghost matching, an annotation's earlier wordings and the figures packed into it (`SW.markRE` reads its hidden marks). |
+| `base.js` | The foundation, loaded first: the `SW` object and its helpers (`SW.$`, `SW.el`, `SW.esc`, dates, `SW.store` under the bench's prefix, `SW.on`/`SW.emit`, `SW.toast`), the side panel, popovers, dialogs closed from their backdrop, sorting tables, sharing and copying, the address bar's query, Developer mode, ghost matching, an annotation's earlier wordings and the figures packed into it (`SW.markRE` reads its hidden marks).; `SW.flip`, a two-state switch for a toolbar (the state shown, a click for the other, kept for the bench). |
 | `md.js` | Rich text in annotations: Markdown shown and as plain text, rich text back to Markdown, and the note editor (`SW.mdTools`). |
 | `themes.js` | How the bench looks: code text, the hands written into the text, colour schemes and themes, and figures and documents for export. |
 | `shell.js` | The bench's frame, loaded last: start-up, the version picker, the tabs and the views drawn in them, the colour theme, the top bar's buttons, and what a link asks for (`?v=`, `&tab=`, `&l=`, `&b=`, `&a=`, `&code=`, `&help=`, `&tour=`, `&join=`, `&tr=`). `SW.setTab`, `SW.select`, `SW.forget`, `SW.setTheme`, `SW.markTabs`, `SW.help(name)`. The bench's parts from `SW.BENCH.shell`. |
@@ -139,7 +139,7 @@ SW.BENCH = {
 | `textNote` | `genealogy.js` | The mark that opens a transcriber's note in a part read as text (role `text`), set aside from the comparisons: `';'` on the ELIZA bench. |
 | `catalogue` | `catalogue.js` | `{ view, store, title, intro, foot, noun, rows, key, held, columns, search, facets, source, heldLabel, extra, subsets }`: see the head of `catalogue.js`. |
 | `layers` | `layers.js` | `{ list: [{ id, label, below, relation, start, more, note }], forms, pick(p), shown(id, versions) }`: the layers, top first, and how Read ▾ lists them; see the head of `layers.js`. |
-| `paratexts` | `paratexts.js`, `guides.js`, `settings.js` | `{ org, repo, cache, tokenName }`: the private repository of scans and documents, the name of the browser cache, and the name given to members' GitHub tokens (by default "<name> research bench"). |
+| `paratexts` | `paratexts.js`, `guides.js`, `settings.js` | `{ org, repo, cache, tokenName }`: the private repository of scans and documents, the name of the browser cache, and the name given to members' GitHub tokens (by default "<name> research bench"). | `genres`: [[group, [[id, label, DCMI, CSL, RIS]]]], a bench's own types of item, added to the kit's.
 | `examples` | `paratexts.js`, `guides.js` | Placeholders in the paratext forms: `date`, `archive`, `versions`, `refs`, `publisher`, `finding`. |
 | `lang` | `genealogy.js`, `compare.js` | The language of the texts: `macro`, `maclisp`, `plain`, or a bench's own (load `kit/lang-<lang>.js` before `kit/genealogy.js`). |
 | `comment`, `routine`, `caseFold` | `lang-plain.js`, `functional.js` | For `lang: 'plain'`: the comment mark (a string or a list), a regular expression for a routine's first line (its name in the first group), case meaning nothing. |
