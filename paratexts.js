@@ -229,7 +229,7 @@
       if (F.tag && (it.tags || []).indexOf(F.tag) < 0) return false;
       if (F.v && (it.versions || []).indexOf(F.v) < 0) return false;
       if (F.kind && it.kind !== F.kind) return false;
-      if (F.q) { var t = [it.code, it.title, it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' ')].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
+      if (F.q) { var t = [it.code, it.title, it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' ')].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
       return true;
     }).sort(function (a, b) {
       var x = sortKey(a, k), y = sortKey(b, k); if (x < y) return -d; if (x > y) return d;
@@ -512,7 +512,8 @@
         el('date', it.date) + el('type', dcType(it)) + el('format', [it.mime, it.extent]) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
-        el('relation', (it.refs || []).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))) + el('coverage', it.coverage) + el('rights', it.rights) + '</oai_dc:dc>\n';
+        el('relation', (it.refs || []).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))
+          .concat(altList(it).map(function (a) { return 'hasVersion: ' + (a.label || 'alternate') + ' [' + (a.lang || '') + ']' + (altNote(a) ? ' (' + altNote(a) + ')' : ''); }))) + el('coverage', it.coverage) + el('rights', it.rights) + '</oai_dc:dc>\n';
     }).join('') + '</records>\n';
   }
   // For Zotero and other reference managers: CSL-JSON and RIS. The creator field may hold several
@@ -736,6 +737,27 @@
       zone.innerHTML = '<p class="hint" style="padding:12px">The PDF could not be drawn here (' + esc(e.message) + '). Open ↗ shows it in the browser\'s own viewer.</p>';
     });
   }
+  // A paratext can carry alternates: a translation, a transcription, an OCR reading, kept beside
+  // the original under the same code and in the same record. `alts` is [{lang, label, file, mime,
+  // size, by, date, note}]; `lang` is BCP 47. altItem makes the shallow item showFile needs.
+  function altList(it) { return (it && it.alts || []).filter(function (a) { return a && a.file; }); }
+  function altItem(it, a) {
+    var mime = a.mime || '', kind = mime === 'application/pdf' ? 'pdf' : /^image\//.test(mime) ? 'image' :
+      /^audio\//.test(mime) ? 'audio' : /^video\//.test(mime) ? 'video' : /^text\//.test(mime) ? 'text' : 'file';
+    return { code: it.code, title: it.title, file: a.file, mime: mime, kind: kind, size: a.size || 0, lang: a.lang };
+  }
+  function altNote(a) { return a.note || (a.by ? 'working translation, by ' + a.by + (a.date ? ', ' + a.date : '') : ''); }
+  function altBar(it) {
+    var esc = SW.esc, list = altList(it); if (!list.length) return '';
+    return '<div class="px-alts"><button class="btn ghost on" data-alt="-1" lang="' + esc(it.language || '') + '">' +
+      esc(it.language ? it.language.toUpperCase() : 'Original') + '</button>' +
+      list.map(function (a, i) {
+        var n = altNote(a);
+        return '<button class="btn ghost" data-alt="' + i + '" lang="' + esc(a.lang || '') + '" title="' + esc(n) + '">' +
+          esc(a.label || (a.lang || '').toUpperCase()) + (n ? ' <span class="faint px-altnote">' + esc(n) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
+  }
+
   function showFile(it, pv, dl) {
     var esc = SW.esc;
     if (!it.file) { pv.innerHTML = okURL(it.url) ? embedHTML(it.url.trim(), it.kind, it.title) : '<p class="hint">Nothing held here, and no link.</p>'; return; }
@@ -745,7 +767,7 @@
       else if (it.kind === 'video' || /^video\//.test(it.mime || '')) pv.innerHTML = '<video class="px-video" controls preload="metadata" src="' + u + '"></video>';
       else if (it.kind === 'image') zoomImage(it, pv, u);
       else if (it.kind === 'pdf') zoomPdf(it, pv, u);
-      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = '<pre class="px-text">' + esc(t) + '</pre>'; });
+      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = '<pre class="px-text"' + (it.lang ? ' lang="' + esc(it.lang) + '"' : '') + '>' + esc(t) + '</pre>'; });
       else pv.innerHTML = '<p class="hint">No preview for this kind of file: ⤓ Download to open it.</p>';
     }, function (e) { pv.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
   }
@@ -755,7 +777,7 @@
     var gh0 = it.file ? 'https://github.com/' + REPO + '/blob/main/' + it.file.split('/').map(encodeURIComponent).join('/') : '';
     d.innerHTML = '<div class="tray-bighead"><span class="px-code mono" data-copy="' + esc(it.code) + '" title="Its code: click to copy">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +
       '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + (it.file ? '<a class="btn ghost" data-a="dl" download="' + esc(it.name || it.code) + '">⤓ Download</a><a class="btn ghost" href="' + esc(gh0) + '" target="_blank" rel="noopener" title="On GitHub, with its history">GitHub ↗</a>' : okURL(it.url) ? '<a class="btn ghost" href="' + esc(it.url.trim()) + '" target="_blank" rel="noopener" title="Where it is held">Open ↗</a>' : '') + (okURL(it.archiveUrl) ? '<a class="btn ghost" href="' + esc(it.archiveUrl.trim()) + '" target="_blank" rel="noopener" title="The original, in ' + esc(it.archive || 'its archive') + '">Source ↗</a>' : '') + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
-      '<div class="px-cols"><div class="px-view"><p class="hint">Opening…</p></div><div class="px-side">' + fieldsHTML(it) +
+      '<div class="px-cols"><div class="px-view">' + altBar(it) + '<div class="px-pv"><p class="hint">Opening…</p></div></div><div class="px-side">' + fieldsHTML(it) +
       '<div class="px-colls">' + collsHTML(it) + '</div>' +
       '<div class="px-by"><span>Catalogued by</span><span>' + esc(it.addedBy || '?') + (it.updated && it.updated !== it.added ? ', changed ' + esc(SW.fmtDate(it.updated)) + ' by ' + esc(it.updatedBy || '?') : '') + '</span></div>' +
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
@@ -765,7 +787,13 @@
     document.body.appendChild(d);
     d.addEventListener('close', function () { d.remove(); });
     d.showModal();
-    showFile(it, SW.$('.px-view', d), SW.$('[data-a="dl"]', d));
+    showFile(it, SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
+    d.addEventListener('click', function (e) {   // data-alt, never data-c: the list reads [data-c] as a collection row
+      var ab = e.target.closest && e.target.closest('[data-alt]'); if (!ab) return;
+      var n = +ab.dataset.alt, list = altList(it);
+      SW.$$('[data-alt]', d).forEach(function (b) { b.classList.toggle('on', b === ab); });
+      showFile(n < 0 ? it : altItem(it, list[n]), SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
+    });
     citedIn(code, SW.$('.px-cited', d));
     function talk(label, change) {   // a rating, emoji or comment: saved, then the talk redrawn
       var who = me();
@@ -1035,8 +1063,20 @@
   });
   // Two paratexts side by side: pictures zoom (wheel, pinch, +/−, double-click) and pan (drag) together
   // while Together is on, as for two printings of one page; a PDF or a text scrolls on its own.
+  // Codes may be a paratext's own code, or CODE#N for the Nth alternate of it, so that an original
+  // and its translation can be set beside each other.
+  function sbsItem(spec) {
+    var m = /^(.+?)#(\d+)$/.exec(String(spec));
+    if (!m) return byCode(spec);
+    var it = byCode(m[1]); if (!it) return null;
+    var a = altList(it)[+m[2]]; if (!a) return null;
+    var alt = altItem(it, a);
+    alt.title = it.title + ' (' + (a.label || a.lang || 'alternate') + ')';
+    alt.date = it.date; alt.archive = it.archive; alt.archiveId = it.archiveId;
+    return alt;
+  }
   P.sideBySide = function (codes) {
-    var esc = SW.esc, items = codes.map(byCode).filter(Boolean); if (items.length !== 2) return;
+    var esc = SW.esc, items = codes.map(sbsItem).filter(Boolean); if (items.length !== 2) return;
     var d = SW.el('dialog', { class: 'tray-big px-dlg px-sbs' }), linked = SW.store.get('px.sbsLinked', true);
     function paneHTML(it, i) {
       return '<div class="px-pane" data-i="' + i + '"><div class="px-ph"><span class="px-code mono">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +

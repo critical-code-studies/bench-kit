@@ -1,5 +1,21 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: a paratext can carry **alternates**, a translation, a transcription or an OCR reading,
+  kept beside the original under the same code and in the same record rather than catalogued twice.
+  The record gains an optional `alts` array of `{lang, label, file, mime, size, by, date, note}`,
+  `lang` in BCP 47; a record without it renders exactly as before. A language row sits above the
+  view, the original first; the rendered text carries its own `lang` so hyphenation and screen
+  readers behave. Where a translation is not a published one the row says so, "machine translation,
+  unchecked" or "working translation, by X, date", so that it cannot be quoted as if it were.
+- Side by side takes `CODE#N` as well as `CODE`, so an original and its translation can be set
+  against each other in the two panes.
+- A translation's language, label and note are searched with the rest of the record; the text of an
+  alternate is not yet searched.
+- Export: alternates leave with the record, as `dc:relation` entries of the form
+  `hasVersion: <label> [<lang>] (<note>)`.
+
 ## 0.40.1 (2026-10-13)
 
 - Paratext ratings: the stars on a card work. Each carried its paratext's code as `data-c`, which the list reads as a collection, so a click on a card's star was taken as a click on a collection named after the paratext: the list emptied and nothing was rated. The code is now `data-rcode`, and the stars are handled before any collection row.

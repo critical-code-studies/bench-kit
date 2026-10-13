@@ -206,3 +206,10 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-cardrate button.px-cs:hover { color: var(--kin); }
 .px-cardrate button.px-cs.on { color: var(--kin); }
 .px-cardrate .px-cavg { margin-left: 3px; font-size: 11px; }
+
+/* a paratext's alternates: a translation or transcription beside the original */
+.px-alts { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 6px; align-items: baseline; }
+.px-alts .btn { font-size: 11.5px; padding: 1px 8px; }
+.px-alts .btn.on { border-color: var(--beam); background: color-mix(in srgb, var(--beam) 16%, transparent); }
+.px-altnote { font-size: 10.5px; margin-left: 4px; }
+.px-pv { min-height: 0; }
