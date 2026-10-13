@@ -18,7 +18,7 @@
   // The kit's own version, raised with each release (CHANGELOG.md), shown in the About box (about.js)
   // a version's main file: its program, or a witness read as text (role 'text'); not support or documentation
   SW.mainPart = function (part) { return !!part && (part.role === 'program' || part.role === 'text'); };
-  SW.KIT = { version: '0.43.1', url: 'https://github.com/critical-code-studies/bench-kit' };
+  SW.KIT = { version: '0.44.0', url: 'https://github.com/critical-code-studies/bench-kit' };
   // The bench's version: the ?v= on the script tags in index.html (set there for every
   // script), shown beside the title and recorded in exports.
   SW.VERSION = ((document.currentScript && /[?&]v=([^&#]+)/.exec(document.currentScript.src)) || [])[1] || 'dev';

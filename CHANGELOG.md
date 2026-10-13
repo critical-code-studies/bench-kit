@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.44.0 (2026-10-13)
 
 - Paratexts: **a type for every item** (`genre`), what the thing is beside its file's kind (a memo scanned to PDF is a memo): 51 types in seven groups (texts, from article, book, thesis and working paper to memo, letter, electronic mail, minutes, patent, finding aid and press release; computing, from program listing and printout to punched cards, paper tape, magnetic tape, software, repository and dataset; images; sound and moving image, oral history among them; objects; the web; other), each mapped to its DCMI, CSL and RIS types for export. Chosen when adding (guessed from the file or the link where none is chosen) and in the record; a Type column, sort and filter in the list, a chip on the card, read by the search. `SW.BENCH.paratexts.genres` adds a bench's own. A link shows as video, audio, an image, a PDF or a page.
 - Paratexts: the list's rows in alternate shades.
