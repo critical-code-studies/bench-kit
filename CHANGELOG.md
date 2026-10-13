@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.52.0 (2026-10-13)
 
 - ⚙ Settings › You: **Tell me when a newer release is live**, on by default. Turned off, the newer-release bar no longer appears in that browser (kept as `freshBar`), and one showing goes on Save. `SW.BENCH.freshness: false` still turns it off for a whole bench.
 
