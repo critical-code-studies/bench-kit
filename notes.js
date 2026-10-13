@@ -1104,7 +1104,7 @@
       '</div></section><section class="js-step"><div class="js-num" aria-hidden="true">2</div><div class="js-body"><h3><span class="vh">Step 2: </span>Join the group</h3>' +
       (grp ? '<p>Your invitation has set the group here. Open it while logged in to Hypothesis, and click <b>Join</b>:</p><p><a class="btn" href="https://hypothes.is/groups/' + esc(grp) + '" target="_blank" rel="noopener noreferrer">Open the group on Hypothesis ↗</a></p>'
         : '<ol class="ah-steps"><li>Ask the project leads for an invitation link if you do not have one. Opening it fills in the group here.</li>' +
-          '<li>Or paste the group’s link (<span class="mono">https://hypothes.is/groups/Ab12Cd34/name</span>) into step 4, open it while logged in to Hypothesis, and click <b>Join</b>.</li></ol>') +
+          '<li>Or paste the group’s link from your invitation into step 4, open it while logged in to Hypothesis, and click <b>Join</b>.</li></ol>') +
 
       '</div></section><section class="js-step"><div class="js-num" aria-hidden="true">3</div><div class="js-body"><h3><span class="vh">Step 3: </span>Get your API token</h3>' +
       '<ol class="ah-steps"><li>Open ' + ext('https://hypothes.is/account/developer', 'hypothes.is/account/developer') + ' (logged in).</li>' +

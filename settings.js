@@ -28,8 +28,8 @@
       '<p class="hint set-msg" id="set-inimsg"></p>' + rows('you') + '</section>' +
 
       '<section class="set-pane" data-sp="anno">' +
-      '<p class="hint">' + (ST.groupHint || 'Annotations are shared through a private Hypothesis group. Paste the group’s link (hypothes.is/groups/<b>ID</b>/…) or just its ID, and a personal API token (hypothes.is/account/developer). Without them, annotations are kept as drafts in this browser and can be exported or published later.') + '</p>' +
-      '<label>Group link or ID <input id="set-group" placeholder="' + esc(ST.groupPlaceholder || 'https://hypothes.is/groups/Ab12Cd34/name') + '" autocomplete="off"></label>' +
+      '<p class="hint">' + (ST.groupHint || 'Annotations are shared through a private Hypothesis group. Paste the group link from your invitation (it fills in the group), and a personal API token (hypothes.is/account/developer). Without them, annotations are kept as drafts in this browser and can be exported or published later.') + '</p>' +
+      '<label>Group link or ID <input id="set-group" placeholder="' + esc(ST.groupPlaceholder || 'The group link from your invitation') + '" autocomplete="off"></label>' +
       '<label for="set-token">API token</label>' +
       '<div class="token-row"><input id="set-token" type="password" placeholder="6879-…" autocomplete="off" spellcheck="false"><button id="set-token-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l"><button id="set-test" type="button" class="btn ghost">Test connection</button> <span class="hint" id="set-check"></span></p>' +
