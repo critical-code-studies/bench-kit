@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: the switchers above an item's view stay at its top left. The view centres what it shows, and the bar, sized to its own width, had moved with each reading: centred over a scan, at the left over a short text, pushed right by a long one.
+
 ## 0.50.0 (2026-10-13)
 
 - Paratexts: an item's alternates switch as the bench's other readings do. One alternate is a two-state flip, **Original | Translated** where its language differs from the record's, **Text | Scan** and the like where it does not; more than one is a row of short labels, a language among translations or the kind of thing (P-JUFYC: Scan | DE | EN). An alternate's `short` names it in either. Its label and note, which had been inside the button and ran off the edge, are a caption under the switcher, in full, for the reading showing; the original has none.

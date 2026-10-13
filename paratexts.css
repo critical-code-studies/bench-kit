@@ -220,7 +220,7 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 /* With a language row above it, the view is two rows and the preview is the one that scrolls.
    Centring a tall item in a capped row puts its top above the row, out of scroll's reach, and
    the middle of the text then paints over the row. */
-.px-view.px-withalts { grid-template-rows: auto minmax(0, 1fr); }
+.px-view.px-withalts { grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
 .px-view.px-withalts > .px-pv { align-self: stretch; justify-self: stretch; display: grid; place-items: center; overflow: auto; }
 
 /* lacunae (paratexts.js gaps): the seam in gold, after kintsugi; one mark means one thing across the
@@ -267,7 +267,9 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 body.px-leiden .px-gap { border: 0; background: none; padding: 0; margin: 0; color: inherit; font-family: var(--code-font, var(--mono)); }
 body.px-leiden .px-gap > :not(.px-gapleiden) { display: none; }
 body.px-leiden .px-gap > .px-gapleiden { display: block; }
-.px-viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* the switchers, at the top left whatever the reading showing: the view centres its content, and
+   a bar sized to its own width moved with every change of reading */
+.px-viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-self: stretch; align-self: start; padding: 6px 8px 4px; min-width: 0; }
 .px-viewbar .px-alts { margin: 0; }
 
 /* the item's file and where it is held, under ☰ in its header */
