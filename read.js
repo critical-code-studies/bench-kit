@@ -168,38 +168,59 @@
       // contractions written out, or spelled-out statements written short: whole-view, marked
       var table = COLS.expand || {}, keys = Object.keys(table);
       if (opts.expand === 'held' || !keys.length) return;
-      var pairs = opts.expand === 'out' ? keys.map(function (k) { return [k, table[k]]; }) :
-        keys.filter(function (k) { return table[k].length === 1; }).map(function (k) { return [table[k][0], [k]]; });
-      pairs.sort(function (x, y) { return y[0].length - x[0].length; });
-      var re = new RegExp('(^|[^A-Z0-9\'])(' + pairs.map(function (x) { return x[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')(?![A-Z0-9\'])', 'g'), by = {};
-      pairs.forEach(function (x) { by[x[0]] = x[1]; });
-      SW.$$('.ln .t', box).forEach(function (t) {
-        var w = document.createTreeWalker(t, NodeFilter.SHOW_TEXT), nodes = [], x;
-        while ((x = w.nextNode())) if (!x.parentNode.closest('.var, .cm, .card-x')) nodes.push(x);
-        nodes.forEach(function (node) {
-          var v = node.nodeValue; re.lastIndex = 0; if (!re.test(v)) return; re.lastIndex = 0;
-          var frag = document.createDocumentFragment(), last = 0, m;
-          while ((m = re.exec(v))) {
-            var at = m.index + m[1].length, held = m[2], reads = by[held];
-            frag.appendChild(document.createTextNode(v.slice(last, at)));
-            var span = document.createElement('span');
-            if (opts.expand === 'out') {
-              var one = reads.length === 1;
+      var esc1 = function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
+      if (opts.expand === 'out') {
+        // a contraction is one token: written out wherever it stands, outside strings and remarks
+        var re = new RegExp("(^|[^A-Z0-9'])(" + keys.sort(function (x, y) { return y.length - x.length; }).map(esc1).join('|') + ")(?![A-Z0-9'])", 'g');
+        SW.$$('.ln .t', box).forEach(function (t) {
+          var w = document.createTreeWalker(t, NodeFilter.SHOW_TEXT), nodes = [], x;
+          while ((x = w.nextNode())) if (!x.parentNode.closest('.var, .cm, .card-x')) nodes.push(x);
+          nodes.forEach(function (node) {
+            var v = node.nodeValue; re.lastIndex = 0; if (!re.test(v)) return; re.lastIndex = 0;
+            var frag = document.createDocumentFragment(), last = 0, m;
+            while ((m = re.exec(v))) {
+              var at = m.index + m[1].length, held = m[2], reads = table[held], one = reads.length === 1;
+              frag.appendChild(document.createTextNode(v.slice(last, at)));
+              var span = document.createElement('span'), not = (COLS.expandNot || {})[held] || [];   // what the source warns it is not
               span.className = 'card-x' + (one ? '' : ' card-x-open');
               span.textContent = one ? reads[0] : held;
-              var not = (COLS.expandNot || {})[held] || [];   // what the source warns it is not
               span.title = held + (one ? ', written out: ' + reads[0] : ': the source leaves it open, ' + reads.join(' or ')) +
                 (not.length ? '; not ' + (not.length > 1 ? not.slice(0, -1).join(', ') + ' or ' + not[not.length - 1] : not[0]) : '') + (COLS.expandSource ? ' (' + COLS.expandSource + ')' : '');
               span.dataset.leiden = one ? leidenExp(held, reads[0]) : held;
-            } else {
-              span.className = 'card-x'; span.textContent = reads[0]; span.title = held + ', written short: ' + reads[0]; span.dataset.leiden = held;
+              frag.appendChild(span); last = at + held.length;
             }
-            frag.appendChild(span); last = at + held.length;
-          }
-          frag.appendChild(document.createTextNode(v.slice(last)));
-          node.parentNode.replaceChild(frag, node);
+            frag.appendChild(document.createTextNode(v.slice(last)));
+            node.parentNode.replaceChild(frag, node);
+          });
         });
-      });
+      } else {
+        // written short: a spelled-out statement that is a contraction's one reading, where a
+        // statement begins (after the label, or after a comma), matched on the whole line, since
+        // its words are drawn apart; INTEGER in NORMAL MODE IS INTEGER is a mode, not a statement
+        var full = {}; keys.forEach(function (k) { if (table[k].length === 1) full[table[k][0]] = k; });
+        var forms = Object.keys(full).sort(function (x, y) { return y.length - x.length; });
+        var re2 = new RegExp("(^\\S*\\s+|,\\s*)(" + forms.map(function (f) { return esc1(f).replace(/ /g, '\\s+'); }).join('|') + ")(?![A-Z0-9'])", 'g');
+        SW.$$('.ln .t', box).forEach(function (t) {
+          // the line's text, with the places in strings and remarks, which are not read
+          var w = document.createTreeWalker(t, NodeFilter.SHOW_TEXT), nodes = [], x, txt = '', off = [];
+          while ((x = w.nextNode())) { off.push([x, txt.length, !!x.parentNode.closest('.var, .cm, .card-x, .card-joined')]); nodes.push(x); txt += x.nodeValue; }
+          var found = [], m; re2.lastIndex = 0;
+          while ((m = re2.exec(txt))) {
+            var s0 = m.index + m[1].length, e0 = s0 + m[2].length, form = m[2].replace(/\s+/g, ' ');
+            if (off.some(function (o) { return o[2] && o[1] < e0 && o[1] + o[0].nodeValue.length > s0; })) continue;
+            found.push([s0, e0, form]);
+          }
+          found.reverse().forEach(function (f) {   // from the end, so the earlier places stay where they were
+            function point(pos) { for (var i = off.length - 1; i >= 0; i--) if (off[i][1] <= pos) return [off[i][0], pos - off[i][1]]; return [off[0][0], 0]; }
+            var a = point(f[0]), b = point(f[1]), r = document.createRange();
+            r.setStart(a[0], a[1]); r.setEnd(b[0], b[1]);
+            var span = document.createElement('span');
+            span.className = 'card-x'; span.textContent = full[f[2]]; span.title = f[2] + ', written short: ' + full[f[2]] + (COLS.expandSource ? ' (' + COLS.expandSource + ')' : '');
+            span.dataset.leiden = f[2];
+            r.deleteContents(); r.insertNode(span);
+          });
+        });
+      }
       // a selection copied: a written-out contraction leaves in Leiden's form, never as if held
       box.addEventListener('copy', function (e) {
         var sel = window.getSelection(); if (!sel || !sel.rangeCount) return;

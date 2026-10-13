@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The card lens, written short: a spelled-out statement is matched on the whole line (its words are drawn apart, so VECTOR VALUES and END OF FUNCTION had never matched) and only where a statement begins, after the label or a comma, so a mode such as INTEGER in NORMAL MODE IS INTEGER is not taken for the INTEGER statement.
 - The card lens: a written-out contraction's mark also says what the source warns it is not (`SW.BENCH.columns.expandNot`), so an expanded P'T reads PRINT FORMAT, "not PRINT COMMENT, PUNCH FORMAT or PRINT ON LINE FORMAT".
 
 ## 0.43.0 (2026-10-13)
