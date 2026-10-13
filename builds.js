@@ -79,7 +79,7 @@
   SW.docMeta = function (b) {
     return [
       ['Version', b.v.label], ['Reference', SW.refText(b.v.id)], ['Date', b.v.date], ['Authors', b.v.authors],
-      ['Sources', b.parts.map(function (p) { return p.src + (p.role !== 'program' ? ' (' + p.role + ')' : ''); }).join('; ')]
+      ['Sources', b.parts.map(function (p) { return p.src + (!SW.mainPart(p) ? ' (' + p.role + ')' : ''); }).join('; ')]
     ].concat(cfg.meta ? cfg.meta(b) : []).concat([['Generated', SW.fmtDate(SW.today()) + ', ' + (B.title || 'Research Bench') + ' v' + SW.VERSION]]);
   };
 })(typeof window !== 'undefined' ? window : globalThis);

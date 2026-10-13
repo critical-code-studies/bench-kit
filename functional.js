@@ -172,7 +172,7 @@
       if (pt.role === 'doc') return '';
       var n = A.shown.filter(function (r) { return r.p === p; }).length, ld = A.load[p] || [], inline = ld.some(function (x) { return x.count; });
       rows.load.push([String(p + 1), fileName(b, p)].concat(P.grouped ? [partName(p)] : [], [String(n), ld.map(function (x) { return x.text + (x.count > 1 ? ' ×' + x.count : ''); }).join(inline ? ', ' : ' · ')]));
-      return '<tr><td class="num">' + (p + 1) + '</td><td class="mono">' + SW.esc(fileName(b, p)) + (pt.role !== 'program' && !H().fileLabel ? ' <span class="faint">(' + SW.esc(pt.role) + ')</span>' : '') + '</td>' +
+      return '<tr><td class="num">' + (p + 1) + '</td><td class="mono">' + SW.esc(fileName(b, p)) + (!SW.mainPart(pt) && !H().fileLabel ? ' <span class="faint">(' + SW.esc(pt.role) + ')</span>' : '') + '</td>' +
         (P.grouped ? '<td>' + chip(P.of[p]) + SW.esc(partName(p)) + '</td>' : '') + '<td class="num">' + n + '</td><td class="mono fo-run">' +
         (ld.length ? ld.map(function (x) { return go(p, x.n, SW.esc(x.text.slice(0, 60))) + (x.count > 1 ? ' ×' + x.count : ''); }).join(inline ? ', ' : '<br>') : '<span class="faint">nothing</span>') + '</td></tr>';
     }).join('') + '</tbody></table>';

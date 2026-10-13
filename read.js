@@ -86,7 +86,7 @@
       if (F.info) return F.info(b);
       return b.parts.map(function (part, pi) {
         var name = part.src.split('/').pop();
-        return { pi: pi, supplied: part.role !== 'program', star: false, title: '', label: name + (part.role !== 'program' ? ' (' + (ROLE[part.role] || part.role) + ')' : '') };
+        return { pi: pi, supplied: !SW.mainPart(part), star: false, title: '', label: name + (!SW.mainPart(part) ? ' (' + (ROLE[part.role] || part.role) + ')' : '') };
       });
     }
     function showsTape(pi) { return opts.tapes === 'all' || +opts.tapes === pi; }

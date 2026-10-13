@@ -42,7 +42,7 @@
     var own = H().rows ? H().rows(b) : [
       ['Files', b.parts.map(function (p, i) {
         return '<a href="' + SW.esc(SW.sourceURL(p.src)) + '" target="_blank" rel="noopener">' + SW.esc(p.src.split('/').pop()) + '</a>' +
-          (p.role !== 'program' ? ' <span class="faint">(' + SW.esc(p.role === 'doc' ? 'documentation' : 'support') + ')</span>' : '') +
+          (!SW.mainPart(p) ? ' <span class="faint">(' + SW.esc(p.role === 'doc' ? 'documentation' : 'support') + ')</span>' : '') +
           ' <span class="faint">' + b.lines[i].length + ' lines</span>';
       }).join('<br>') || 'none'],
       ['Read as', v.build ? 'source text, divided into lines' : 'no copy is held']

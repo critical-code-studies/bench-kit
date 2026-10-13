@@ -24,7 +24,7 @@
     var anc = V.ancestry(v.id);
     if (anc.length > 1) rows.push(['Descent', anc.map(function (id) { return short(V.byId(id)); }).join(' → ')]);
     if (v.witnessOf) rows.push(['A reading of', short(V.byId(v.witnessOf))]);
-    rows.push(['Sources', b.parts.map(function (p) { return p.src + (p.role !== 'program' ? ' (' + p.role + ')' : '') + (H.source ? H.source(p) : ''); }).join('; ')]);
+    rows.push(['Sources', b.parts.map(function (p) { return p.src + (!SW.mainPart(p) ? ' (' + p.role + ')' : '') + (H.source ? H.source(p) : ''); }).join('; ')]);
     if ((v.witnesses || []).length) rows.push(['Object tapes', v.witnesses.join('; ')]);
     if ((v.sourceTapes || []).length) rows.push(['Source tapes', v.sourceTapes.join('; ')]);
     if (H.built) rows.push(H.built(b));
@@ -38,7 +38,7 @@
     threads.forEach(function (t) { var k = t.note.anchor.p + ':' + t.note.anchor.n0; (at[k] = at[k] || []).push(t); });
     var lines = [];
     b.parts.forEach(function (part, pi) {
-      if (part.role !== 'program' && !opts.supplied) return;
+      if (!SW.mainPart(part) && !opts.supplied) return;
       b.lines[pi].forEach(function (L) {
         if (L.away) return;
         lines.push({ L: L, part: pi, notes: at[pi + ':' + L.n] || [] });
@@ -66,7 +66,7 @@
       cur.lines.push({ x: x, marks: marks });
     });
     var contents = [], seen = {};
-    pages.forEach(function (pg, i) { if (!seen[pg.part]) { seen[pg.part] = 1; contents.push([b.parts[pg.part].src + (b.parts[pg.part].role !== 'program' ? ' (' + b.parts[pg.part].role + ')' : ''), i + 1]); } });
+    pages.forEach(function (pg, i) { if (!seen[pg.part]) { seen[pg.part] = 1; contents.push([b.parts[pg.part].src + (!SW.mainPart(b.parts[pg.part]) ? ' (' + b.parts[pg.part].role + ')' : ''), i + 1]); } });
     var esc = SW.esc;
     var o = ['<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>' + esc(v.label) + ': reading edition</title><style>',
       '@page { size: A4; margin: 16mm 14mm 16mm 18mm; }',

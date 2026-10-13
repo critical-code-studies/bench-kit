@@ -193,7 +193,7 @@
   root.SWLang.mad = {
     normalize: normalize, parseLine: parseLine, parseMad: parseMad, parseFap: parseFap, parseScript: parseScript, prepareLine: prepareLine, stem: stemOf,
     tokens: tokens, scriptTokens: scriptTokens, fapTokens: fapTokens, isScript: isScript, deckOf: deckOf, keywords: KW,
-    skipPart: function (part, opts) { return part.role === 'doc' || (part.role !== 'program' && part.role !== 'text' && !opts.includeSupplied); },
+    skipPart: function (part, opts) { return part.role === 'doc' || (!(part.role === 'program' || part.role === 'text') && !opts.includeSupplied); },
     routineUnits: function (text, o, h) { H = h; return routineUnits(text, o); },
     sectionUnits: function (text, o, h) { H = h; return sectionUnits(text, o); }
   };

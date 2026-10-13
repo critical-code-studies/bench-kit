@@ -65,7 +65,7 @@
   /*
    * prepare(versionId, label, sort, parts, opts) -> text
    * parts: loaded parts from SWVersions.load ({src, role, raw, text, title, end}).
-   * Only role === 'program' parts unless opts.includeSupplied. Lines from
+   * Only a version's main parts (SW.mainPart: program, or text) unless opts.includeSupplied. Lines from
    * each part's title line to its end (inclusive); header lines skipped.
    * The (possibly normalised) .text is parsed, .raw is kept for display.
    */

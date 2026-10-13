@@ -47,7 +47,7 @@
     if (s.find) {
       SW.build(s.v || SW.state.v).then(function (b) {
         for (var p = 0; p < b.lines.length; p++) {
-          if (b.parts[p].role !== 'program') continue;
+          if (!SW.mainPart(b.parts[p])) continue;
           for (var i = 0; i < b.lines[p].length; i++) {
             var L = b.lines[p][i];
             if (!L.away && s.find.test(L.raw)) { SW.openAt(b.v.id, { p: p, n0: L.n }); return focusOn(s.focus); }

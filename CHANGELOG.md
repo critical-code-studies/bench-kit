@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `SW.mainPart(part)`: a version's main file, its program or a witness read as text; Compare, the reading edition, the tours, the functional overview and the records count a `text` part as main (0.39.0 left it out of Compare's text view).
+
 ## 0.39.0 (2026-10-13)
 
 - `tools/ocr.swift` and `tools/ocr-vote.js`: a draft transcription from a scan, by Apple's Vision text recognition (macOS), and from many copies of one page the reading most copies give, line by line, with indents kept (from the ELIZA bench's 32 ditto copies of a 1965 conversation).

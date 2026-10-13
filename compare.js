@@ -21,7 +21,7 @@
   function progLines(b, supplied) {
     var out = [];
     b.lines.forEach(function (ls, pi) {
-      if (!supplied && b.parts[pi].role !== 'program') return;
+      if (!supplied && !SW.mainPart(b.parts[pi])) return;
       ls.forEach(function (L) { if (!L.skipped) out.push(L); });
     });
     return out;
