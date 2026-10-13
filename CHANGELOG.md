@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.49.0 (2026-10-13)
 
 - Paratexts: an item's Download, GitHub ↗, Open ↗ and Source ↗ under ☰ in its header, beside Share and ＋ My notes; the menu closes on a choice or a click elsewhere.
 - Paratexts: **Catalogued by** is a field under More metadata, which can be corrected, with the last change (when, by whom) under it; it no longer sits below the collections.
