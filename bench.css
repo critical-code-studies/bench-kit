@@ -628,12 +628,14 @@ dialog.nudge { animation: nudge 0.35s; }
 .fd-rxbar button.on { border-color: var(--beam); background: color-mix(in srgb, var(--beam) 16%, transparent); }
 .fd-rxbar sup { font-size: 10px; margin-left: 2px; }
 .fd-rate { display: inline-flex; align-items: center; gap: 1px; margin-right: 10px; }
-.fd-rate button { border: none; padding: 0 2px; font-size: 18px; color: transparent; -webkit-text-stroke: 1px var(--text-faint); }
+.fd-rate button { border: none; padding: 0 2px; font-size: 18px; color: transparent; -webkit-text-stroke: 1px var(--text-faint); opacity: .45; }
 /* a star given is filled in gold, a star not given is an outline: on the light themes a pale
    fill beside the gold could not be told apart */
-.fd-rate button.on { color: var(--star, var(--kin)); -webkit-text-stroke: 0; background: none; }
-.fd-rate button:hover { color: var(--kin-bg); -webkit-text-stroke: 1px var(--kin); }
-.fd-rate button:not(.on):not(:hover) { opacity: .45; }
+.fd-rate button.on { color: var(--star, var(--kin)); -webkit-text-stroke: 0; background: none; opacity: 1; }
+/* under the pointer, the rating a click would give: every star up to the one pointed at filled,
+   the rest empty */
+.fd-rate:has(button:hover) button { color: var(--star, var(--kin)); -webkit-text-stroke: 0; opacity: .8; }
+.fd-rate:has(button:hover) button:hover ~ button { color: transparent; -webkit-text-stroke: 1px var(--text-faint); opacity: .45; }
 .tray-code.tray-full { white-space: pre; }
 .tray-code .tl { white-space: pre; }
 .tray-anno { white-space: normal; font-family: var(--sans, inherit); font-size: 12.5px; text-align: right; margin: 3px 0 6px auto; max-width: 80%; padding: 3px 10px 4px; border-right: 3px solid var(--line); background: color-mix(in srgb, var(--surface-2) 60%, transparent); border-radius: 4px 0 0 4px; }

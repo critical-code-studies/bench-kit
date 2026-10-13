@@ -204,10 +204,11 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 
 /* rate from the card itself: your own stars, the crew average beside them */
 .px-cardrate { display: inline-flex; align-items: center; gap: 1px; }
-.px-cardrate button.px-cs { background: none; border: 0; padding: 0 1px; cursor: pointer; font-size: 14px; line-height: 1; color: transparent; -webkit-text-stroke: 1px var(--text-faint); }
-.px-cardrate button.px-cs:hover { color: var(--kin-bg); -webkit-text-stroke: 1px var(--kin); }
-.px-cardrate button.px-cs:not(.on):not(:hover) { opacity: .45; }
-.px-cardrate button.px-cs.on { color: var(--star, var(--kin)); -webkit-text-stroke: 0; }
+.px-cardrate button.px-cs { background: none; border: 0; padding: 0 1px; cursor: pointer; font-size: 14px; line-height: 1; color: transparent; -webkit-text-stroke: 1px var(--text-faint); opacity: .45; }
+.px-cardrate button.px-cs.on { color: var(--star, var(--kin)); -webkit-text-stroke: 0; opacity: 1; }
+/* under the pointer, the rating a click would give: the stars up to the one pointed at filled */
+.px-cardrate:has(button.px-cs:hover) button.px-cs { color: var(--star, var(--kin)); -webkit-text-stroke: 0; opacity: .8; }
+.px-cardrate:has(button.px-cs:hover) button.px-cs:hover ~ button.px-cs { color: transparent; -webkit-text-stroke: 1px var(--text-faint); opacity: .45; }
 .px-cardrate .px-cavg { margin-left: 3px; font-size: 11px; }
 
 /* a paratext's alternates: a translation or transcription beside the original */

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Ratings: under the pointer, the rating a click would give. Every star up to the one pointed at fills, and the rest empty, on the cards and wherever a rating is set; only the star under the pointer had changed.
+
 ## 0.53.6 (2026-10-13)
 
 - Ratings: a star not given is fainter (its outline at 45%), so the gold of a star given stands out; under the pointer it shows at full strength.
