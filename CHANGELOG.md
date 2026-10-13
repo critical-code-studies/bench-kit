@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.53.3 (2026-10-13)
 
 - Paratexts: an embedded player (YouTube, Vimeo, the Internet Archive) or a video fills the width of the view, in an item, in one with alternates, and in the read-only box. The view centres what it shows, and a player sized by percentage inside the centred box had shrunk to a small frame in the middle.
 
