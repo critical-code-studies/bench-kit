@@ -96,7 +96,7 @@ To take a newer kit: `git submodule update --remote research/kit`, test, and com
 
 ## What a bench provides
 
-**Versions** (`js/versions.js`, `root.SWVersions`): `VERSIONS` (each `{ id, label, date, sort, authors, fork, status, medium, summary, build: [{ src, role }], parent, witnessOf, also, influence }`; `role` is `program`, `support` or `doc`; a lost version has no `build`), `byId(id)`, `load(v, fetchText)`, `SRC` (where the sources are), `LINES` (lines of descent: `{ id, label, tip, ids }`; a line may give `ids` itself, in order, in place of `tip` where no descent is known), `ancestry(id)`, `DIALECTS`, `TRANSFORMS`. These come from `kit/versionlist.js`, which the bench gives its records: `SWVersionList({ versions, src, dialects, transforms, parent, witness, also, influence, lines, load, findTitle, extra })`, with `parent` and `witness` as `{ id: id }`, `also` and `influence` as `{ id: [id] }`, and `load` and `findTitle` only where the bench reads its files otherwise; `SWVersionList.files(dir, list)` makes a version's `build`. In Node the bench's `js/versions.js` requires `../kit/versionlist.js`.
+**Versions** (`js/versions.js`, `root.SWVersions`): `VERSIONS` (each `{ id, label, date, sort, authors, fork, status, medium, summary, build: [{ src, role }], parent, witnessOf, also, influence }`; `role` is `program`, `support`, `doc` or `text` (a witness read and compared as plain text: a transcript, a conversation, a log); a lost version has no `build`), `byId(id)`, `load(v, fetchText)`, `SRC` (where the sources are), `LINES` (lines of descent: `{ id, label, tip, ids }`; a line may give `ids` itself, in order, in place of `tip` where no descent is known), `ancestry(id)`, `DIALECTS`, `TRANSFORMS`. These come from `kit/versionlist.js`, which the bench gives its records: `SWVersionList({ versions, src, dialects, transforms, parent, witness, also, influence, lines, load, findTitle, extra })`, with `parent` and `witness` as `{ id: id }`, `also` and `influence` as `{ id: [id] }`, and `load` and `findTitle` only where the bench reads its files otherwise; `SWVersionList.files(dir, list)` makes a version's `build`. In Node the bench's `js/versions.js` requires `../kit/versionlist.js`.
 
 **Builds** (`SW.build(id)`, a promise; `kit/builds.js` fetches and caches them, the bench's `js/core.js` reads them through `SW.builds({ read(v, L, extra), split, key(v, extra), meta(b) })`): `{ v, parts: [{ src, role, raw }], lines: [[{ p, n, raw, norm }] per file], errorsAt: { 'p:n': [...] }, kind: { 'p:n': 'def' | 'com' | … }, asm }` (`asm` is null where the bench neither assembles nor indexes; Read, the edition and the figures show addresses and words where it holds `byLine`).
 
@@ -135,6 +135,8 @@ SW.BENCH = {
 | `joinCard` | `notes.js` | HTML at the top of the joining guide. |
 | `tagsHint` | `shell.js` | Examples of tags, shown in the annotate dialog's Tags field. |
 | `annoHelp` | `notes.js` | The worked examples in Help ▸ Advanced annotation: `manual`, `manualName`, `start`, `search`, `refA`, `refB`, `noteA`, `noteB`, `quoteA`, `boxA`, `boxB`, `tryText`, `code`, `caption`. |
+| `freshness` | `shell.js` | `false` to stop the bar that offers to reload when a newer release is live. |
+| `textNote` | `genealogy.js` | The mark that opens a transcriber's note in a part read as text (role `text`), set aside from the comparisons: `';'` on the ELIZA bench. |
 | `catalogue` | `catalogue.js` | `{ view, store, title, intro, foot, noun, rows, key, held, columns, search, facets, source, heldLabel, extra, subsets }`: see the head of `catalogue.js`. |
 | `layers` | `layers.js` | `{ list: [{ id, label, below, relation, start, more, note }], forms, pick(p), shown(id, versions) }`: the layers, top first, and how Read ▾ lists them; see the head of `layers.js`. |
 | `paratexts` | `paratexts.js`, `guides.js`, `settings.js` | `{ org, repo, cache, tokenName }`: the private repository of scans and documents, the name of the browser cache, and the name given to members' GitHub tokens (by default "<name> research bench"). |
@@ -225,6 +227,14 @@ A bench's `tests/annotations.html` loads its values (`window.BENCH_TESTS = { lin
 
 ```bash
 node research/kit/tools/release.js next "What changed." --kit v0.32.0
+```
+
+`tools/ocr.swift` and `tools/ocr-vote.js` make a draft transcription from a scan. `ocr.swift` (macOS only, with the Xcode command line tools) reads each page of a PDF with Apple's Vision text recognition and writes its lines with where each begins across the page; `ocr-vote.js`, for a scan that holds many copies of one page (ditto copies, carbons), matches each line of a base page in every copy and takes the reading most copies give, keeping a line's indent. The draft is to be checked against the scan line by line.
+
+```bash
+swiftc -O -o /tmp/ocr research/kit/tools/ocr.swift
+/tmp/ocr scan.pdf scan.ocr.txt
+node research/kit/tools/ocr-vote.js scan.ocr.txt --base 2 --report > draft.txt
 ```
 
 `tools/kit-release.js` releases the kit itself, run from the kit's repository: the version in `base.js` (`SW.KIT`, which the benches show and `release.js` reports), a dated heading in `CHANGELOG.md` over the notes written under `## Unreleased`, a commit and a tag. `next` raises the last number, `minor` the middle one; pushing stays with you.

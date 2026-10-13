@@ -1128,3 +1128,6 @@ ul.reading a { overflow-wrap: anywhere; }
 .catalogue .cat-foot { margin-top: 14px; }
 .catalogue .badge.cat-in { color: var(--green); border-color: currentColor; }
 .catalogue .badge.cat-out { color: var(--amber); border-color: currentColor; }
+
+/* a newer release live (shell.js): a bar at the foot offering to reload */
+.fresh-bar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: 13px var(--sans); box-shadow: 0 4px 18px rgba(0,0,0,.35); }

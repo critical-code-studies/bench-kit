@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `tools/ocr.swift` and `tools/ocr-vote.js`: a draft transcription from a scan, by Apple's Vision text recognition (macOS), and from many copies of one page the reading most copies give, line by line, with indents kept (from the ELIZA bench's 32 ditto copies of a 1965 conversation).
+- `shell.js`: where the page the browser holds is an older release than the one live (GitHub Pages lets a browser keep it for ten minutes), a bar offers to reload; looked for a few seconds after opening and every half hour. `SW.BENCH.freshness: false` turns it off.
+- A file's role may be `text`: a witness read and compared as plain text (a transcript, a conversation, a log), whatever the bench's language; a line opening with `SW.BENCH.textNote` is a transcriber's note. The language adapters compare it as they do a program. `SWVersionList.skipHead(mark, test)` makes a `findTitle` that starts a file past a note at its head.
+
 ## 0.38.0 (2026-10-13)
 
 - `catalogue.js` (from the ELIZA bench's scripts catalogue): a table of what is known to have existed, held here or not, with search, filters, sorting, named subsets, links to the versions held, and a column for whether an entry is in the source the catalogue follows. Its styles are in `bench.css`.

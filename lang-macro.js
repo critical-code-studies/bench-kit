@@ -208,7 +208,7 @@
   root.SWLang = root.SWLang || {};
   root.SWLang.macro = {
     normalize: normalize, parseLine: parseLine, prepareLine: prepareLine,
-    skipPart: function (part, opts) { return part.role !== 'program' && !opts.includeSupplied; },
+    skipPart: function (part, opts) { return part.role !== 'program' && part.role !== 'text' && !opts.includeSupplied; },
     routineUnits: function (text, o, h) { H = h; return routineUnits(text, o); },
     sectionUnits: function (text, o, h) { H = h; return sectionUnits(text, o); }
   };

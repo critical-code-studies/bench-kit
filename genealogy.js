@@ -69,6 +69,13 @@
    * each part's title line to its end (inclusive); header lines skipped.
    * The (possibly normalised) .text is parsed, .raw is kept for display.
    */
+  // a part read as text (role 'text': a transcript, a conversation, a log), whatever the bench's
+  // language: each line is itself; a line opening with the bench's note mark (SW.BENCH.textNote,
+  // ';' on the ELIZA bench) is a transcriber's note, set aside as a comment
+  function textLine(t) {
+    var mark = ((root.SW || {}).BENCH || {}).textNote, note = !!mark && t.replace(/^\s+/, '').indexOf(mark) === 0;
+    return { labels: [], code: note ? '' : t.replace(/\s+$/, ''), comment: note ? t : '', kind: note ? 'comment' : t.trim() ? 'code' : 'blank', top: false };
+  }
   function prepare(versionId, label, sort, parts, opts) {
     opts = opts || {};
     var lines = [];
@@ -82,7 +89,7 @@
         // control characters (a tape's stop code, read as a form feed, can sit at the
         // head of a line) are not part of the code: left in, '\fa1,' is not 'a1,'
         var t = String(tl[n - 1]).replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
-        var p = LANG().prepareLine(t, LANG().parseLine(t), n, from, state, part);
+        var p = part.role === 'text' ? textLine(t) : LANG().prepareLine(t, LANG().parseLine(t), n, from, state, part);
         var lab = p.labels.join(', ');
         var norm = p.kind === 'title' ? '' :
           LANG().normalize((p.labels.length ? p.labels.join(',') + ',' : '') + p.code);

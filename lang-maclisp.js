@@ -76,7 +76,7 @@
   root.SWLang.maclisp = {
     normalize: normalize, parseLine: parseLine, prepareLine: prepareLine, stem: stemOf,
     // documentation files are never compared; support files only when asked
-    skipPart: function (part, opts) { return part.role === 'doc' || (part.role !== 'program' && !opts.includeSupplied); },
+    skipPart: function (part, opts) { return part.role === 'doc' || (part.role !== 'program' && part.role !== 'text' && !opts.includeSupplied); },
     routineUnits: function (text, o, h) { H = h; return routineUnits(text, o); },
     sectionUnits: function (text, o, h) { H = h; return sectionUnits(text, o); }
   };

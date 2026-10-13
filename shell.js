@@ -218,5 +218,35 @@
     else if (!SW.store.get('tour.seen', false)) setTimeout(SW.tours.offer, 1200);
     else if (!SW.store.get('initials', '') && Date.now() - (+SW.store.get('ini.later', 0) || 0) > 7 * 864e5) setTimeout(function () { if (!document.querySelector('dialog[open]')) SW.askInitials('Welcome. Annotations, notes and findings are signed with your initials.'); }, 1200);
   }
+  // ---------- a newer release live ----------
+  // A browser may keep the bench's page for a while (GitHub Pages lets it for ten minutes), and
+  // so run an older release than the one published. The page is asked for again, past the
+  // browser's copy, a few seconds after opening and every half hour; where its ?v= is a later
+  // release, a bar offers to reload. SW.BENCH.freshness: false turns this off.
+  function newer(a, b) {
+    var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+    for (var i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
+    return false;
+  }
+  function freshness() {
+    if (B.freshness === false || SW.VERSION === 'dev' || !/^https?:$/.test(location.protocol) || !root.fetch) return;
+    var told = false;
+    function look() {
+      if (told) return;
+      fetch(location.pathname + '?fresh=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+        var m = /\?v=([0-9][0-9.]*)"/.exec(t || '');
+        if (!m || !newer(m[1], SW.VERSION) || told) return;
+        told = true;
+        var bar = SW.el('div', { class: 'fresh-bar', role: 'status' });
+        bar.innerHTML = 'A newer release of the bench is live (v' + SW.esc(m[1]) + '; this page is v' + SW.esc(SW.VERSION) + '). <button class="btn">Reload</button> <button class="icon-btn" aria-label="Not now" title="Not now">✕</button>';
+        bar.querySelector('.btn').onclick = function () { location.reload(); };
+        bar.querySelector('.icon-btn').onclick = function () { bar.remove(); };
+        document.body.appendChild(bar);
+      }).catch(function () { /* offline: no matter */ });
+    }
+    setTimeout(look, 5000); setInterval(look, 30 * 60 * 1000);
+  }
+  SW.newerRelease = newer;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  freshness();
 })(typeof window !== 'undefined' ? window : globalThis);

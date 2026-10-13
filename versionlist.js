@@ -6,6 +6,10 @@
  * the browser and in Node (the bench's tools require it).
  *   var L = root.SWVersionList || require('../kit/versionlist.js');
  *   var files = L.files;     files(dir, [name | { src, role, … }]): a version's build list
+ *                            (role: program, support, doc, or text: a witness read and compared
+ *                            as plain text, a transcript, a conversation, a log)
+ *   L.skipHead(mark, test)   a findTitle that starts a file past the lines at its head that open
+ *                            with mark (a transcriber's note) or are blank, for files test(b) accepts
  *   var api = L({ versions, src, dialects, transforms, parent, witness, also, influence, lines,
  *                 load, findTitle, extra });
  *     versions     the records, [{ id, label, date, build, … }]
@@ -84,6 +88,14 @@
     return api;
   }
   make.files = files;
+  // a findTitle that starts a file past its head note: the lines opening with mark, and blanks
+  make.skipHead = function (mark, test) {
+    return function (lines, b) {
+      if (test && !test(b)) return 1;
+      for (var i = 0; i < lines.length; i++) { var t = lines[i].replace(/^\s+/, ''); if (t && t.indexOf(mark) !== 0) return i + 1; }
+      return 1;
+    };
+  };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = make;
   else root.SWVersionList = make;
