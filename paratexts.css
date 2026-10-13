@@ -213,3 +213,32 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-alts .btn.on { border-color: var(--beam); background: color-mix(in srgb, var(--beam) 16%, transparent); }
 .px-altnote { font-size: 10.5px; margin-left: 4px; }
 .px-pv { min-height: 0; }
+
+/* lacunae (paratexts.js gaps): the seam in gold, after kintsugi; one mark means one thing across the
+   bench (Help ▸ Marks and conventions). An open seam is a dashed band; a fill sits inside it, from
+   another copy dashed (yobitsugi), by conjecture solid (kake); neither is the text's own colour */
+.px-textgaps pre.px-text { margin: 0; }
+.px-gap { margin: 8px 0; padding: 6px 10px; border: 1px dashed var(--kin); border-left: 4px solid var(--kin); border-radius: 3px; font: 12.5px/1.45 var(--sans); color: var(--text-dim);
+  background: repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--kin) 9%, transparent) 7px 14px); }
+.px-gap b { color: var(--kin); }
+.px-gapl { margin-left: 6px; color: var(--kin); opacity: .85; }
+.px-gapnone { margin-top: 3px; font-style: italic; color: var(--text-faint); }
+.px-gapfill { margin-top: 6px; }
+.px-gapsrc { font-size: 11.5px; color: var(--kin); margin-bottom: 3px; }
+.px-gapfill pre { margin: 0; padding: 4px 6px; color: var(--kin); background: color-mix(in srgb, var(--kin) 7%, transparent); white-space: pre-wrap; }
+.px-gapfill-conjecture pre { border-bottom: 2px solid var(--kin); }
+.px-gapfill-witness pre { outline: 1px dashed var(--kin); outline-offset: 1px; }
+.px-gapnote summary { cursor: pointer; color: var(--text-faint); font-size: 11.5px; margin-top: 3px; }
+.px-gapnote p { margin: 3px 0 0; }
+.px-gapflash { outline: 2px solid var(--kin); outline-offset: 2px; transition: outline-color .6s; }
+.px-gapstrip { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 6px; }
+.px-gapgo { border: 1px dashed var(--kin); background: none; color: var(--kin); border-radius: 3px; padding: 1px 7px; font: 12px var(--sans); cursor: pointer; }
+.px-gapgo:hover { background: color-mix(in srgb, var(--kin) 14%, transparent); }
+.px-gapr { color: var(--text-faint); }
+.px-gapover { margin: 0 0 6px; }
+.px-gapover .px-gap { margin: 0; }
+.px-gaptl { position: relative; height: 6px; margin: 2px 0 4px; background: var(--line-soft, var(--line)); border-radius: 3px; }
+.px-gaptlb { position: absolute; top: 0; bottom: 0; background: var(--kin); border-radius: 2px; }
+.px-gapsay { min-height: 1.2em; font: 12px var(--sans); color: var(--kin); }
+.px-s.px-gapn { color: var(--kin); border: 1px dashed var(--kin); border-radius: 3px; padding: 0 5px; font-size: 11px; }
+.px-s.px-gapflag { color: var(--kin); font-style: italic; font-size: 11px; }

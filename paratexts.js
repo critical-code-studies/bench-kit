@@ -232,7 +232,7 @@
       if (F.tag && (it.tags || []).indexOf(F.tag) < 0) return false;
       if (F.v && (it.versions || []).indexOf(F.v) < 0) return false;
       if (F.kind && it.kind !== F.kind) return false;
-      if (F.q) { var t = [it.code, it.title, it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' ')].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
+      if (F.q) { var t = [it.code, it.title, it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' '), gapHay(it), gapHay(it, true)].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
       return true;
     }).sort(function (a, b) {
       var x = sortKey(a, k), y = sortKey(b, k); if (x < y) return -d; if (x > y) return d;
@@ -511,7 +511,7 @@
     var x = SW.esc;
     function el(n, v) { return (Array.isArray(v) ? v : [v]).filter(function (y) { return y; }).map(function (y) { return '  <dc:' + n + '>' + x(String(y)) + '</dc:' + n + '>\n'; }).join(''); }
     return '<?xml version="1.0" encoding="UTF-8"?>\n<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">\n' + items.map(function (it) {
-      return '<oai_dc:dc>\n' + el('title', it.title) + el('creator', it.creator) + el('subject', it.tags) + el('description', it.description) + el('publisher', it.publisher) + el('contributor', it.contributor) +
+      return '<oai_dc:dc>\n' + el('title', it.title) + el('creator', it.creator) + el('subject', it.tags) + el('description', [it.description].concat(gapsAll(it).map(gapLine))) + el('publisher', it.publisher) + el('contributor', it.contributor) +
         el('date', it.date) + el('type', dcType(it)) + el('format', [it.mime, it.extent]) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
@@ -551,7 +551,7 @@
       if (x.DOI) o.DOI = x.DOI; if (x.ISBN) o.ISBN = x.ISBN;
       o.URL = okURL(it.url) ? it.url.trim() : okURL(it.archiveUrl) ? it.archiveUrl.trim() : x.URL || benchLink(it);
       if ((it.tags || []).length) o.keyword = it.tags.join(', ');
-      o.note = BNAME + ' paratext ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '');
+      o.note = BNAME + ' paratext ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '') + gapsAll(it).map(function (g) { return '. ' + gapLine(g); }).join('');
       return o;
     }), null, 2) + '\n';
   }
@@ -565,7 +565,7 @@
         line('PY', dp ? dp[0][0] : '') + line('DA', da) + line('PB', it.publisher) + line('AB', it.description) +
         (it.tags || []).map(function (g) { return line('KW', g); }).join('') + line('LA', it.language) + line('DO', x.DOI) + line('SN', x.ISBN) +
         line('UR', okURL(it.url) ? it.url.trim() : okURL(it.archiveUrl) ? it.archiveUrl.trim() : x.URL || benchLink(it)) + line('AV', [it.archive, it.archiveId].filter(Boolean).join(', ')) +
-        line('N1', BNAME + ' paratext ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '')) + 'ER  - \r\n';
+        line('N1', BNAME + ' paratext ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '')) + gapsAll(it).map(function (g) { return line('N1', gapLine(g)); }).join('') + 'ER  - \r\n';
     }).join('\r\n');
   }
   // the export menu's formats: [key, label, file extension, mime, maker]
@@ -726,9 +726,14 @@
     var pn = SW.$('.px-zpn', pv), zone = SW.$('.px-zone', pv);
     function page(k) {
       if (!doc) return;
-      n = Math.max(1, Math.min(doc.numPages, k)); pn.textContent = n + ' / ' + doc.numPages;
+      n = Math.max(1, Math.min(doc.numPages, k));
+      var lost = gapsOf(it).map(function (g, i) { return [g, i]; }).filter(function (x) { var a = x[0].at; return a.page === n || a.pages && n >= a.pages[0] && n <= a.pages[1]; });
+      pn.textContent = n + ' / ' + doc.numPages + (lost.length ? ' · ' + (GAPKIND[lost[0][0].kind] || 'Lost').toLowerCase() : '');
+      var over = SW.$('.px-gapover', pv); if (over) over.remove();
+      if (lost.length) zone.insertAdjacentHTML('beforebegin', '<div class="px-gapover">' + lost.map(function (x) { return gapHTML(x[0], it, x[1]); }).join('') + '</div>');
       pdfPicture(doc, n, zone.clientWidth).then(function (pic) { if (last) URL.revokeObjectURL(last); last = pic.url; Z.show(pic.url, [pic.w, pic.h]); });
     }
+    pv.__gopage = page;
     pv.addEventListener('click', function (e) { var b = e.target.closest('[data-pg]'); if (b) page(n + +b.dataset.pg); });
     var dlg = pv.closest('dialog');
     if (dlg) dlg.addEventListener('keydown', function (e) {
@@ -747,7 +752,7 @@
   function altItem(it, a) {
     var mime = a.mime || '', kind = mime === 'application/pdf' ? 'pdf' : /^image\//.test(mime) ? 'image' :
       /^audio\//.test(mime) ? 'audio' : /^video\//.test(mime) ? 'video' : /^text\//.test(mime) ? 'text' : 'file';
-    return { code: it.code, title: it.title, file: a.file, mime: mime, kind: kind, size: a.size || 0, lang: a.lang };
+    return { code: it.code, title: it.title, file: a.file, mime: mime, kind: kind, size: a.size || 0, lang: a.lang, gaps: a.gaps };
   }
   // The rendered text in its own language, wherever it is shown: an alternate's own `lang`, the
   // record's `language` otherwise.
@@ -765,16 +770,169 @@
       }).join('') + '</div>';
   }
 
+  // ---------- lacunae: a paratext's gaps, drawn where they are (kintsugi) ----------
+  // A record, or an alternate, carries gaps: [{ id, at, kind, cause, note, extent, label, fill }].
+  //   at     one key: { page: n, printed } or { pages: [a, b], printed } (1-based pages of the
+  //          file; printed, what the paper says); { lines: [a, b] } (lines of the file that stand
+  //          for the loss, drawn as the seam); { after: n } (the seam after line n, 0 before the
+  //          first); { t: [s, e] } (seconds); { bytes: [a, b] }; label, words for the place
+  //   kind   missing, illegible, redacted, damaged or withheld: the loss, not its cause
+  //   extent what at cannot give, in words ("c. 46 lines, estimated from the surviving pages")
+  //   fill   { text, basis: 'witness' (read from another copy) or 'conjecture', by, date, source }:
+  //          drawn inside the seam, never merged into the text, and marked as a restoration in
+  //          every export
+  // The same loss in two witnesses (the scan's page, the transcription's lines) shares an id, and
+  // an export lists it once. The marks are Help ▸ Marks and conventions' (SW.leiden).
+  var GAPKIND = { missing: 'Lost', illegible: 'Illegible', redacted: 'Redacted', damaged: 'Damaged', withheld: 'Withheld' };
+  function gapsOf(x) { return (x && x.gaps || []).filter(function (g) { return g && g.at; }); }
+  function clock(s) { s = Math.round(+s || 0); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+  function gapWhere(g) {
+    var a = g.at || {};
+    if (g.label || a.label) return g.label || a.label;
+    if (a.page != null) return a.printed ? 'printed p. ' + a.printed + ' (page ' + a.page + ' of the file)' : 'page ' + a.page;
+    if (a.pages) return a.printed ? 'printed pp. ' + a.printed + ' (pages ' + a.pages[0] + '–' + a.pages[1] + ' of the file)' : 'pages ' + a.pages[0] + '–' + a.pages[1];
+    if (a.lines) return 'lines ' + a.lines[0] + '–' + a.lines[1];
+    if (a.after != null) return +a.after ? 'after line ' + a.after : 'before the first line';
+    if (a.t) return clock(a.t[0]) + '–' + clock(a.t[1]);
+    if (a.bytes) return 'bytes ' + a.bytes[0] + '–' + a.bytes[1];
+    return '';
+  }
+  // how much: from at where it can say (pages, time), the rest from extent
+  function gapExtent(g) {
+    var a = g.at || {}, n = a.page != null ? 1 : a.pages ? a.pages[1] - a.pages[0] + 1 : 0;
+    var own = n ? n + ' page' + (n > 1 ? 's' : '') : a.t ? Math.round(a.t[1] - a.t[0]) + ' s' : '';
+    return [own, g.extent].filter(Boolean).join(', ');
+  }
+  function gapLeiden(g) {
+    var f = g.fill, a = g.at || {};
+    if (f && f.text) return SW.leiden(f.basis === 'witness' ? 'supplied' : 'restored', f.text);
+    var lines = /(\d+)\s*lines?/.exec(g.extent || '');
+    return SW.leiden('lost', '', a.page != null ? { pages: 1 } : a.pages ? { pages: a.pages[1] - a.pages[0] + 1 } : lines ? { lines: +lines[1] } : {});
+  }
+  function fillLine(f) { return f.basis === 'witness' ? 'restored from ' + (f.source || 'another copy') + (f.by ? ', by ' + f.by : '') : 'conjecture' + (f.by ? ', ' + f.by : '') + (f.date ? ', ' + f.date : '') + (f.source ? ', from ' + f.source : ''); }
+  // one line for a record or an export: lacuna: <kind> at <where>; <cause> (and its fill)
+  function gapLine(g) {
+    var f = g.fill && g.fill.text ? g.fill : null;
+    return 'lacuna ' + gapLeiden(g) + ': ' + (g.kind || 'missing') + ' at ' + gapWhere(g) + (g.cause ? '; ' + g.cause : '') + (f ? ' (' + fillLine(f) + ')' : '');
+  }
+  // the seam: a band in the place of what is lost, with how much and why; a fill inside it, gold
+  // (yobitsugi from another copy, dashed; kake by conjecture, solid), never in the text itself
+  function gapHTML(g, it, i) {
+    var esc = SW.esc, f = g.fill && g.fill.text ? g.fill : null, ext = gapExtent(g), lang = it ? langOf(it) : '';
+    return '<div class="px-gap px-gap-' + esc(g.kind || 'missing') + '" data-gap="' + esc(g.id || '') + '" data-gi="' + (i == null ? '' : i) + '" data-leiden="' + esc(gapLeiden(g)) + '" role="note" aria-label="' + esc(gapLine(g)) + '">' +
+      '<div class="px-gaphead"><b>' + esc(GAPKIND[g.kind] || 'Lost') + '</b>' + (ext ? ' · ' + esc(ext) : '') + ' · ' + esc(gapWhere(g)) + (g.cause ? ' · ' + esc(g.cause) : '') +
+      ' <span class="px-gapl mono" title="In an export (Leiden): Help ▸ Marks and conventions">' + esc(gapLeiden(g)) + '</span></div>' +
+      (f ? '<div class="px-gapfill px-gapfill-' + (f.basis === 'witness' ? 'witness' : 'conjecture') + '"><div class="px-gapsrc">' + esc(f.basis === 'witness' ? 'Restored from another copy' : 'Restored by conjecture') + ': ' + esc(fillLine(f)) + '</div><pre' + (lang ? ' lang="' + esc(lang) + '"' : '') + '>' + esc(f.text) + '</pre></div>'
+        : '<div class="px-gapnone">Not restored: the seam is left open.</div>') +
+      (g.note ? '<details class="px-gapnote"><summary>What is known of it</summary><p>' + esc(g.note) + '</p></details>' : '') + '</div>';
+  }
+  // the gaps of a witness, as a strip of places to go to, above its view
+  function gapStrip(it) {
+    var gs = gapsOf(it); if (!gs.length) return '';
+    return '<div class="px-gapstrip" role="list" aria-label="Gaps">' + gs.map(function (g, i) {
+      return '<button class="px-gapgo" data-gapgo="' + i + '" role="listitem" title="' + SW.esc(gapLine(g)) + '">' + SW.esc((GAPKIND[g.kind] || 'Lost') + ' · ' + gapWhere(g)) + (g.fill && g.fill.text ? ' <span class="px-gapr">restored</span>' : '') + '</button>';
+    }).join('') + '</div>';
+  }
+  // the losses of a record and its alternates, each once (a shared id is one loss)
+  function gapCount(it) {
+    var seen = {}, n = 0;
+    [it].concat(it.alts || []).forEach(function (x) { gapsOf(x).forEach(function (g, i) { var k = g.id || (x.file || '') + '#' + i; if (!seen[k]) { seen[k] = 1; n++; } }); });
+    return n;
+  }
+  function gapsAll(it) {
+    var seen = {}, out = [];
+    [it].concat(it.alts || []).forEach(function (x) { gapsOf(x).forEach(function (g, i) { var k = g.id || (x.file || '') + '#' + i; if (!seen[k]) { seen[k] = 1; out.push(g); } }); });
+    return out;
+  }
+  // what a search reads of the gaps: the place, the kind, the cause and note (fill: the restorations)
+  function gapHay(it, fill) {
+    return gapsAll(it).map(function (g) {
+      return fill ? (g.fill && g.fill.text ? [g.fill.text, g.fill.source, g.fill.by].join(' ') : '') : [g.kind, gapWhere(g), g.cause, g.note, g.extent].join(' ');
+    }).join(' ');
+  }
+  // a text with its seams: lines standing for a loss ({ lines }) drawn as the seam, a seam after a
+  // line ({ after }) put between; the rest as the text, each run in a <pre> of its language
+  function gapText(it, t) {
+    var gs = gapsOf(it).map(function (g, i) { return [g, i]; }).filter(function (x) { return x[0].at.lines || x[0].at.after != null; });
+    if (!gs.length) return null;
+    var L = String(t).replace(/\r\n?/g, '\n').split('\n'), at = {}, skip = {};
+    gs.forEach(function (x) {
+      var a = x[0].at;
+      if (a.lines) { for (var i = a.lines[0]; i <= a.lines[1]; i++) skip[i] = 1; (at[a.lines[0] - 1] = at[a.lines[0] - 1] || []).push(x); }
+      else (at[+a.after] = at[+a.after] || []).push(x);
+    });
+    var out = [], run = [];
+    function flush() { if (run.length) { out.push(preHTML(it, run.join('\n'))); run = []; } }
+    (at[0] || []).forEach(function (x) { out.push(gapHTML(x[0], it, x[1])); });
+    L.forEach(function (line, i) {
+      var n = i + 1;
+      if (!skip[n]) run.push(line);
+      if (at[n]) { flush(); at[n].forEach(function (x) { out.push(gapHTML(x[0], it, x[1])); }); }
+    });
+    flush();
+    return '<div class="px-textgaps">' + out.join('') + '</div>';
+  }
+  // a selection copied across a seam takes the seam's Leiden form, never its fill as the text
+  function leidenCopy(e) {
+    var sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+    var frag = sel.getRangeAt(0).cloneContents(); if (!frag.querySelector || !frag.querySelector('.px-gap')) return;
+    var parts = [];
+    (function walk(node) {
+      node.childNodes.forEach(function (c) {
+        if (c.nodeType === 3) parts.push(c.nodeValue);
+        else if (c.classList && c.classList.contains('px-gap')) parts.push('\n' + c.dataset.leiden + '\n');
+        else if (c.nodeType === 1) { walk(c); if (c.tagName === 'PRE' && !/\n$/.test(parts[parts.length - 1] || '')) parts.push('\n'); }
+      });
+    })(frag);
+    e.clipboardData.setData('text/plain', parts.join('').replace(/\n{3,}/g, '\n\n').replace(/^\n+/, ''));
+    e.preventDefault();
+  }
+  // audio and video: the gaps on a strip under the player, and said aloud when playback reaches one
+  function mediaGaps(it, pv) {
+    var gs = gapsOf(it).filter(function (g) { return g.at.t; }), m = SW.$('audio, video', pv);
+    if (!gs.length || !m) return;
+    var tl = SW.el('div', { class: 'px-gaptl', 'aria-hidden': 'true' }), say = SW.el('div', { class: 'px-gapsay', 'aria-live': 'polite' });
+    m.after(tl); tl.after(say);
+    function lay() {
+      var dur = m.duration; if (!dur || !isFinite(dur)) return;
+      tl.innerHTML = gs.map(function (g) { return '<span class="px-gaptlb" title="' + SW.esc(gapLine(g)) + '" style="left:' + (100 * g.at.t[0] / dur) + '%;width:' + Math.max(0.5, 100 * (g.at.t[1] - g.at.t[0]) / dur) + '%"></span>'; }).join('');
+    }
+    m.addEventListener('loadedmetadata', lay); lay();
+    var inGap = null;
+    m.addEventListener('timeupdate', function () {
+      var t = m.currentTime, g = gs.filter(function (x) { return t >= x.at.t[0] && t < x.at.t[1]; })[0] || null;
+      if (g === inGap) return; inGap = g;
+      say.textContent = g ? (GAPKIND[g.kind] || 'Lost') + ' here, ' + gapWhere(g) + (g.cause ? ': ' + g.cause : '') : '';
+    });
+  }
+
+  function gapWire(it, pv) {
+    if (!gapsOf(it).length) return;
+    if (!SW.$('.px-gapstrip', pv)) pv.insertAdjacentHTML('afterbegin', gapStrip(it));
+    if (pv.dataset.gapwired) return;
+    pv.dataset.gapwired = '1';
+    pv.addEventListener('copy', leidenCopy);
+    pv.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-gapgo]'); if (!b) return;
+      var cur = pv.__gapIt || it, g = gapsOf(cur)[+b.dataset.gapgo]; if (!g) return;
+      var a = g.at, seam = SW.$('.px-gap[data-gi="' + b.dataset.gapgo + '"]', pv), m = SW.$('audio, video', pv);
+      if (seam) { seam.scrollIntoView({ block: 'center', behavior: 'smooth' }); seam.classList.add('px-gapflash'); setTimeout(function () { seam.classList.remove('px-gapflash'); }, 1200); }
+      else if ((a.page != null || a.pages) && pv.__gopage) pv.__gopage(a.page != null ? a.page : a.pages[0]);
+      else if (a.t && m) { m.currentTime = a.t[0]; }
+    });
+  }
   function showFile(it, pv, dl) {
+    pv.__gapIt = it;
+    var strip = gapStrip(it), done = function () { gapWire(it, pv); };
     var esc = SW.esc;
     if (!it.file) { pv.innerHTML = okURL(it.url) ? embedHTML(it.url.trim(), it.kind, it.title) : '<p class="hint">Nothing held here, and no link.</p>'; return; }
     blobOf(it).then(function (u) {
       if (dl) dl.href = u;
-      if (it.kind === 'audio' || /^audio\//.test(it.mime || '')) pv.innerHTML = '<audio class="px-audio" controls preload="metadata" src="' + u + '"></audio>';
-      else if (it.kind === 'video' || /^video\//.test(it.mime || '')) pv.innerHTML = '<video class="px-video" controls preload="metadata" src="' + u + '"></video>';
-      else if (it.kind === 'image') zoomImage(it, pv, u);
-      else if (it.kind === 'pdf') zoomPdf(it, pv, u);
-      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = preHTML(it, t); });
+      if (it.kind === 'audio' || /^audio\//.test(it.mime || '')) { pv.innerHTML = strip + '<audio class="px-audio" controls preload="metadata" src="' + u + '"></audio>'; mediaGaps(it, pv); done(); }
+      else if (it.kind === 'video' || /^video\//.test(it.mime || '')) { pv.innerHTML = strip + '<video class="px-video" controls preload="metadata" src="' + u + '"></video>'; mediaGaps(it, pv); done(); }
+      else if (it.kind === 'image') { zoomImage(it, pv, u); done(); }
+      else if (it.kind === 'pdf') { zoomPdf(it, pv, u); done(); }
+      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = strip + (gapText(it, t) || preHTML(it, t)); done(); });
       else pv.innerHTML = '<p class="hint">No preview for this kind of file: ⤓ Download to open it.</p>';
     }, function (e) { pv.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
   }
@@ -930,6 +1088,12 @@
   // after a save: the list and the open panel from the catalogue, with any rating still waiting
   function settle() { applyWanted(); if (!rateTimer) refresh(); Object.keys(pendingRates).length ? Object.keys(pendingRates).forEach(showRating) : redrawTalk(); }
   function summary(it) {
+    var gn = gapCount(it), q = (F.q || '').toLowerCase();
+    var inFill = q && gapHay(it, true).toLowerCase().indexOf(q) >= 0 && [it.code, it.title, it.description, gapHay(it)].join(' ').toLowerCase().indexOf(q) < 0;
+    return (gn ? '<span class="px-s px-gapn" title="' + SW.esc(gapsAll(it).map(gapLine).join('\n')) + '">' + gn + ' gap' + (gn > 1 ? 's' : '') + '</span>' : '') +
+      (inFill ? '<span class="px-s px-gapflag" title="The words searched for are in a restoration, not in the transmitted text">found in a restoration</span>' : '') + summary0(it);
+  }
+  function summary0(it) {
     var a = avg(it), rx = it.rx || {}, em = Object.keys(rx).filter(function (e) { return (rx[e] || []).length; }), nc = (it.comments || []).length;
     var mine = me(), mr = (it.rates || {})[mine] || 0;
     return '<span class="px-s px-cardrate" title="' + SW.esc(a ? (Math.round(a.avg * 10) / 10) + ' from ' + a.n + ': ' + a.who.join('; ') : 'Rate it, one to three stars') + '">' +
