@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.51.1 (2026-10-13)
 
 - The newer-release bar looks again every five minutes (it was every half hour) and on coming back to the tab, at most once a minute; a page left open through a release had gone without it for up to half an hour, longer in a background tab. A later release still updates the bar; ✕ puts off that release, not the next (it had silenced the bar for the life of the page).
 
