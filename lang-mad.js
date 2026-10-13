@@ -6,7 +6,8 @@
  *
  * A MAD line is a card: a statement label from column 1 (IDENT, READ(7)); an R for a remark
  * card or a digit for a continuation in column 11, 12 or 13 (transcriptions differ by a
- * column); the statement after it, to column 72; from 73 the card's sequence number. A line
+ * column); the statement after it, to column 72; from 73 the card's sequence number (or where the
+ * bench's SW.BENCH.columns layout puts the identification field, for an edition laid out otherwise). A line
  * "        NAME   MAD" or "NAME   FAP" (perhaps with its sequence number) heads a deck, a
  * separately compiled program, in MAD or in FAP, the 7094's assembler. Keywords are often
  * written short (W'R for WHENEVER, T'O for TRANSFER TO); text is between dollar signs
@@ -57,6 +58,9 @@
     return { labels: [], code: code.trim(), comment: comment, kind: code.trim() ? 'code' : 'comment', script: true, top: /^\(/.test(s) };
   }
 
+  // where the identification field begins: the bench's layout of the file it reads
+  // (SW.BENCH.columns, read.js's card lens), else column 73, a card's
+  function seqAt() { var c = root.SW && root.SW.BENCH && root.SW.BENCH.columns, l = c && c.layout; return l && l.seq ? l.seq[0] : 73; }
   // a deck's head: "        NAME   MAD" or "NAME   FAP", perhaps with a sequence number after
   function deckOf(s) {
     var m = /^\s+([A-Z0-9]+)\s+(MAD|FAP)(?:\s+(\d+))?\s*$/.exec(s);
@@ -67,7 +71,7 @@
     if (/^\s*$/.test(s)) return { labels: [], code: '', comment: '', kind: 'blank' };
     var deck = deckOf(s);
     if (deck) return { labels: [], code: deck.name + ' ' + deck.lang, comment: '', kind: 'deck', deck: deck.name, deckLang: deck.lang, seq: deck.seq };
-    var body = s.length > 72 ? s.slice(0, 72) : s, seq = s.length > 72 ? s.slice(72).trim() : '';
+    var cut = seqAt() - 1, body = s.length > cut ? s.slice(0, cut) : s, seq = s.length > cut ? s.slice(cut).trim() : '';
     var lm = /^\S+/.exec(body), label = lm ? lm[0] : '', from = label.length;
     var i = from; while (i < body.length && body.charAt(i) === ' ') i++;
     var ch = body.charAt(i), next = body.charAt(i + 1);
@@ -86,7 +90,7 @@
     if (/^\s*$/.test(s)) return { labels: [], code: '', comment: '', kind: 'blank', fap: true };
     var deck = deckOf(s);
     if (deck) return { labels: [], code: deck.name + ' ' + deck.lang, comment: '', kind: 'deck', deck: deck.name, deckLang: deck.lang, seq: deck.seq, fap: true };
-    var body = s.length > 72 ? s.slice(0, 72) : s, seq = s.length > 72 ? s.slice(72).trim() : '';
+    var cut = seqAt() - 1, body = s.length > cut ? s.slice(0, cut) : s, seq = s.length > cut ? s.slice(cut).trim() : '';
     if (/^\*/.test(body)) return { labels: [], code: '', comment: body.slice(1).trim(), kind: 'comment', seq: seq, fap: true };
     var label = body.slice(0, 6).trim(), m = /^(\S+)(?:\s+(\S+))?(?:\s+(.*))?$/.exec(body.slice(6).replace(/^\s+/, '')) || [];
     var op = m[1] || '', args = m[2] || '';

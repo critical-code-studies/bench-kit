@@ -1153,3 +1153,21 @@ ul.reading a { overflow-wrap: anywhere; }
 .mk-vac { font-style: italic; color: var(--text-faint); }
 .mk-norm { padding: 0 4px; border-radius: 3px; border: 1px solid var(--line); color: var(--text-dim); font-size: .9em; }
 .mk-note { color: var(--text-faint); }
+
+/* the card lens (read.js, SW.BENCH.columns): the sequence numbers in a gutter, a column ruler,
+   continuation cards joined, contractions written out (marked, after Leiden's (abc)) */
+.with-seq .ln, .with-seq .lncols { grid-template-columns: 4.8em 3.6em 5.2em 1fr 6.5ch minmax(2.2em, max-content); }
+.hide-words.with-seq .ln, .hide-words.with-seq .lncols { grid-template-columns: 4.8em 1fr 6.5ch minmax(2.2em, max-content); }
+.ln .sq, .lncols .sq { color: var(--text-faint); font-style: italic; text-align: right; }
+.card-ruler { position: sticky; top: 0; z-index: 2; background: var(--bg); color: var(--text-faint); font-size: .85em; }
+.card-ruler .t span { display: inline; }
+.card-ruler .cr-label { background: color-mix(in srgb, var(--amber) 12%, transparent); }
+.card-ruler .cr-flag { background: color-mix(in srgb, var(--violet) 30%, transparent); color: var(--text); }
+.card-ruler .cr-text { background: color-mix(in srgb, var(--text) 5%, transparent); }
+.card-ruler .cr-seq { background: color-mix(in srgb, var(--kin) 12%, transparent); }
+.ln.card-folded { display: none; }
+.card-joined { border-left: 2px solid var(--line); margin-left: 1ch; padding-left: 1ch; }
+.card-x { text-decoration: underline dotted var(--kin); text-underline-offset: 3px; cursor: help; }
+.card-x-open::after { content: "?"; font-size: .75em; vertical-align: super; color: var(--kin); }
+.card-note { max-width: 32em; white-space: normal; margin-top: 4px; }
+@media (max-width: 720px) { .with-seq .ln .sq, .with-seq .lncols .sq { display: none; } .with-seq .ln, .with-seq .lncols, .hide-words.with-seq .ln, .hide-words.with-seq .lncols { grid-template-columns: 3.2em 1fr 2em; } }

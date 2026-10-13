@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Read: **the card lens**, for a bench whose files are fixed-column listings (`SW.BENCH.columns`: a layout of label, flag, text and sequence fields, 1-based, by file; contractions to write out, with their source; a note). Under View: the sequence numbers in a gutter of their own, hidden, or as held; a column ruler with its fields shaded; continuation cards joined to their statement, folded under it with their own lines and annotations kept, a click on the statement selecting all its cards and a link to a folded card landing on its statement; contractions written out or spelled-out statements written short, over the whole view and marked, an open contraction showing its readings, a copy carrying Leiden's form (`W(HENEVE)R`). A bench's `hl(raw, b, o)` is given `o.cut`, the column where the identification field begins, and draws the line up to it.
+- `lang-mad.js`: the identification field begins where the bench's layout puts it (`SW.BENCH.columns.layout.seq`), else at column 73; an edition laid out otherwise no longer loses statement text past column 72 (ELIZA 1965b's `T'O MATCH`).
 - Help ▸ Marks and conventions: the abbreviation row no longer says a bench writes MAD's contractions out with Normalised text; none does yet.
 
 ## 0.42.0 (2026-10-13)

@@ -65,6 +65,26 @@
     var opts = { repairs: SW.store.get('read.repairs', true), kinBar: SW.store.get('read.kinBar', false), words: H.words ? SW.store.get('read.words', true) : false, norm: false,
                  tapes: F.remember ? SW.store.get('read.file', '0') : 'all', heat: false, onlyNoted: false, onlyRepaired: false, by: '',
                  notes: SW.store.get('read.notes', 'inline'), show: SW.store.get('read.show', 'all'), ghosts: SW.store.get('read.ghosts', true) };
+    // ---------- the card lens: a fixed-column file read as cards (SW.BENCH.columns) ----------
+    // SW.BENCH.columns: { layout, files: [[pattern on a file's src, layout]], expand, note }
+    //   layout  { label: [a, b], flag: { at, cont: /…/, remark: /…/ }, text: [a, b], seq: [a, b] }:
+    //           1-based inclusive columns of the file the bench reads (an edition, which may sit
+    //           otherwise than the printout behind it); any field may be absent
+    //   expand  { contraction: [reading, …] }: contractions written out on demand, a list where the
+    //           source leaves it open; never silently: the whole view is set, the held text one
+    //           choice away, and each reading is marked (Help ▸ Marks and conventions)
+    // Read then offers, under View: the sequence numbers in a gutter, hidden, or as held; a column
+    // ruler; continuation cards joined to their statement; contractions written out or shortened.
+    // Lines keep their numbers and their annotations whatever the view: a joined card's line is
+    // folded, not removed, and a link to it lands on its statement.
+    var COLS = SW.BENCH.columns || null;
+    if (COLS) { opts.seq = SW.store.get('read.seq', 'gutter'); opts.ruler = SW.store.get('read.ruler', false); opts.join = SW.store.get('read.join', false); opts.expand = SW.store.get('read.expand', 'held'); }
+    function layoutOf(b, pi) {
+      if (!COLS) return null;
+      var src = (b.parts[pi] || {}).src || '', f = (COLS.files || []).filter(function (x) { return x[0].test ? x[0].test(src) : x[0] === src; })[0];
+      return f ? f[1] : COLS.layout || null;
+    }
+    function seqCol() { return !!COLS && opts.seq === 'gutter'; }
     // show: whose annotations Read shows, cycled from the chevron on the Annotations heading
     var SHOW = { all: '▾ All', mine: '▾ Mine', open: '▾ Open', none: '▸ None' }, SHOW_NEXT = { all: 'mine', mine: 'open', open: 'none', none: 'all' };
     function isMine(n) { var me = SW.me().initials; return N.mine(n) || (!!me && n.by === me); }
@@ -96,8 +116,11 @@
     }
 
     // ---------- highlighting: the bench's, or numbers and the comment ----------
-    function hl(raw, b) {
-      if (H.hl) return H.hl(raw, b);
+    // o.cut: the column after which the line is its identification field, drawn by Read in its
+    // gutter; a bench's hl draws the line up to it
+    function hl(raw, b, o) {
+      if (H.hl) return H.hl(raw, b, o);
+      if (o && o.cut) raw = String(raw).slice(0, o.cut).replace(/\s+$/, '');
       var p = SW.parseLine(raw);
       var code = p.code, h = '', re = /(^|[^\w.])(\d+(?:\.\d+)?)(?![\w.])/g, last = 0, m;
       while ((m = re.exec(code))) { var s0 = m.index + m[1].length; h += esc(code.slice(last, s0)) + '<span class="num">' + m[2] + '</span>'; last = s0 + m[2].length; }
@@ -106,6 +129,82 @@
       return h;
     }
     SW.hlLine = function (raw, b) { return hl(raw, b); };   // also used by the Functional overview
+
+    // ---------- the card lens's parts ----------
+    // a ruler of the file's columns, its fields shaded: label, flag, text, sequence
+    function rulerHTML(lay) {
+      var w = Math.max(lay.text ? lay.text[1] : 0, lay.seq ? lay.seq[1] : 0, 80), out = '';
+      function field(c) { return lay.flag && c === lay.flag.at ? 'flag' : lay.label && c >= lay.label[0] && c <= lay.label[1] ? 'label' : lay.text && c >= lay.text[0] && c <= lay.text[1] ? 'text' : lay.seq && c >= lay.seq[0] && c <= lay.seq[1] ? 'seq' : ''; }
+      var cut = lay.seq && opts.seq !== 'inline' ? lay.seq[0] - 1 : w;
+      for (var c = 1; c <= cut; c++) out += '<span class="cr-' + (field(c) || 'gap') + '" title="column ' + c + (field(c) ? ', ' + field(c) : '') + '">' + (c % 10 === 0 ? String(c / 10 % 10) : c % 5 === 0 ? '+' : '·') + '</span>';
+      return '<div class="ln card-ruler" aria-hidden="true"><span class="n">col</span><span class="a"></span><span class="w"></span><span class="t">' + out + '</span>' +
+        (seqCol() ? '<span class="sq">' + (lay.seq ? lay.seq[0] + '–' + lay.seq[1] : '') + '</span>' : '') + '<span class="mk"></span></div>';
+    }
+    // a contraction's Leiden form: W'R with WHENEVER is W(HENEVE)R
+    function leidenExp(held, full) {
+      var m = /^(.)'(.)$/.exec(held);
+      return m && full.charAt(0) === m[1] && full.charAt(full.length - 1) === m[2] ? m[1] + '(' + full.slice(1, -1) + ')' + m[2] : full + ' (' + held + ')';
+    }
+    function cardPass(box, b) {
+      // continuation cards: their text drawn on the statement's first card, their own rows folded
+      if (opts.join) b.parts.forEach(function (part, pi) {
+        var lay = layoutOf(b, pi); if (!lay || !lay.flag || !lay.flag.cont) return;
+        var head = null;
+        SW.$$('.ln[data-p="' + pi + '"]', box).forEach(function (row) {
+          if (!row.classList.contains('card-cont')) { head = row; return; }
+          if (!head) return;
+          var t = SW.$('.t', row).cloneNode(true), first = t.firstChild;
+          while (first && first.nodeType === 3 && !first.nodeValue.trim()) { t.removeChild(first); first = t.firstChild; }
+          if (first && first.nodeType === 3) first.nodeValue = first.nodeValue.replace(/^\s+/, '');
+          var j = SW.el('span', { class: 'card-joined', title: 'Continued on line ' + row.dataset.n + ', a card of its own (View ▸ Join continuation cards)' });
+          j.innerHTML = t.innerHTML; SW.$('.t', head).appendChild(j);
+          row.classList.add('card-folded'); row.dataset.head = head.dataset.n; head.dataset.join = row.dataset.n;
+          if (row.classList.contains('noted')) head.classList.add('noted');
+        });
+      });
+      // contractions written out, or spelled-out statements written short: whole-view, marked
+      var table = COLS.expand || {}, keys = Object.keys(table);
+      if (opts.expand === 'held' || !keys.length) return;
+      var pairs = opts.expand === 'out' ? keys.map(function (k) { return [k, table[k]]; }) :
+        keys.filter(function (k) { return table[k].length === 1; }).map(function (k) { return [table[k][0], [k]]; });
+      pairs.sort(function (x, y) { return y[0].length - x[0].length; });
+      var re = new RegExp('(^|[^A-Z0-9\'])(' + pairs.map(function (x) { return x[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')(?![A-Z0-9\'])', 'g'), by = {};
+      pairs.forEach(function (x) { by[x[0]] = x[1]; });
+      SW.$$('.ln .t', box).forEach(function (t) {
+        var w = document.createTreeWalker(t, NodeFilter.SHOW_TEXT), nodes = [], x;
+        while ((x = w.nextNode())) if (!x.parentNode.closest('.var, .cm, .card-x')) nodes.push(x);
+        nodes.forEach(function (node) {
+          var v = node.nodeValue; re.lastIndex = 0; if (!re.test(v)) return; re.lastIndex = 0;
+          var frag = document.createDocumentFragment(), last = 0, m;
+          while ((m = re.exec(v))) {
+            var at = m.index + m[1].length, held = m[2], reads = by[held];
+            frag.appendChild(document.createTextNode(v.slice(last, at)));
+            var span = document.createElement('span');
+            if (opts.expand === 'out') {
+              var one = reads.length === 1;
+              span.className = 'card-x' + (one ? '' : ' card-x-open');
+              span.textContent = one ? reads[0] : held;
+              span.title = held + (one ? ', written out: ' + reads[0] : ': the source leaves it open, ' + reads.join(' or ')) + (COLS.expandSource ? ' (' + COLS.expandSource + ')' : '');
+              span.dataset.leiden = one ? leidenExp(held, reads[0]) : held;
+            } else {
+              span.className = 'card-x'; span.textContent = reads[0]; span.title = held + ', written short: ' + reads[0]; span.dataset.leiden = held;
+            }
+            frag.appendChild(span); last = at + held.length;
+          }
+          frag.appendChild(document.createTextNode(v.slice(last)));
+          node.parentNode.replaceChild(frag, node);
+        });
+      });
+      // a selection copied: a written-out contraction leaves in Leiden's form, never as if held
+      box.addEventListener('copy', function (e) {
+        var sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+        var f = sel.getRangeAt(0).cloneContents(); if (!f.querySelector || !f.querySelector('.card-x')) return;
+        SW.$$('.card-x', f).forEach(function (x) { x.replaceWith(document.createTextNode(x.dataset.leiden)); });
+        SW.$$('.n, .a, .w, .sq, .mk, .card-folded', f).forEach(function (x) { x.remove(); });
+        e.clipboardData.setData('text/plain', SW.$$('.ln', f).length ? SW.$$('.ln', f).map(function (r) { return r.textContent.replace(/\s+$/, ''); }).join('\n') : f.textContent);
+        e.preventDefault();
+      });
+    }
 
     // ---------- a line ----------
     function rowHTML(b, L) {
@@ -138,12 +237,18 @@
       }
       var title = b.errorsAt[k] ? b.errorsAt[k].map(function (e) { return e.message + (e.symbol ? ' "' + e.symbol + '"' : ''); }).join('; ') : '';
       if (H.rowTitle) title = H.rowTitle(b, L, k, title) || title;
-      var t = text ? hl(text, b) : ' ';
+      var lay = layoutOf(b, L.p), cut = 0, seq = '';
+      if (lay && lay.seq && text && opts.seq !== 'inline') { cut = lay.seq[0] - 1; seq = text.slice(cut, lay.seq[1]).trim(); }
+      if (lay && lay.flag && text) {
+        var fc = text.charAt(lay.flag.at - 1);
+        if (lay.flag.remark && lay.flag.remark.test(fc)) cls += ' card-remark'; else if (lay.flag.cont && lay.flag.cont.test(fc)) cls += ' card-cont';
+      }
+      var t = text ? hl(text, b, cut ? { cut: cut } : undefined) : ' ';
       if (text && H.mark) t = H.mark(t);
       return '<div class="' + cls + '" id="L' + L.p + '-' + L.n + '" data-p="' + L.p + '" data-n="' + L.n + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' +
         '<span class="n" style="--d:' + String(L.n).length + ';' + heat + '"><button class="qa" tabindex="-1" title="Annotate this">+A</button>' + L.n + '</span>' +
         '<span class="a"' + (wTitle ? ' title="' + esc(wTitle) + '"' : '') + '>' + a + '</span><span class="w"' + (wTitle ? ' title="' + esc(wTitle) + '"' : '') + '>' + w + '</span>' +
-        '<span class="t">' + t + '</span><span class="mk">' + mk + '</span></div>';
+        '<span class="t">' + t + '</span>' + (seqCol() ? '<span class="sq">' + esc(seq) + '</span>' : '') + '<span class="mk">' + mk + '</span></div>';
     }
     function errCount(b) { return b.asm && b.asm.errors ? (b.asm.errorCount != null ? b.asm.errorCount : b.asm.errors.length) : 0; }
     function errWord(n) { var w = (H.errors || {}).word || 'error'; return n + ' ' + w + (n > 1 ? 's' : ''); }
@@ -164,6 +269,12 @@
         '<label class="check" title="Show only annotations (and the lines they cover) in which these initials take part, as author or in a reply">Annotations by <select id="rd-by"><option value="">anyone</option></select></label>' +
         (H.heat ? '<label class="check" title="Shade each line by how often it ran, from the profile collected in the Run view (run the program there first)"><input type="checkbox" id="rd-heat"' + (opts.heat ? ' checked' : '') + '> Run heat</label>' : '') +
         (typeof X.view === 'function' ? X.view() : X.view || '') +
+        (COLS ? '<div class="menu-rule"></div>' +
+          '<label class="check" title="The identification field (the card’s sequence number): in a gutter of its own, hidden, or where the file has it">Sequence numbers <select id="rd-seq"><option value="gutter"' + (opts.seq === 'gutter' ? ' selected' : '') + '>in a gutter</option><option value="hide"' + (opts.seq === 'hide' ? ' selected' : '') + '>hidden</option><option value="inline"' + (opts.seq === 'inline' ? ' selected' : '') + '>as held</option></select></label>' +
+          '<label class="check" title="A ruler of the file’s columns above each file, its fields shaded: label, flag, statement, sequence"><input type="checkbox" id="rd-ruler"' + (opts.ruler ? ' checked' : '') + '> Column ruler</label>' +
+          '<label class="check" title="A statement continued on further cards read as one line; the cards keep their own lines and annotations, folded under the first"><input type="checkbox" id="rd-join"' + (opts.join ? ' checked' : '') + '> Join continuation cards</label>' +
+          (Object.keys(COLS.expand || {}).length ? '<label class="check" title="Contractions written out, or spelled-out statements written short, over the whole view and marked; the text as held is one choice away, and a copy carries the Leiden form">Contractions <select id="rd-expand"><option value="held"' + (opts.expand === 'held' ? ' selected' : '') + '>as held</option><option value="out"' + (opts.expand === 'out' ? ' selected' : '') + '>written out</option><option value="short"' + (opts.expand === 'short' ? ' selected' : '') + '>written short</option></select></label>' : '') +
+          '<div class="hint card-note">' + (COLS.note || 'Columns are those of the file the bench reads, an edition, which may sit otherwise than the printout behind it.') + '</div>' : '') +
         '</div></details><span class="hint" id="rd-nf"></span>' +
         '<span class="undo-pair"><button class="btn" id="rd-undo" disabled title="Undo">↶</button><button class="btn" id="rd-redo" disabled title="Redo">↷</button></span>' +
         (X.nav || '');
@@ -221,7 +332,7 @@
       var b = build, inf = info(b), bar = SW.$('#rd-selbar', view);
       SW.$$('.rd-body', view).forEach(function (x) { x.remove(); });
       var wrap = SW.el('div', { class: 'rd-body' + (marginOn() ? ' with-margin' : '') });
-      var box = SW.el('div', { class: 'listing' + (opts.words ? '' : ' hide-words') + (opts.repairs ? '' : ' no-repairs') });
+      var box = SW.el('div', { class: 'listing' + (opts.words ? '' : ' hide-words') + (opts.repairs ? '' : ' no-repairs') + (seqCol() ? ' with-seq' : '') });
       var margin = SW.el('div', { class: 'note-margin', 'aria-label': 'Annotations' });
       wrap.addEventListener('click', function (e) {
         if (e.target.closest('[data-asmerrs]') && SW.asmErrors) { e.stopPropagation(); SW.asmErrors(b); return; }
@@ -241,7 +352,9 @@
             '<span class="w" title="' + (T.word || 'The machine word the line assembled to, in octal; “+N” means N more words followed (hover a row for the count)') + '">Word <button class="colfold" data-cf="0" title="Fold away Address and Word, for more room (View ▸ Addresses &amp; words brings them back too)">‹</button></span>' +
             '<span class="t" title="' + (T.source || 'The source as written (or as the bench reads it, with Normalised text on in View)') + '"><button class="colfold cf-show" data-cf="1" title="Show Address and Word">›</button>Source</span>'
             : '<span class="a"></span><span class="w"></span><span class="t" title="The source as held">Source</span>') +
+          (seqCol() ? '<span class="sq" title="The identification field: the card’s sequence number, in a gutter of its own (View)">Seq</span>' : '') +
           '<span class="mk" title="Initials of anyone who has annotated the line; click them to read">Annotations<button class="ann-cyc" data-ann title="Show all annotations, only yours, only open questions, or none (click to change)">' + SHOW[opts.show] + '</button><button class="ann-cyc ghost-sw' + (opts.ghosts ? ' on' : '') + '" data-ghosts aria-pressed="' + !!opts.ghosts + '" title="Ghosts: annotations made on other versions, shown faintly on the lines here that match">Ghosts</button></span></div></div>';
+        if (opts.ruler && layoutOf(b, pi)) sec.insertAdjacentHTML('beforeend', rulerHTML(layoutOf(b, pi)));
         sec.insertAdjacentHTML('beforeend', b.lines[pi].filter(function (L) { return !L.away; }).map(function (L) { return rowHTML(b, L); }).join(''));
         box.appendChild(sec);
       });
@@ -249,6 +362,7 @@
       wrap.appendChild(margin);
       view.insertBefore(wrap, bar);
       if (X.paint) X.paint(box, b);
+      if (COLS) cardPass(box, b);
       wireBox(box);
       wireMargin(margin);
       applyFilter();
@@ -309,7 +423,7 @@
           SW.state.sel = { p: p, n0: Math.min(anchorSel.n, n), n1: Math.max(anchorSel.n, n) };
         } else {
           anchorSel = { p: p, n: n };
-          SW.state.sel = { p: p, n0: n, n1: n };
+          SW.state.sel = { p: p, n0: n, n1: row.dataset.join ? +row.dataset.join : n };   // a joined statement: all its cards
         }
         paintSel();
         SW.writeQuery();
@@ -359,6 +473,10 @@
       setTimeout(paintUndo, 0);
       var wc = SW.$('#rd-words', tb); if (wc) wc.onchange = function (e) { setWords(e.target.checked); };
       var nc = SW.$('#rd-norm', tb); if (nc) nc.onchange = function (e) { opts.norm = e.target.checked; render(); };
+      // the card lens's choices, kept in this browser
+      [['rd-seq', 'seq', 'value'], ['rd-ruler', 'ruler', 'checked'], ['rd-join', 'join', 'checked'], ['rd-expand', 'expand', 'value']].forEach(function (c) {
+        var el = SW.$('#' + c[0], tb); if (el) el.onchange = function (e) { opts[c[1]] = e.target[c[2]]; SW.store.set('read.' + c[1], opts[c[1]]); renderListing(); };
+      });
       var hc = SW.$('#rd-heat', tb);
       if (hc) hc.onchange = function (e) {
         opts.heat = e.target.checked;
@@ -453,6 +571,7 @@
         renderListing();
       }
       var el = SW.$('#L' + p + '-' + n, view);
+      if (el && el.classList.contains('card-folded')) el = SW.$('#L' + p + '-' + el.dataset.head, view) || el;   // a joined card: its statement
       if (!el) return;
       el.scrollIntoView({ block: 'center' });
       if (flash) {
