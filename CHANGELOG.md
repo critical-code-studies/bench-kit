@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Read ▾ by default (a bench without layers): the versions in the version picker's groups, each opening in Read, another reading of a version under it in a submenu; more than ten versions take a submenu for each group, naming its versions.
+- Menus: three marks no longer taken for one another. The item under the pointer is filled; the item whose submenu is open is filled more lightly, its ▸ lit; the place you are now has a bar at its left and its name lit, no fill (it had looked like the open one). A pointer on its way into an open submenu no longer opens the neighbours it crosses, and switching to a neighbour waits a moment longer while one is open.
+
 ## 0.46.1 (2026-10-13)
 
 - `tools/release.js` sets the page's `bench-date` to the release's day (the local day), which Help ▾ and About show beside the version; it had been left as it was, and went stale.
