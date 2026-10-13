@@ -401,6 +401,10 @@
     };
     body.onclick = function (e) {
       var t = e.target, b = t.closest('[data-px]'), act = b && b.dataset.px, crow = t.closest('[data-c]');
+      // a star on a card: rated there, without opening it. Its code is data-rcode: data-c names a
+      // collection, and a star carrying it was read as a collection's row (0.40.0's card stars)
+      var rb = t.closest('[data-cardrate]');
+      if (rb) { e.stopPropagation(); rateIt(rb.dataset.rcode, paintStars(rb, 'cardrate')); return; }
       if (act === 'add') { addBox(); return; }
       if (act === 'reload') { body.innerHTML = '<p class="hint">Reading the catalogue again…</p>'; P.load(true).then(function () { paint(body); }, function (err) { body.innerHTML = '<p class="badge err">' + SW.esc(err.message) + '</p>'; }); return; }
       if (act === 'newc') { editing = { mode: 'new', parent: '' }; paintNav(body); return; }
@@ -423,12 +427,6 @@
       var th = t.closest('th[data-sort]');
       if (th) { var k = th.dataset.sort; setView(VW.sort === k ? { dir: -(VW.dir || 1) } : { sort: k, dir: defDir(k) }); var ss = SW.$('[data-px="sort"]', body); if (ss) ss.value = VW.sort; paintList(body); return; }
       if (crow && !t.closest('.px-cedit')) { setF('c', crow.dataset.c); sel = {}; editing = null; paintNav(body); paintList(body); return; }
-      var rb = t.closest('[data-cardrate]');
-      if (rb) {   // rate from the card itself, without opening it
-        e.stopPropagation();
-        rateIt(rb.dataset.c, paintStars(rb, 'cardrate'));
-        return;
-      }
       var card = t.closest('[data-code]'); if (!card) return;
       if (t.closest('[data-pick]') || e.metaKey || e.ctrlKey || e.shiftKey) { pick(card.dataset.code, e.shiftKey); selUpdate(body); return; }
       openItem(card.dataset.code);
@@ -861,8 +859,8 @@
   }
   function showRating(code) {
     var it0 = byCode(code), mr = it0 ? ((it0.rates || {})[me()] || 0) : 0, a = it0 ? avg(it0) : null;
-    SW.$$('[data-cardrate][data-c="' + code + '"]').forEach(function (b) { b.classList.toggle('on', +b.dataset.cardrate <= mr); });
-    SW.$$('[data-cardrate][data-c="' + code + '"]').map(function (b) { return b.parentNode; }).filter(function (x, i, l) { return l.indexOf(x) === i; }).forEach(function (row) {
+    SW.$$('[data-cardrate][data-rcode="' + code + '"]').forEach(function (b) { b.classList.toggle('on', +b.dataset.cardrate <= mr); });
+    SW.$$('[data-cardrate][data-rcode="' + code + '"]').map(function (b) { return b.parentNode; }).filter(function (x, i, l) { return l.indexOf(x) === i; }).forEach(function (row) {
       var av = SW.$('.px-cavg', row);
       if (a && !av) { av = SW.el('span', { class: 'faint px-cavg' }); row.appendChild(av); }
       if (av) { if (a) av.textContent = String(Math.round(a.avg * 10) / 10); else av.remove(); }
@@ -900,7 +898,7 @@
     var a = avg(it), rx = it.rx || {}, em = Object.keys(rx).filter(function (e) { return (rx[e] || []).length; }), nc = (it.comments || []).length;
     var mine = me(), mr = (it.rates || {})[mine] || 0;
     return '<span class="px-s px-cardrate" title="' + SW.esc(a ? (Math.round(a.avg * 10) / 10) + ' from ' + a.n + ': ' + a.who.join('; ') : 'Rate it, one to three stars') + '">' +
-      [1, 2, 3].map(function (k) { return '<button class="px-cs' + (mr >= k ? ' on' : '') + '" data-cardrate="' + k + '" data-c="' + SW.esc(it.code) + '" title="' + k + ' star' + (k > 1 ? 's' : '') + '">\u2605</button>'; }).join('') +
+      [1, 2, 3].map(function (k) { return '<button class="px-cs' + (mr >= k ? ' on' : '') + '" data-cardrate="' + k + '" data-rcode="' + SW.esc(it.code) + '" title="' + k + ' star' + (k > 1 ? 's' : '') + '">\u2605</button>'; }).join('') +
       (a ? '<span class="faint px-cavg">' + (Math.round(a.avg * 10) / 10) + '</span>' : '') + '</span>' +
       (em.length ? '<span class="px-s">' + em.map(function (e) { return e + (rx[e].length > 1 ? '<sup>' + rx[e].length + '</sup>' : ''); }).join('') + '</span>' : '') +
       (nc ? '<span class="px-s">💬 ' + nc + '</span>' : '');
