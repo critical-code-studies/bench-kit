@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.54.0 (2026-10-13)
 
 - Paratexts: the **Language** filter finds an item by any language it can be read in, its own and any translation held beside it (an alternate in another language); it had read the record's own language only, so a German item with an English translation was hidden from a reader filtering to English. A card marks each translation (EN · machine translated, from the translation's note), so an original and a translation are told apart; the record's own Language field stays the original's. On the ELIZA archive: German 69 (every German original), English 218 (184 originals, 34 translations).
 
