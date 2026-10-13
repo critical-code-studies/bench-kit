@@ -26,7 +26,9 @@
   function menuItems(btn) {
     btn.click();
     var m = document.querySelector('.tab-menu'), out = [];
-    if (m) SW.$$('.menu-group, .lens-g > h5, [data-pick]', m).forEach(function (e) {
+    // a submenu's opener (kit/menus.js) heads its items, as a group heading does
+    if (m) SW.$$('.menu-group, .lens-g > h5, .menu-subopen, [data-pick]', m).forEach(function (e) {
+      if (e.classList.contains('menu-subopen')) { out.push({ sub: (e.querySelector('b') || e).textContent.trim() }); return; }
       if (e.dataset.pick == null) { out.push({ sub: e.textContent.trim() }); return; }
       var bEl = e.querySelector('b'), sEl = e.querySelector('span');
       out.push({ pick: e.dataset.pick, name: (bEl || e).textContent.trim(), text: sEl ? sEl.textContent.trim() : '' });

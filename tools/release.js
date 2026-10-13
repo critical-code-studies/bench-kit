@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /*
  * tools/release.js - a bench's release: its version raised on every script and stylesheet
- * (the ?v= in its pages), a line in its changelog, the version in its README, and the kit
- * moved to a release if asked; then a check for conflict markers. It changes files only:
- * committing and pushing stay with you. Run from the bench's repository:
+ * (the ?v= in its pages) and its date (the bench-date meta) set to the day, a line in its
+ * changelog, the version in its README, and the kit moved to a release if asked; then a check
+ * for conflict markers. It changes files only: committing and pushing stay with you. Run from
+ * the bench's repository:
  *
  *   node research/kit/tools/release.js next "What changed."           raise the last number
  *   node research/kit/tools/release.js 1.19.0 "What changed." --kit v0.31.0
@@ -82,7 +83,7 @@ if (problems.length) fail(problems.join('\n'));
 
 const next = want === 'next' ? cur.replace(/(\d+)$/, (n) => String(+n + 1)) : want;
 if (next === cur) fail('the version is already ' + cur);
-const today = new Date().toISOString().slice(0, 10);
+const now = new Date(), today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');   // the local day, not UTC's
 const changes = [], touched = [];
 const write = (p, s) => { touched.push(p); if (!DRY) fs.writeFileSync(p, s); };
 
@@ -103,8 +104,13 @@ const kv = kitVersion();
 }
 
 pages.forEach((p) => {
-  const s = fs.readFileSync(p, 'utf8'), n = s.split('?v=' + cur + '"').length - 1;
-  if (n) { write(p, s.split('?v=' + cur + '"').join('?v=' + next + '"')); changes.push(p + ': ' + n + ' × ?v=' + next); }
+  let s = fs.readFileSync(p, 'utf8'), t = s;
+  const n = s.split('?v=' + cur + '"').length - 1;
+  if (n) t = t.split('?v=' + cur + '"').join('?v=' + next + '"');
+  // the release's day, which Help and About show beside the version
+  t = t.replace(/(<meta name="bench-date" content=")[^"]*(">)/, (m, a, b) => a + today + b);
+  const dated = (/<meta name="bench-date" content="([^"]*)">/.exec(s) || [])[1] !== (/<meta name="bench-date" content="([^"]*)">/.exec(t) || [])[1];
+  if (t !== s) { write(p, t); changes.push(p + ': ' + [n ? n + ' × ?v=' + next : '', dated ? 'bench-date ' + today : ''].filter(Boolean).join(', ')); }
 });
 
 const log = path.join(dir, 'CHANGELOG.md');
