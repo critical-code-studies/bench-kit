@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.48.0 (2026-10-13)
 
 - Read ▾: a bench that groups its files (`SW.BENCH.readFiles`: groups by a test on a file's name, one taking the rest, and a description of each file) has the versions in a submenu, then the open version's code by part, each file opening in Read (SHRDLU: SHRDLU, PROGRAMMAR, Micro-Planner).
 - Paratexts: a **Language** filter beside Type, by name (German, not de), from the languages the catalogue has; it reads the record's own language, not a translation's; the search reads it too. `SW.BENCH.paratexts.languages` adds names.
