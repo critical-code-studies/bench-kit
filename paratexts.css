@@ -290,3 +290,10 @@ body.px-leiden .px-gap > .px-gapleiden { display: block; }
 .px-cdate { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .px-card .px-tags { margin-top: 0; max-height: calc(2 * 1.9em); overflow: hidden; }
 .px-cfoot { margin-top: auto; padding-top: 2px; }
+
+/* an embedded player (YouTube, Vimeo, the Internet Archive) or a video across the whole view: the
+   view centres what it shows, and a player sized by percentage inside a centred box had shrunk
+   to a small frame in the middle */
+.px-view, .px-pv { grid-template-columns: minmax(0, 1fr); }
+.px-embed, .px-video { justify-self: stretch; }
+.px-pv:has(> .px-embed, > .px-video) { justify-self: stretch; width: 100%; }

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: an embedded player (YouTube, Vimeo, the Internet Archive) or a video fills the width of the view, in an item, in one with alternates, and in the read-only box. The view centres what it shows, and a player sized by percentage inside the centred box had shrunk to a small frame in the middle.
+
 ## 0.53.2 (2026-10-13)
 
 - Paratexts: ☰ Download and GitHub ↗ follow the reading showing. Reading a transcript, Download gave the recording, under the recording's name; it now gives the transcript, under its own file name, and says which (⤓ Download transcript, ⤓ Download audio). A download started as one reading loads never lands on the reading switched away from.
