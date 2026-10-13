@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.39.0 (2026-10-13)
 
 - `tools/ocr.swift` and `tools/ocr-vote.js`: a draft transcription from a scan, by Apple's Vision text recognition (macOS), and from many copies of one page the reading most copies give, line by line, with indents kept (from the ELIZA bench's 32 ditto copies of a 1965 conversation).
 - `shell.js`: where the page the browser holds is an older release than the one live (GitHub Pages lets a browser keep it for ten minutes), a bar offers to reload; looked for a few seconds after opening and every half hour. `SW.BENCH.freshness: false` turns it off.
