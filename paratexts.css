@@ -299,3 +299,6 @@ body.px-leiden .px-gap > .px-gapleiden { display: block; }
 .px-view, .px-pv { grid-template-columns: minmax(0, 1fr); }
 .px-embed, .px-video { justify-self: stretch; }
 .px-pv:has(> .px-embed, > .px-video) { justify-self: stretch; width: 100%; }
+
+/* a translation held beside the item, on its card */
+.px-s.px-trchip { color: var(--beam); border: 1px dashed var(--beam); border-radius: 3px; padding: 0 5px; font-size: 11px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
