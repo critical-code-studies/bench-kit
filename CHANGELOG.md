@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.51.0 (2026-10-13)
 
 - Paratexts: an item's readings are a row of buttons, one each, all in view, the one showing marked; the two-reading flip of 0.50.0 showed only the reading you were on (an audio record read **Audio**, its transcript out of sight). Names: the record by its kind (Scan, Audio, Video, Text), **Original** where it is a text with only translations beside it; an alternate in the record's language a **Transcript** of a recording (**Subtitles** for .srt or .vtt), a **Scan** or a **Text**; one in another language the **Translation**, or by its language where there are several. ELIZA's broadcasts: Audio · Transcript · Translation. The caption leaves out a title the button already gives.
 
