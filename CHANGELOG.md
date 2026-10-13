@@ -1,5 +1,13 @@
 # Changelog: bench-kit
 
+## 0.39.3 (2026-10-13)
+
+- Paratexts, the item panel: only Title, Date, Creator, Source, Description and Tags stay in
+  view. Held at, Archive ref, Archive link, Online at, Rights, Accession date, Versions and
+  References move behind the chevron with the Dublin Core fields, which now reads "More metadata
+  (archive, rights, Dublin Core; N filled)".
+- "Date made" is now "Date".
+
 ## 0.39.2 (2026-10-13)
 
 - Paratexts, the item panel: the reactions fold away. Only the emoji someone has actually chosen

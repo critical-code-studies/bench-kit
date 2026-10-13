@@ -478,10 +478,10 @@
   // The record: [key, label, kind, placeholder, group]. The 'dc' group, the rest of Dublin Core's fifteen
   // elements, folds away under More metadata; the archive fields say where the original is kept.
   var DCMI = ['Collection', 'Dataset', 'Event', 'Image', 'InteractiveResource', 'MovingImage', 'PhysicalObject', 'Service', 'Software', 'Sound', 'StillImage', 'Text'];
-  var FIELDS = [['title', 'Title'], ['date', 'Date made', '', EX.date || 'e.g. 1970-05-17, or 1970'], ['creator', 'Creator'], ['source', 'Source', '', 'where this copy came from'],
-    ['archive', 'Held at', '', 'the archive with the original, ' + (EX.archive || 'e.g. Computer History Museum')], ['archiveId', 'Archive ref', '', 'its catalogue number, or box and folder'], ['archiveUrl', 'Archive link', 'url', 'https://… the original in its archive’s catalogue'], ['url', 'Online at', 'url', 'https://… a recording or page to play or show here'],
-    ['rights', 'Rights'], ['accessioned', 'Accession date', '', 'the day it came into the collection'], ['description', 'Description', 'area'],
-    ['tags', 'Tags', 'list', 'comma separated'], ['versions', 'Versions', 'list', EX.versions || 'version ids, comma separated'], ['refs', 'References', 'list', EX.refs || 'e.g. [REF: …]'],
+  var FIELDS = [['title', 'Title'], ['date', 'Date', '', EX.date || 'e.g. 1970-05-17, or 1970'], ['creator', 'Creator'], ['source', 'Source', '', 'where this copy came from'],
+    ['archive', 'Held at', '', 'the archive with the original, ' + (EX.archive || 'e.g. Computer History Museum'), 'more'], ['archiveId', 'Archive ref', '', 'its catalogue number, or box and folder', 'more'], ['archiveUrl', 'Archive link', 'url', 'https://… the original in its archive’s catalogue', 'more'], ['url', 'Online at', 'url', 'https://… a recording or page to play or show here', 'more'],
+    ['rights', 'Rights', '', '', 'more'], ['accessioned', 'Accession date', '', 'the day it came into the collection', 'more'], ['description', 'Description', 'area'],
+    ['tags', 'Tags', 'list', 'comma separated'], ['versions', 'Versions', 'list', EX.versions || 'version ids, comma separated', 'more'], ['refs', 'References', 'list', EX.refs || 'e.g. [REF: …]', 'more'],
     ['type', 'Type', 'dcmi', '', 'dc'], ['publisher', 'Publisher', '', EX.publisher || 'e.g. MIT Press', 'dc'], ['contributor', 'Contributors', 'list', 'comma separated', 'dc'],
     ['language', 'Language', '', 'e.g. en', 'dc'], ['extent', 'Extent', '', 'a duration or size, e.g. 1 h 12 min, 34 pp.', 'dc'], ['coverage', 'Coverage', '', 'a place or a period', 'dc'], ['identifier', 'Identifiers', 'list', 'DOI, ISBN, URL; comma separated', 'dc']];
   function okURL(u) { return /^https?:\/\/\S+$/i.test(String(u || '').trim()); }
@@ -493,9 +493,10 @@
         '<input data-k="' + f[0] + '"' + (f[2] === 'url' ? ' type="url"' : '') + ' value="' + SW.esc(val) + '" placeholder="' + SW.esc(ph) + '">';
       return '<label><span>' + f[1] + '</span>' + inp + '</label>';
     }
-    var dc = FIELDS.filter(function (f) { return f[4] === 'dc'; }), filled = dc.filter(function (f) { var v = it[f[0]]; return Array.isArray(v) ? v.length : v; }).length;
-    return '<div class="px-fields">' + FIELDS.filter(function (f) { return f[4] !== 'dc'; }).map(one).join('') + '</div>' +
-      '<details class="px-dc"><summary>More metadata <span class="faint">(Dublin Core' + (filled ? ', ' + filled + ' filled' : '') + ')</span></summary><div class="px-fields">' + dc.map(one).join('') +
+    var rest = FIELDS.filter(function (f) { return f[4] === 'more' || f[4] === 'dc'; });
+    var filled = rest.filter(function (f) { var v = it[f[0]]; return Array.isArray(v) ? v.length : v; }).length;
+    return '<div class="px-fields">' + FIELDS.filter(function (f) { return !f[4]; }).map(one).join('') + '</div>' +
+      '<details class="px-dc"><summary>More metadata <span class="faint">(archive, rights, Dublin Core' + (filled ? '; ' + filled + ' filled' : '') + ')</span></summary><div class="px-fields">' + rest.map(one).join('') +
       (it.mime || it.size ? '<label><span>Format</span><span class="px-fmt">' + SW.esc([it.mime, fmtSize(it.size)].filter(Boolean).join(', ')) + '</span></label>' : '') + '</div></details>';
   }
   // Dublin Core (oai_dc) records, for the selection or one item
