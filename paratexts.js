@@ -573,6 +573,8 @@
     var filled = rest.filter(function (f) { var v = it[f[0]]; return Array.isArray(v) ? v.length : v; }).length;
     return '<div class="px-fields">' + FIELDS.filter(function (f) { return !f[4]; }).map(one).join('') + '</div>' +
       '<details class="px-dc"><summary>More metadata <span class="faint">(archive, rights, Dublin Core' + (filled ? '; ' + filled + ' filled' : '') + ')</span></summary><div class="px-fields">' + rest.map(one).join('') +
+      (it.code ? '<label><span>Catalogued by</span><input data-k="addedBy" value="' + SW.esc(it.addedBy || '') + '" placeholder="initials or a name"></label>' +
+        (it.updated && it.updated !== it.added ? '<label><span>Last changed</span><span class="px-fmt">' + SW.esc(SW.fmtDate(it.updated)) + ' by ' + SW.esc(it.updatedBy || '?') + '</span></label>' : '') : '') +
       (it.mime || it.size ? '<label><span>Format</span><span class="px-fmt">' + SW.esc([it.mime, fmtSize(it.size)].filter(Boolean).join(', ')) + '</span></label>' : '') + '</div></details>';
   }
   // Dublin Core (oai_dc) records, for the selection or one item
@@ -654,6 +656,33 @@
     });
     return o;
   }
+  // Leaving a box with changes not saved: a small box asks first. Resolves 'save', 'discard' or
+  // 'keep' (Keep editing, Esc, or a click outside it).
+  function askUnsaved(what, canSave) {
+    return new Promise(function (ok) {
+      var q = SW.el('dialog', { class: 'ini-dlg px-unsaved' }), fin = false;
+      q.innerHTML = '<form method="dialog" class="settings"><h2>Not saved</h2><p>' + SW.esc(what) + '</p>' +
+        '<div class="row"><button type="button" class="btn ghost" data-u="keep">Keep editing</button><button type="button" class="btn ghost" data-u="discard">Discard</button>' + (canSave ? '<button type="button" class="btn" data-u="save">Save</button>' : '') + '</div></form>';
+      document.body.appendChild(q);
+      function finish(v) { if (fin) return; fin = true; if (q.open) q.close(); q.remove(); ok(v); }
+      q.addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (b) finish(b.dataset.u); else if (e.target === q) finish('keep'); });
+      q.addEventListener('cancel', function (e) { e.preventDefault(); finish('keep'); });
+      q.showModal(); var f = SW.$(canSave ? '[data-u="save"]' : '[data-u="keep"]', q); if (f) f.focus();
+    });
+  }
+  // a box that asks before it closes on what would be lost: d.__leave(then) closes it, asking first
+  // when lost() names something; ✕, a click outside and Esc go through it
+  function guardClose(d, lost, saveIt) {
+    d.__leave = function (then) {
+      var w = lost();
+      if (!w) { d.close(); if (then) then(); return; }
+      askUnsaved(w, !!saveIt).then(function (v) {
+        if (v === 'discard') { d.close(); if (then) then(); }
+        else if (v === 'save') saveIt().then(function (ok) { if (ok !== false) { d.close(); if (then) then(); } });
+      });
+    };
+    d.addEventListener('cancel', function (e) { if (lost()) { e.preventDefault(); d.__leave(); } });
+  }
   // Cited in: the annotations, replies, findings and notes that write its code, each a link to it
   function citedIn(code, box) {
     if (!box || !SW.notes || !SW.notes.citing) return;
@@ -669,8 +698,9 @@
   // a click on a citation: the box (or boxes) closed, and on to it
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('dialog [data-go]'); if (!b || !b.dataset.go) return;
-    SW.$$('dialog.px-dlg[open]').forEach(function (d) { d.close(); d.remove(); });
-    SW.notes.goCode(b.dataset.go);
+    var open = SW.$$('dialog.px-dlg[open]'), guarded = open.filter(function (d) { return d.__leave; })[0];
+    function go() { SW.$$('dialog.px-dlg[open]').forEach(function (d) { d.close(); d.remove(); }); SW.notes.goCode(b.dataset.go); }
+    if (guarded) guarded.__leave(go); else go();
   });
   // A linked item played or shown where it lives: YouTube, Vimeo and the Internet Archive in their own
   // players; a direct audio or video file in the browser's; anything else as a link to it.
@@ -1032,7 +1062,6 @@
       (altList(it).length || gapCount(it) ? '<div class="px-viewbar">' + (gapCount(it) ? SW.flip.html('gaps', [['kintsugi', 'Kintsugi', 'Gaps drawn as seams in gold, with what is known of each.'], ['leiden', 'Leiden', 'Gaps in Leiden’s notation, as a quotation or an export carries them.']]) : '') + altBar(it) + '</div>' : '') +
       '<div class="px-pv"><p class="hint">Opening…</p></div></div><div class="px-side">' + fieldsHTML(it) +
       '<div class="px-colls">' + collsHTML(it) + '</div>' +
-      '<div class="px-by"><span>Catalogued by</span><span>' + esc(it.addedBy || '?') + (it.updated && it.updated !== it.added ? ', changed ' + esc(SW.fmtDate(it.updated)) + ' by ' + esc(it.updatedBy || '?') : '') + '</span></div>' +
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
       (it.withdrawn ? '<p class="badge px-wdnote">Withdrawn ' + esc(SW.fmtDate(it.withdrawn)) + (it.withdrawnBy ? ' by ' + esc(it.withdrawnBy) : '') + (it.withdrawnWhy ? ': ' + esc(it.withdrawnWhy) : '') + '</p>' : '') +
       '<div class="px-linkline">Use the code <span class="mono">' + esc(it.code) + '</span> in an annotation to link it. <button class="btn ghost" data-copy="' + esc(it.code) + '">Copy the code</button></div>' +
@@ -1051,6 +1080,18 @@
       showFile(n < 0 ? it : altItem(it, list[n]), SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
     });
     citedIn(code, SW.$('.px-cited', d));
+    var kept = JSON.stringify(readFields(SW.$('.px-side', d)));
+    function saveDetails() {   // resolves true once saved, false if it failed
+      var a = SW.$('[data-a="save"]', d), msg = SW.$('.px-msg', d), o = readFields(SW.$('.px-side', d)), was = JSON.stringify(o);
+      a.disabled = true; msg.textContent = 'Saving…';
+      return save('Paratext ' + it.code + ': details, by ' + me(), function (c) { c.items.forEach(function (x) { if (x.code === it.code) { Object.assign(x, o); x.updated = now(); x.updatedBy = me(); } }); })
+        .then(function () { a.disabled = false; msg.textContent = 'Saved'; kept = was; it = byCode(code); SW.$('.tray-bighead b', d).textContent = it.title; refresh(); return true; },
+          function (err) { a.disabled = false; msg.textContent = err.message; return false; });
+    }
+    guardClose(d, function () {
+      var changed = JSON.stringify(readFields(SW.$('.px-side', d))) !== kept, ta = SW.$('.px-cbox textarea', d), said = ta && ta.value.trim();
+      return changed && said ? 'Changes to its details, and a comment not yet sent, will be lost.' : changed ? 'Changes to its details will be lost: Save keeps them.' : said ? 'A comment not yet sent will be lost.' : '';
+    }, function () { return saveDetails(); });
     function talk(label, change) {   // a rating, emoji or comment: saved, then the talk redrawn
       var who = me();
       if (who === '?') return SW.askInitials('Ratings, reactions and comments are signed with your initials, and none are set.').then(function (ini) { return ini ? talk(label, change) : null; });
@@ -1066,7 +1107,7 @@
       colls0(); p.then(colls0);
     });
     d.addEventListener('click', function (e) {
-      if (e.target === d || e.target.closest('[data-x]')) { d.close(); return; }
+      if (e.target === d || e.target.closest('[data-x]')) { d.__leave(); return; }
       var xp = e.target.closest('[data-xp]');
       if (xp) { var xd = xp.closest('details'); if (xd) xd.open = false; exportItems(xp.dataset.xp, [byCode(code)], code); return; }
       var uc = e.target.closest('[data-uncoll]');
@@ -1083,11 +1124,8 @@
         talk('comment', function (x, who) { x.comments = x.comments || []; x.comments.push({ id: Math.random().toString(36).slice(2, 9), by: who, date: now(), text: text }); });
         return;
       }
-      if (a.dataset.a === 'save') {
-        var o = readFields(d); a.disabled = true; msg.textContent = 'Saving…';
-        save('Paratext ' + it.code + ': details, by ' + me(), function (c) { c.items.forEach(function (x) { if (x.code === it.code) { Object.assign(x, o); x.updated = now(); x.updatedBy = me(); } }); })
-          .then(function () { a.disabled = false; msg.textContent = 'Saved'; it = byCode(code); SW.$('.tray-bighead b', d).textContent = it.title; refresh(); }, function (err) { a.disabled = false; msg.textContent = err.message; });
-      } else if (a.dataset.a === 'withdraw') {
+      if (a.dataset.a === 'save') saveDetails();
+      else if (a.dataset.a === 'withdraw') {
         var mm = a.closest('details'); if (mm) mm.open = false;
         withdrawBox([it.code], function () { d.close(); });
       } else if (a.dataset.a === 'restore') {
@@ -1250,8 +1288,10 @@
     drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('on'); });
     drop.addEventListener('dragleave', function () { drop.classList.remove('on'); });
     drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('on'); pick(e.dataTransfer.files[0]); });
+    var blank0 = JSON.stringify(readFields(d));
+    guardClose(d, function () { return file || SW.$('.px-url', d).value.trim() || JSON.stringify(readFields(d)) !== blank0 ? 'What you have entered for this item will be lost: it is not added until you ' + (mode === 'file' ? 'Upload' : 'Add') + '.' : ''; });
     d.addEventListener('click', function (e) {
-      if (e.target === d || e.target.closest('[data-x]')) { d.close(); return; }
+      if (e.target === d || e.target.closest('[data-x]')) { d.__leave(); return; }
       var a = e.target.closest('[data-a="up"]'); if (!a) return;
       var msg = SW.$('.px-msg', d), o = readFields(d), ic = SW.$('.px-intoc', d);
       if (ic && ic.checked) o.collections = [into.id];

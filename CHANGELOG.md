@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Paratexts: an item's Download, GitHub ↗, Open ↗ and Source ↗ under ☰ in its header, beside Share and ＋ My notes; the menu closes on a choice or a click elsewhere.
+- Paratexts: **Catalogued by** is a field under More metadata, which can be corrected, with the last change (when, by whom) under it; it no longer sits below the collections.
+- Paratexts: closing an item with changes not saved, or a comment not sent (✕, Esc, a click outside, or a citation link), asks first: Keep editing, Discard, or Save. The Add box asks too, before what has been entered is lost.
 - The paratexts guide says what a collection is for: a grouping someone has to judge, which no field records; where a field says it (type, language, date), the filter of that name. The README notes that the Language filter appears only once a catalogue holds a second language.
 
 ## 0.48.0 (2026-10-13)

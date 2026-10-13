@@ -188,7 +188,6 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .pxlink { font-style: normal; }
 
 /* the record's own provenance, as a field row like the rest */
-.px-by { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; font-size: 12.5px; color: var(--text-dim); margin: 5px 0 0; }
 /* reactions: only the ones chosen are shown; the rest fold behind + */
 .px-talk .fd-rxbar { margin: 4px 0; gap: 3px; }
 .px-rxmore { display: inline-block; }
