@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Help ▾ and Graphics ▾ in submenus, one for each group, its first items named under it (`SW.menuFirst`); Help's long first group is two, Reading the bench and Annotating and sharing. The version line stays at Help's foot.
+
 ## 0.45.0 (2026-10-13)
 
 - Menus take **submenus** (`SW.menuSub`): an item that opens a list beside it, on a pointer's rest, a click or a tap, or →, closed by ← or Esc, placed against the window so the menu's scrolling cannot clip it, opened in place on a narrow screen; they nest, and ↑ ↓ move through a list.
