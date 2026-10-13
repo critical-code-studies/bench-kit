@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.53.6 (2026-10-13)
 
 - Ratings: a star not given is fainter (its outline at 45%), so the gold of a star given stands out; under the pointer it shows at full strength.
 
