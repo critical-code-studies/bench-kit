@@ -1,5 +1,5 @@
 /*
- * helppages.js - three Help pages drawn from the bench's data:
+ * helppages.js - four Help pages drawn from the bench's data:
  *   Referencing and versions (SW.refHelp): the bench's form of reference, its versions and its
  *     ports, to copy as a list or export with their SWHIDs. From SW.BENCH.refHelp:
  *       example   a reference in full, as the page's example
@@ -25,7 +25,10 @@
  *                 title, what, why, evidence, by }
  *       note(v)   plain text before the table; after(v): { title, head, rows }, a table after it
  *       empty     what the card says when there are no repairs; subtitle, menu
- * The kit's Help menu and links (&help=refs, reading, cards) open them.
+ *   Marks and conventions (SW.marksHelp): the marks the benches draw for losses, restorations,
+ *     corrections and doubtful readings, each with its Leiden form for export (SW.leiden(id, text,
+ *     o)), beside the kintsugi of the repairs; SW.BENCH.marks { uses, add, note } adapts it.
+ * The kit's Help menu and links (&help=refs, reading, cards, marks) open them.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
@@ -285,5 +288,101 @@
   }
   SW.cardsOne = function (vid) { cardDialog(vid); };
   SW.cardsHelp = function () { cardDialog(SW.state && SW.state.v); };
+
+  // ---------- Marks and conventions ----------
+  // One list of the marks the benches draw on a text, each with its Leiden form, so that what is
+  // seen and what is exported say the same thing, and a reader of an export needs no key of the
+  // bench's: the Leiden conventions of epigraphy and papyrology for losses, restorations and
+  // readings, beside the kintsugi of the repairs (Berry 2025), which leaves a repair visible.
+  //   id: [mark on screen (HTML), Leiden form, what it means, kintsugi's name, where the benches use it]
+  // A bench adds or rewords through SW.BENCH.marks: { uses: { id: text }, add: [[id, ...]], note }.
+  var MARKS = [
+    ['lost', '<span class="mk-lost">— 1 page lost: the camera failed —</span>', '[---]  ·  [--- c. 46 lines ---]  ·  [.3.]',
+      'Lost and not restored: the band stands in the place of what is missing, with how much and why.', 'the open seam',
+      'A page a scan failed on, a tape torn, a reel that drops out (a paratext’s gaps).'],
+    ['restored', '<span class="mk-fill">PRINT COMMENT</span>', '[PRINT COMMENT]',
+      'Restored by an editor where nothing can be read: a conjecture, never merged into the text.', 'kake, a missing piece remade',
+      'A line remade where none can be read; a gap filled by conjecture.'],
+    ['supplied', '<span class="mk-supplied">PRINT COMMENT</span>', '[PRINT COMMENT], the witness named in a note',
+      'Supplied from another copy of the same text, named.', 'yobitsugi, a piece from another vessel',
+      'A tape supplied from another listing; a gap filled from another copy.'],
+    ['corrected', '<span class="mk-corr">jmp <b>srt</b></span>', 'the text as the source reads, the old reading in a note',
+      'A transcription corrected against the scan: the text is the source’s again.', 'hibi, a crack mended',
+      'Readings corrected against the scan.'],
+    ['uncertain', '<span class="mk-unc">ior (4</span>', 'ịọṛ (4  (a dot under each doubtful letter)',
+      'Read, but not surely: left as found.', 'a crack seen, not mended',
+      'Uncertain readings in a transcription ([word?]).'],
+    ['illegible', '<span class="mk-ill">[?]</span>', '. . .  (a dot for each letter seen but not read)',
+      'Traces of letters that cannot be read.', '',
+      '[?] in a transcription.'],
+    ['erased', '<span class="mk-erased">the Police</span>', '⟦the Police⟧',
+      'Struck out or erased in the source itself.', '',
+      'Strike-overs in typed copies; words struck out in pencil on a printout.'],
+    ['added', '<span class="mk-added">n</span>', '\\n/',
+      'Written in above the line, or in the margin, in the source itself.', '',
+      'A handwritten insertion: Me corrected to Men by a caret and an n.'],
+    ['omitted', '<span class="mk-omit">u</span>', '⟨u⟩',
+      'Left out by the source, supplied by the editor so it reads.', '',
+      'A letter a typist dropped.'],
+    ['superfluous', '<span class="mk-sup">e</span>', '{e}',
+      'In the source by mistake, set aside by the editor.', '',
+      'A letter typed twice.'],
+    ['sic', '<span class="mk-sic">thunb</span>', 'thunb (!)',
+      'So in the source, odd as it is: not a mistake of the transcription.', '',
+      'A typist’s slip kept as typed.'],
+    ['expanded', '<span class="mk-exp">W’R</span>', 'W(HENEVE)R',
+      'An abbreviation written out in full.', '',
+      'MAD’s short keywords, read in full with Normalised text.'],
+    ['vacat', '<span class="mk-vac">vac.</span>', 'vac.',
+      'Space left blank in the source.', '',
+      'A blank card or line in a listing.'],
+    ['normalised', '<span class="mk-norm">~ssn</span>', 'the text as held, the change in a note',
+      'Changed only so that the text can be run, not to its reading: the bench’s own mark.', 'the mount, not the vessel',
+      'Normalised for assembly or for running.'],
+    ['note', '<span class="mk-note">; [page 3]</span>', 'a note, outside the text',
+      'The transcriber’s note: what the page is, what is on it besides the text.', '',
+      'Lines beginning ; in a transcription.']
+  ];
+  function marks() {
+    var M = B.marks || {}, uses = M.uses || {};
+    return MARKS.concat(M.add || []).map(function (m) { return m.slice(0, 5).concat([uses[m[0]] || m[5]]); });
+  }
+  // a mark's Leiden form, for an export: SW.leiden(id, text, { lines, pages, chars, label })
+  SW.leiden = function (id, t, o) {
+    o = o || {}; t = t == null ? '' : String(t);
+    switch (id) {
+      case 'lost': return o.lines ? '[--- c. ' + o.lines + ' line' + (o.lines > 1 ? 's' : '') + ' ---]' : o.pages ? '[--- ' + o.pages + ' page' + (o.pages > 1 ? 's' : '') + ' ---]' : o.chars ? '[.' + o.chars + '.]' : '[---]';
+      case 'restored': case 'supplied': return '[' + t + ']';
+      case 'uncertain': return t.replace(/(\S)/g, '$1\u0323');
+      case 'illegible': return new Array((o.chars || 1) + 1).join('. ').trim();
+      case 'erased': return '\u27E6' + t + '\u27E7';
+      case 'added': return '\\' + t + '/';
+      case 'omitted': return '\u27E8' + t + '\u27E9';
+      case 'superfluous': return '{' + t + '}';
+      case 'sic': return t + ' (!)';
+      case 'vacat': return 'vac.';
+      default: return t;   // corrected, normalised, expanded (given whole), note: the text, the rest in a note
+    }
+  };
+  SW.MARKS = { list: marks };
+  SW.marksHelp = function () {
+    var ms = marks(), note = (B.marks || {}).note;
+    var rows = ms.map(function (m) {
+      return '<tr><td class="mk-cell">' + m[1] + '</td><td class="mono">' + esc(m[2]) + '</td><td>' + esc(m[3]) + (m[4] ? ' <span class="faint">Kintsugi: ' + esc(m[4]) + '.</span>' : '') + '</td><td class="faint">' + esc(m[5]) + '</td></tr>';
+    }).join('');
+    var d = bigDialog('Marks and conventions', '<div class="marks-help">' +
+      '<p>The marks the bench draws on a text where something was lost, restored, corrected or read with doubt, and the form each takes in an export. The export follows the Leiden conventions of epigraphy and papyrology, so that a reader of a Word or Markdown file can read the marks without this page. On the screen, the repairs are in gold, after kintsugi, the mending of pottery with gold that leaves the repair visible (Berry 2025): a restoration is never merged into the text it mends, and a loss is drawn where it is, not closed up.</p>' +
+      (note ? '<p>' + note + '</p>' : '') +
+      '<table class="data marks-table"><thead><tr><th>On the screen</th><th>In an export (Leiden)</th><th>What it means</th><th>In the benches</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<p class="hint">A restoration and a supply both take square brackets in Leiden; the export names the witness of a supply, or the editor of a conjecture, in a note, as the screen does in gold.</p></div>',
+      'markshelp', '<button class="btn ghost" data-mk="md">⤓ Markdown</button>');
+    d.addEventListener('click', function (e) {
+      if (!e.target.closest('[data-mk="md"]')) return;
+      var md = '# Marks and conventions\n\n| In an export (Leiden) | What it means | Kintsugi | In the benches |\n|---|---|---|---|\n' +
+        ms.map(function (m) { return '| `' + m[2].replace(/\|/g, '\\|') + '` | ' + m[3] + ' | ' + (m[4] || '') + ' | ' + m[5] + ' |'; }).join('\n') + '\n';
+      root.SWExport.download(slug() + '-marks.md', md, 'text/markdown');
+    });
+  };
+
   SW.cards = { text: function (v, rows) { return cardText(verOf(v), rows); }, doc: cardDoc, svg: function (v, rows) { return cardSVG(verOf(v), rows); }, act: act, rows: rowsOf };
 })(typeof window !== 'undefined' ? window : globalThis);

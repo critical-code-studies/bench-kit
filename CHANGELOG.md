@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Help ▸ Marks and conventions (`helppages.js`, `SW.marksHelp`): one table of the marks the benches draw for losses, restorations, corrections and doubtful readings, each with its Leiden form for export, beside the kintsugi of the repairs, and as Markdown. `SW.leiden(id, text, o)` gives a mark's Leiden form to an export. `SW.BENCH.marks { uses, add, note }` adapts it to a bench.
 - Paratexts: in side by side the panes' text carries its language too, an alternate's own `lang` or
   the record's `language`; one renderer now serves the item view and both panes.
 

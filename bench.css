@@ -1131,3 +1131,25 @@ ul.reading a { overflow-wrap: anywhere; }
 
 /* a newer release live (shell.js): a bar at the foot offering to reload */
 .fresh-bar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: 13px var(--sans); box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+
+/* Marks and conventions (helppages.js): the marks as the benches draw them, gold for a repair (kintsugi) */
+.marks-help p { max-width: 70em; }
+.marks-table td { vertical-align: top; }
+.marks-table td.mk-cell { white-space: nowrap; font-family: var(--code-font, var(--mono)); }
+.mk-lost { display: inline-block; padding: 1px 8px; border: 1px dashed var(--kin); border-radius: 3px; color: var(--kin); font: 12px var(--sans); background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--kin) 10%, transparent) 6px 12px); }
+.mk-fill { color: var(--kin); border-bottom: 2px solid var(--kin); }
+.mk-supplied { color: var(--kin); outline: 1px dashed var(--kin); outline-offset: 1px; }
+.mk-corr b { font-weight: inherit; background: color-mix(in srgb, var(--kin) 25%, transparent); }
+.mk-corr::before { content: "\25CF  "; color: var(--kin); }
+.mk-unc { text-decoration: underline wavy var(--text-faint); text-underline-offset: 4px; }
+.mk-ill { color: var(--text-faint); }
+.mk-erased { text-decoration: line-through; color: var(--text-dim); }
+.mk-added { vertical-align: super; font-size: .8em; color: var(--text-dim); }
+.mk-omit { color: var(--kin); }
+.mk-omit::before { content: "\27E8"; color: var(--text-faint); } .mk-omit::after { content: "\27E9"; color: var(--text-faint); }
+.mk-sup { text-decoration: line-through dotted; color: var(--text-faint); }
+.mk-sic::after { content: " (!)"; color: var(--text-faint); }
+.mk-exp { }
+.mk-vac { font-style: italic; color: var(--text-faint); }
+.mk-norm { padding: 0 4px; border-radius: 3px; border: 1px solid var(--line); color: var(--text-dim); font-size: .9em; }
+.mk-note { color: var(--text-faint); }

@@ -35,6 +35,7 @@
                                  ['refs', 'Referencing and versions', ex ? 'How the bench cites a source, as ' + ex : 'How the bench cites a source']]
                                 .concat(B.reading ? [['reading', 'What you should read', (B.reading || {}).menu || 'The reading behind the bench']] : [])
                                 .concat(B.cards ? [['cards', 'Reconstruction cards', (B.cards || {}).menu || 'What the bench does to each version to read and run it']] : [])
+                                .concat([['marks', 'Marks and conventions', 'Losses, restorations and doubtful readings: the marks, and their Leiden forms']])
                                 .concat([['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
                                          ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
                                          ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],

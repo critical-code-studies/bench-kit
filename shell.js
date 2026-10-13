@@ -130,6 +130,7 @@
     if (SW.refHelp) h.refs = SW.refHelp;
     if (SW.readingHelp && B.reading) h.reading = SW.readingHelp;
     if (SW.cardsHelp && B.cards) h.cards = SW.cardsHelp;
+    if (SW.marksHelp) h.marks = SW.marksHelp;
     var own = H().help || {}; Object.keys(own).forEach(function (k) { h[k] = own[k]; });
     return h;
   }
