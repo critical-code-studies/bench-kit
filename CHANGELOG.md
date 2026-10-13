@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- The top bar's small print (the bench's version, the reference and the language line) takes the bar's own ink, dimmed, in every theme: it had the page's faint grey, which on the paper theme's blue bar was all but invisible (contrast 1.4) and below 4.5 in most others.
+
 ## 0.44.3 (2026-10-13)
 
 - No specimen that looks like a real identifier anywhere in the kit: the code shown in the Go to a code box, the paratext guide, the codes guide and two comments now give the shapes (A-XXXXX, C-XXXXX, P-XXXXX, XX-N1), the group comment in notes.js says in words where a link carries its ID, and the README's example config has an empty group, not a real one.
