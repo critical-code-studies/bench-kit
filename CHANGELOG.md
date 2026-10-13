@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.44.4 (2026-10-13)
 
 - The top bar's small print (the bench's version, the reference and the language line) takes the bar's own ink, dimmed, in every theme: it had the page's faint grey, which on the paper theme's blue bar was all but invisible (contrast 1.4) and below 4.5 in most others.
 
