@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.40.1 (2026-10-13)
 
 - Paratext ratings: the stars on a card work. Each carried its paratext's code as `data-c`, which the list reads as a collection, so a click on a card's star was taken as a click on a collection named after the paratext: the list emptied and nothing was rated. The code is now `data-rcode`, and the stars are handled before any collection row.
 - Paratext ratings: a star clicked is shown at once on the paratext's card and in its open panel, averages included, and held until its own save is written, so a save that returns while a later click waits no longer paints the earlier rating back, and a second click during a save no longer reads the catalogue that save fetched afresh (0.40.0's stars could jump back).
