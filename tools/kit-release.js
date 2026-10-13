@@ -34,12 +34,12 @@ if (!m) die('base.js: no SW.KIT version found');
 const cur = m.slice(1, 4).map(Number);
 const next = want === 'next' ? [cur[0], cur[1], cur[2] + 1].join('.') : want === 'minor' ? [cur[0], cur[1] + 1, 0].join('.') :
   /^\d+\.\d+\.\d+$/.test(want || '') ? want : die('usage: node tools/kit-release.js next|minor|X.Y.Z [--author "…"] [--dry-run]');
-if (!/^## Unreleased\s*$/m.test(log)) die('CHANGELOG.md: write the notes under "## Unreleased" first');
+if (!/^## Unreleased[ \t]*$/m.test(log)) die('CHANGELOG.md: write the notes under "## Unreleased" first');
 if (git(['status', '--porcelain', '--', 'base.js', 'CHANGELOG.md'])) die('base.js or CHANGELOG.md has uncommitted changes besides the release');
 
 const date = new Date().toISOString().slice(0, 10);
 const base2 = base.replace(m[0], m[0].replace(cur.join('.'), next));
-const log2 = log.replace(/^## Unreleased\s*$/m, '## ' + next + ' (' + date + ')');
+const log2 = log.replace(/^## Unreleased[ \t]*$/m, '## ' + next + ' (' + date + ')');
 if (DRY) { console.log('would release ' + cur.join('.') + ' → ' + next + ' (base.js, CHANGELOG.md, tag v' + next + ')'); process.exit(0); }
 fs.writeFileSync(basePath, base2); fs.writeFileSync(logPath, log2);
 git(['add', 'base.js', 'CHANGELOG.md']);
