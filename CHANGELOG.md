@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.40.0 (2026-10-13)
 
 - Ratings no longer wait on the network. The panel had its own rate handler that ran first,
   disabled the button and rebuilt the whole bar after a fetch and a write, so the stars only
