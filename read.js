@@ -81,7 +81,12 @@
     // Lines keep their numbers and their annotations whatever the view: a joined card's line is
     // folded, not removed, and a link to it lands on its statement.
     var COLS = SW.BENCH.columns || null;
-    if (COLS) { opts.seq = SW.store.get('read.seq', 'gutter'); opts.ruler = SW.store.get('read.ruler', false); opts.join = SW.store.get('read.join', false); opts.expand = SW.store.get('read.expand', 'held'); }
+    // the toolbar's Normal / Expand switch and View's Contractions choose the same thing
+    if (COLS) SW.on('flip:expand', function (v) {
+      if (opts.expand === v || (v === 'held' && opts.expand === 'short')) return;
+      opts.expand = v; SW.store.set('read.expand', v); var se = SW.$('#rd-expand'); if (se) se.value = v; if (build) renderListing();
+    });
+    if (COLS) { opts.seq = SW.store.get('read.seq', 'gutter'); opts.ruler = SW.store.get('read.ruler', false); opts.join = SW.store.get('read.join', false); opts.expand = SW.flip.get('expand') || SW.store.get('read.expand', 'held'); }
     function layoutOf(b, pi) {
       if (!COLS) return null;
       var src = (b.parts[pi] || {}).src || '', f = (COLS.files || []).filter(function (x) { return x[0].test ? x[0].test(src) : x[0] === src; })[0];
@@ -301,7 +306,9 @@
           '<label class="check" title="A statement continued on further cards read as one line; the cards keep their own lines and annotations, folded under the first"><input type="checkbox" id="rd-join"' + (opts.join ? ' checked' : '') + '> Join continuation cards</label>' +
           (Object.keys(COLS.expand || {}).length ? '<label class="check" title="Contractions written out, or spelled-out statements written short, over the whole view and marked; the text as held is one choice away, and a copy carries the Leiden form">Contractions <select id="rd-expand"><option value="held"' + (opts.expand === 'held' ? ' selected' : '') + '>as held</option><option value="out"' + (opts.expand === 'out' ? ' selected' : '') + '>written out</option><option value="short"' + (opts.expand === 'short' ? ' selected' : '') + '>written short</option></select></label>' : '') +
           '<div class="hint card-note">' + (COLS.note || 'Columns are those of the file the bench reads, an edition, which may sit otherwise than the printout behind it.') + '</div>' : '') +
-        '</div></details><span class="hint" id="rd-nf"></span>' +
+        '</div></details>' +
+        (COLS && Object.keys(COLS.expand || {}).length ? SW.flip.html('expand', [['held', 'Normal', 'Contractions as held (W’R).'], ['out', 'Expand', 'Contractions written out (WHENEVER), each marked; a copy carries Leiden’s form.']]) : '') +
+        '<span class="hint" id="rd-nf"></span>' +
         '<span class="undo-pair"><button class="btn" id="rd-undo" disabled title="Undo">↶</button><button class="btn" id="rd-redo" disabled title="Redo">↷</button></span>' +
         (X.nav || '');
       if (H.key) tb.appendChild(SW.el('button', { class: 'btn', title: 'What the colours and marks in the listing mean', onclick: function (e) { SW.pop(e.clientX, e.clientY, H.key()); } }, 'Key'));
@@ -501,7 +508,10 @@
       var nc = SW.$('#rd-norm', tb); if (nc) nc.onchange = function (e) { opts.norm = e.target.checked; render(); };
       // the card lens's choices, kept in this browser
       [['rd-seq', 'seq', 'value'], ['rd-ruler', 'ruler', 'checked'], ['rd-join', 'join', 'checked'], ['rd-expand', 'expand', 'value']].forEach(function (c) {
-        var el = SW.$('#' + c[0], tb); if (el) el.onchange = function (e) { opts[c[1]] = e.target[c[2]]; SW.store.set('read.' + c[1], opts[c[1]]); renderListing(); };
+        var el = SW.$('#' + c[0], tb); if (el) el.onchange = function (e) {
+          opts[c[1]] = e.target[c[2]]; SW.store.set('read.' + c[1], opts[c[1]]); renderListing();
+          if (c[1] === 'expand') SW.flip.set('expand', opts.expand === 'out' ? 'out' : 'held');   // the toolbar's switch follows
+        };
       });
       var hc = SW.$('#rd-heat', tb);
       if (hc) hc.onchange = function (e) {

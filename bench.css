@@ -1171,3 +1171,9 @@ ul.reading a { overflow-wrap: anywhere; }
 .card-x-open::after { content: "?"; font-size: .75em; vertical-align: super; color: var(--kin); }
 .card-note { max-width: 32em; white-space: normal; margin-top: 4px; }
 @media (max-width: 720px) { .with-seq .ln .sq, .with-seq .lncols .sq { display: none; } .with-seq .ln, .with-seq .lncols, .hide-words.with-seq .ln, .hide-words.with-seq .lncols { grid-template-columns: 3.2em 1fr 2em; } }
+
+/* a two-state switch on a toolbar (base.js SW.flip): the state you are in, the dot lit in the second */
+.btn.flip { display: inline-flex; align-items: center; gap: 5px; }
+.btn.flip .flip-dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid currentColor; }
+.btn.flip[aria-pressed="true"] { border-color: var(--kin); color: var(--kin); }
+.btn.flip[aria-pressed="true"] .flip-dot { background: var(--kin); border-color: var(--kin); }

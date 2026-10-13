@@ -217,12 +217,13 @@
     if (inC()) return all.filter(function (it) { return inColl(it).indexOf(F.c) >= 0; });
     return all;
   }
-  var SORTS = [['date', 'Date made', 1], ['title', 'Title', 1], ['added', 'Accessioned (newest)', -1], ['rating', 'Rating', -1], ['code', 'Code', 1], ['size', 'Size', -1], ['creator', 'Creator', 1], ['kind', 'Kind', 1]];
+  var SORTS = [['date', 'Date made', 1], ['title', 'Title', 1], ['added', 'Accessioned (newest)', -1], ['rating', 'Rating', -1], ['code', 'Code', 1], ['size', 'Size', -1], ['creator', 'Creator', 1], ['genre', 'Type', 1], ['kind', 'Kind', 1]];
   function defDir(k) { var s = SORTS.filter(function (x) { return x[0] === k; })[0]; return s ? s[2] : 1; }
   function sortKey(it, k) {
     if (k === 'date') return String(it.date || '9999');
     if (k === 'rating') { var a = avg(it); return a ? a.avg : -1; }
     if (k === 'size') return it.size || 0;
+    if (k === 'genre') return ((genreOf(it) || [])[1] || '~').toLowerCase();
     if (k === 'added') return (it.accessioned || String(it.added || '').slice(0, 10)) + (it.added || '');
     return String(it[k] || '').toLowerCase();
   }
@@ -232,7 +233,8 @@
       if (F.tag && (it.tags || []).indexOf(F.tag) < 0) return false;
       if (F.v && (it.versions || []).indexOf(F.v) < 0) return false;
       if (F.kind && it.kind !== F.kind) return false;
-      if (F.q) { var t = [it.code, it.title, it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' '), gapHay(it), gapHay(it, true)].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
+      if (F.genre && it.genre !== F.genre) return false;
+      if (F.q) { var t = [it.code, it.title, (genreOf(it) || [])[1], it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' '), gapHay(it), gapHay(it, true)].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
       return true;
     }).sort(function (a, b) {
       var x = sortKey(a, k), y = sortKey(b, k); if (x < y) return -d; if (x > y) return d;
@@ -269,13 +271,16 @@
     items.forEach(function (it) { (it.tags || []).forEach(function (g) { if (tags.indexOf(g) < 0) tags.push(g); }); (it.versions || []).forEach(function (v) { if (vids.indexOf(v) < 0) vids.push(v); }); if (kinds.indexOf(it.kind) < 0) kinds.push(it.kind); });
     tags.sort(); vids.sort(function (a, b) { return ((V.byId(a) || {}).sort || 0) - ((V.byId(b) || {}).sort || 0); });
     function opt(v, l, cur0) { return '<option value="' + esc(v) + '"' + (v === cur0 ? ' selected' : '') + '>' + esc(l) + '</option>'; }
+    // the types the catalogue has, in the vocabulary's order
+    function genresIn() { var have = {}; items.forEach(function (it) { if (it.genre) have[it.genre] = 1; }); return Object.keys(GENRE_BY).filter(function (g) { return have[g]; }).map(function (g) { return GENRE_BY[g]; }).concat(Object.keys(have).filter(function (g) { return !GENRE_BY[g]; }).map(function (g) { return [g, g]; })); }
     function seg(act, v, label, on, tip) { return '<button class="' + (on ? 'on' : '') + '" data-px="' + act + '" data-v="' + v + '" title="' + tip + '">' + label + '</button>'; }
     body.innerHTML = '<div class="px-shell"><nav class="px-nav" aria-label="Collections"></nav><div class="px-main">' +
       '<div class="toolbar px-bar" style="position:static;padding-left:0">' +
       '<input type="search" data-f="q" placeholder="Find (code, title, words)" value="' + esc(F.q || '') + '">' +
       '<label class="check">Tag <select data-f="tag">' + opt('', 'All', F.tag || '') + tags.map(function (g) { return opt(g, g, F.tag); }).join('') + '</select></label>' +
       '<label class="check">Version <select data-f="v">' + opt('', 'All', F.v || '') + vids.map(function (v) { return opt(v, vShort(v), F.v); }).join('') + '</select></label>' +
-      '<label class="check">Kind <select data-f="kind">' + opt('', 'All', F.kind || '') + kinds.map(function (k) { return opt(k, k, F.kind); }).join('') + '</select></label>' +
+      '<label class="check" title="What the items are">Type <select data-f="genre">' + opt('', 'All', F.genre || '') + genresIn().map(function (g) { return opt(g[0], g[1], F.genre); }).join('') + '</select></label>' +
+      '<label class="check" title="The format of the file, or how a link shows">Kind <select data-f="kind">' + opt('', 'All', F.kind || '') + kinds.map(function (k) { return opt(k, k, F.kind); }).join('') + '</select></label>' +
       '<label class="check">Sort <select data-px="sort">' + SORTS.map(function (s) { return opt(s[0], s[1], VW.sort); }).join('') + '</select></label>' +
       '<span class="px-seg">' + seg('view', 'grid', '▦', VW.mode !== 'list', 'Grid') + seg('view', 'list', '☰', VW.mode === 'list', 'List') + '</span>' +
       (VW.mode !== 'list' ? '<span class="px-seg">' + seg('size', 's', 'S', VW.size === 's', 'Small') + seg('size', 'm', 'M', VW.size === 'm', 'Medium') + seg('size', 'l', 'L', VW.size === 'l', 'Large') + '</span>' : '') +
@@ -341,7 +346,7 @@
         '<div class="px-tags">' + summary(it) + (it.tags || []).map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join(' ') + (it.versions || []).map(function (v) { return ' <span class="fd-tag px-v">' + esc(vShort(v)) + '</span>'; }).join('') + collChips(it) + '</div></div></li>';
     }).join('') + '</ul>';
   }
-  var COLS = [['code', 'Code'], ['title', 'Title'], ['date', 'Made'], ['creator', 'Creator'], ['kind', 'Kind'], ['size', 'Size'], ['rating', '★'], [null, 'Collections'], ['added', 'Accessioned']];
+  var COLS = [['code', 'Code'], ['title', 'Title'], ['genre', 'Type'], ['date', 'Made'], ['creator', 'Creator'], ['kind', 'Kind'], ['size', 'Size'], ['rating', '★'], [null, 'Collections'], ['added', 'Accessioned']];
   function listHTML(l) {
     var esc = SW.esc;
     return '<div class="px-tablewrap"><table class="px-table"><thead><tr><th><button class="px-pick" data-px="pickall" aria-pressed="' + l.every(function (it) { return sel[it.code]; }) + '" title="Select all shown"></button></th><th></th>' +
@@ -350,6 +355,7 @@
         var a = avg(it);
         return '<tr class="px-row" data-code="' + esc(it.code) + '" tabindex="0" draggable="true"><td><button class="px-pick" data-pick aria-pressed="false" title="Select"></button></td><td><div class="px-thumb px-mini" data-kind="' + esc(it.kind) + '">' + thumb(it) + '</div></td>' +
           '<td class="mono px-code-c">' + esc(it.code) + '</td><td><b>' + esc(it.title) + '</b>' + ((it.tags || []).length ? ' ' + it.tags.map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join(' ') : '') + '</td>' +
+          '<td class="px-genre-c">' + esc((genreOf(it) || [])[1] || '') + '</td>' +
           '<td class="num">' + esc(it.date || '') + '</td><td>' + esc(it.creator || '') + '</td><td>' + esc(it.kind || '') + '</td><td class="num">' + fmtSize(it.size) + '</td>' +
           '<td>' + (a ? SW.stars(a.avg, (Math.round(a.avg * 10) / 10) + ' from ' + a.n + ': ' + a.who.join('; ')) : '') + '</td>' +
           '<td>' + inColl(it).map(function (id) { return '<span class="px-cl" title="' + esc(pathName(id)) + '">📁 ' + esc(coll(id).name) + '</span>'; }).join('') + '</td>' +
@@ -482,10 +488,52 @@
   function byCode(c) { return (cat ? cat.items : []).filter(function (it) { return it.code === c; })[0] || null; }
 
   // ---------- one paratext ----------
+  // ---------- what an item is: its type, beside its file's kind ----------
+  // A paratext's type (`genre`): what the thing is, not the format of the file that holds it (a
+  // memo scanned to PDF is a memo). [id, label, DCMI type (null: from the file), CSL type, RIS type],
+  // in groups; SW.BENCH.paratexts.genres adds a bench's own, [[group, [[id, label, dcmi, csl, ris]]]].
+  var GENRES = [
+    ['Texts', [['article', 'Article (journal or magazine)', 'Text', 'article-journal', 'JOUR'], ['press', 'Newspaper or periodical article', 'Text', 'article-newspaper', 'NEWS'],
+      ['book', 'Book', 'Text', 'book', 'BOOK'], ['chapter', 'Book chapter', 'Text', 'chapter', 'CHAP'], ['conference', 'Conference paper', 'Text', 'paper-conference', 'CPAPER'],
+      ['thesis', 'Thesis or dissertation', 'Text', 'thesis', 'THES'], ['report', 'Report or technical report', 'Text', 'report', 'RPRT'], ['preprint', 'Preprint or working paper', 'Text', 'article', 'UNPB'],
+      ['manual', 'Manual or documentation', 'Text', 'document', 'GEN'], ['memo', 'Memo', 'Text', 'document', 'GEN'], ['letter', 'Letter or correspondence', 'Text', 'personal_communication', 'PCOMM'],
+      ['email', 'Electronic mail or message (ARPANET, Usenet)', 'Text', 'personal_communication', 'PCOMM'], ['notes', 'Notes or notebook', 'Text', 'manuscript', 'MANSCPT'], ['minutes', 'Minutes or agenda', 'Text', 'document', 'GEN'],
+      ['proposal', 'Proposal or grant', 'Text', 'document', 'GRANT'], ['patent', 'Patent', 'Text', 'patent', 'PAT'], ['newsletter', 'Newsletter or bulletin', 'Text', 'article-magazine', 'MGZN'],
+      ['pressrel', 'Press release', 'Text', 'document', 'GEN'], ['transcript', 'Transcript', 'Text', 'document', 'GEN'], ['programme', 'Programme or catalogue', 'Text', 'document', 'CTLG'], ['findingaid', 'Finding aid or archival description', 'Text', 'document', 'GEN'],
+      ['ephemera', 'Brochure, flyer or advertisement', 'Text', 'document', 'PAMP']]],
+    ['Computing', [['listing', 'Program listing', 'Text', 'document', 'COMP'], ['printout', 'Printout or run output', 'Text', 'document', 'COMP'],
+      ['cards', 'Punched cards', 'PhysicalObject', 'document', 'GEN'], ['papertape', 'Paper tape', 'PhysicalObject', 'document', 'GEN'], ['magtape', 'Magnetic tape or disk', 'PhysicalObject', 'document', 'GEN'],
+      ['software', 'Software or source code', 'Software', 'software', 'COMP'], ['repo', 'Source repository', 'Software', 'software', 'COMP'], ['emulator', 'Emulator or simulation', 'Software', 'software', 'COMP'],
+      ['dataset', 'Dataset', 'Dataset', 'dataset', 'DATA']]],
+    ['Images', [['photo', 'Photograph', 'StillImage', 'graphic', 'FIGURE'], ['diagram', 'Drawing, diagram or schematic', 'StillImage', 'figure', 'FIGURE'], ['flowchart', 'Flowchart', 'StillImage', 'figure', 'FIGURE'],
+      ['screenshot', 'Screenshot', 'StillImage', 'graphic', 'FIGURE'], ['map', 'Map or plan', 'StillImage', 'map', 'MAP'], ['poster', 'Poster', 'StillImage', 'graphic', 'ART'], ['slides', 'Slides', 'Text', 'document', 'SLIDE']]],
+    ['Sound and moving image', [['audio', 'Audio recording', 'Sound', 'song', 'SOUND'], ['interview', 'Oral history or interview', null, 'interview', 'SOUND'], ['talk', 'Lecture or talk', null, 'speech', 'GEN'],
+      ['film', 'Film', 'MovingImage', 'motion_picture', 'MPCT'], ['video', 'Video recording', 'MovingImage', 'motion_picture', 'VIDEO'], ['broadcast', 'Broadcast (radio or television)', null, 'broadcast', 'VIDEO']]],
+    ['Objects', [['hardware', 'Computer or hardware', 'PhysicalObject', 'document', 'GEN'], ['artefact', 'Object or artefact', 'PhysicalObject', 'document', 'GEN']]],
+    ['The web', [['webpage', 'Web page', 'InteractiveResource', 'webpage', 'ELEC'], ['blog', 'Blog post', 'Text', 'post-weblog', 'BLOG'], ['social', 'Social media post', 'Text', 'post', 'ELEC'],
+      ['exhibit', 'Online exhibition', 'InteractiveResource', 'webpage', 'ELEC']]],
+    ['Other', [['other', 'Other', null, 'document', 'GEN']]]
+  ];
+  ((B.paratexts || {}).genres || []).forEach(function (g) {
+    var have = GENRES.filter(function (x) { return x[0] === g[0]; })[0];
+    if (have) have[1] = have[1].concat(g[1]); else GENRES.splice(GENRES.length - 1, 0, [g[0], g[1].slice()]);
+  });
+  var GENRE_BY = {}; GENRES.forEach(function (g) { g[1].forEach(function (e) { GENRE_BY[e[0]] = e; }); });
+  function genreOf(it) { return it && it.genre ? GENRE_BY[it.genre] || [it.genre, it.genre, null, 'document', 'GEN'] : null; }
+  function genreOpts(cur) {
+    return '<option value="">—</option>' + GENRES.map(function (g) {
+      return '<optgroup label="' + SW.esc(g[0]) + '">' + g[1].map(function (e) { return '<option value="' + SW.esc(e[0]) + '"' + (e[0] === cur ? ' selected' : '') + '>' + SW.esc(e[1]) + '</option>'; }).join('') + '</optgroup>';
+    }).join('') + (cur && !GENRE_BY[cur] ? '<option value="' + SW.esc(cur) + '" selected>' + SW.esc(cur) + '</option>' : '');
+  }
+  // a first guess from the file or the link, only where none is given
+  function guessGenre(mime, kind) {
+    var m = String(mime || ''), k = kind || '';
+    return /^image\//.test(m) || k === 'image' ? 'photo' : /^audio\//.test(m) || k === 'audio' ? 'audio' : /^video\//.test(m) || k === 'video' ? 'video' : k === 'link' ? 'webpage' : '';
+  }
   // The record: [key, label, kind, placeholder, group]. The 'dc' group, the rest of Dublin Core's fifteen
   // elements, folds away under More metadata; the archive fields say where the original is kept.
   var DCMI = ['Collection', 'Dataset', 'Event', 'Image', 'InteractiveResource', 'MovingImage', 'PhysicalObject', 'Service', 'Software', 'Sound', 'StillImage', 'Text'];
-  var FIELDS = [['title', 'Title'], ['date', 'Date', '', EX.date || 'e.g. 1970-05-17, or 1970'], ['creator', 'Creator'], ['source', 'Source', '', 'where this copy came from'],
+  var FIELDS = [['title', 'Title'], ['genre', 'Type', 'genre'], ['date', 'Date', '', EX.date || 'e.g. 1970-05-17, or 1970'], ['creator', 'Creator'], ['source', 'Source', '', 'where this copy came from'],
     ['archive', 'Held at', '', 'the archive with the original, ' + (EX.archive || 'e.g. Computer History Museum'), 'more'], ['archiveId', 'Archive ref', '', 'its catalogue number, or box and folder', 'more'], ['archiveUrl', 'Archive link', 'url', 'https://… the original in its archive’s catalogue', 'more'], ['url', 'Online at', 'url', 'https://… a recording or page to play or show here', 'more'],
     ['rights', 'Rights', '', '', 'more'], ['accessioned', 'Accession date', '', 'the day it came into the collection', 'more'], ['description', 'Description', 'area'],
     ['tags', 'Tags', 'list', 'comma separated'], ['versions', 'Versions', 'list', EX.versions || 'version ids, comma separated', 'more'], ['refs', 'References', 'list', EX.refs || 'e.g. [REF: …]', 'more'],
@@ -497,6 +545,7 @@
       var v = it[f[0]], val = f[2] === 'list' ? (v || []).join(', ') : (v || ''), ph = f[3] || '';
       var inp = f[2] === 'area' ? '<textarea data-k="' + f[0] + '" rows="3">' + SW.esc(val) + '</textarea>' :
         f[2] === 'dcmi' ? '<select data-k="' + f[0] + '"><option value="">—</option>' + DCMI.map(function (t) { return '<option' + (t === val ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>' :
+        f[2] === 'genre' ? '<select data-k="genre" title="What the item is: a memo scanned to PDF is a memo">' + genreOpts(val) + '</select>' :
         '<input data-k="' + f[0] + '"' + (f[2] === 'url' ? ' type="url"' : '') + ' value="' + SW.esc(val) + '" placeholder="' + SW.esc(ph) + '">';
       return '<label><span>' + f[1] + '</span>' + inp + '</label>';
     }
@@ -512,7 +561,7 @@
     function el(n, v) { return (Array.isArray(v) ? v : [v]).filter(function (y) { return y; }).map(function (y) { return '  <dc:' + n + '>' + x(String(y)) + '</dc:' + n + '>\n'; }).join(''); }
     return '<?xml version="1.0" encoding="UTF-8"?>\n<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">\n' + items.map(function (it) {
       return '<oai_dc:dc>\n' + el('title', it.title) + el('creator', it.creator) + el('subject', it.tags) + el('description', [it.description].concat(gapsAll(it).map(gapLine))) + el('publisher', it.publisher) + el('contributor', it.contributor) +
-        el('date', it.date) + el('type', dcType(it)) + el('format', [it.mime, it.extent]) +
+        el('date', it.date) + el('type', [dcType(it), (genreOf(it) || [])[1]]) + el('format', [it.mime, it.extent]) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
         el('relation', (it.refs || []).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))
@@ -529,14 +578,15 @@
     });
   }
   function dateParts(d) { var m = /^(\d{4})(?:-(\d{1,2})(?:-(\d{1,2}))?)?/.exec(String(d || '')); return m ? [m.slice(1).filter(Boolean).map(Number)] : null; }
-  function dcType(it) { return it.type || ({ image: 'StillImage', pdf: 'Text', text: 'Text', video: 'MovingImage', audio: 'Sound' })[it.kind] || ''; }
+  function dcType(it) { return it.type || (genreOf(it) || [])[2] || ({ image: 'StillImage', pdf: 'Text', text: 'Text', video: 'MovingImage', audio: 'Sound' })[it.kind] || ''; }
   function isInterview(it) { return (it.tags || []).some(function (g) { return /^(oral history|interview)$/i.test(g); }); }
   function benchLink(it) { return SW.BASE_URI + '?code=' + it.code; }
   function ids(it) { var o = {}; (it.identifier || []).forEach(function (x) { x = String(x).trim(); if (/^(doi:)?10\.\d{4,}\//i.test(x)) o.DOI = x.replace(/^doi:/i, ''); else if (/^(isbn:)?[\d-]{10,17}X?$/i.test(x)) o.ISBN = x.replace(/^isbn:/i, ''); else if (/^https?:/.test(x) && !o.URL) o.URL = x; }); return o; }
   function cslJSON(items) {
     var T = { StillImage: 'graphic', Image: 'graphic', MovingImage: 'motion_picture', Sound: 'song', Software: 'software', Dataset: 'dataset', Text: 'document' };
     return JSON.stringify(items.map(function (it) {
-      var o = { id: it.code, type: isInterview(it) ? 'interview' : T[dcType(it)] || (it.kind === 'link' ? 'webpage' : 'document'), title: it.title }, x = ids(it), dp;
+      var o = { id: it.code, type: genreOf(it) ? genreOf(it)[3] : isInterview(it) ? 'interview' : T[dcType(it)] || (it.kind === 'link' ? 'webpage' : 'document'), title: it.title }, x = ids(it), dp;
+      if (genreOf(it)) o.genre = genreOf(it)[1];
       if (it.extent) o.dimensions = it.extent;
       var au = people(it.creator); if (au.length) o.author = au;
       if ((dp = dateParts(it.date))) o.issued = { 'date-parts': dp };
@@ -560,7 +610,7 @@
     var T = { StillImage: 'ART', Image: 'ART', MovingImage: 'VIDEO', Sound: 'SOUND', Software: 'COMP', Dataset: 'DATA', Text: 'GEN' };
     return items.map(function (it) {
       var x = ids(it), dp = dateParts(it.date), da = dp ? dp[0].map(function (n, i) { return i ? ('0' + n).slice(-2) : n; }).join('/') + '/'.repeat(4 - dp[0].length) : '';
-      return line('TY', T[dcType(it)] || (it.kind === 'link' ? 'ELEC' : 'GEN')) + line('ID', it.code) + line('TI', it.title) +
+      return line('TY', genreOf(it) ? genreOf(it)[4] : T[dcType(it)] || (it.kind === 'link' ? 'ELEC' : 'GEN')) + line('ID', it.code) + line('TI', it.title) + line('M3', (genreOf(it) || [])[1]) +
         people(it.creator).map(function (p) { return line('AU', p.literal || p.family + ', ' + p.given); }).join('') +
         line('PY', dp ? dp[0][0] : '') + line('DA', da) + line('PB', it.publisher) + line('AB', it.description) +
         (it.tags || []).map(function (g) { return line('KW', g); }).join('') + line('LA', it.language) + line('DO', x.DOI) + line('SN', x.ISBN) +
@@ -614,6 +664,8 @@
     if ((m = /archive\.org\/(?:details|embed)\/([^/?#]+)/.exec(url))) return '<iframe class="px-embed' + (kind === 'audio' ? ' px-embed-audio' : '') + '" src="https://archive.org/embed/' + m[1] + '" title="' + esc(title) + '" allow="fullscreen" allowfullscreen loading="lazy"></iframe>';
     if (/\.(mp3|m4a|wav|ogg|oga|flac|aac)(\?|$)/i.test(url) || kind === 'audio' && /\.(mp4|webm)(\?|$)/i.test(url)) return '<audio class="px-audio" controls preload="metadata" src="' + esc(url) + '"></audio>';
     if (/\.(mp4|webm|mov|m4v|ogv)(\?|$)/i.test(url)) return '<video class="px-video" controls preload="metadata" src="' + esc(url) + '"></video>';
+    if (kind === 'image') return '<img class="px-linkimg" alt="' + esc(title) + '" src="' + esc(url) + '">';
+    if (kind === 'pdf') return '<iframe class="px-embed px-embed-pdf" src="' + esc(url) + '" title="' + esc(title) + '"></iframe><p class="px-linkout">' + (ICON.pdf || ICON.link) + ' Held at its source: <a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(url.replace(/^https?:\/\//, '').slice(0, 80)) + ' ↗</a></p>';
     return '<p class="px-linkout">' + (ICON[kind] || ICON.link) + ' Held at its source: <a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(url.replace(/^https?:\/\//, '').slice(0, 80)) + ' ↗</a></p>';
   }
   // Zoom in a single item's box. A picture: a bar (− ＋ Fit 1:1 and the scale), the wheel or a
@@ -784,6 +836,9 @@
   // The same loss in two witnesses (the scan's page, the transcription's lines) shares an id, and
   // an export lists it once. The marks are Help ▸ Marks and conventions' (SW.leiden).
   var GAPKIND = { missing: 'Lost', illegible: 'Illegible', redacted: 'Redacted', damaged: 'Damaged', withheld: 'Withheld' };
+  // the notation the gaps are read in, for the whole bench (Kintsugi or Leiden, on the item's switch)
+  function gapNotation() { document.body.classList.toggle('px-leiden', SW.flip.get('gaps') === 'leiden'); }
+  SW.on('flip:gaps', gapNotation); gapNotation();
   function gapsOf(x) { return (x && x.gaps || []).filter(function (g) { return g && g.at; }); }
   function clock(s) { s = Math.round(+s || 0); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
   function gapWhere(g) {
@@ -824,7 +879,9 @@
       ' <span class="px-gapl mono" title="In an export (Leiden): Help ▸ Marks and conventions">' + esc(f ? (f.basis === 'witness' ? '[…] supplied' : '[…] restored') : gapLeiden(g)) + '</span></div>' +
       (f ? '<div class="px-gapfill px-gapfill-' + (f.basis === 'witness' ? 'witness' : 'conjecture') + '"><div class="px-gapsrc">' + esc(f.basis === 'witness' ? 'Restored from another copy' : 'Restored by conjecture') + ': ' + esc(fillLine(f)) + '</div><pre' + (lang ? ' lang="' + esc(lang) + '"' : '') + '>' + esc(f.text) + '</pre></div>'
         : '<div class="px-gapnone">Not restored: the seam is left open.</div>') +
-      (g.note ? '<details class="px-gapnote"><summary>What is known of it</summary><p>' + esc(g.note) + '</p></details>' : '') + '</div>';
+      (g.note ? '<details class="px-gapnote"><summary>What is known of it</summary><p>' + esc(g.note) + '</p></details>' : '') +
+      // the same gap in Leiden's notation, shown instead when the switch says so (SW.flip 'gaps')
+      '<pre class="px-gapleiden"' + (lang ? ' lang="' + esc(lang) + '"' : '') + ' title="' + esc(gapLine(g)) + '">' + esc(gapLeiden(g)) + '</pre></div>';
   }
   // the gaps of a witness, as a strip of places to go to, above its view
   function gapStrip(it) {
@@ -951,7 +1008,9 @@
     var gh0 = it.file ? 'https://github.com/' + REPO + '/blob/main/' + it.file.split('/').map(encodeURIComponent).join('/') : '';
     d.innerHTML = '<div class="tray-bighead"><span class="px-code mono" data-copy="' + esc(it.code) + '" title="Its code: click to copy">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +
       '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + (it.file ? '<a class="btn ghost" data-a="dl" download="' + esc(it.name || it.code) + '">⤓ Download</a><a class="btn ghost" href="' + esc(gh0) + '" target="_blank" rel="noopener" title="On GitHub, with its history">GitHub ↗</a>' : okURL(it.url) ? '<a class="btn ghost" href="' + esc(it.url.trim()) + '" target="_blank" rel="noopener" title="Where it is held">Open ↗</a>' : '') + (okURL(it.archiveUrl) ? '<a class="btn ghost" href="' + esc(it.archiveUrl.trim()) + '" target="_blank" rel="noopener" title="The original, in ' + esc(it.archive || 'its archive') + '">Source ↗</a>' : '') + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
-      '<div class="px-cols"><div class="px-view' + (altList(it).length ? ' px-withalts' : '') + '">' + altBar(it) + '<div class="px-pv"><p class="hint">Opening…</p></div></div><div class="px-side">' + fieldsHTML(it) +
+      '<div class="px-cols"><div class="px-view' + (altList(it).length || gapCount(it) ? ' px-withalts' : '') + '">' +
+      (altList(it).length || gapCount(it) ? '<div class="px-viewbar">' + (gapCount(it) ? SW.flip.html('gaps', [['kintsugi', 'Kintsugi', 'Gaps drawn as seams in gold, with what is known of each.'], ['leiden', 'Leiden', 'Gaps in Leiden’s notation, as a quotation or an export carries them.']]) : '') + altBar(it) + '</div>' : '') +
+      '<div class="px-pv"><p class="hint">Opening…</p></div></div><div class="px-side">' + fieldsHTML(it) +
       '<div class="px-colls">' + collsHTML(it) + '</div>' +
       '<div class="px-by"><span>Catalogued by</span><span>' + esc(it.addedBy || '?') + (it.updated && it.updated !== it.added ? ', changed ' + esc(SW.fmtDate(it.updated)) + ' by ' + esc(it.updatedBy || '?') : '') + '</span></div>' +
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
@@ -1103,6 +1162,10 @@
       (inFill ? '<span class="px-s px-gapflag" title="The words searched for are in a restoration, not in the transmitted text">found in a restoration</span>' : '') + summary0(it);
   }
   function summary0(it) {
+    var gl = (genreOf(it) || [])[1];
+    return (gl ? '<span class="px-s px-genre">' + SW.esc(gl) + '</span>' : '') + summary1(it);
+  }
+  function summary1(it) {
     var a = avg(it), rx = it.rx || {}, em = Object.keys(rx).filter(function (e) { return (rx[e] || []).length; }), nc = (it.comments || []).length;
     var mine = me(), mr = (it.rates || {})[mine] || 0;
     return '<span class="px-s px-cardrate" title="' + SW.esc(a ? (Math.round(a.avg * 10) / 10) + ' from ' + a.n + ': ' + a.who.join('; ') : 'Rate it, one to three stars') + '">' +
@@ -1133,7 +1196,7 @@
       '<div class="px-seg px-addmode"><button class="on" data-mode="file">A file</button><button data-mode="link">A link</button></div>' +
       '<label class="px-drop"><input type="file" class="px-file"><span>Choose a file, or drop one here: a scan, photograph, PDF, text, audio or video (up to 50 MB).</span></label>' +
       '<div class="px-linkin" hidden><label><span>Link</span><input class="px-url" type="url" placeholder="https://… a YouTube, Vimeo or Internet Archive recording, an audio or video file, or a page"></label>' +
-      '<label><span>Kind</span><select class="px-lkind"><option value="video">Video</option><option value="audio">Audio</option><option value="link">Web page or document</option></select></label>' +
+      '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="link">Web page or document</option></select></label>' +
       '<p class="hint">Catalogued with nothing copied: it plays or shows here from where it is held.</p></div>' +
       fieldsHTML(blank) + (into ? '<label class="check px-into"><input type="checkbox" class="px-intoc" checked> Into the collection “' + esc(into.name) + '”</label>' : '') + '<div class="px-acts"><button class="btn" data-a="up">Upload</button> <span class="hint px-msg"></span></div>';
     document.body.appendChild(d);
@@ -1150,11 +1213,15 @@
       var u = e.target.value, k = SW.$('.px-lkind', d);
       if (/\.(mp3|m4a|wav|ogg|oga|flac|aac)(\?|$)/i.test(u)) k.value = 'audio';
       else if (/youtube\.com|youtu\.be|vimeo\.com|\.(mp4|webm|mov|m4v)(\?|$)/i.test(u)) k.value = 'video';
+      else if (/\.(png|jpe?g|gif|webp|tiff?|svg)(\?|$)/i.test(u)) k.value = 'image';
+      else if (/\.pdf(\?|$)/i.test(u)) k.value = 'pdf';
+      var g = SW.$('[data-k="genre"]', d); if (g && !g.value) g.value = guessGenre('', k.value);
     });
     function pick(f) {
       file = f; if (!f) return;
       SW.$('.px-drop span', d).textContent = f.name + ' (' + Math.round(f.size / 1024).toLocaleString('en-GB') + ' KB)';
       var t = SW.$('[data-k="title"]', d); if (t && !t.value) t.value = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+      var g = SW.$('[data-k="genre"]', d); if (g && !g.value) g.value = guessGenre(f.type, '');
     }
     inp.addEventListener('change', function () { pick(inp.files[0]); });
     drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('on'); });

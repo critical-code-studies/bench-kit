@@ -442,6 +442,33 @@
       d.showModal();
     }
   };
+  // A two-state switch for a toolbar (SW.flip): the button shows the state you are in, a click
+  // gives the other, and the state is kept for the bench. SW.flip.html(key, states) with states
+  // [[value, label, title], [value, label, title]] (the first the default); SW.flip.get(key);
+  // SW.flip.set(key, value); SW.on('flip:' + key, fn(value)) hears a change.
+  SW.flip = {
+    get: function (key) { var v = SW.store.get('flip.' + key, null); return v; },
+    set: function (key, v) {
+      SW.store.set('flip.' + key, v);
+      SW.$$('[data-flip="' + key + '"]').forEach(function (b) { paintFlip(b, v); });
+      SW.emit('flip:' + key, v);
+    },
+    html: function (key, states) {
+      var cur = SW.flip.get(key); if (!states.some(function (x) { return x[0] === cur; })) cur = states[0][0];
+      var b = '<button class="btn flip" data-flip="' + SW.esc(key) + '" data-states="' + SW.esc(JSON.stringify(states)) + '"></button>';
+      var tmp = document.createElement('div'); tmp.innerHTML = b; paintFlip(tmp.firstChild, cur); return tmp.innerHTML;
+    }
+  };
+  function paintFlip(b, v) {
+    var st = JSON.parse(b.dataset.states || '[]'), i = Math.max(0, st.map(function (x) { return x[0]; }).indexOf(v)), s = st[i] || ['', '', ''], o = st[1 - i] || ['', '', ''];
+    b.dataset.v = s[0]; b.innerHTML = '<span class="flip-dot" aria-hidden="true"></span>' + SW.esc(s[1]);
+    b.title = s[2] + ' Click for ' + o[1] + '.'; b.setAttribute('aria-pressed', i === 1 ? 'true' : 'false');
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-flip]'); if (!b) return;
+    var st = JSON.parse(b.dataset.states || '[]'); if (st.length !== 2) return;
+    e.preventDefault(); SW.flip.set(b.dataset.flip, b.dataset.v === st[0][0] ? st[1][0] : st[0][0]);
+  });
   // A double-click anywhere in a find field takes the whole of it, not the word under the
   // pointer: these hold short queries that are usually replaced wholesale rather than edited.
   document.addEventListener('dblclick', function (e) {
