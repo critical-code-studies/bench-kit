@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Ratings: a star not given is fainter (its outline at 45%), so the gold of a star given stands out; under the pointer it shows at full strength.
+
 ## 0.53.5 (2026-10-13)
 
 - Ratings: a star given is a little brighter than the gold of the repairs (`--star`: #e9c547 on the dark themes, #c29a12 on paper, white and sepia; falls back to `--kin`).

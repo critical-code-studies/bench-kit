@@ -633,6 +633,7 @@ dialog.nudge { animation: nudge 0.35s; }
    fill beside the gold could not be told apart */
 .fd-rate button.on { color: var(--star, var(--kin)); -webkit-text-stroke: 0; background: none; }
 .fd-rate button:hover { color: var(--kin-bg); -webkit-text-stroke: 1px var(--kin); }
+.fd-rate button:not(.on):not(:hover) { opacity: .45; }
 .tray-code.tray-full { white-space: pre; }
 .tray-code .tl { white-space: pre; }
 .tray-anno { white-space: normal; font-family: var(--sans, inherit); font-size: 12.5px; text-align: right; margin: 3px 0 6px auto; max-width: 80%; padding: 3px 10px 4px; border-right: 3px solid var(--line); background: color-mix(in srgb, var(--surface-2) 60%, transparent); border-radius: 4px 0 0 4px; }
