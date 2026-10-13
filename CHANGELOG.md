@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.45.0 (2026-10-13)
 
 - Menus take **submenus** (`SW.menuSub`): an item that opens a list beside it, on a pointer's rest, a click or a tap, or →, closed by ← or Esc, placed against the window so the menu's scrolling cannot clip it, opened in place on a narrow screen; they nest, and ↑ ↓ move through a list.
 - `layers.js`: Read ▾ is a submenu for each layer, naming the version chosen in it, in `readOrder` (a bench's order for the menu only; the layers' list keeps the stack's order, which `?stack=` links follow); a layer's `groups` ([{ label, note, ids | line }], a line of descent stating a grouping once) gather versions in a submenu of their own; the current version's mark, the · on a layer's chosen version, `shown`, `more`, the breadcrumb and ◀ ▶ are as they were.
