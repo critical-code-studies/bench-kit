@@ -201,12 +201,12 @@
     select(q.v || B.start);
     // a link to an annotation: to it, once the version is up
     if (q.a && q.v) setTimeout(function () { SW.notes.follow(q); }, 900);
-    // a link to a code (?code=A-MLKH5): to what it names
+    // a link to a code (?code=A-XXXXX): to what it names
     if (q.code) setTimeout(function () { SW.notes.goCode(q.code); }, 1000);
     var shb = SW.$('#btn-share'); if (shb) { shb.innerHTML = SW.SHARE_ICON; shb.onclick = function () { SW.share({ title: document.title }); }; }
     SW.$('#btn-code').onclick = function (e) {
       var r = e.currentTarget.getBoundingClientRect(), f = (B.examples || {}).finding || 'F1';
-      SW.pop(r.left - 180, r.bottom + 6, '<h4>Go to a code</h4><input type="text" class="code-in mono" placeholder="A-MLKH5, C-FT1A7, P-U1J8Q, ' + SW.esc(f) + ', DMB-N14" autocomplete="off"><p class="hint">An annotation or reply (A-, R-), a group finding (C-), the bench’s (F), a paratext (P-), or a note in My notes (initials-N). A link can carry one: ?code=…</p>');
+      SW.pop(r.left - 180, r.bottom + 6, '<h4>Go to a code</h4><input type="text" class="code-in mono" placeholder="A-XXXXX, C-XXXXX, P-XXXXX, ' + SW.esc(f) + ', XX-N1" autocomplete="off"><p class="hint">An annotation or reply (A-, R-), a group finding (C-), the bench’s (F), a paratext (P-), or a note in My notes (initials-N). A link can carry one: ?code=…</p>');
       var inp = SW.$('.pop .code-in'); if (!inp) return;
       inp.focus();
       inp.addEventListener('keydown', function (k) { if (k.key === 'Enter' && inp.value.trim()) { SW.unpop(); SW.notes.goCode(inp.value); } });

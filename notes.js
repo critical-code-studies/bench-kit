@@ -52,7 +52,7 @@
   // (Hypothesis takes a moment to index a new annotation).
   var pending = {};
 
-  // Accepts a group's URL (https://hypothes.is/groups/ID/name) or its bare ID.
+  // Accepts a group's URL, which carries its ID after /groups/, or the bare ID.
   N.groupId = function (s) {
     s = String(s || '').trim();
     var m = /\/groups\/([A-Za-z0-9]+)/.exec(s);

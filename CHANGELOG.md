@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- No specimen that looks like a real identifier anywhere in the kit: the code shown in the Go to a code box, the paratext guide, the codes guide and two comments now give the shapes (A-XXXXX, C-XXXXX, P-XXXXX, XX-N1), the group comment in notes.js says in words where a link carries its ID, and the README's example config has an empty group, not a real one.
+
 ## 0.44.2 (2026-10-13)
 
 - No made-up Hypothesis address in the kit: the joining guide and ⚙ Settings showed a made-up group address as an example, which was taken for a real, out-of-date link. They now ask for the group link from the invitation.

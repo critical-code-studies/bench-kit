@@ -55,7 +55,7 @@
         'Under ⋯: <b>Withdraw from the list</b>.'])],
       ['Withdrawing', '<p>Withdrawing takes an item out of the list for the whole crew. It asks for a reason, kept with the record, and for the item’s code typed in (for several, their number). The file stays in the repository, with its history. <b>Withdrawn</b>, in the left panel, lists them, with who withdrew each and why; select them there and <b>Bring back</b>.</p>'],
       ['Linking to one', ul([
-        'In an annotation, note or finding, write its code, as <span class="mono">P-MJH2M</span>. It shows as a link, <b>Paratext:</b> and its title.',
+        'In an annotation, note or finding, write its code, as <span class="mono">P-XXXXX</span>. It shows as a link, <b>Paratext:</b> and its title.',
         'Clicking the link opens the paratext read-only, over whatever you were doing, and closes back to it. At its foot, <b>Go to P-… in Paratexts →</b> opens its full box.',
         '<b>Share</b> sends a link that opens the bench at the paratext; whoever opens it needs access to see it.',
         'Its box lists where it is <b>Cited in</b>: the group’s annotations, replies and findings, the bench’s findings and your notes that write its code, each a link.'])],
@@ -65,12 +65,12 @@
       ['Every item has a code', '<p>Each thing the bench keeps has a code that does not change, shown on it (click to copy):</p>' + ul([
         '<span class="mono">A-XXXXX</span> an annotation, <span class="mono">R-XXXXX</span> a reply',
         '<span class="mono">C-XXXXX</span> a finding of the crew’s, <span class="mono">' + (EX.finding || 'F1') + '</span> one of the bench’s own',
-        '<span class="mono">DMB-N14</span> a note in My notes (your initials and its number)',
+        '<span class="mono">XX-N1</span> a note in My notes (your initials and its number)',
         '<span class="mono">P-XXXXX</span> a paratext'])],
       ['Going to one', ul([
         '<b>#</b> in the top bar: type a code and Enter.',
         'In an annotation, note or finding, a code written in the text becomes a link (a paratext’s shows as <b>Paratext:</b> and its title, and opens read-only where you are).',
-        'A web link can carry one: <span class="mono">…/research/?code=A-MLKH5</span>.'])],
+        'A web link can carry one: <span class="mono">…/research/?code=A-XXXXX</span>.'])],
       ['Sharing', ul([
         B.topShare ? SW.SHARE_ICON + ' in the top bar shares what you are looking at: the version, view, lines or comparison.' : null,
         '<b>Share</b> on a paratext sends a link to it. Where the browser has a share sheet (Safari, phones), it opens it: Mail, Messages and the rest. Elsewhere the link is copied, to paste.',

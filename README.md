@@ -116,7 +116,7 @@ SW.BENCH = {
   title: 'SHRDLU Research Bench',    // the page and the About box
   slug: 'shrdlu',                    // file names of exports and backups
   store: 'shbench.',                 // the prefix of the bench's keys in localStorage (SW.store)
-  group: '1Kb3vwEV',                 // the Hypothesis group to use when none is set
+  group: '',                         // the Hypothesis group's ID, as it appears after /groups/ in its link
   relation: 'SHRDLU, ',              // put before a version's label in Dublin Core relation
   topShare: false,                   // the bench has a share button in its top bar
   tag: 'sh:',                        // the prefix its tags had before bench-kit 0.5.0 (still read; new tags are bk:). A new bench: 'bk:'

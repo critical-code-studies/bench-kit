@@ -16,7 +16,7 @@
   var T = SW.tray = {};
 
   // Each note has a number given when it is made and never reused, with the
-  // initials of whoever's notes these are (DMB-N12), so numbers from different
+  // initials of whoever's notes these are (XX-N1), so numbers from different
   // people stay distinct once shared. t.seq is the last given; notes from before
   // numbering get theirs once, in order.
   function refFor(n) { return SW.me().initials + '-N' + n; }
