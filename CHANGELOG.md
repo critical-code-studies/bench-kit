@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.41.0 (2026-10-13)
 
 - Paratexts: a paratext can carry **alternates**, a translation, a transcription or an OCR reading,
   kept beside the original under the same code and in the same record rather than catalogued twice.
