@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratext ratings: a star clicked is shown at once on the paratext's card and in its open panel, averages included, and held until its own save is written, so a save that returns while a later click waits no longer paints the earlier rating back, and a second click during a save no longer reads the catalogue that save fetched afresh (0.40.0's stars could jump back).
+
 ## 0.40.0 (2026-10-13)
 
 - Ratings no longer wait on the network. The panel had its own rate handler that ran first,
