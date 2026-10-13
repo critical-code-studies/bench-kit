@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.53.7 (2026-10-13)
 
 - Ratings: under the pointer, the rating a click would give. Every star up to the one pointed at fills, and the rest empty, on the cards and wherever a rating is set; only the star under the pointer had changed.
 
