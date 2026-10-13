@@ -72,7 +72,10 @@
     //           otherwise than the printout behind it); any field may be absent
     //   expand  { contraction: [reading, …] }: contractions written out on demand, a list where the
     //           source leaves it open; never silently: the whole view is set, the held text one
-    //           choice away, and each reading is marked (Help ▸ Marks and conventions)
+    //           choice away, and each reading is marked (Help ▸ Marks and conventions); expandNot
+    //           { contraction: [phrase, …] }, what the source warns it is not, on the mark's title;
+    //           expandSource, the source. Written short contracts only a phrase that is a
+    //           contraction's one reading, so a statement with no contraction is left as it is
     // Read then offers, under View: the sequence numbers in a gutter, hidden, or as held; a column
     // ruler; continuation cards joined to their statement; contractions written out or shortened.
     // Lines keep their numbers and their annotations whatever the view: a joined card's line is
@@ -184,7 +187,9 @@
               var one = reads.length === 1;
               span.className = 'card-x' + (one ? '' : ' card-x-open');
               span.textContent = one ? reads[0] : held;
-              span.title = held + (one ? ', written out: ' + reads[0] : ': the source leaves it open, ' + reads.join(' or ')) + (COLS.expandSource ? ' (' + COLS.expandSource + ')' : '');
+              var not = (COLS.expandNot || {})[held] || [];   // what the source warns it is not
+              span.title = held + (one ? ', written out: ' + reads[0] : ': the source leaves it open, ' + reads.join(' or ')) +
+                (not.length ? '; not ' + (not.length > 1 ? not.slice(0, -1).join(', ') + ' or ' + not[not.length - 1] : not[0]) : '') + (COLS.expandSource ? ' (' + COLS.expandSource + ')' : '');
               span.dataset.leiden = one ? leidenExp(held, reads[0]) : held;
             } else {
               span.className = 'card-x'; span.textContent = reads[0]; span.title = held + ', written short: ' + reads[0]; span.dataset.leiden = held;
