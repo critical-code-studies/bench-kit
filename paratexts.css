@@ -37,7 +37,7 @@ dialog.px-dlg { width: min(96vw, 1200px); }
 .px-drop { display: block; border: 2px dashed var(--line); border-radius: 8px; padding: 18px; text-align: center; color: var(--text-dim); margin: 6px 0 12px; cursor: pointer; }
 .px-drop.on { border-color: var(--beam); color: var(--text); }
 .px-drop input { display: none; }
-.px-rx .fd-rate button.on { color: var(--kin); }
+.px-rx .fd-rate button.on { color: var(--star, var(--kin)); }
 .px-shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; align-items: start; }
 .px-nav { position: sticky; top: 8px; font-size: 13px; border-right: 1px solid var(--line-soft); padding-right: 10px; max-height: calc(100vh - 120px); overflow: auto; }
 @media (max-width: 760px) { .px-shell { grid-template-columns: 1fr; } .px-nav { position: static; border-right: 0; border-bottom: 1px solid var(--line-soft); padding: 0 0 8px; max-height: none; } }
@@ -206,7 +206,7 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-cardrate { display: inline-flex; align-items: center; gap: 1px; }
 .px-cardrate button.px-cs { background: none; border: 0; padding: 0 1px; cursor: pointer; font-size: 14px; line-height: 1; color: transparent; -webkit-text-stroke: 1px var(--text-faint); }
 .px-cardrate button.px-cs:hover { color: var(--kin-bg); -webkit-text-stroke: 1px var(--kin); }
-.px-cardrate button.px-cs.on { color: var(--kin); -webkit-text-stroke: 0; }
+.px-cardrate button.px-cs.on { color: var(--star, var(--kin)); -webkit-text-stroke: 0; }
 .px-cardrate .px-cavg { margin-left: 3px; font-size: 11px; }
 
 /* a paratext's alternates: a translation or transcription beside the original */

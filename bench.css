@@ -631,7 +631,7 @@ dialog.nudge { animation: nudge 0.35s; }
 .fd-rate button { border: none; padding: 0 2px; font-size: 18px; color: transparent; -webkit-text-stroke: 1px var(--text-faint); }
 /* a star given is filled in gold, a star not given is an outline: on the light themes a pale
    fill beside the gold could not be told apart */
-.fd-rate button.on { color: var(--kin); -webkit-text-stroke: 0; background: none; }
+.fd-rate button.on { color: var(--star, var(--kin)); -webkit-text-stroke: 0; background: none; }
 .fd-rate button:hover { color: var(--kin-bg); -webkit-text-stroke: 1px var(--kin); }
 .tray-code.tray-full { white-space: pre; }
 .tray-code .tl { white-space: pre; }

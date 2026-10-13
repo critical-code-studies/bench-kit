@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Ratings: a star given is a little brighter than the gold of the repairs (`--star`: #e9c547 on the dark themes, #c29a12 on paper, white and sepia; falls back to `--kin`).
+
 ## 0.53.4 (2026-10-13)
 
 - Ratings: a star given is filled in gold, a star not given is an outline, on the paratext cards and wherever a rating is set (the item's record, annotations). On the light themes the pale fill of an unrated star could not be told from the gold.

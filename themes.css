@@ -172,4 +172,7 @@
 
 /* gold, for repairs and ratings */
 :root { --kin: #d4af37; --kin-bg: rgba(212, 175, 55, 0.13); }
+/* a star given: the gold of the repairs, a little brighter, since a star is a shape and not text */
+:root { --star: #e9c547; }
 :root[data-theme="paper"], :root[data-theme="white"], :root[data-theme="sepia"] { --kin: #9a7400; --kin-bg: rgba(170, 128, 0, 0.12); }
+:root[data-theme="paper"], :root[data-theme="white"], :root[data-theme="sepia"] { --star: #c29a12; }
