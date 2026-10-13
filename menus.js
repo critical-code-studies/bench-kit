@@ -16,7 +16,10 @@
  *                     Site map is in the list when SW.BENCH.sitemap is set (a sitemap.html).
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
  * Read ▾ (a tab button with data-menu="read" data-tabs="read") lists the versions in the version
- * picker's groups, unless the bench draws its own (kit/layers.js does, by layer).
+ * picker's groups, unless the bench draws its own (kit/layers.js does, by layer). A bench that sets
+ * readFiles { groups: [{ label, note, test (on a file's name, without its version), rest (takes
+ * the files no group names) }], about(src, role) } has the versions in a submenu, then the open
+ * version's code by part, each file opening in Read.
  *   pick(which, p)    a pick the bench handles itself (a graphic, a Versions item that
  *                     is not a view); true when it has
  *   on(which, p)      whether a Versions item is the one open, where it is not a view
@@ -178,7 +181,30 @@
           wit.map(one).join(''), wit.some(function (w) { return w.id === cur; })) : '');
       }).join('');
     }
-    if (all.length <= 10) return groups.map(function (g, i) { return (i ? '<hr class="menu-rule">' : '') + (g[0] ? '<div class="menu-group">' + SW.esc(g[0]) + '</div>' : '') + list(g[1]); }).join('');
+    var flat = function () { return groups.map(function (g, i) { return (i ? '<hr class="menu-rule">' : '') + (g[0] ? '<div class="menu-group">' + SW.esc(g[0]) + '</div>' : '') + list(g[1]); }).join(''); };
+    // a bench that groups its files (SW.BENCH.readFiles): the versions in a submenu of their own,
+    // then the open version's code by part, each file opening in Read
+    var RF = B.readFiles;
+    if (RF) {
+      var v0 = V.byId(cur), parts = (v0 && v0.build) || [], ix = parts.map(function (b, i) { return [b, i]; }), used = {};
+      var stem = function (src) { return src.split('/').pop().replace(/\.[^.]*$/, '').replace(/\.\d+$/, '').toLowerCase(); };
+      var file = function (x) {
+        return '<button data-pick="f:' + x[1] + '"><b>' + SW.esc(x[0].src.split('/').pop()) + '</b><span>' + SW.esc(RF.about ? RF.about(x[0].src, x[0].role) : x[0].role) + '</span></button>';
+      };
+      var gs = (RF.groups || []).map(function (g) {
+        var fs = g.test ? ix.filter(function (x) { return !used[x[1]] && g.test.test(stem(x[0].src)); }) : [];
+        fs.forEach(function (x) { used[x[1]] = 1; });
+        return [g, fs];
+      });
+      var rest = ix.filter(function (x) { return !used[x[1]]; });
+      return SW.menuSub('Versions', SW.esc(v0 ? v0.label : ''), all.length <= 10 ? flat() : groups.map(function (g) { return SW.menuSub(SW.esc(g[0] || 'Versions'), '', list(g[1]), g[1].some(function (v) { return v.id === cur; })); }).join('')) +
+        (parts.length ? '<hr class="menu-rule"><div class="menu-group">The code of ' + SW.esc(v0.label) + '</div>' : '') +
+        gs.map(function (x) {
+          var fs = x[0].rest ? x[1].concat(rest) : x[1]; if (!fs.length) return '';
+          return SW.menuSub(SW.esc(x[0].label), SW.esc(x[0].note || firstOf(fs.map(function (y) { return [0, stem(y[0].src)]; }))), fs.map(file).join(''));
+        }).join('');
+    }
+    if (all.length <= 10) return flat();
     return groups.map(function (g) {
       var main = g[1].filter(function (v) { return !v.witnessOf; });
       return SW.menuSub(SW.esc(g[0] || 'Versions'), SW.esc(firstOf(main.map(function (v) { return [v.id, v.label]; }))), list(g[1]), g[1].some(function (v) { return v.id === cur; }));
@@ -189,6 +215,7 @@
     if (SW.lenses && SW.lenses.pick(which, p)) return;
     if (SW.graphics && SW.graphics.pick(which, p)) return;
     if (which === 'help') { SW.help(p); return; }
+    if (which === 'read' && /^f:/.test(p)) { SW.openAt(SW.state.v, { p: +p.slice(2), n0: 1 }); return; }   // a file of the open version
     if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) SW.select(p.slice(2)); SW.setTab('read'); return; }
     if (which === 'versions') SW.setTab(p);
   }
