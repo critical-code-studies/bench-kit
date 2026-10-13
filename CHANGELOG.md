@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- ⚙ Settings › You: **Tell me when a newer release is live**, on by default. Turned off, the newer-release bar no longer appears in that browser (kept as `freshBar`), and one showing goes on Save. `SW.BENCH.freshness: false` still turns it off for a whole bench.
+
 ## 0.51.1 (2026-10-13)
 
 - The newer-release bar looks again every five minutes (it was every half hour) and on coming back to the tab, at most once a minute; a page left open through a release had gone without it for up to half an hour, longer in a background tab. A later release still updates the bar; ✕ puts off that release, not the next (it had silenced the bar for the life of the page).

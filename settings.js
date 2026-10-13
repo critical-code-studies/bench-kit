@@ -25,7 +25,8 @@
       '<p class="hint">Initials and a date are attached to every annotation, note and finding, so discussions can be followed. They are kept in this browser.</p>' +
       '<label>Initials <input id="set-initials" maxlength="4" placeholder="e.g. AB" autocomplete="off" spellcheck="false"></label>' +
       '<label>Name <input id="set-name" placeholder="optional" autocomplete="off"></label>' +
-      '<p class="hint set-msg" id="set-inimsg"></p>' + rows('you') + '</section>' +
+      '<p class="hint set-msg" id="set-inimsg"></p>' +
+      '<label class="check-row"><span><input type="checkbox" id="set-fresh"> Tell me when a newer release is live</span><span class="hint">A bar at the foot of the page, with a button to reload, when the bench has been updated since this page was opened.</span></label>' + rows('you') + '</section>' +
 
       '<section class="set-pane" data-sp="anno">' +
       '<p class="hint">' + (ST.groupHint || 'Annotations are shared through a private Hypothesis group. Paste the group link from your invitation (it fills in the group), and a personal API token (hypothes.is/account/developer). Without them, annotations are kept as drafts in this browser and can be exported or published later.') + '</p>' +
@@ -130,6 +131,7 @@
     swatches();
     SW.$('#set-figbg').value = SW.figBg();
     SW.$('#set-noteshade').checked = SW.store.get('noteShade', true);
+    SW.$('#set-fresh').checked = SW.store.get('freshBar', true) !== false;
     SW.$('#set-dev').checked = SW.dev();
     extra.forEach(function (r) { if (r.load) r.load(); });
     var fontSel = SW.$('#set-font'), size = SW.$('#set-size'), sizeOut = SW.$('#set-size-out');
@@ -142,6 +144,8 @@
       if (dlg.returnValue !== 'save') { SW.store.set('codeFont', was.font); SW.store.set('codeSize', was.size); SW.applyCodeText(); if (SW.theme() !== wasTheme) SW.setTheme(wasTheme); return; }
       SW.store.set('figbg', SW.$('#set-figbg').value);
       SW.store.set('noteShade', SW.$('#set-noteshade').checked);
+      SW.store.set('freshBar', SW.$('#set-fresh').checked);
+      if (!SW.$('#set-fresh').checked) SW.$$('.fresh-bar').forEach(function (b) { b.remove(); });
       extra.forEach(function (r) { if (r.save) r.save(); });
       SW.applyNoteShade();
       if (SW.dev() !== SW.$('#set-dev').checked) {

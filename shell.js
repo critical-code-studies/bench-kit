@@ -224,8 +224,8 @@
   // so run an older release than the one published. The page is asked for again, past the
   // browser's copy: a few seconds after opening, every five minutes, and on coming back to the
   // tab (at most once a minute). Where its ?v= is a later release, a bar offers to reload; a later
-  // release still updates the bar. ✕ puts off that release, not the next. SW.BENCH.freshness:
-  // false turns this off.
+  // release still updates the bar. ✕ puts off that release, not the next. On unless a reader turns
+  // it off in ⚙ Settings (freshBar); SW.BENCH.freshness: false turns it off for the bench.
   function newer(a, b) {
     var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
     for (var i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
@@ -235,6 +235,8 @@
     if (B.freshness === false || SW.VERSION === 'dev' || !/^https?:$/.test(location.protocol) || !root.fetch) return;
     var shown = SW.VERSION, put = SW.VERSION, last = 0, bar = null;
     function look() {
+      if (SW.store.get('freshBar', true) === false) { if (bar) { bar.remove(); bar = null; } return; }
+      if (bar && !bar.isConnected) { bar = null; shown = SW.VERSION; }   // taken away by ⚙ Settings
       if (Date.now() - last < 60000) return;
       last = Date.now();
       fetch(location.pathname + '?fresh=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
