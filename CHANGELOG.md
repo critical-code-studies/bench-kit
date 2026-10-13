@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: in side by side the panes' text carries its language too, an alternate's own `lang` or
+  the record's `language`; one renderer now serves the item view and both panes.
+
 ## 0.41.1 (2026-10-13)
 
 - Paratexts: switching to an alternate shows the alternate. The blob-URL cache was keyed by the

@@ -749,6 +749,10 @@
       /^audio\//.test(mime) ? 'audio' : /^video\//.test(mime) ? 'video' : /^text\//.test(mime) ? 'text' : 'file';
     return { code: it.code, title: it.title, file: a.file, mime: mime, kind: kind, size: a.size || 0, lang: a.lang };
   }
+  // The rendered text in its own language, wherever it is shown: an alternate's own `lang`, the
+  // record's `language` otherwise.
+  function langOf(it) { return it.lang || it.language || ''; }
+  function preHTML(it, t) { return '<pre class="px-text"' + (langOf(it) ? ' lang="' + SW.esc(langOf(it)) + '"' : '') + '>' + SW.esc(t) + '</pre>'; }
   function altNote(a) { return a.note || (a.by ? 'working translation, by ' + a.by + (a.date ? ', ' + a.date : '') : ''); }
   function altBar(it) {
     var esc = SW.esc, list = altList(it); if (!list.length) return '';
@@ -770,7 +774,7 @@
       else if (it.kind === 'video' || /^video\//.test(it.mime || '')) pv.innerHTML = '<video class="px-video" controls preload="metadata" src="' + u + '"></video>';
       else if (it.kind === 'image') zoomImage(it, pv, u);
       else if (it.kind === 'pdf') zoomPdf(it, pv, u);
-      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = '<pre class="px-text"' + (it.lang || it.language ? ' lang="' + esc(it.lang || it.language) + '"' : '') + '>' + esc(t) + '</pre>'; });
+      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = preHTML(it, t); });
       else pv.innerHTML = '<p class="hint">No preview for this kind of file: ⤓ Download to open it.</p>';
     }, function (e) { pv.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
   }
@@ -1109,7 +1113,7 @@
           v.img.onload = function () { v.laid = 0; place(v); };
           pdfjs().then(function (lib) { return pdfOpen(lib, u); }).then(function (doc) { v.doc = doc; turn(v, 1); }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; v.img = null; });
         }
-        else if (/^text\//.test(it.mime || '')) { box.classList.add('px-free'); fetch(u).then(function (r) { return r.text(); }).then(function (t) { box.innerHTML = '<pre class="px-text">' + esc(t) + '</pre>'; }); }
+        else if (/^text\//.test(it.mime || '')) { box.classList.add('px-free'); fetch(u).then(function (r) { return r.text(); }).then(function (t) { box.innerHTML = preHTML(it, t); }); }
         else box.innerHTML = '<p class="hint">No preview for this kind of file.</p>';
       }, function (e) { box.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
       return v;
