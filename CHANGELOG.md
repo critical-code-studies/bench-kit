@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `catalogue.js` (from the ELIZA bench's scripts catalogue): a table of what is known to have existed, held here or not, with search, filters, sorting, named subsets, links to the versions held, and a column for whether an entry is in the source the catalogue follows. Its styles are in `bench.css`.
 - `layers.js` (from the ELIZA bench): code in layers, with Read ▾ by layer, the stack of versions chosen, names looked up down the layers, ◀ ▶ history, the breadcrumb and a layer's forms. `read.js` takes its toolbar from it where the bench gives none. Its styles, and the name pop-up's hover-card classes (`.pop-what`, `.pop-sec`, `.pop-row`, `.pop-go`), are in `bench.css`.
 - `read.js`: a version opened at a line is drawn there: the listing goes to the selection before the browser paints, so it is never seen at the place the last version was scrolled to; a version opened with no line selected starts at its head.
 - `read.js`: a row in a name's pop-up selects its line, as a click on the line does, so the link follows.

@@ -1106,3 +1106,25 @@ ul.reading a { overflow-wrap: anywhere; }
 .pop a.pop-row code { font: 11.5px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pop .pop-more { color: var(--text-faint); font-size: 11.5px; padding: 2px 0; }
 .pop a.pop-jump { display: inline-block; margin-top: 6px; font-weight: 600; }
+
+/* a catalogue of what is known to have existed, held here or not (catalogue.js) */
+.catalogue h2 { margin: 0 0 6px; }
+.catalogue .cat-subset { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-top: 12px; }
+.catalogue .cat-subset .hint { flex: 1 1 360px; }
+.catalogue .cat-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 12px 0 10px; }
+.catalogue #cat-q { min-width: 220px; flex: 0 1 300px; }
+.catalogue .cat-count { margin-left: auto; }
+.catalogue .cat-wrap { overflow-x: auto; }
+.catalogue .cat-table { min-width: 820px; }
+.catalogue .cat-table th:not([data-cat-sort]) { cursor: default; }
+.catalogue .cat-file { min-width: 8em; max-width: 13em; font-weight: 600; }
+.catalogue .cat-table th { white-space: nowrap; }
+.catalogue .cat-desc { max-width: 42em; }
+.catalogue .cat-ref { max-width: 16em; }
+.catalogue .cat-year, .catalogue .cat-go { white-space: nowrap; }
+.catalogue .cat-go a { display: block; font-size: 12px; margin-top: 2px; }
+.catalogue .cat-go .cat-read { display: block; margin: 0 0 3px; font-size: 12px; }
+.catalogue tr.cat-held td { background: color-mix(in srgb, var(--amber) 7%, transparent); }
+.catalogue .cat-foot { margin-top: 14px; }
+.catalogue .badge.cat-in { color: var(--green); border-color: currentColor; }
+.catalogue .badge.cat-out { color: var(--amber); border-color: currentColor; }
