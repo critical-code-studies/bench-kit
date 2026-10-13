@@ -16,6 +16,9 @@
  *          (the version first chosen), more ([[pick, label, text, on]], or a function giving
  *          them: Read ▾ items of the layer's own, as a catalogue), note }], top first. A version's
  *          layer is v.layer; one with none (an output) is in no layer.
+ *   readOrder  [layer id]: the order of Read ▾'s submenus, by default the list's (which the stack,
+ *          its drawing and ?stack= links keep)
+ *   a layer's groups [{ label, note, ids | line }]: versions Read ▾ gathers in a submenu of their own
  *   shown(id, versions)  the versions Read ▾ lists under a layer (all of its own, by default):
  *          a bench's subset of them, which may bring in versions of no layer
  *   forms  { layer: { FORM: { re (a pattern for the line of the layer below that handles it),
@@ -178,18 +181,34 @@
 
   // ---------- Read ▾: each layer, and its versions ----------
   var M0 = B.menus || {};
+  // Read ▾: a submenu for each layer, in readOrder (else the layers' own order, which the stack and
+  // ?stack= links keep), each naming the version chosen in it; within, the versions a group names
+  // (groups: [{ label, note, ids | line }], line: a line of descent in SWVersions.LINES, so a
+  // grouping is stated once) in a submenu of their own, then the rest, then the layer's own items
+  function verItem(l, v, cur) {
+    return '<button data-pick="v:' + esc(v.id) + '"' + (v.id === cur ? ' class="on"' : '') + '><b>' + esc(v.label) + (stack[l.id] === v.id && v.id !== cur ? ' ·' : '') + '</b><span>' +
+      esc(v.build ? (v.medium || 'held') : 'lost: known from the record') + '</span></button>';
+  }
   function readMenu() {
-    return list().map(function (l, i) {
-      var ws = C().shown ? C().shown(l.id, versionsOf(l.id)) : versionsOf(l.id), cur = SW.state.v;
+    var cur = SW.state.v, order = (C().readOrder || []).map(byId).filter(Boolean);
+    list().forEach(function (l) { if (order.indexOf(l) < 0) order.push(l); });
+    return order.map(function (l) {
+      var ws = C().shown ? C().shown(l.id, versionsOf(l.id)) : versionsOf(l.id), used = {};
       var more = typeof l.more === 'function' ? l.more() : l.more || [];
-      return (i ? '<hr class="menu-rule">' : '') + '<div class="menu-group">' + esc(l.label) + (l.below ? ' · ' + esc(l.relation || 'on') + ' ' + esc((byId(l.below) || {}).label || '') : '') + '</div>' +
-        ws.map(function (v) {
-          return '<button data-pick="v:' + esc(v.id) + '"' + (v.id === cur ? ' class="on"' : '') + '><b>' + esc(v.label) + (stack[l.id] === v.id && v.id !== cur ? ' ·' : '') + '</b><span>' +
-            esc(v.build ? (v.medium || 'held') : 'lost: known from the record') + '</span></button>';
-        }).join('') +
-        more.map(function (m) { return '<button data-pick="' + esc(m[0]) + '"' + (m[3] ? ' class="on"' : '') + '><b>' + esc(m[1]) + '</b><span>' + esc(m[2] || '') + '</span></button>'; }).join('');
+      var groups = (l.groups || []).map(function (g) {
+        var line = g.line ? (V.LINES || []).filter(function (x) { return x.id === g.line; })[0] : null;
+        var gids = g.ids || (line ? line.ids : []), gv = ws.filter(function (v) { return gids.indexOf(v.id) >= 0; });
+        gv.forEach(function (v) { used[v.id] = 1; });
+        return gv.length ? SW.menuSub(esc(g.label), esc(g.note || gv.length + ' versions'), gv.map(function (v) { return verItem(l, v, cur); }).join(''), gv.some(function (v) { return v.id === cur; })) : '';
+      }).join('');
+      var rest = ws.filter(function (v) { return !used[v.id]; }).map(function (v) { return verItem(l, v, cur); }).join('');
+      var inner = '<div class="menu-group">' + esc(l.label) + (l.below ? ' · ' + esc(l.relation || 'on') + ' ' + esc((byId(l.below) || {}).label || '') : '') + '</div>' + groups + rest +
+        (more.length ? '<hr class="menu-rule">' + more.map(function (m) { return '<button data-pick="' + esc(m[0]) + '"' + (m[3] ? ' class="on"' : '') + '><b>' + esc(m[1]) + '</b><span>' + esc(m[2] || '') + '</span></button>'; }).join('') : '');
+      var chosen = V.byId(stack[l.id]);
+      return SW.menuSub(esc(l.label), esc(chosen ? chosen.label : l.note || ''), inner, ws.some(function (v) { return v.id === cur; }));
     }).join('');
   }
+
   B.menus = Object.assign({}, M0, {
     menu: function (which) { return which === 'read' ? readMenu() : (M0.menu ? M0.menu(which) : null); },
     pick: function (which, p) {

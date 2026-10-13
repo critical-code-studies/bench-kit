@@ -18,6 +18,10 @@
  *   pick(which, p)    a pick the bench handles itself (a graphic, a Versions item that
  *                     is not a view); true when it has
  *   on(which, p)      whether a Versions item is the one open, where it is not a view
+ * A menu's HTML may hold submenus, made with SW.menuSub(label, text, inner, on): an item that
+ * opens a list of its own beside it (on a pointer's rest, a click or a tap, or →; ← or Esc
+ * closes it), placed against the window so the menu's own scrolling cannot clip it, and opened in
+ * place on a narrow screen. Submenus nest.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
@@ -75,6 +79,57 @@
   SW.helpList = helpList;
 
   var tabMenu = null;
+  // ---------- submenus ----------
+  SW.menuSub = function (label, text, inner, on) {
+    return '<div class="menu-sub"><button class="menu-subopen' + (on ? ' on' : '') + '" aria-haspopup="menu" aria-expanded="false"><b>' + label + '</b>' +
+      (text ? '<span>' + text + '</span>' : '') + '<i class="menu-subcaret" aria-hidden="true">▸</i></button><div class="menu-subbody" role="menu" hidden>' + inner + '</div></div>';
+  };
+  function subOpen(sub, focus) {
+    var body = sub.querySelector(':scope > .menu-subbody'), btn = sub.querySelector(':scope > .menu-subopen'); if (!body || !body.hidden) { if (focus && body) { var f0 = body.querySelector('button'); if (f0) f0.focus(); } return; }
+    // the others at this level close
+    SW.$$(':scope > .menu-sub', sub.parentNode).forEach(function (o) { if (o !== sub) subClose(o); });
+    body.hidden = false; btn.setAttribute('aria-expanded', 'true'); sub.classList.add('open');
+    if (window.innerWidth < 640) { body.classList.add('inline'); body.style.cssText = ''; }
+    else {
+      body.classList.remove('inline');
+      var r = btn.getBoundingClientRect(), w = body.offsetWidth, h = body.offsetHeight;
+      var left = r.right + 2 + w > window.innerWidth - 6 ? Math.max(6, r.left - w - 2) : r.right + 2;
+      var top = Math.max(6, Math.min(r.top - 6, window.innerHeight - h - 6));
+      body.style.left = left + 'px'; body.style.top = top + 'px';
+    }
+    if (focus) { var f = body.querySelector('button'); if (f) f.focus(); }
+  }
+  function subClose(sub) {
+    var body = sub.querySelector(':scope > .menu-subbody'), btn = sub.querySelector(':scope > .menu-subopen'); if (!body || body.hidden) return;
+    SW.$$('.menu-sub', body).forEach(subClose);
+    body.hidden = true; btn.setAttribute('aria-expanded', 'false'); sub.classList.remove('open');
+  }
+  function wireSubs(el) {
+    var hover = window.matchMedia && window.matchMedia('(hover: hover)').matches, timers = new Map();
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('.menu-subopen'); if (!b) return;
+      e.stopPropagation(); var sub = b.parentNode, body = sub.querySelector(':scope > .menu-subbody');
+      if (body.hidden) subOpen(sub, e.detail === 0); else if (!hover) subClose(sub);
+    });
+    if (hover) {
+      el.addEventListener('mouseover', function (e) {
+        var sub = e.target.closest('.menu-sub'); if (!sub) return;
+        clearTimeout(timers.get(sub)); timers.set(sub, setTimeout(function () { subOpen(sub); }, 140));
+        // the open ones not on the pointer's way close, after a moment
+        SW.$$('.menu-sub.open', el).forEach(function (o) { if (!o.contains(e.target)) { clearTimeout(timers.get(o)); timers.set(o, setTimeout(function () { if (!o.matches(':hover')) subClose(o); }, 320)); } });
+      });
+    }
+    el.addEventListener('keydown', function (e) {
+      var b = document.activeElement, inSub = b && b.closest && b.closest('.menu-subbody');
+      if (e.key === 'ArrowRight' && b.classList.contains('menu-subopen')) { e.preventDefault(); subOpen(b.parentNode, true); }
+      else if ((e.key === 'ArrowLeft' || e.key === 'Escape') && inSub) {   // back out one level, to the item that opened it
+        var own = inSub.parentNode; e.preventDefault(); e.stopPropagation(); subClose(own); own.querySelector(':scope > .menu-subopen').focus();
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        var list = b.closest('.menu-subbody') || el, items = SW.$$(':scope > button, :scope > .menu-sub > .menu-subopen', list), i = items.indexOf(b);
+        if (i >= 0) { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus(); }
+      }
+    });
+  }
   function closeTabMenu() { if (!tabMenu) return; tabMenu.el.remove(); tabMenu.btn.setAttribute('aria-expanded', 'false'); tabMenu = null; }
   function item(h, on) { return '<button data-pick="' + SW.esc(h[0]) + '"' + (on ? ' class="on"' : '') + '><b>' + SW.esc(h[1]) + '</b><span>' + SW.esc(h[2]) + '</span></button>'; }
 
@@ -114,6 +169,8 @@
       el.style.left = Math.max(6, Math.min(r.left, window.innerWidth - el.offsetWidth - 6)) + 'px';
       btn.setAttribute('aria-expanded', 'true');
       tabMenu = { el: el, btn: btn };
+      wireSubs(el);
+      el.addEventListener('scroll', function () { SW.$$('.menu-sub.open', el).forEach(subClose); });   // a placed submenu would stay behind
       el.addEventListener('click', function (ev) {
         var t = ev.target.closest('[data-pick]');
         if (!t) return;

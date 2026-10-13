@@ -1181,3 +1181,14 @@ ul.reading a { overflow-wrap: anywhere; }
 .btn.flip .flip-dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid currentColor; }
 .btn.flip[aria-pressed="true"] { border-color: var(--kin); color: var(--kin); }
 .btn.flip[aria-pressed="true"] .flip-dot { background: var(--kin); border-color: var(--kin); }
+
+/* submenus (menus.js SW.menuSub): an item that opens a list beside it, placed against the window */
+.menu-sub { position: relative; }
+.lens-list .menu-subopen { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: center; }
+.lens-list .menu-subopen span { grid-column: 1; }
+.menu-subcaret { grid-column: 2; grid-row: 1 / span 2; font-style: normal; color: var(--text-faint); }
+.menu-sub.open > .menu-subopen { background: color-mix(in srgb, var(--beam) 16%, transparent); }
+.menu-subbody { position: fixed; z-index: 61; width: min(420px, 90vw); max-height: 70vh; overflow: auto; display: grid; gap: 2px; padding: 6px;
+  background: var(--menu-bg, var(--surface)); border: 1px solid var(--menu-line, var(--line)); border-radius: 6px; box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5); }
+.menu-subbody.inline { position: static; width: auto; max-height: none; box-shadow: none; border: 0; border-left: 2px solid var(--line); border-radius: 0; margin: 2px 0 4px 10px; padding: 0 0 0 4px; }
+.menu-subbody[hidden] { display: none; }
