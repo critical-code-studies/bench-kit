@@ -1,5 +1,15 @@
 # Changelog: bench-kit
 
+## 0.39.5 (2026-10-13)
+
+- Ratings no longer wait on the network. The panel had its own rate handler that ran first,
+  disabled the button and rebuilt the whole bar after a fetch and a write, so the stars only
+  moved once both returned; card and panel now share one handler that paints first and saves
+  after. Rapid clicks coalesce, so three stars in a row is one save rather than six round trips
+  in a queue.
+- A double-click anywhere in a find field selects the whole of it, in every bench and every
+  view, rather than the word under the pointer.
+
 ## 0.39.4 (2026-10-13)
 
 - Paratexts: the stars on a card are now live. Click one to rate the paratext without opening it,

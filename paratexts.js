@@ -426,9 +426,8 @@
       var rb = t.closest('[data-cardrate]');
       if (rb) {   // rate from the card itself, without opening it
         e.stopPropagation();
-        var row = rb.parentNode, want = +rb.dataset.cardrate, offNow = rb.classList.contains('on') && !SW.$$('[data-cardrate].on', row).slice(want).length;
-        SW.$$('[data-cardrate]', row).forEach(function (b) { b.classList.toggle('on', !offNow && +b.dataset.cardrate <= want); });
-        rateIt(rb.dataset.c, want);
+        paintStars(rb, 'cardrate');
+        rateIt(rb.dataset.c, +rb.dataset.cardrate);
         return;
       }
       var card = t.closest('[data-code]'); if (!card) return;
@@ -792,13 +791,7 @@
       var uc = e.target.closest('[data-uncoll]');
       if (uc) { var pr = outOf([code], uc.dataset.uncoll); colls0(); pr.then(colls0); return; }
       var rb = e.target.closest('[data-rate]');
-      if (rb) { var k = +rb.dataset.rate; rb.disabled = true; talk('rated', function (x, who) { x.rates = x.rates || {}; if (x.rates[who] === k) delete x.rates[who]; else x.rates[who] = k; }); return; }
-      var sb = e.target.closest('[data-rate]');
-      if (sb) {   // show the change at once; the save follows
-        var want = +sb.dataset.rate, row = sb.parentNode, have = SW.$$('[data-rate]', row);
-        var off = sb.classList.contains('on') && !SW.$$('[data-rate].on', row).slice(want).length;
-        have.forEach(function (b) { b.classList.toggle('on', !off && +b.dataset.rate <= want); });
-      }
+      if (rb) { paintStars(rb, 'rate'); rateIt(it.code, +rb.dataset.rate); return; }
       var eb = e.target.closest('[data-emoji]');
       if (eb) { var em = eb.dataset.emoji; eb.disabled = true; talk(em, function (x, who) { x.rx = x.rx || {}; var l = x.rx[em] = x.rx[em] || [], i = l.indexOf(who); if (i >= 0) l.splice(i, 1); else l.push(who); if (!l.length) delete x.rx[em]; }); return; }
       var a = e.target.closest('[data-a]'); if (!a) return;
@@ -834,20 +827,38 @@
       ' <select class="px-addc" title="Put it in a collection"><option value="">＋ Add to…</option>' + treeOpts(mine) + '<option value="_new">＋ A new collection…</option></select></span>';
   }
   function avg(it) { var r = it.rates || {}, k = Object.keys(r); return k.length ? { avg: k.reduce(function (t, x) { return t + r[x]; }, 0) / k.length, n: k.length, who: k.map(function (x) { return x + ' ' + '★'.repeat(r[x]); }) } : null; }
-  // a rating set from a card: the stars have already moved, this records it
+  // the stars move before anything is saved: a click should never wait on the network
+  function paintStars(btn, attr) {
+    var row = btn.parentNode, want = +btn.dataset[attr];
+    var on = SW.$$('[data-' + attr + '].on', row).length;
+    var off = btn.classList.contains('on') && on === want;   // the same star again clears it
+    SW.$$('[data-' + attr + ']', row).forEach(function (b) { b.classList.toggle('on', !off && +b.dataset[attr] <= want); });
+    return off ? 0 : want;
+  }
+  // Ratings coalesce. Each save is a fetch of the catalogue and a write back, so three quick
+  // clicks used to mean six round trips in a queue; now the last one within the window wins.
+  var rateWait = {}, rateTimer = null;
   function rateIt(code, k) {
     var who = me();
     if (who === '?') return SW.askInitials('Ratings are signed with your initials, and none are set.')
       .then(function (ini) { return ini ? rateIt(code, k) : null; });
-    return save('Paratext ' + code + ': rated, by ' + who, function (c) {
-      c.items.forEach(function (x) {
-        if (x.code !== code) return;
-        x.rates = x.rates || {};
-        if (x.rates[who] === k) delete x.rates[who]; else x.rates[who] = k;
-        if (!Object.keys(x.rates).length) delete x.rates;
-        x.updated = now(); x.updatedBy = who;
-      });
-    }).then(function () { refresh(); }, function (err) { SW.toast(err.message, 5000); refresh(); });
+    var it0 = byCode(code);
+    if (it0) { it0.rates = it0.rates || {}; if (it0.rates[who] === k) delete it0.rates[who]; else it0.rates[who] = k; }
+    rateWait[code] = it0 ? (it0.rates || {})[who] || 0 : k;
+    clearTimeout(rateTimer);
+    rateTimer = setTimeout(function () {
+      var want = rateWait; rateWait = {};
+      var codes = Object.keys(want); if (!codes.length) return;
+      save('Paratext ' + codes.join(', ') + ': rated, by ' + who, function (c) {
+        c.items.forEach(function (x) {
+          if (!(x.code in want)) return;
+          x.rates = x.rates || {};
+          if (want[x.code]) x.rates[who] = want[x.code]; else delete x.rates[who];
+          if (!Object.keys(x.rates).length) delete x.rates;
+          x.updated = now(); x.updatedBy = who;
+        });
+      }).catch(function (err) { SW.toast(err.message, 5000); refresh(); });
+    }, 700);
   }
   function summary(it) {
     var a = avg(it), rx = it.rx || {}, em = Object.keys(rx).filter(function (e) { return (rx[e] || []).length; }), nc = (it.comments || []).length;

@@ -442,4 +442,12 @@
       d.showModal();
     }
   };
+  // A double-click anywhere in a find field takes the whole of it, not the word under the
+  // pointer: these hold short queries that are usually replaced wholesale rather than edited.
+  document.addEventListener('dblclick', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'INPUT' || el.type !== 'search' || !el.value) return;
+    el.select();
+  });
+
 })(this);
