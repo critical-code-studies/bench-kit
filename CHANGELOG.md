@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.46.1 (2026-10-13)
 
 - `tools/release.js` sets the page's `bench-date` to the release's day (the local day), which Help ▾ and About show beside the version; it had been left as it was, and went stale.
 - `sitemap.js`: a submenu's opener heads its items in the site map, as a group heading did, so Help's and Graphics' groups are named there again.
