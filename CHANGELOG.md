@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.41.1 (2026-10-13)
 
 - Paratexts: switching to an alternate shows the alternate. The blob-URL cache was keyed by the
   record's code, and an alternate carries its record's code, so every translation was handed the
