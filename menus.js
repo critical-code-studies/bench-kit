@@ -119,7 +119,7 @@
         // a submenu reached: the openers crossed on the way to it do not open (the pointer's path
         // from an item to its list runs over its neighbours)
         timers.forEach(function (t, k) { if (k !== sub && !k.contains(sub)) clearTimeout(t); });
-        if (sub.classList.contains('open') && !e.target.closest('.menu-subopen')) return;
+        if (sub.classList.contains('open')) { clearTimeout(timers.get(sub)); if (!e.target.closest('.menu-subopen')) return; }   // back in an open one: it stays
         // a neighbour's list open: wait a little longer before switching, for a pointer on its way there
         var openNear = SW.$$(':scope > .menu-sub.open', sub.parentNode).some(function (o) { return o !== sub; });
         clearTimeout(timers.get(sub)); timers.set(sub, setTimeout(function () { subOpen(sub); }, openNear ? 260 : 120));
