@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: an item's alternates switch as the bench's other readings do. One alternate is a two-state flip, **Original | Translated** where its language differs from the record's, **Text | Scan** and the like where it does not; more than one is a row of short labels, a language among translations or the kind of thing (P-JUFYC: Scan | DE | EN). An alternate's `short` names it in either. Its label and note, which had been inside the button and ran off the edge, are a caption under the switcher, in full, for the reading showing; the original has none.
+- Paratexts: **Catalogued** is one line under More metadata: who catalogued it, in a box that can be corrected, and when it was last changed and by whom beside it.
+
 ## 0.49.0 (2026-10-13)
 
 - Paratexts: an item's Download, GitHub ↗, Open ↗ and Source ↗ under ☰ in its header, beside Share and ＋ My notes; the menu closes on a choice or a click elsewhere.

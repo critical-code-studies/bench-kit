@@ -573,8 +573,8 @@
     var filled = rest.filter(function (f) { var v = it[f[0]]; return Array.isArray(v) ? v.length : v; }).length;
     return '<div class="px-fields">' + FIELDS.filter(function (f) { return !f[4]; }).map(one).join('') + '</div>' +
       '<details class="px-dc"><summary>More metadata <span class="faint">(archive, rights, Dublin Core' + (filled ? '; ' + filled + ' filled' : '') + ')</span></summary><div class="px-fields">' + rest.map(one).join('') +
-      (it.code ? '<label><span>Catalogued by</span><input data-k="addedBy" value="' + SW.esc(it.addedBy || '') + '" placeholder="initials or a name"></label>' +
-        (it.updated && it.updated !== it.added ? '<label><span>Last changed</span><span class="px-fmt">' + SW.esc(SW.fmtDate(it.updated)) + ' by ' + SW.esc(it.updatedBy || '?') + '</span></label>' : '') : '') +
+      (it.code ? '<label><span>Catalogued</span><span class="px-catby"><input data-k="addedBy" value="' + SW.esc(it.addedBy || '') + '" placeholder="by whom">' +
+        (it.updated && it.updated !== it.added ? '<span class="faint">changed ' + SW.esc(SW.fmtDate(it.updated)) + ' by ' + SW.esc(it.updatedBy || '?') + '</span>' : '') + '</span></label>' : '') +
       (it.mime || it.size ? '<label><span>Format</span><span class="px-fmt">' + SW.esc([it.mime, fmtSize(it.size)].filter(Boolean).join(', ')) + '</span></label>' : '') + '</div></details>';
   }
   // Dublin Core (oai_dc) records, for the selection or one item
@@ -861,15 +861,40 @@
   function langOf(it) { return it.lang || it.language || ''; }
   function preHTML(it, t) { return '<pre class="px-text"' + (langOf(it) ? ' lang="' + SW.esc(langOf(it)) + '"' : '') + '>' + SW.esc(t) + '</pre>'; }
   function altNote(a) { return a.note || (a.by ? 'working translation, by ' + a.by + (a.date ? ', ' + a.date : '') : ''); }
+  // The switcher between a record and its alternates. One alternate: a two-state flip, as Normal |
+  // Expand and Kintsugi | Leiden are (Original | Translated where its language differs from the
+  // record's, Text | Scan and the like where it does not). More than one: a row of short labels,
+  // each a language among translations, or the kind of thing (Scan, Text). An alternate's own
+  // `short` names it in either. Its label (often a title) and note are a caption under the
+  // switcher, never inside it: "machine translation, unchecked" has to be seen where the text is.
+  function isTr(it, a) { var b = function (l) { return String(l || '').toLowerCase().split('-')[0]; }; return !!(a.lang && it.language && b(a.lang) !== b(it.language)); }
+  function kindWord(x) { return x.kind === 'pdf' || x.kind === 'image' ? 'Scan' : x.kind === 'audio' ? 'Audio' : x.kind === 'video' ? 'Video' : x.kind === 'text' || x.kind === 'software' || /^text\//.test(x.mime || '') ? 'Text' : 'File'; }
+  function altLabels(it) {
+    var list = altList(it), alts = list.map(function (a) { return altItem(it, a); }), anyTr = list.some(function (a) { return isTr(it, a); }), L;
+    if (list.length === 1) {
+      L = isTr(it, list[0]) ? ['Original', 'Translated'] : [kindWord(it), kindWord(alts[0])];
+      if (L[0] === L[1]) L = ['Original', list[0].label && list[0].label.length <= 24 ? list[0].label : 'Alternate'];
+    } else {
+      var lang = function (x, l) { return /^Text$/.test(kindWord(x)) && l ? l.toUpperCase() : kindWord(x); };
+      L = [anyTr ? lang(it, it.language) : kindWord(it)].concat(alts.map(function (x, i) { return anyTr ? lang(x, list[i].lang) : kindWord(x); }));
+      if (!anyTr) L = L.map(function (l, i) { return L.indexOf(l) !== L.lastIndexOf(l) ? (i ? (list[i - 1].label && list[i - 1].label.length <= 24 ? list[i - 1].label : l) : 'Original') : l; });
+    }
+    L = L.map(function (l, i) { return i && list[i - 1].short ? list[i - 1].short : l; });
+    return L.map(function (l, i) { return L.indexOf(l) !== i ? l + ' ' + (i + 1) : l; });
+  }
+  function altCaption(it, n) {
+    var a = altList(it)[n]; if (!a) return '';
+    var t = a.label ? '<i>' + SW.esc(a.label) + '</i>' : '', note = altNote(a);
+    return t + (t && note ? ': ' : '') + SW.esc(note);
+  }
   function altBar(it) {
     var esc = SW.esc, list = altList(it); if (!list.length) return '';
-    return '<div class="px-alts"><button class="btn ghost on" data-alt="-1" lang="' + esc(it.language || '') + '">' +
-      esc(it.language ? it.language.toUpperCase() : 'Original') + '</button>' +
-      list.map(function (a, i) {
-        var n = altNote(a);
-        return '<button class="btn ghost" data-alt="' + i + '" lang="' + esc(a.lang || '') + '" title="' + esc(n) + '">' +
-          esc(a.label || (a.lang || '').toUpperCase()) + (n ? ' <span class="faint px-altnote">' + esc(n) + '</span>' : '') + '</button>';
-      }).join('') + '</div>';
+    var L = altLabels(it), tip = function (n) { var a = list[n]; return a ? (a.label ? a.label + (altNote(a) ? ': ' : '') : '') + altNote(a) : 'The record’s own file'; };
+    if (list.length === 1) return '<button class="btn flip px-altflip" data-altflip data-v="-1" data-l0="' + esc(L[0]) + '" data-l1="' + esc(L[1]) + '" aria-pressed="false" title="' + esc(tip(-1)) + '. Click for ' + esc(L[1]) + '."><span class="flip-dot" aria-hidden="true"></span>' + esc(L[0]) + '</button>';
+    return '<span class="seg-btns px-alts" role="group" aria-label="Readings">' + L.map(function (l, i) {
+      var a = list[i - 1], lg = i ? a.lang : it.language;
+      return '<button class="btn ghost' + (i ? '' : ' on') + '" data-alt="' + (i - 1) + '"' + (lg ? ' lang="' + esc(lg) + '"' : '') + ' title="' + esc(tip(i - 1)) + '">' + esc(l) + '</button>';
+    }).join('') + '</span>';
   }
 
   // ---------- lacunae: a paratext's gaps, drawn where they are (kintsugi) ----------
@@ -1059,7 +1084,7 @@
     d.innerHTML = '<div class="tray-bighead"><span class="px-code mono" data-copy="' + esc(it.code) + '" title="Its code: click to copy">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +
       '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + fileMenu(it, gh0) + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
       '<div class="px-cols"><div class="px-view' + (altList(it).length || gapCount(it) ? ' px-withalts' : '') + '">' +
-      (altList(it).length || gapCount(it) ? '<div class="px-viewbar">' + (gapCount(it) ? SW.flip.html('gaps', [['kintsugi', 'Kintsugi', 'Gaps drawn as seams in gold, with what is known of each.'], ['leiden', 'Leiden', 'Gaps in Leiden’s notation, as a quotation or an export carries them.']]) : '') + altBar(it) + '</div>' : '') +
+      (altList(it).length || gapCount(it) ? '<div class="px-viewbar">' + (gapCount(it) ? SW.flip.html('gaps', [['kintsugi', 'Kintsugi', 'Gaps drawn as seams in gold, with what is known of each.'], ['leiden', 'Leiden', 'Gaps in Leiden’s notation, as a quotation or an export carries them.']]) : '') + altBar(it) + (altList(it).length ? '<p class="px-altcap" aria-live="polite" hidden></p>' : '') + '</div>' : '') +
       '<div class="px-pv"><p class="hint">Opening…</p></div></div><div class="px-side">' + fieldsHTML(it) +
       '<div class="px-colls">' + collsHTML(it) + '</div>' +
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
@@ -1074,9 +1099,14 @@
       SW.$$('details.px-filemenu[open]', d).forEach(function (x) { if (!x.contains(e.target) || e.target.closest('.px-menu a')) setTimeout(function () { x.open = false; }, 0); });
     });
     d.addEventListener('click', function (e) {   // data-alt, never data-c: the list reads [data-c] as a collection row
-      var ab = e.target.closest && e.target.closest('[data-alt]'); if (!ab) return;
-      var n = +ab.dataset.alt, list = altList(it);
-      SW.$$('[data-alt]', d).forEach(function (b) { b.classList.toggle('on', b === ab); });
+      var fb = e.target.closest && e.target.closest('[data-altflip]'), ab = !fb && e.target.closest && e.target.closest('[data-alt]'); if (!fb && !ab) return;
+      var n = fb ? (fb.dataset.v === '-1' ? 0 : -1) : +ab.dataset.alt, list = altList(it), cap = SW.$('.px-altcap', d);
+      if (fb) {
+        fb.dataset.v = n; fb.setAttribute('aria-pressed', n < 0 ? 'false' : 'true');
+        fb.innerHTML = '<span class="flip-dot" aria-hidden="true"></span>' + SW.esc(fb.dataset[n < 0 ? 'l0' : 'l1']);
+        fb.title = (n < 0 ? 'The record’s own file. ' : '') + 'Click for ' + fb.dataset[n < 0 ? 'l1' : 'l0'] + '.';
+      } else SW.$$('[data-alt]', d).forEach(function (b) { b.classList.toggle('on', b === ab); });
+      if (cap) { cap.innerHTML = altCaption(it, n); cap.hidden = !cap.innerHTML; }
       showFile(n < 0 ? it : altItem(it, list[n]), SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
     });
     citedIn(code, SW.$('.px-cited', d));

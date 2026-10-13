@@ -142,6 +142,9 @@ dialog.px-wdbox { width: min(94vw, 520px); }
 .px-dc > summary { cursor: pointer; font-size: 12.5px; color: var(--text-dim); margin-bottom: 6px; }
 .px-fields select { font: 13px var(--sans); padding: 3px 6px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
 .px-fmt { color: var(--text); font-size: 12.5px; }
+.px-catby { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.px-catby input { width: 7em; flex: none; }
+.px-catby .faint { font-size: 12px; }
 .guidehelp .gh-toc { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
 .guidehelp .gh-toc a { color: var(--beam); }
 .guidehelp section p { max-width: 75ch; }
@@ -207,10 +210,12 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-cardrate .px-cavg { margin-left: 3px; font-size: 11px; }
 
 /* a paratext's alternates: a translation or transcription beside the original */
-.px-alts { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 6px; align-items: baseline; }
-.px-alts .btn { font-size: 11.5px; padding: 1px 8px; }
+.px-alts { flex-wrap: wrap; margin: 0 0 6px; }
+.px-alts .btn { font-size: 11.5px; padding: 1px 8px; white-space: nowrap; }
 .px-alts .btn.on { border-color: var(--beam); background: color-mix(in srgb, var(--beam) 16%, transparent); }
-.px-altnote { font-size: 10.5px; margin-left: 4px; }
+/* what the reading showing is, under the switcher: its title and its note, in full */
+.px-altcap { flex-basis: 100%; margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-dim); }
+.px-altcap i { color: var(--text); }
 .px-pv { min-height: 0; }
 /* With a language row above it, the view is two rows and the preview is the one that scrolls.
    Centring a tall item in a capped row puts its top above the row, out of scroll's reach, and
