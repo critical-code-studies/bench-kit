@@ -213,6 +213,11 @@ dialog.px-sbs { width: min(98vw, 1600px); }
 .px-alts .btn.on { border-color: var(--beam); background: color-mix(in srgb, var(--beam) 16%, transparent); }
 .px-altnote { font-size: 10.5px; margin-left: 4px; }
 .px-pv { min-height: 0; }
+/* With a language row above it, the view is two rows and the preview is the one that scrolls.
+   Centring a tall item in a capped row puts its top above the row, out of scroll's reach, and
+   the middle of the text then paints over the row. */
+.px-view.px-withalts { grid-template-rows: auto minmax(0, 1fr); }
+.px-view.px-withalts > .px-pv { align-self: stretch; justify-self: stretch; display: grid; place-items: center; overflow: auto; }
 
 /* lacunae (paratexts.js gaps): the seam in gold, after kintsugi; one mark means one thing across the
    bench (Help ▸ Marks and conventions). An open seam is a dashed band; a fill sits inside it, from
