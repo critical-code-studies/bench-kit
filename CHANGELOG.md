@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.47.0 (2026-10-13)
 
 - The newer-release bar compares the version on the live page's `kit/base.js`, not the page's first `?v=`: SHRDLU's sharing image (`DB-Card.jpg?v=2`) came first, so every SHRDLU page said a release "v2" was live, at every load.
 - Read ▾ by default (a bench without layers): the versions in the version picker's groups, each opening in Read, another reading of a version under it in a submenu; more than ten versions take a submenu for each group, naming its versions.
