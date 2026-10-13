@@ -813,7 +813,7 @@
   // one line for a record or an export: lacuna: <kind> at <where>; <cause> (and its fill)
   function gapLine(g) {
     var f = g.fill && g.fill.text ? g.fill : null;
-    return 'lacuna ' + gapLeiden(g) + ': ' + (g.kind || 'missing') + ' at ' + gapWhere(g) + (g.cause ? '; ' + g.cause : '') + (f ? ' (' + fillLine(f) + ')' : '');
+    return 'lacuna ' + gapLeiden(g) + ': ' + (g.kind || 'missing') + ', ' + gapWhere(g) + (g.cause ? '; ' + g.cause : '') + (f ? ' (' + fillLine(f) + ')' : '');
   }
   // the seam: a band in the place of what is lost, with how much and why; a fill inside it, gold
   // (yobitsugi from another copy, dashed; kake by conjecture, solid), never in the text itself
@@ -821,7 +821,7 @@
     var esc = SW.esc, f = g.fill && g.fill.text ? g.fill : null, ext = gapExtent(g), lang = it ? langOf(it) : '';
     return '<div class="px-gap px-gap-' + esc(g.kind || 'missing') + '" data-gap="' + esc(g.id || '') + '" data-gi="' + (i == null ? '' : i) + '" data-leiden="' + esc(gapLeiden(g)) + '" role="note" aria-label="' + esc(gapLine(g)) + '">' +
       '<div class="px-gaphead"><b>' + esc(GAPKIND[g.kind] || 'Lost') + '</b>' + (ext ? ' · ' + esc(ext) : '') + ' · ' + esc(gapWhere(g)) + (g.cause ? ' · ' + esc(g.cause) : '') +
-      ' <span class="px-gapl mono" title="In an export (Leiden): Help ▸ Marks and conventions">' + esc(gapLeiden(g)) + '</span></div>' +
+      ' <span class="px-gapl mono" title="In an export (Leiden): Help ▸ Marks and conventions">' + esc(f ? (f.basis === 'witness' ? '[…] supplied' : '[…] restored') : gapLeiden(g)) + '</span></div>' +
       (f ? '<div class="px-gapfill px-gapfill-' + (f.basis === 'witness' ? 'witness' : 'conjecture') + '"><div class="px-gapsrc">' + esc(f.basis === 'witness' ? 'Restored from another copy' : 'Restored by conjecture') + ': ' + esc(fillLine(f)) + '</div><pre' + (lang ? ' lang="' + esc(lang) + '"' : '') + '>' + esc(f.text) + '</pre></div>'
         : '<div class="px-gapnone">Not restored: the seam is left open.</div>') +
       (g.note ? '<details class="px-gapnote"><summary>What is known of it</summary><p>' + esc(g.note) + '</p></details>' : '') + '</div>';
