@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.46.0 (2026-10-13)
 
 - Help ▾ and Graphics ▾ in submenus, one for each group, its first items named under it (`SW.menuFirst`); Help's long first group is two, Reading the bench and Annotating and sharing. The version line stays at Help's foot.
 
