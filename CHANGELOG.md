@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts, the grid: each thing in the same place on every card, for scanning. The code and the rating on the top line (the rating at its right, with reactions and comments), the title (three lines at most, the whole in the card's tooltip), the type and the date on one line (a date never broken), the tags (two lines at most), the collections at the foot. The rating had sat among the tags, wherever the title's length put it, and a date could break across lines.
+
 ## 0.53.0 (2026-10-13)
 
 - Paratexts, Add an item › A link: **Shows as** has Text file, Code and Other beside Video, Audio, Image, PDF and Web page. A linked text or code file is shown as text where the place it is held lets the browser read it (GitHub's raw files do), with its link under it; elsewhere, and for Other, the link. The address suggests the kind (.txt, .md, .srt; .bas, .lisp, .mad, .c, .py and other source files), and Code suggests the Type Software or source code.

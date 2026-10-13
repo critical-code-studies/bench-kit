@@ -354,8 +354,14 @@
     var esc = SW.esc;
     return '<ul class="px-grid px-' + esc(VW.size || 'm') + '">' + l.map(function (it) {
       return '<li class="px-card" data-code="' + esc(it.code) + '" tabindex="0" draggable="true" title="Open: ' + esc(it.title) + '"><button class="px-pick" data-pick aria-pressed="false" title="Select (or ⌘-click; ⇧-click for a run)"></button><div class="px-thumb" data-kind="' + esc(it.kind) + '">' + thumb(it) + '</div>' +
-        '<div class="px-meta"><span class="px-code mono">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' + (it.date ? ' <span class="faint">' + esc(it.date) + '</span>' : '') +
-        '<div class="px-tags">' + summary(it) + (it.tags || []).map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join(' ') + (it.versions || []).map(function (v) { return ' <span class="fd-tag px-v">' + esc(vShort(v)) + '</span>'; }).join('') + collChips(it) + '</div></div></li>';
+        // each thing in its own place on every card, so the eye finds it when scanning: the code and
+        // the rating on the top line, the title (three lines at most), the type and date, the tags,
+        // and the collections at the foot
+        '<div class="px-meta"><div class="px-ctop"><span class="px-code mono">' + esc(it.code) + '</span>' + summary1(it) + '</div>' +
+        '<b class="px-ctitle">' + esc(it.title) + '</b>' +
+        '<div class="px-cline">' + ((genreOf(it) || [])[1] ? '<span class="px-s px-genre">' + esc(genreOf(it)[1]) + '</span>' : '') + (it.date ? '<span class="px-cdate">' + esc(it.date) + '</span>' : '') + gapChips(it) + '</div>' +
+        '<div class="px-tags">' + (it.tags || []).map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join('') + (it.versions || []).map(function (v) { return '<span class="fd-tag px-v">' + esc(vShort(v)) + '</span>'; }).join('') + '</div>' +
+        (inColl(it).some(function (id) { return id !== F.c; }) ? '<div class="px-cfoot">' + collChips(it) + '</div>' : '') + '</div></li>';
     }).join('') + '</ul>';
   }
   var COLS = [['code', 'Code'], ['title', 'Title'], ['genre', 'Type'], ['date', 'Made'], ['creator', 'Creator'], ['kind', 'Kind'], ['size', 'Size'], ['rating', '★'], [null, 'Collections'], ['added', 'Accessioned']];
@@ -1253,11 +1259,12 @@
   }
   // after a save: the list and the open panel from the catalogue, with any rating still waiting
   function settle() { applyWanted(); if (!rateTimer) refresh(); Object.keys(pendingRates).length ? Object.keys(pendingRates).forEach(showRating) : redrawTalk(); }
-  function summary(it) {
+  function summary(it) { return gapChips(it) + summary0(it); }
+  function gapChips(it) {
     var gn = gapCount(it), q = (F.q || '').toLowerCase();
     var inFill = q && gapHay(it, true).toLowerCase().indexOf(q) >= 0 && [it.code, it.title, it.description, gapHay(it)].join(' ').toLowerCase().indexOf(q) < 0;
     return (gn ? '<span class="px-s px-gapn" title="' + SW.esc(gapsAll(it).map(gapLine).join('\n')) + '">' + gn + ' gap' + (gn > 1 ? 's' : '') + '</span>' : '') +
-      (inFill ? '<span class="px-s px-gapflag" title="The words searched for are in a restoration, not in the transmitted text">found in a restoration</span>' : '') + summary0(it);
+      (inFill ? '<span class="px-s px-gapflag" title="The words searched for are in a restoration, not in the transmitted text">found in a restoration</span>' : '');
   }
   function summary0(it) {
     var gl = (genreOf(it) || [])[1];
