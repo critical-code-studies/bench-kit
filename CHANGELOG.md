@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.44.1 (2026-10-13)
 
 - Help ▸ Paratexts: **Getting access** now carries the token form itself, with the step GitHub will
   not take from a link (Repository access ▸ Only select repositories ▸ the repository) called out,
