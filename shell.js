@@ -235,7 +235,9 @@
     function look() {
       if (told) return;
       fetch(location.pathname + '?fresh=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
-        var m = /\?v=([0-9][0-9.]*)"/.exec(t || '');
+        // the version on the kit's own base.js, which SW.VERSION is read from: a page's other ?v=
+        // (an image's, a stylesheet of the site's) is not the bench's release
+        var m = /kit\/base\.js\?v=([0-9][0-9.]*)"/.exec(t || '');
         if (!m || !newer(m[1], SW.VERSION) || told) return;
         told = true;
         var bar = SW.el('div', { class: 'fresh-bar', role: 'status' });
