@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.53.4 (2026-10-13)
 
 - Ratings: a star given is filled in gold, a star not given is an outline, on the paratext cards and wherever a rating is set (the item's record, annotations). On the light themes the pale fill of an unrated star could not be told from the gold.
 
