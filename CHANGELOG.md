@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Help ▸ Marks and conventions: the abbreviation row no longer says a bench writes MAD's contractions out with Normalised text; none does yet.
+
 ## 0.42.0 (2026-10-13)
 
 - Paratexts: **lacunae**. A record or an alternate carries `gaps: [{ id, at, kind, cause, note, extent, label, fill }]` (at: `{page, printed}`, `{pages}`, `{lines}`, `{after}`, `{t}` or `{bytes}`; kind: missing, illegible, redacted, damaged, withheld; fill: `{text, basis: 'witness' | 'conjecture', by, date, source}`). Each is drawn where it is, as a seam in kintsugi's gold, not closed up: in a text, a band in place of the lines, with the kind, the extent, the place, the cause and the note behind it; over a PDF page that failed, with the page counter saying so; on a strip under audio and video, said aloud when playback reaches it. A fill sits inside its seam, never in the text, from another copy (dashed) or by conjecture (solid), with its source. A strip above each witness goes to its gaps. A selection copied across a seam takes its Leiden form. The card counts the gaps; a search reads their place, cause and note, and a match only in a restoration is flagged. Dublin Core, CSL-JSON and RIS carry each loss once (a shared id is one loss), in Leiden, a loss shared by several witnesses placed in each: `lacuna [--- c. 46 lines ---]: missing, after line 1204, the original; printed p. 219 (page 29 of the file), The scan; The camera failed on this page.`

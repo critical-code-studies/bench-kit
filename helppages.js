@@ -332,7 +332,7 @@
       'A typist’s slip kept as typed.'],
     ['expanded', '<span class="mk-exp">W’R</span>', 'W(HENEVE)R',
       'An abbreviation written out in full.', '',
-      'MAD’s short keywords, read in full with Normalised text.'],
+      'MAD’s contracted statements written out (W’R for WHENEVER), where a bench offers it.'],
     ['vacat', '<span class="mk-vac">vac.</span>', 'vac.',
       'Space left blank in the source.', '',
       'A blank card or line in a listing.'],
