@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## 0.39.4 (2026-10-13)
+
+- Paratexts: the stars on a card are now live. Click one to rate the paratext without opening it,
+  click the same star again to take the rating back. The card shows your own rating and the crew's
+  average beside it, and the stars fill before the save returns.
+
 ## 0.39.3 (2026-10-13)
 
 - Paratexts, the item panel: only Title, Date, Creator, Source, Description and Tags stay in

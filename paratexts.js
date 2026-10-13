@@ -423,6 +423,14 @@
       var th = t.closest('th[data-sort]');
       if (th) { var k = th.dataset.sort; setView(VW.sort === k ? { dir: -(VW.dir || 1) } : { sort: k, dir: defDir(k) }); var ss = SW.$('[data-px="sort"]', body); if (ss) ss.value = VW.sort; paintList(body); return; }
       if (crow && !t.closest('.px-cedit')) { setF('c', crow.dataset.c); sel = {}; editing = null; paintNav(body); paintList(body); return; }
+      var rb = t.closest('[data-cardrate]');
+      if (rb) {   // rate from the card itself, without opening it
+        e.stopPropagation();
+        var row = rb.parentNode, want = +rb.dataset.cardrate, offNow = rb.classList.contains('on') && !SW.$$('[data-cardrate].on', row).slice(want).length;
+        SW.$$('[data-cardrate]', row).forEach(function (b) { b.classList.toggle('on', !offNow && +b.dataset.cardrate <= want); });
+        rateIt(rb.dataset.c, want);
+        return;
+      }
       var card = t.closest('[data-code]'); if (!card) return;
       if (t.closest('[data-pick]') || e.metaKey || e.ctrlKey || e.shiftKey) { pick(card.dataset.code, e.shiftKey); selUpdate(body); return; }
       openItem(card.dataset.code);
@@ -826,9 +834,27 @@
       ' <select class="px-addc" title="Put it in a collection"><option value="">＋ Add to…</option>' + treeOpts(mine) + '<option value="_new">＋ A new collection…</option></select></span>';
   }
   function avg(it) { var r = it.rates || {}, k = Object.keys(r); return k.length ? { avg: k.reduce(function (t, x) { return t + r[x]; }, 0) / k.length, n: k.length, who: k.map(function (x) { return x + ' ' + '★'.repeat(r[x]); }) } : null; }
+  // a rating set from a card: the stars have already moved, this records it
+  function rateIt(code, k) {
+    var who = me();
+    if (who === '?') return SW.askInitials('Ratings are signed with your initials, and none are set.')
+      .then(function (ini) { return ini ? rateIt(code, k) : null; });
+    return save('Paratext ' + code + ': rated, by ' + who, function (c) {
+      c.items.forEach(function (x) {
+        if (x.code !== code) return;
+        x.rates = x.rates || {};
+        if (x.rates[who] === k) delete x.rates[who]; else x.rates[who] = k;
+        if (!Object.keys(x.rates).length) delete x.rates;
+        x.updated = now(); x.updatedBy = who;
+      });
+    }).then(function () { refresh(); }, function (err) { SW.toast(err.message, 5000); refresh(); });
+  }
   function summary(it) {
     var a = avg(it), rx = it.rx || {}, em = Object.keys(rx).filter(function (e) { return (rx[e] || []).length; }), nc = (it.comments || []).length;
-    return (a ? '<span class="px-s">' + SW.stars(a.avg, (Math.round(a.avg * 10) / 10) + ' from ' + a.n + ': ' + a.who.join('; ')) + '</span>' : '') +
+    var mine = me(), mr = (it.rates || {})[mine] || 0;
+    return '<span class="px-s px-cardrate" title="' + SW.esc(a ? (Math.round(a.avg * 10) / 10) + ' from ' + a.n + ': ' + a.who.join('; ') : 'Rate it, one to three stars') + '">' +
+      [1, 2, 3].map(function (k) { return '<button class="px-cs' + (mr >= k ? ' on' : '') + '" data-cardrate="' + k + '" data-c="' + SW.esc(it.code) + '" title="' + k + ' star' + (k > 1 ? 's' : '') + '">\u2605</button>'; }).join('') +
+      (a ? '<span class="faint px-cavg">' + (Math.round(a.avg * 10) / 10) + '</span>' : '') + '</span>' +
       (em.length ? '<span class="px-s">' + em.map(function (e) { return e + (rx[e].length > 1 ? '<sup>' + rx[e].length + '</sup>' : ''); }).join('') + '</span>' : '') +
       (nc ? '<span class="px-s">💬 ' + nc + '</span>' : '');
   }
