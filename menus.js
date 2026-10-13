@@ -35,16 +35,16 @@
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
     var ex = (B.refHelp || {}).example;
-    return [['Getting started', [['tour', 'Take the welcome tour', 'A few stops through the bench'],
+    return [['Reading the bench', [['tour', 'Take the welcome tour', 'A few stops through the bench'],
                                  ['refs', 'Referencing and versions', ex ? 'How the bench cites a source, as ' + ex : 'How the bench cites a source']]
                                 .concat(B.reading ? [['reading', 'What you should read', (B.reading || {}).menu || 'The reading behind the bench']] : [])
                                 .concat(B.cards ? [['cards', 'Reconstruction cards', (B.cards || {}).menu || 'What the bench does to each version to read and run it']] : [])
                                 .concat([['marks', 'Marks and conventions', 'Losses, restorations and doubtful readings: the marks, and their Leiden forms']])
-                                .concat([['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
-                                         ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
-                                         ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
-                                         ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']])
                                 .concat(B.sitemap ? [['sitemap', 'Site map', 'Every view and version as a plain link']] : [])],
+            ['Annotating and sharing', [['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
+                                        ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
+                                        ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
+                                        ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']]],
             ['Your bench', [['settings', 'Settings', 'Initials, group, theme, fonts'],
                             ['backup', 'Back up everything', 'Notes, drafts, settings and findings in one file'],
                             ['restore', 'Restore from a backup…', 'Brings back notes and drafts beside those here']]],
@@ -131,15 +131,16 @@
     });
   }
   function closeTabMenu() { if (!tabMenu) return; tabMenu.el.remove(); tabMenu.btn.setAttribute('aria-expanded', 'false'); tabMenu = null; }
+  // what a submenu holds, in brief: its first items' names
+  function firstOf(list) { return list.slice(0, 3).map(function (h) { return h[1].replace(/ ↗$/, ''); }).join(', ') + (list.length > 3 ? '…' : ''); }
+  SW.menuFirst = firstOf;
   function item(h, on) { return '<button data-pick="' + SW.esc(h[0]) + '"' + (on ? ' class="on"' : '') + '><b>' + SW.esc(h[1]) + '</b><span>' + SW.esc(h[2]) + '</span></button>'; }
 
   function menuHTML(which) {
     if (which === 'help') {
       var dm = document.querySelector('meta[name="bench-date"]');
-      // grouped, with a divider and a small heading between the groups; About the bench last
-      return helpList().map(function (g, i) {
-        return (i ? '<hr class="menu-rule">' : '') + '<div class="menu-group">' + SW.esc(g[0]) + '</div>' + g[1].map(function (h) { return item(h); }).join('');
-      }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
+      // a submenu for each group, its first items named under it; the bench's version at the foot
+      return helpList().map(function (g) { return SW.menuSub(SW.esc(g[0]), SW.esc(firstOf(g[1])), g[1].map(function (h) { return item(h); }).join('')); }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }
     if (which === 'versions') return (H().versions || VERSIONS).map(function (h) {
       var on = H().on && H().on(which, h[0]); if (on == null && SW.lenses) on = SW.lenses.on(which, h[0]); if (on == null) on = SW.state.tab === h[0];

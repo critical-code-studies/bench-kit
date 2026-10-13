@@ -83,7 +83,16 @@
   SW.graphics = {
     render: function () { if (build && SW.state.tab === 'graphics') render(); },
     // Graphics ▾ in the tab row (kit/menus.js)
-    menuHTML: function (which) { return which === 'graphics' && B.graphics ? items('data-pick', SW.state.tab === 'graphics' ? current() : null) : null; },
+    // Graphics ▾: a submenu for each group (its first graphics named under it), the ungrouped as they are
+    menuHTML: function (which) {
+      if (which !== 'graphics' || !B.graphics) return null;
+      var on = SW.state.tab === 'graphics' ? current() : null, groups = C().groups || [['', list().map(function (g) { return g[0]; })]];
+      return groups.map(function (grp) {
+        var its = grp[1].map(item).filter(Boolean); if (!its.length) return '';
+        var html = its.map(function (g) { return '<button data-pick="' + g[0] + '"' + (g[0] === on ? ' class="on"' : '') + '><b>' + esc(g[1]) + '</b><span>' + esc(g[2]) + '</span></button>'; }).join('');
+        return grp[0] && SW.menuSub ? SW.menuSub(esc(grp[0]), esc(SW.menuFirst ? SW.menuFirst(its) : ''), html, its.some(function (g) { return g[0] === on; })) : html;
+      }).join('');
+    },
     pick: function (which, p) { if (which !== 'graphics' || !valid(p)) return false; SW.openGraphic(p); return true; }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

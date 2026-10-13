@@ -675,7 +675,7 @@ li.fd.folded > :not(.fd-head) { display: none; }
 li.fd.folded { padding-bottom: 2px; }
 .tab-menu .menu-group, .tab-menu .menu-rule { grid-column: 1 / -1; }
 /* the Graphics menu: its groups in two columns */
-.tab-menu[data-w="graphics"] { width: min(760px, 94vw); display: grid; grid-template-columns: 1fr 1fr; gap: 0 6px; }
+.tab-menu[data-w="graphics"] { width: min(420px, 92vw); display: grid; grid-template-columns: 1fr; gap: 2px; }   /* a submenu for each group */
 /* assembly errors, explained */
 button.badge.err { cursor: pointer; font: 11px/1.4 var(--mono); background: none; vertical-align: middle; white-space: nowrap; }
 button.badge.err:hover { filter: brightness(1.2); }
