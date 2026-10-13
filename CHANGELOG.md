@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts, Add an item › A link: **Shows as** has Text file, Code and Other beside Video, Audio, Image, PDF and Web page. A linked text or code file is shown as text where the place it is held lets the browser read it (GitHub's raw files do), with its link under it; elsewhere, and for Other, the link. The address suggests the kind (.txt, .md, .srt; .bas, .lisp, .mad, .c, .py and other source files), and Code suggests the Type Software or source code.
+
 ## 0.52.0 (2026-10-13)
 
 - ⚙ Settings › You: **Tell me when a newer release is live**, on by default. Turned off, the newer-release bar no longer appears in that browser (kept as `freshBar`), and one showing goes on Save. `SW.BENCH.freshness: false` still turns it off for a whole bench.

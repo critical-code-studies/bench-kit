@@ -250,7 +250,7 @@
       var t = String(a.title).toLowerCase(), u = String(b.title).toLowerCase(); return t < u ? -1 : t > u ? 1 : 0;
     });
   }
-  var ICON = { pdf: '📄', image: '🖼', text: '📝', audio: '🔊', video: '🎞', link: '🔗', file: '📎' };
+  var ICON = { pdf: '📄', image: '🖼', text: '📝', software: '⌨', audio: '🔊', video: '🎞', link: '🔗', file: '📎', other: '📎' };
   function thumb(it) { return it.kind === 'image' && urls[ukey(it)] ? '<img alt="" src="' + urls[ukey(it)] + '">' : ICON[it.kind] || ICON.file; }
   function fmtSize(n) { return !n ? '' : n < 1e6 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; }
   function render() {
@@ -548,7 +548,7 @@
   // a first guess from the file or the link, only where none is given
   function guessGenre(mime, kind) {
     var m = String(mime || ''), k = kind || '';
-    return /^image\//.test(m) || k === 'image' ? 'photo' : /^audio\//.test(m) || k === 'audio' ? 'audio' : /^video\//.test(m) || k === 'video' ? 'video' : k === 'link' ? 'webpage' : '';
+    return /^image\//.test(m) || k === 'image' ? 'photo' : /^audio\//.test(m) || k === 'audio' ? 'audio' : /^video\//.test(m) || k === 'video' ? 'video' : k === 'link' ? 'webpage' : k === 'software' ? 'software' : '';
   }
   // The record: [key, label, kind, placeholder, group]. The 'dc' group, the rest of Dublin Core's fifteen
   // elements, folds away under More metadata; the archive fields say where the original is kept.
@@ -600,7 +600,7 @@
     });
   }
   function dateParts(d) { var m = /^(\d{4})(?:-(\d{1,2})(?:-(\d{1,2}))?)?/.exec(String(d || '')); return m ? [m.slice(1).filter(Boolean).map(Number)] : null; }
-  function dcType(it) { return it.type || (genreOf(it) || [])[2] || ({ image: 'StillImage', pdf: 'Text', text: 'Text', video: 'MovingImage', audio: 'Sound' })[it.kind] || ''; }
+  function dcType(it) { return it.type || (genreOf(it) || [])[2] || ({ image: 'StillImage', pdf: 'Text', text: 'Text', software: 'Software', video: 'MovingImage', audio: 'Sound' })[it.kind] || ''; }
   function isInterview(it) { return (it.tags || []).some(function (g) { return /^(oral history|interview)$/i.test(g); }); }
   function benchLink(it) { return SW.BASE_URI + '?code=' + it.code; }
   function ids(it) { var o = {}; (it.identifier || []).forEach(function (x) { x = String(x).trim(); if (/^(doi:)?10\.\d{4,}\//i.test(x)) o.DOI = x.replace(/^doi:/i, ''); else if (/^(isbn:)?[\d-]{10,17}X?$/i.test(x)) o.ISBN = x.replace(/^isbn:/i, ''); else if (/^https?:/.test(x) && !o.URL) o.URL = x; }); return o; }
@@ -1067,7 +1067,17 @@
     pv.__gapIt = it;
     var strip = gapStrip(it), done = function () { gapWire(it, pv); };
     var esc = SW.esc;
-    if (!it.file) { pv.innerHTML = okURL(it.url) ? embedHTML(it.url.trim(), it.kind, it.title) : '<p class="hint">Nothing held here, and no link.</p>'; return; }
+    if (!it.file) {
+      pv.innerHTML = okURL(it.url) ? embedHTML(it.url.trim(), it.kind, it.title) : '<p class="hint">Nothing held here, and no link.</p>';
+      // a linked text or code file shown as text where the place it is held lets the browser read
+      // it (GitHub's raw files do); elsewhere the link stays
+      if (okURL(it.url) && (it.kind === 'text' || it.kind === 'software')) {
+        var link0 = pv.innerHTML;
+        fetch(it.url.trim()).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+          .then(function (t) { if (pv.__gapIt === it) pv.innerHTML = preHTML(it, t) + link0; }, function () { /* not readable from here: the link stays */ });
+      }
+      return;
+    }
     blobOf(it).then(function (u) {
       if (dl) dl.href = u;
       if (it.kind === 'audio' || /^audio\//.test(it.mime || '')) { pv.innerHTML = strip + '<audio class="px-audio" controls preload="metadata" src="' + u + '"></audio>'; mediaGaps(it, pv); done(); }
@@ -1284,7 +1294,7 @@
       '<div class="px-seg px-addmode"><button class="on" data-mode="file">A file</button><button data-mode="link">A link</button></div>' +
       '<label class="px-drop"><input type="file" class="px-file"><span>Choose a file, or drop one here: a scan, photograph, PDF, text, audio or video (up to 50 MB).</span></label>' +
       '<div class="px-linkin" hidden><label><span>Link</span><input class="px-url" type="url" placeholder="https://… a YouTube, Vimeo or Internet Archive recording, an audio or video file, or a page"></label>' +
-      '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="link">Web page or document</option></select></label>' +
+      '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="text">Text file</option><option value="software">Code</option><option value="link">Web page or document</option><option value="other">Other</option></select></label>' +
       '<p class="hint">Catalogued with nothing copied: it plays or shows here from where it is held.</p></div>' +
       fieldsHTML(blank) + (into ? '<label class="check px-into"><input type="checkbox" class="px-intoc" checked> Into the collection “' + esc(into.name) + '”</label>' : '') + '<div class="px-acts"><button class="btn" data-a="up">Upload</button> <span class="hint px-msg"></span></div>';
     document.body.appendChild(d);
@@ -1303,6 +1313,8 @@
       else if (/youtube\.com|youtu\.be|vimeo\.com|\.(mp4|webm|mov|m4v)(\?|$)/i.test(u)) k.value = 'video';
       else if (/\.(png|jpe?g|gif|webp|tiff?|svg)(\?|$)/i.test(u)) k.value = 'image';
       else if (/\.pdf(\?|$)/i.test(u)) k.value = 'pdf';
+      else if (/\.(txt|md|markdown|csv|tsv|srt|vtt)(\?|$)/i.test(u)) k.value = 'text';
+      else if (/\.(bas|lisp|lsp|mad|slip|c|h|js|py|asm|mac|mid|f|for|pas|java|rb|pl|sh|el|cl|scm)(\?|$)/i.test(u)) k.value = 'software';
       var g = SW.$('[data-k="genre"]', d); if (g && !g.value) g.value = guessGenre('', k.value);
     });
     function pick(f) {
