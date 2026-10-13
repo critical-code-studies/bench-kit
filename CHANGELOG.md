@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Paratexts: an item's Download, GitHub ↗, Open ↗ and Source ↗ under ☰ in its header, beside Share and ＋ My notes; the menu closes on a choice or a click elsewhere.
 - The paratexts guide says what a collection is for: a grouping someone has to judge, which no field records; where a field says it (type, language, date), the filter of that name. The README notes that the Language filter appears only once a catalogue holds a second language.
 
 ## 0.48.0 (2026-10-13)

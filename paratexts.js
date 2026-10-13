@@ -173,6 +173,14 @@
 
   // Withdrawing: behind ⋯, with a reason (kept in the record) and the code, or the number, typed to
   // confirm. The file stays in the repository; Withdrawn lists them, to bring back.
+  // the item's file and where it is held, under ☰: Download, GitHub ↗ (its history), Open ↗ (a
+  // linked item, where it is held), Source ↗ (the original, in its archive)
+  function fileMenu(it, gh0) {
+    var esc = SW.esc, items = (it.file ? '<a data-a="dl" download="' + esc(it.name || it.code) + '">⤓ Download</a><a href="' + esc(gh0) + '" target="_blank" rel="noopener" title="On GitHub, with its history">GitHub ↗</a>' :
+      okURL(it.url) ? '<a href="' + esc(it.url.trim()) + '" target="_blank" rel="noopener" title="Where it is held">Open ↗</a>' : '') +
+      (okURL(it.archiveUrl) ? '<a href="' + esc(it.archiveUrl.trim()) + '" target="_blank" rel="noopener" title="The original, in ' + esc(it.archive || 'its archive') + '">Source ↗</a>' : '');
+    return items ? '<details class="px-more px-filemenu"><summary class="btn ghost" title="Download it, see it on GitHub, or go to the original" aria-label="The file and where it is held">☰</summary><div class="px-menu">' + items + '</div></details>' : '';
+  }
   function moreMenu(inner) { return '<details class="px-more"><summary class="btn ghost" title="More">⋯</summary><div class="px-menu">' + inner + '</div></details>'; }
   function unwithdraw(x) { delete x.withdrawn; delete x.withdrawnBy; delete x.withdrawnWhy; x.updated = now(); x.updatedBy = me(); }
   function withdrawBox(codes, after) {
@@ -1019,7 +1027,7 @@
     var esc = SW.esc, d = SW.el('dialog', { class: 'tray-big px-dlg' });
     var gh0 = it.file ? 'https://github.com/' + REPO + '/blob/main/' + it.file.split('/').map(encodeURIComponent).join('/') : '';
     d.innerHTML = '<div class="tray-bighead"><span class="px-code mono" data-copy="' + esc(it.code) + '" title="Its code: click to copy">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +
-      '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + (it.file ? '<a class="btn ghost" data-a="dl" download="' + esc(it.name || it.code) + '">⤓ Download</a><a class="btn ghost" href="' + esc(gh0) + '" target="_blank" rel="noopener" title="On GitHub, with its history">GitHub ↗</a>' : okURL(it.url) ? '<a class="btn ghost" href="' + esc(it.url.trim()) + '" target="_blank" rel="noopener" title="Where it is held">Open ↗</a>' : '') + (okURL(it.archiveUrl) ? '<a class="btn ghost" href="' + esc(it.archiveUrl.trim()) + '" target="_blank" rel="noopener" title="The original, in ' + esc(it.archive || 'its archive') + '">Source ↗</a>' : '') + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
+      '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + fileMenu(it, gh0) + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
       '<div class="px-cols"><div class="px-view' + (altList(it).length || gapCount(it) ? ' px-withalts' : '') + '">' +
       (altList(it).length || gapCount(it) ? '<div class="px-viewbar">' + (gapCount(it) ? SW.flip.html('gaps', [['kintsugi', 'Kintsugi', 'Gaps drawn as seams in gold, with what is known of each.'], ['leiden', 'Leiden', 'Gaps in Leiden’s notation, as a quotation or an export carries them.']]) : '') + altBar(it) + '</div>' : '') +
       '<div class="px-pv"><p class="hint">Opening…</p></div></div><div class="px-side">' + fieldsHTML(it) +
@@ -1033,6 +1041,9 @@
     d.addEventListener('close', function () { d.remove(); });
     d.showModal();
     showFile(it, SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
+    d.addEventListener('click', function (e) {   // ☰ closes on a choice, or a click anywhere else
+      SW.$$('details.px-filemenu[open]', d).forEach(function (x) { if (!x.contains(e.target) || e.target.closest('.px-menu a')) setTimeout(function () { x.open = false; }, 0); });
+    });
     d.addEventListener('click', function (e) {   // data-alt, never data-c: the list reads [data-c] as a collection row
       var ab = e.target.closest && e.target.closest('[data-alt]'); if (!ab) return;
       var n = +ab.dataset.alt, list = altList(it);

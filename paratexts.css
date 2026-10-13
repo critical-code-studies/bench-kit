@@ -265,3 +265,8 @@ body.px-leiden .px-gap > :not(.px-gapleiden) { display: none; }
 body.px-leiden .px-gap > .px-gapleiden { display: block; }
 .px-viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .px-viewbar .px-alts { margin: 0; }
+
+/* the item's file and where it is held, under ☰ in its header */
+.px-filemenu .px-menu { min-width: 170px; }
+.px-menu a { display: block; padding: 5px 10px; border-radius: 4px; color: var(--text); font: 13px var(--sans); text-decoration: none; white-space: nowrap; }
+.px-menu a:hover { background: var(--bg); }
