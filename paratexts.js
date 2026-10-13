@@ -1440,6 +1440,7 @@
   };
   SW.views.paratexts = { show: function () { if (!done) render(); }, enter: function () { if (!done) render(); }, reset: function () { done = false; } };
   P.TOKEN_URL = TOKEN_URL;
+  P.STEPS = STEPS;                                        // the setting-up steps, for Help ▸ Paratexts to offer as text to send
   // Titles for paratext links in annotations, notes and findings: the catalogue read once, in the background
   var wanted = false;
   P.titleOf = function (c) { var it = byCode(c); return it ? it.title : null; };

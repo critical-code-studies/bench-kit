@@ -1075,6 +1075,17 @@
     if (had && had !== id && !confirm('This invitation is to another annotation group (' + id + ') than the one set here (' + had + '). Use the new one?')) return;
     SW.store.set('group', id); N.forget && N.forget();
   };
+  // The steps to send someone who is joining the annotation group, as plain text, for
+  // ⚙ Settings to offer beside the token box.
+  N.joinSteps = function () {
+    var g = N.groupId(SW.store.get('group', B.group || '')) || '(the group’s ID)';
+    return 'Annotations in the ' + (B.name || 'research') + ' bench: joining\n\n' +
+      '1. Make a Hypothesis account at https://hypothes.is/signup (free; any name will do).\n' +
+      '2. Ask for an invitation to the private group ' + g + ', and open the link you are sent.\n' +
+      '3. Open https://hypothes.is/account/developer and generate your personal API token.\n' +
+      '4. Paste the group and the token into the bench: ⚙ Settings, Annotations (' + SW.BASE_URI + '), then Test connection.\n\n' +
+      'The token stays in your browser; keep it to yourself. Without it, annotations are kept as drafts here and can be published later.';
+  };
   N.joinHelp = function () {
     function ext(url, text) { return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + ' ↗</a>'; }
     var esc = SW.esc, grp = N.groupId(SW.store.get('group', '')), P = SW.paratexts;

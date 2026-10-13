@@ -1,5 +1,18 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Help ▸ Paratexts: **Getting access** now carries the token form itself, with the step GitHub will
+  not take from a link (Repository access ▸ Only select repositories ▸ the repository) called out,
+  and a new **Inviting someone** section with a button that copies the steps to send. It says what
+  the link cannot: that the member must be in the organisation first, that the token is read and
+  write so every holder can add and withdraw paratexts, and that tokens expire after a year.
+- ⚙ Settings: beneath each token box, the place to get one. Paratexts gains **Open the token form ↗**
+  and **Copy the steps to send**; Annotations gains **Open the token page ↗** and the same copy
+  button, over a new `SW.notes.joinSteps()`. The steps are built by the module that owns each
+  service, so the group, the organisation and the repository stay right if any of them is renamed.
+- `SW.paratexts.STEPS` is exported beside `SW.paratexts.TOKEN_URL`.
+
 ## 0.44.0 (2026-10-13)
 
 - Paratexts: **a type for every item** (`genre`), what the thing is beside its file's kind (a memo scanned to PDF is a memo): 51 types in seven groups (texts, from article, book, thesis and working paper to memo, letter, electronic mail, minutes, patent, finding aid and press release; computing, from program listing and printout to punched cards, paper tape, magnetic tape, software, repository and dataset; images; sound and moving image, oral history among them; objects; the web; other), each mapped to its DCMI, CSL and RIS types for export. Chosen when adding (guessed from the file or the link where none is chosen) and in the record; a Type column, sort and filter in the list, a chip on the card, read by the search. `SW.BENCH.paratexts.genres` adds a bench's own. A link shows as video, audio, an image, a PDF or a page.

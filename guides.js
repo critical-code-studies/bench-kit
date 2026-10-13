@@ -6,17 +6,30 @@
  */
 (function (root) {
   'use strict';
-  var SW = root.SW, B = SW.BENCH || {}, BP = B.paratexts || {}, EX = B.examples || {};
+  var SW = root.SW, B = SW.BENCH || {}, BP = B.paratexts || {}, EX = B.examples || {}, esc = SW.esc;
   function ul(items) { return '<ul class="ah-steps">' + items.filter(Boolean).map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>'; }
   function k(t) { return '<kbd>' + t + '</kbd>'; }
+  // the token form, and the steps to send someone: both built by kit/paratexts.js from the bench's
+  // own org and repository, so they stay right if either is renamed
+  function tokenBtn() {
+    var P = SW.paratexts || {}, url = P.TOKEN_URL || '';
+    return (url ? '<a class="btn" href="' + esc(url) + '" target="_blank" rel="noopener">Open the token form ↗</a> ' : '') +
+      (P.STEPS ? '<button class="btn ghost" data-copy="' + esc(P.STEPS) + '">Copy the steps to send</button>' : '');
+  }
 
   var GUIDES = {
     paratexts: ['Paratexts', [
       ['What they are', '<p>The scans, clippings, photographs and documents around the program, kept for the crew in a private GitHub repository (' + BP.org + '/' + BP.repo + '): a catalogue of records, and the files. Every change made here is saved there as a commit, signed with your initials, so the history of each item is kept.</p>'],
       ['Getting access', ul([
-        'Accept the invitation to the <b>' + BP.org + '</b> organisation that GitHub emails you.',
-        'Help ▸ Joining the annotation group, step 5: open the token form (its name, owner, expiry and permission are filled in), choose <b>Only select repositories</b> and <b>' + BP.repo + '</b>, generate the token, paste it in, and <b>Save and test</b>. ⚙ Settings has the same box.',
-        'The token stays in this browser. On another computer, paste it there too.'])],
+        'Accept the invitation to the <b>' + BP.org + '</b> organisation that GitHub emails you. Until that is accepted the token form will not offer the owner.',
+        'Open the token form: its name, owner, a year’s expiry and the permission it needs (Contents, read and write) are filled in. ' + tokenBtn(),
+        'On the form, under <b>Repository access</b>, choose <b>Only select repositories</b> and then <b>' + BP.repo + '</b>. GitHub will not take the repository from a link, so this step is by hand.',
+        '<b>Generate token</b>, copy it, and paste it into the bench: ⚙ Settings, Paratexts, then <b>Save and test</b>. Help ▸ Joining the annotation group, step 5, has the same box.',
+        'The token stays in this browser, and is sent to nobody but GitHub. On another computer, paste it there too.'])],
+      ['Inviting someone', '<p>Send them the four steps above with the link, which is what the button below copies. Two things to know before you do.</p>' + ul([
+        'They must be a member of the <b>' + BP.org + '</b> organisation first, so invite them there before sending the steps.',
+        'The token is <b>read and write</b>. Whoever holds one can add, change and withdraw paratexts. Every change is a commit in ' + BP.org + '/' + BP.repo + ' under their initials, so nothing is anonymous and nothing is lost, but there is no reading-only form of this link. Send it to people you mean to catalogue with.',
+        'Tokens expire after a year. GitHub emails a warning first; a new one is made the same way and pasted over the old.'])],
       ['The left panel', ul([
         '<b>＋ Add an item</b>: <b>A file</b> (a scan, photograph, PDF, text, audio or video, up to 50 MB), or <b>A link</b> (a YouTube, Vimeo or Internet Archive recording, an audio or video file online, or a page), catalogued with nothing copied, which plays or shows in the item’s box from where it is held. Give it a title and what else you know, and Upload (or Add). It goes into the collection you are in, unless you untick it.',
         '<b>All</b>, <b>Not in a collection</b>, your <b>collections</b>, and <b>Withdrawn</b>, each with its count.',

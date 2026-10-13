@@ -16,7 +16,7 @@
 
   function rows(tab) { return extra.filter(function (r) { return (r.tab || 'display') === tab; }).map(function (r) { return r.html; }).join(''); }
   function build() {
-    var B = SW.BENCH || {}, ST = B.settings || {}, BP = B.paratexts || {}, esc = SW.esc;
+    var B = SW.BENCH || {}, ST = B.settings || {}, BP = B.paratexts || {}, esc = SW.esc, PX = SW.paratexts || {};
     var d = SW.el('dialog', { id: 'dlg-settings', class: 'set-dlg' });
     d.innerHTML = '<form method="dialog" class="settings">' +
       '<div class="set-tabs" role="tablist">' + TABS.map(function (t) { return '<button type="button" role="tab" data-st="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
@@ -33,12 +33,16 @@
       '<label for="set-token">API token</label>' +
       '<div class="token-row"><input id="set-token" type="password" placeholder="6879-…" autocomplete="off" spellcheck="false"><button id="set-token-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l"><button id="set-test" type="button" class="btn ghost">Test connection</button> <span class="hint" id="set-check"></span></p>' +
+      '<p class="row-l"><a class="btn ghost" href="https://hypothes.is/account/developer" target="_blank" rel="noopener">Open the token page ↗</a> <button type="button" class="btn ghost" id="set-hypsteps">Copy the steps to send</button></p>' +
       '<p class="hint"><button type="button" class="btn ghost" id="set-join">New to this? How to join the group</button> An account, the group and your token, step by step.</p>' + rows('anno') + '</section>' +
 
       '<section class="set-pane" data-sp="px">' +
       '<p class="hint">The paratexts are kept in a private GitHub repository shared with the crew (' + esc((BP.org || '') + '/' + (BP.repo || '')) + '). Paste a fine-grained token limited to that repository, with Contents read and write (Paratexts, in the menu, says how). It is kept in this browser only.</p>' +
       '<label for="set-ghtoken">GitHub token</label>' +
-      '<div class="token-row"><input id="set-ghtoken" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><button id="set-ghtoken-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' + rows('px') + '</section>' +
+      '<div class="token-row"><input id="set-ghtoken" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><button id="set-ghtoken-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
+      '<p class="row-l">' + (PX.TOKEN_URL ? '<a class="btn ghost" href="' + esc(PX.TOKEN_URL) + '" target="_blank" rel="noopener">Open the token form ↗</a> ' : '') +
+      (PX.STEPS ? '<button type="button" class="btn ghost" id="set-ghsteps">Copy the steps to send</button>' : '') + '</p>' +
+      '<p class="hint">The form arrives with its name, owner, a year’s expiry and the permission filled in; <b>Only select repositories</b> and <b>' + esc(BP.repo || '') + '</b> are chosen by hand. The token is read and write, so send the steps only to people who are to catalogue. Help ▸ Paratexts says the same at length.</p>' + rows('px') + '</section>' +
 
       '<section class="set-pane" data-sp="display">' +
       '<h2>Colour theme</h2><p class="hint">' + esc(ST.themeHint || 'The colours of the whole bench: listings, annotations and figures. The ◐ button in the top bar switches between your last light and dark themes.') + '</p>' +
@@ -95,6 +99,12 @@
     grp.onchange = function () { grp.value = SW.notes.groupId(grp.value); };
     show.onclick = function () { var hidden = tok.type === 'password'; tok.type = hidden ? 'text' : 'password'; show.textContent = hidden ? 'Hide' : 'Show'; show.setAttribute('aria-pressed', String(hidden)); };
     SW.$('#set-join').onclick = function () { SW.notes.joinHelp(); };
+    // the steps to send someone, copied rather than written out again; built by the modules that
+    // own each service, so the group, the organisation and the repository stay right
+    var hyps = SW.$('#set-hypsteps');
+    if (hyps) hyps.onclick = function () { SW.copyText(SW.notes.joinSteps(), 'the steps'); };
+    var ghs = SW.$('#set-ghsteps');
+    if (ghs) ghs.onclick = function () { SW.copyText(PX.STEPS, 'the steps'); };
     SW.$('#set-test').onclick = function () {
       SW.store.set('group', SW.notes.groupId(grp.value));
       SW.store.set('token', tok.value.trim());
