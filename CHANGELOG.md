@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## 0.39.5 (2026-10-13)
+## Unreleased
 
 - Ratings no longer wait on the network. The panel had its own rate handler that ran first,
   disabled the button and rebuilt the whole bar after a fetch and a write, so the stars only
@@ -9,23 +9,15 @@
   in a queue.
 - A double-click anywhere in a find field selects the whole of it, in every bench and every
   view, rather than the word under the pointer.
-
-## 0.39.4 (2026-10-13)
-
 - Paratexts: the stars on a card are now live. Click one to rate the paratext without opening it,
   click the same star again to take the rating back. The card shows your own rating and the crew's
-  average beside it, and the stars fill before the save returns.
-
-## 0.39.3 (2026-10-13)
-
+  average beside it, and the stars fill before the save returns. The averages on the cards and in
+  the panel are repainted once the save lands.
 - Paratexts, the item panel: only Title, Date, Creator, Source, Description and Tags stay in
   view. Held at, Archive ref, Archive link, Online at, Rights, Accession date, Versions and
   References move behind the chevron with the Dublin Core fields, which now reads "More metadata
   (archive, rights, Dublin Core; N filled)".
 - "Date made" is now "Date".
-
-## 0.39.2 (2026-10-13)
-
 - Paratexts, the item panel: the reactions fold away. Only the emoji someone has actually chosen
   are shown, with the rest behind a `+` menu; the stars stay in view and now fill as you click,
   before the save returns, so a rating no longer feels laggy.

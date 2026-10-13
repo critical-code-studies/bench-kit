@@ -827,6 +827,16 @@
       ' <select class="px-addc" title="Put it in a collection"><option value="">＋ Add to…</option>' + treeOpts(mine) + '<option value="_new">＋ A new collection…</option></select></span>';
   }
   function avg(it) { var r = it.rates || {}, k = Object.keys(r); return k.length ? { avg: k.reduce(function (t, x) { return t + r[x]; }, 0) / k.length, n: k.length, who: k.map(function (x) { return x + ' ' + '★'.repeat(r[x]); }) } : null; }
+  // after a rating lands, the averages are stale wherever they are shown
+  function redrawTalk() {
+    var t = document.querySelector('.px-dlg .px-talk'); if (!t) return;
+    var d = t.closest('.px-dlg'), cd = d && SW.$('.px-code', d), it = cd && byCode(cd.dataset.copy || cd.textContent.trim());
+    if (!it) return;
+    var op = SW.$('.px-cfold', t) && SW.$('.px-cfold', t).open;
+    t.innerHTML = talkHTML(it);
+    if (op && SW.$('.px-cfold', t)) SW.$('.px-cfold', t).open = true;
+    if (SW.mdTools) SW.mdTools(SW.$('.px-cbox textarea', t));
+  }
   // the stars move before anything is saved: a click should never wait on the network
   function paintStars(btn, attr) {
     var row = btn.parentNode, want = +btn.dataset[attr];
@@ -857,7 +867,7 @@
           if (!Object.keys(x.rates).length) delete x.rates;
           x.updated = now(); x.updatedBy = who;
         });
-      }).catch(function (err) { SW.toast(err.message, 5000); refresh(); });
+      }).then(function () { refresh(); redrawTalk(); }, function (err) { SW.toast(err.message, 5000); refresh(); redrawTalk(); });
     }, 700);
   }
   function summary(it) {
