@@ -15,6 +15,8 @@
  *                       drop  [pick]: items left out
  *                     Site map is in the list when SW.BENCH.sitemap is set (a sitemap.html).
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
+ * Read ▾ (a tab button with data-menu="read" data-tabs="read") lists the versions in the version
+ * picker's groups, unless the bench draws its own (kit/layers.js does, by layer).
  *   pick(which, p)    a pick the bench handles itself (a graphic, a Versions item that
  *                     is not a view); true when it has
  *   on(which, p)      whether a Versions item is the one open, where it is not a view
@@ -148,13 +150,40 @@
     }).join('');
     var lm = SW.lenses ? SW.lenses.menuHTML(which) : null; if (lm != null) return lm;   // kit/lenses.js
     var gm = SW.graphics ? SW.graphics.menuHTML(which) : null; if (gm != null) return gm;   // kit/graphics.js
-    return H().menu ? H().menu(which) || '' : '';
+    var own = H().menu ? H().menu(which) : null; if (own) return own;
+    return which === 'read' ? readHTML() : '';
+  }
+  // Read ▾, where a bench has no menu of its own for it (a bench in layers has kit/layers.js's):
+  // the versions in the version picker's groups (SW.BENCH.forks), each opening in Read; another
+  // reading of a version (witnessOf) under it, in a submenu. A long list (more than ten) takes a
+  // submenu for each group, naming its versions; a short one is one list under the group headings.
+  function readHTML() {
+    var V = root.SWVersions, cur = SW.state.v, all = V.VERSIONS.slice().sort(function (a, b) { return a.sort - b.sort; });
+    var groups = (B.forks && B.forks.length ? B.forks : [[null, '']]).map(function (g) { return [g[1], all.filter(function (v) { return g[0] == null || v.fork === g[0]; })]; })
+      .filter(function (g) { return g[1].length; });
+    function one(v) {
+      return '<button data-pick="v:' + SW.esc(v.id) + '"' + (v.id === cur ? ' class="on"' : '') + '><b>' + SW.esc(v.label) + '</b><span>' +
+        SW.esc([v.date, v.build ? v.medium || '' : 'lost: known from the record'].filter(Boolean).join(' · ')) + '</span></button>';
+    }
+    function list(vs) {
+      return vs.filter(function (v) { return !v.witnessOf || vs.every(function (w) { return w.id !== v.witnessOf; }); }).map(function (v) {
+        var wit = vs.filter(function (w) { return w.witnessOf === v.id; });
+        return one(v) + (wit.length ? SW.menuSub('Other readings of ' + SW.esc(v.label), SW.esc(wit.map(function (w) { return w.label; }).join(', ')),
+          wit.map(one).join(''), wit.some(function (w) { return w.id === cur; })) : '');
+      }).join('');
+    }
+    if (all.length <= 10) return groups.map(function (g, i) { return (i ? '<hr class="menu-rule">' : '') + (g[0] ? '<div class="menu-group">' + SW.esc(g[0]) + '</div>' : '') + list(g[1]); }).join('');
+    return groups.map(function (g) {
+      var main = g[1].filter(function (v) { return !v.witnessOf; });
+      return SW.menuSub(SW.esc(g[0] || 'Versions'), SW.esc(firstOf(main.map(function (v) { return [v.id, v.label]; }))), list(g[1]), g[1].some(function (v) { return v.id === cur; }));
+    }).join('');
   }
   function pick(which, p) {
     if (H().pick && H().pick(which, p)) return;
     if (SW.lenses && SW.lenses.pick(which, p)) return;
     if (SW.graphics && SW.graphics.pick(which, p)) return;
     if (which === 'help') { SW.help(p); return; }
+    if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) SW.select(p.slice(2)); SW.setTab('read'); return; }
     if (which === 'versions') SW.setTab(p);
   }
 
