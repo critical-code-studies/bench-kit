@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.39.1 (2026-10-13)
 
 - `SW.mainPart(part)`: a version's main file, its program or a witness read as text; Compare, the reading edition, the tours, the functional overview and the records count a `text` part as main (0.39.0 left it out of Compare's text view).
 
