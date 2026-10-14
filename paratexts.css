@@ -308,3 +308,14 @@ body.px-leiden .px-gap > .px-gapleiden { display: block; }
 .px-missing { max-width: 60ch; padding: 18px 20px; align-self: start; justify-self: start; }
 .px-misshead { font-weight: 600; color: var(--red, #b44); margin: 0 0 8px; }
 .px-missing .note-md { font-size: 13.5px; line-height: 1.5; }
+
+/* what a filter hides, beside the count and in an empty list */
+.px-count b, .px-none b { color: var(--text); font-weight: 600; }
+.px-clearf { font-size: 11.5px; padding: 0 7px; margin-left: 3px; }
+/* a stub's long description, and any tall reading, starts at the top of the box: centred, it
+   overflowed upward and its first lines could not be scrolled to */
+.px-view, .px-pv { place-items: safe center; }
+.px-pv:has(> .px-missing), .px-view:has(> .px-missing) { place-items: start stretch; }
+.px-view > .px-pv:has(> .px-missing) { align-self: start; justify-self: stretch; }
+.px-view.px-withalts > .px-pv { place-items: safe center; }
+.px-view.px-withalts > .px-pv:has(> .px-missing) { place-items: start stretch; }

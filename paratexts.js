@@ -235,22 +235,55 @@
     if (k === 'added') return (it.accessioned || String(it.added || '').slice(0, 10)) + (it.added || '');
     return String(it[k] || '').toLowerCase();
   }
-  function shown() {
-    var k = VW.sort, d = VW.dir || 1;
-    return base().filter(function (it) {
-      if (F.tag && (it.tags || []).indexOf(F.tag) < 0) return false;
-      if (F.v && (it.versions || []).indexOf(F.v) < 0) return false;
-      if (F.kind && it.kind !== F.kind) return false;
-      if (F.genre && it.genre !== F.genre) return false;
-      if (F.lang && readIn(it).indexOf(F.lang) < 0) return false;   // its own language or a translation's
+  // an item passes the filters (all but `skip`, to count what that one filter hides)
+  function passes(it, skip) {
+      if (skip !== 'tag' && F.tag && (it.tags || []).indexOf(F.tag) < 0) return false;
+      if (skip !== 'v' && F.v && (it.versions || []).indexOf(F.v) < 0) return false;
+      if (skip !== 'kind' && F.kind && it.kind !== F.kind) return false;
+      if (skip !== 'genre' && F.genre && it.genre !== F.genre) return false;
+      if (skip !== 'lang' && F.lang && readIn(it).indexOf(F.lang) < 0) return false;   // its own language or a translation's
       if (F.q) { var t = [it.code, it.title, (genreOf(it) || [])[1], langOfRec(it) ? langLabel(langOfRec(it)) : '', it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' '), gapHay(it), gapHay(it, true)].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
       return true;
-    }).sort(function (a, b) {
+  }
+  function shown() {
+    var k = VW.sort, d = VW.dir || 1;
+    return base().filter(function (it) { return passes(it); }).sort(function (a, b) {
       var x = sortKey(a, k), y = sortKey(b, k); if (x < y) return -d; if (x > y) return d;
       var t = String(a.title).toLowerCase(), u = String(b.title).toLowerCase(); return t < u ? -1 : t > u ? 1 : 0;
     });
   }
   var ICON = { pdf: '📄', image: '🖼', text: '📝', software: '⌨', audio: '🔊', video: '🎞', link: '🔗', file: '📎', other: '📎', missing: '❔' };
+  // What each filter hides: the items that would show were that one filter cleared, so a reader
+  // who finds nothing (or less than they expect) is told which filter is in the way, and can
+  // clear just that one. A search is never counted as the culprit, and nothing is reset.
+  function hiddenBy(nShown) {
+    if (F.c === '_wd') return [];
+    var b = base(), out = [];
+    function lab(k) {
+      if (k === 'tag') return 'Tag: ' + F.tag;
+      if (k === 'v') return 'Version: ' + vShort(F.v);
+      if (k === 'genre') return 'Type: ' + ((genreOf({ genre: F.genre }) || [])[1] || F.genre);
+      if (k === 'lang') return 'Language: ' + langLabel(F.lang);
+      if (k === 'kind') return 'Kind: ' + F.kind;
+      return k;
+    }
+    ['tag', 'v', 'genre', 'lang', 'kind'].forEach(function (k) {
+      if (!F[k]) return;
+      var n = b.filter(function (it) { return passes(it, k); }).length - nShown;
+      if (n > 0) out.push({ k: k, label: lab(k), n: n });
+    });
+    if (F.c && F.c !== '_wd') {   // the collection open on the left is a filter too
+      var n = cat.items.filter(live).filter(function (it) { return passes(it); }).length - nShown;
+      if (n > 0) out.push({ k: 'c', label: F.c === '_none' ? 'Not in a collection' : 'Collection: ' + ((coll(F.c) || {}).name || ''), n: n });
+    }
+    return out;
+  }
+  function hiddenHTML(h, empty) {
+    var esc = SW.esc;
+    if (!h.length) return '';
+    return h.map(function (x) { return (empty ? '' : ' · ') + '<b>' + x.n + (empty ? (x.n > 1 ? ' matches are' : ' match is') : ' more') + ' hidden by ' + esc(x.label) + '</b> <button class="btn ghost px-clearf" data-px="clearf" data-k="' + x.k + '">Clear ' + esc(x.label.split(':')[0]) + '</button>'; }).join(empty ? ' ' : '') +
+      (h.length > 1 || empty ? ' <button class="btn ghost px-clearf" data-px="clearf" data-k="*">Clear all</button>' : '');
+  }
   function thumb(it) { return it.kind === 'image' && urls[ukey(it)] ? '<img alt="" src="' + urls[ukey(it)] + '">' : ICON[it.kind] || ICON.file; }
   function fmtSize(n) { return !n ? '' : n < 1e6 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; }
   function render() {
@@ -329,7 +362,8 @@
     var main = SW.$('.px-list', body); if (!main) return;
     var esc = SW.esc, b = base(); cur = shown();
     Object.keys(sel).forEach(function (k) { if (!cur.some(function (it) { return it.code === k; })) delete sel[k]; });
-    var cnt = SW.$('.px-count', body); if (cnt) cnt.textContent = cur.length + ' of ' + b.length;
+    var hid = hiddenBy(cur.length), cnt = SW.$('.px-count', body);
+    if (cnt) cnt.innerHTML = cur.length + ' of ' + b.length + (cur.length ? hiddenHTML(hid) : '');
     var head = '';
     if (inC()) head = '<div class="px-crumbs"><a data-c="" title="All the paratexts">All</a>' + pathOf(F.c).map(function (c) { return ' › ' + (c.id === F.c ? '<b>' + esc(c.name) + '</b>' : '<a data-c="' + esc(c.id) + '">' + esc(c.name) + '</a>'); }).join('') + '</div>';
     else if (F.c === '_none') head = '<div class="px-crumbs"><b>Not in a collection</b></div>';
@@ -337,7 +371,7 @@
     var sub = inC() ? kidsOf(F.c) : [];
     if (sub.length) head += '<ul class="px-folders">' + sub.map(function (c) { var n = cat.items.filter(function (it) { return live(it) && inColl(it).indexOf(c.id) >= 0; }).length; return '<li class="px-folder" data-c="' + esc(c.id) + '" tabindex="0">📁 ' + esc(c.name) + ' <span class="faint">' + n + '</span></li>'; }).join('') + '</ul>';
     main.innerHTML = head + '<div class="px-selbar" hidden></div>' + (cur.length ? (VW.mode === 'list' ? listHTML(cur) : gridHTML(cur)) :
-      '<p class="hint">' + (b.length ? 'None with these filters.' : F.c === '_wd' ? 'Nothing withdrawn.' : inC() ? 'Nothing in this collection yet: drag items onto it on the left, or tick them and Add to.' : 'Nothing here.') + '</p>');
+      '<p class="hint px-none">' + (b.length || hid.length ? 'None with these filters. ' + hiddenHTML(hid, true) : F.c === '_wd' ? 'Nothing withdrawn.' : inC() ? 'Nothing in this collection yet: drag items onto it on the left, or tick them and Add to.' : 'Nothing here.') + '</p>');
     selUpdate(body);
     // the pictures, as they come into view (small ones only: a large scan stays an icon here)
     var io = new IntersectionObserver(function (ents) {
@@ -433,6 +467,7 @@
       var rb = t.closest('[data-cardrate]');
       if (rb) { e.stopPropagation(); rateIt(rb.dataset.rcode, paintStars(rb, 'cardrate')); return; }
       if (act === 'add') { addBox(); return; }
+      if (act === 'clearf') { var fk = b.dataset.k; (fk === '*' ? ['tag', 'v', 'genre', 'lang', 'kind', 'c'] : [fk]).forEach(function (x) { setF(x, ''); }); paint(body); return; }
       if (act === 'reload') { body.innerHTML = '<p class="hint">Reading the catalogue again…</p>'; P.load(true).then(function () { paint(body); }, function (err) { body.innerHTML = '<p class="badge err">' + SW.esc(err.message) + '</p>'; }); return; }
       if (act === 'newc') { editing = { mode: 'new', parent: '' }; paintNav(body); return; }
       if (act === 'subc' && crow) { editing = { mode: 'new', parent: crow.dataset.c }; paintNav(body); return; }

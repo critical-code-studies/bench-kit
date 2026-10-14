@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: **what a filter hides**. When a filter (Tag, Version, Type, Language, Kind, or the collection open on the left) hides items that match the rest, the count says so and names it, with a button to clear that one filter: "12 of 255 · 3 more hidden by Language: German [Clear Language]"; an empty list says "None with these filters. 1 match is hidden by Language: German [Clear Language] [Clear all]". Nothing is reset under the reader, and a search is never counted as the culprit. (A stub catalogued in English could not be found with the Language filter left on German, and was taken for not created; the ELIZA session's account and proposal.)
+- Paratexts: a stub's description, and any reading taller than its box, starts at the top: the box centred what it shows, so a long text overflowed upward and its first lines could not be reached.
+
 ## 0.55.0 (2026-10-14)
 
 - Paratexts: **missing items**. A stub records something known to have existed that the archive holds no copy of and no link to (`kind: "missing"`, no file, no url): ＋ Add an item ▸ **Missing**, with a description begun for it (missing and to be located; what it is; where it is cited, as the citing paratext's code with the page and a quotation; where it has been looked for), and refused without a citation. Its card shows ❔ and **Missing · to locate**; its box shows the description, each code a link to the citing item; Kind ▸ missing lists them. The rule is in the README (**Paratext rules ▸ A stub for a missing item**: check that it existed from a source read at the page; a located but undigitised object is a link, not a stub; something planned and never made is not a stub; when a copy turns up, add it as its own item and withdraw the stub with the new code as the reason) and in Help ▸ Paratexts ▸ Missing items.
