@@ -241,6 +241,8 @@ The bench shows a stub with ❔ and **Not available or missing** on its card (in
 
 A fixed order that cuts across collections and filters (a run of logbooks, the volumes of a deposition, a transcript's parts, the issues of a newsletter) is a **sequence**, kept on the catalogue beside the collections: `sequences: [{ id, name, codes: [P-codes in order], note }]`. An item can be in several. Put the run's missing members in it as stubs, so the gap shows as you step through. In an item's box, Sequences ▸ ＋ Add to… puts it at the end of one (or makes a new one), ↑ ↓ move it, × takes it out (an emptied sequence goes). A sequence exports to Dublin Core as `dc:relation` "isPartOf: <name> (n of N)".
 
+**Related** items are linked with no order (a transcript and its recording, two documents from one archive folder, two prints of one photograph, a paper and its reprint): `related: [P-codes]` on each item, written both ways. The item's box lists them under Related, each opening the other; ＋ Add… and × link and unlink both ways; a code not in the catalogue is skipped. Dublin Core: `dc:relation` "references: <code> <title>". Use a sequence where the order matters, a relation where it does not.
+
 An item opened from the list also steps through that list as it stood when it was opened (the collection, filters, search and sort): "‹ Back · 12 of 56 in Photos · Next ›", and ← → step through the first bar. An item in a sequence shows a bar for each.
 
 ## Tests

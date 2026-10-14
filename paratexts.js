@@ -644,7 +644,7 @@
         el('date', it.date) + el('type', [dcType(it), (genreOf(it) || [])[1]]) + el('format', [it.mime, it.extent]) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
-        el('relation', (it.refs || []).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))
+        el('relation', (it.refs || []).concat(relOf(it).map(function (r) { return 'references: ' + r + ' ' + byCode(r).title; })).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))
           .concat(altList(it).map(function (a) { return 'hasVersion: ' + (a.label || 'alternate') + ' [' + (a.lang || '') + ']' + (altNote(a) ? ' (' + altNote(a) + ')' : ''); }))) + el('coverage', it.coverage) + el('rights', it.rights) + '</oai_dc:dc>\n';
     }).join('') + '</records>\n';
   }
@@ -1186,6 +1186,18 @@
     }).join(' ') : '<span class="faint">none</span>') +
       ' <select class="px-addseq" title="Put it in a sequence, at the end"><option value="">＋ Add to…</option>' + others.map(function (q) { return '<option value="' + esc(q.id) + '">' + esc(q.name) + ' (' + (q.codes || []).length + ')</option>'; }).join('') + '<option value="_new">＋ A new sequence…</option></select></span>';
   }
+  // Related: links with no order between two items (a transcript and its recording, two papers
+  // from one archive folder, two prints of one photograph): related [P-codes] on each item,
+  // written both ways; a code not in the catalogue is skipped.
+  function relOf(it) { return (it.related || []).filter(function (c) { return c !== it.code && byCode(c); }); }
+  function relatedHTML(it) {
+    var esc = SW.esc, r = relOf(it);
+    return '<h4 class="fd-rh">Related <span class="faint">' + (r.length || '') + '</span> <button class="btn ghost px-reladd" data-a="addrel" title="Link another item to this one (both ways)">＋ Add…</button></h4>' +
+      (r.length ? '<ul class="px-citelist">' + r.map(function (c) {
+        var x = byCode(c);
+        return '<li class="px-relrow"><button class="px-cite" data-relgo="' + esc(c) + '" title="Open it"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(x.title) + '</b>' + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' · <span class="faint">' + esc(x.date) + '</span>' : '') + '</button><button class="icon-btn px-relx" data-unrel="' + esc(c) + '" title="Unlink (both ways)">×</button></li>';
+      }).join('') + '</ul>' : '');
+  }
   function openItem(code, ctx) {
     var it = byCode(code); if (!it) { SW.toast(code + ' is not in the catalogue.', 4000); return; }
     var esc = SW.esc, d = SW.el('dialog', { class: 'tray-big px-dlg' });
@@ -1200,7 +1212,7 @@
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
       (it.withdrawn ? '<p class="badge px-wdnote">Withdrawn ' + esc(SW.fmtDate(it.withdrawn)) + (it.withdrawnBy ? ' by ' + esc(it.withdrawnBy) : '') + (it.withdrawnWhy ? ': ' + esc(it.withdrawnWhy) : '') + '</p>' : '') +
       '<div class="px-linkline">Use the code <span class="mono">' + esc(it.code) + '</span> in an annotation to link it. <button class="btn ghost" data-copy="' + esc(it.code) + '">Copy the code</button></div>' +
-      '<div class="px-talk">' + talkHTML(it) + '</div><div class="px-cited"></div></div></div>';
+      '<div class="px-talk">' + talkHTML(it) + '</div><div class="px-related">' + relatedHTML(it) + '</div><div class="px-cited"></div></div></div>';
     document.body.appendChild(d);
     d.addEventListener('close', function () { d.remove(); });
     d.showModal();
@@ -1242,6 +1254,16 @@
     function colls0() { it = byCode(code); var b = SW.$('.px-colls', d); if (b) b.innerHTML = collsHTML(it); }
     function seqs0() { it = byCode(code); var b = SW.$('.px-seqs', d); if (b) b.innerHTML = seqsHTML(it); var sb = SW.$('.px-stepbars', d); if (sb) sb.innerHTML = stepBars(it, ctx); }
     function seqSave(label, change) { return save('Paratext ' + code + ': ' + label + ', by ' + me(), function (c) { c.sequences = c.sequences || []; change(c.sequences); }).then(seqs0, function (err) { SW.toast(err.message, 5000); }); }
+    function rel0() { it = byCode(code); var b = SW.$('.px-related', d); if (b) b.innerHTML = relatedHTML(it); }
+    function relSave(label, other, add) {
+      return save('Paratexts ' + code + ', ' + other + ': ' + label + ', by ' + me(), function (c) {
+        c.items.forEach(function (x) {
+          var mate = x.code === code ? other : x.code === other ? code : null; if (!mate) return;
+          var r = (x.related || []).filter(function (y) { return y !== mate; }); if (add) r.push(mate);
+          if (r.length) x.related = r; else delete x.related;
+        });
+      }).then(rel0, function (err) { SW.toast(err.message, 5000); });
+    }
     function step(to) { if (to && byCode(to)) d.__leave(function () { openItem(to, ctx); }); }
     d.addEventListener('keydown', function (e) {   // ← → step through the first bar (the list it came from, else its first sequence)
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1268,6 +1290,14 @@
     d.addEventListener('click', function (e) {
       if (e.target === d || e.target.closest('[data-x]')) { d.__leave(); return; }
       var stp = e.target.closest('[data-step]'); if (stp) { step(stp.dataset.step); return; }
+      var rg = e.target.closest('[data-relgo]'); if (rg) { var to0 = rg.dataset.relgo; d.__leave(function () { openItem(to0, ctx); }); return; }
+      var ur = e.target.closest('[data-unrel]'); if (ur) { relSave('unlinked', ur.dataset.unrel, false); return; }
+      if (e.target.closest('[data-a="addrel"]')) {
+        var other = (prompt('The code of the related item (P-XXXXX)') || '').trim().toUpperCase();
+        if (!other) return;
+        if (other === code || !byCode(other)) { SW.toast(other + (other === code ? ' is this item.' : ' is not in the catalogue.'), 4000); return; }
+        relSave('linked as related', other, true); return;
+      }
       var sm = e.target.closest('[data-seqmv]');
       if (sm) { var dir = +sm.dataset.seqmv, sid = sm.dataset.seq; seqSave('moved in a sequence', function (S) { S.forEach(function (q) { if (q.id !== sid) return; var i = q.codes.indexOf(code), j = i + dir; if (i < 0 || j < 0 || j >= q.codes.length) return; q.codes[i] = q.codes[j]; q.codes[j] = code; }); }); return; }
       var us = e.target.closest('[data-unseq]');

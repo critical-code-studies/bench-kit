@@ -327,3 +327,9 @@ body.px-leiden .px-gap > .px-gapleiden { display: block; }
 .px-stepbar .btn { padding: 1px 8px; font-size: 12px; }
 .px-stepbar[data-stepkind="seq"] .px-steppos { color: var(--text); }
 .px-cchip button[disabled] { opacity: .35; cursor: default; }
+
+/* related items: a list like Cited in, each row with its unlink button */
+.px-relrow { display: flex; gap: 4px; align-items: stretch; }
+.px-relrow .px-cite { flex: 1; }
+.px-reladd { font-size: 11.5px; padding: 0 7px; margin-left: 6px; }
+.px-related:empty { display: none; }
