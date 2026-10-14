@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.56.1 (2026-10-14)
 
 - Paratexts, missing items: the wording is "Provenance found but item not available or missing" (your wording), in small capitals: the box's heading, the first line of a stub's description (the Add ▸ Missing prefill, and the README rule, which asks for the line exactly so stubs can be found by it), and in Help; the card's chip reads **Not available or missing**, the full line in its tooltip. It had been "Missing: not held, to be located" and "Missing · to locate".
 
