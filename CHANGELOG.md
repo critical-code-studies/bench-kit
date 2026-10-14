@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- ⚙ Settings ▸ Paratexts: **Fetch ahead**, how many items either side of an open one to fetch into this browser: Off, 1 (the default), 2, 3, 5 or 10 each way, in the list it came from and in each sequence it is in, nearest first; its small alternates are fetched whenever it is on.
+
 ## 0.59.0 (2026-10-14)
 
 - Paratexts: **fetching ahead** (your question). Once an item is open, the items either side of it (in the list it came from, and in each sequence it is in) and its small alternates (a transcript beside a recording) are fetched quietly, one at a time, into the browser's cache, so Back, Next and switching readings open at once; files over 25 MB (an alternate over 5 MB) wait until asked for. Two requests for one file now share one download. Unchanged: the catalogue is one file, kept in the browser after the first visit; a card's picture loads only as it comes into view (images under 6 MB); a file only when its item is opened, then cached.

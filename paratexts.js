@@ -1321,12 +1321,13 @@
     d.addEventListener('close', function () { d.remove(); });
     d.showModal();
     showFile(it, SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
-    setTimeout(function () {   // fetching ahead: its neighbours (list, sequences) and small alternates
+    setTimeout(function () {   // fetching ahead: N either side (⚙ Settings ▸ Paratexts; 1 by default) in the list and each sequence, nearest first, and small alternates
       if (!d.isConnected) return;
-      var near = [];
-      SW.$$('.px-stepbar [data-step]', d).forEach(function (b) { if (b.dataset.step) near.push(byCode(b.dataset.step)); });
-      altList(it).forEach(function (a) { if ((a.size || 0) < 5e6) near.unshift(altItem(it, a)); });
-      fetchAhead(near);
+      var n = +SW.store.get('px.ahead', 1); if (!(n >= 0)) n = 1; n = Math.min(n, 10);
+      var near = [], runs = (ctx && ctx.codes ? [ctx.codes] : []).concat(seqsOf(it.code).map(seqCodes));
+      altList(it).forEach(function (a) { if ((a.size || 0) < 5e6) near.push(altItem(it, a)); });
+      for (var k = 1; k <= n; k++) runs.forEach(function (r) { var i = r.indexOf(it.code); if (i < 0) return; [r[i + k], r[i - k]].forEach(function (c) { if (c) near.push(byCode(c)); }); });
+      if (n) fetchAhead(near);
     }, 700);
     d.addEventListener('click', function (e) {   // ☰ closes on a choice, or a click anywhere else
       SW.$$('details.px-filemenu[open]', d).forEach(function (x) { if (!x.contains(e.target) || e.target.closest('.px-menu a')) setTimeout(function () { x.open = false; }, 0); });

@@ -43,7 +43,9 @@
       '<div class="token-row"><input id="set-ghtoken" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><button id="set-ghtoken-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l">' + (PX.TOKEN_URL ? '<a class="btn ghost" href="' + esc(PX.TOKEN_URL) + '" target="_blank" rel="noopener">Open the token form ↗</a> ' : '') +
       (PX.STEPS ? '<button type="button" class="btn ghost" id="set-ghsteps">Copy the steps to send</button>' : '') + '</p>' +
-      '<p class="hint">The form arrives with its name, owner, a year’s expiry and the permission filled in; <b>Only select repositories</b> and <b>' + esc(BP.repo || '') + '</b> are chosen by hand. The token is read and write, so send the steps only to people who are to catalogue. Help ▸ Paratexts says the same at length.</p>' + rows('px') + '</section>' +
+      '<p class="hint">The form arrives with its name, owner, a year’s expiry and the permission filled in; <b>Only select repositories</b> and <b>' + esc(BP.repo || '') + '</b> are chosen by hand. The token is read and write, so send the steps only to people who are to catalogue. Help ▸ Paratexts says the same at length.</p>' +
+      '<h2>Fetching ahead</h2><p class="hint">When an item is open, the items either side of it in the list (and in any sequence it is in) are fetched quietly into this browser, so Back and Next open at once. Files over 25 MB wait until asked for.</p>' +
+      '<label>Fetch ahead <select id="set-ahead">' + [0, 1, 2, 3, 5, 10].map(function (n) { return '<option value="' + n + '">' + (n ? n + ' each way' : 'Off') + '</option>'; }).join('') + '</select></label>' + rows('px') + '</section>' +
 
       '<section class="set-pane" data-sp="display">' +
       '<h2>Colour theme</h2><p class="hint">' + esc(ST.themeHint || 'The colours of the whole bench: listings, annotations and figures. The ◐ button in the top bar switches between your last light and dark themes.') + '</p>' +
@@ -91,6 +93,7 @@
     grp.value = SW.notes.groupId(SW.store.get('group', B.group || ''));
     tok.value = SW.store.get('token', '');
     tok.type = 'password'; show.textContent = 'Show'; show.setAttribute('aria-pressed', 'false');
+    SW.$('#set-ahead').value = String(SW.store.get('px.ahead', 1));
     var gtok = SW.$('#set-ghtoken'), gshow = SW.$('#set-ghtoken-show');
     gtok.value = SW.store.get('gh.token', ''); gtok.type = 'password'; gshow.textContent = 'Show'; gshow.setAttribute('aria-pressed', 'false');
     gshow.onclick = function () { var hid = gtok.type === 'password'; gtok.type = hid ? 'text' : 'password'; gshow.textContent = hid ? 'Hide' : 'Show'; gshow.setAttribute('aria-pressed', String(hid)); };
@@ -159,6 +162,7 @@
       SW.store.set('name', SW.$('#set-name').value.trim());
       SW.store.set('group', SW.notes.groupId(grp.value));
       SW.store.set('token', tok.value.trim());
+      SW.store.set('px.ahead', +SW.$('#set-ahead').value);
       var gwas = SW.store.get('gh.token', ''); SW.store.set('gh.token', gtok.value.trim());
       if (gwas !== gtok.value.trim() && SW.paratexts) SW.paratexts.reset();
       SW.notes.forget();
