@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.58.0 (2026-10-14)
 
 - Paratexts: **Related** items (your request, via the SPACEWAR! session): links with no order, `related: [P-codes]` on each item, written both ways. Listed in the item's box like Cited in, each opening the other; ＋ Add… (a code) and × link and unlink both ways; codes not in the catalogue skipped; Dublin Core dc:relation "references: <code> <title>". A bench save keeps the field (checked). README (Paratext rules ▸ Sequences) and Help ▸ Paratexts ▸ Stepping through.
 
