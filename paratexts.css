@@ -302,3 +302,9 @@ body.px-leiden .px-gap > .px-gapleiden { display: block; }
 
 /* a translation held beside the item, on its card */
 .px-s.px-trchip { color: var(--beam); border: 1px dashed var(--beam); border-radius: 3px; padding: 0 5px; font-size: 11px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* a stub for a missing item: on its card and in its box */
+.px-s.px-misschip { color: var(--red, #b44); border: 1px dashed currentColor; border-radius: 3px; padding: 0 5px; font-size: 11px; white-space: nowrap; }
+.px-missing { max-width: 60ch; padding: 18px 20px; align-self: start; justify-self: start; }
+.px-misshead { font-weight: 600; color: var(--red, #b44); margin: 0 0 8px; }
+.px-missing .note-md { font-size: 13.5px; line-height: 1.5; }

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: **missing items**. A stub records something known to have existed that the archive holds no copy of and no link to (`kind: "missing"`, no file, no url): ＋ Add an item ▸ **Missing**, with a description begun for it (missing and to be located; what it is; where it is cited, as the citing paratext's code with the page and a quotation; where it has been looked for), and refused without a citation. Its card shows ❔ and **Missing · to locate**; its box shows the description, each code a link to the citing item; Kind ▸ missing lists them. The rule is in the README (**Paratext rules ▸ A stub for a missing item**: check that it existed from a source read at the page; a located but undigitised object is a link, not a stub; something planned and never made is not a stub; when a copy turns up, add it as its own item and withdraw the stub with the new code as the reason) and in Help ▸ Paratexts ▸ Missing items.
+
 ## 0.54.0 (2026-10-13)
 
 - Paratexts: the **Language** filter finds an item by any language it can be read in, its own and any translation held beside it (an alternate in another language); it had read the record's own language only, so a German item with an English translation was hidden from a reader filtering to English. A card marks each translation (EN · machine translated, from the translation's note), so an original and a translation are told apart; the record's own Language field stays the original's. On the ELIZA archive: German 69 (every German original), English 218 (184 originals, 34 translations).

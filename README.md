@@ -217,6 +217,26 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 
 **Settings rows**: `SW.settings.add({ tab, html, load(), save() })`, before Settings is first opened. **Findings checks**: `SW.findings.addCheck({ title, run(box), doc() })`, run each time the Bench side is shown and exported with it. **Help guides**: `SW.guideAdd(name, [title, sections])`, opened with `SW.guide(name)`.
 
+## Paratext rules
+
+Rules for whoever catalogues into a bench's paratexts repository, by hand or with a script (an accession script, a research agent's records).
+
+### A stub for a missing item
+
+When a source shows that a document, recording, file, program or object existed, and the archive holds no copy of it and no link to a copy, catalogue it as a stub, so the gap is visible and someone can go looking.
+
+1. **Check that it existed.** Read a source that says so: a catalogue or inventory entry, a directory or tape listing, a bibliography, a letter, a report, or the work's own reference to it. Read it yourself, at the page; a secondary account's say-so is a lead, not proof. Something proposed or planned and never made (a memo number reserved and "Never written") is not a stub: record that in the description of the item that says so.
+2. **Keep it apart from a located item.** An object in a known catalogue that has not been digitised is located: catalogue it as a link (`kind: "link"`) to its catalogue page, with the holder and reference. A stub is for something no one can currently point to.
+3. **The record.** `kind: "missing"`, no `file`, no `url`. Title as the source cites it; date, creator and genre as far as the sources give them. Add an item ▸ Missing makes one in the bench; a script sets `kind: "missing"`.
+4. **The description**, in this order:
+   - `Missing: not held; to be located.`
+   - What it is, in two to four sentences, from the sources.
+   - **Provenance**: every place it is cited, each as the citing item's paratext code with the page (printed and PDF) or the timestamp and a short quotation, for example `Cited in P-XXXXX, p. 132 (PDF p. 133): "…"`. A citing source not in the archive is given as a full reference; better, catalogue it first and cite its code.
+   - **Looked for**: where it has been searched for and not found, with dates, so the next search does not repeat them.
+5. **When a copy turns up**, add it as an item of its own (a file, or a link), carry the provenance into its description, and withdraw the stub giving the new item's code as the reason. The stub's history stays in the repository.
+
+The bench shows a stub with ❔ and **Missing · to locate** on its card, its description in place of a file (each P- code a link to the citing item), and **missing** under the Kind filter.
+
 ## Tests
 
 A bench's `tests/annotations.html` loads its values (`window.BENCH_TESTS = { link: { v, l, name }, text, lineKey }`, in its `tests/annotations.test.js`) and the kit's `tests/run.js`, nothing else: the runner reads the bench's `index.html` and loads its scripts in their order, all but `kit/shell.js`, so a script added to the page is in the tests too; then it runs the kit's tests and reports, a script that fails to load among the failures. `tests/annotations.test.js` checks the annotation system's pure parts (Markdown, links, ghosts, open and resolved, mentions); `tests/kit.test.js` checks the version list (on a made-up list, and the bench's own for consistency: ids, descent, chains, lines, files, references), builds (the bench's first version with files, fetched), changes to the Help menu, the beam, octal and a name's pop-up. A new test file goes in `tests/` and in run.js's list; the benches need no change. The template has the page and the values.

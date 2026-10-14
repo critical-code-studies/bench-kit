@@ -54,6 +54,11 @@
         'At the top: <b>Share</b>, ＋ My notes, ⤓ Download, the file on GitHub with its history.',
         '<b>⤓ Export</b> saves its record: <b>CSL-JSON</b> or <b>RIS</b> to import into Zotero (File ▸ Import; creators as Family, Given, separated by semicolons; the archive and its reference go to Zotero’s Archive and Loc. in Archive), or <b>Dublin Core</b> (oai_dc XML). The read-only box has it too.',
         'Under ⋯: <b>Withdraw from the list</b>.'])],
+      ['Missing items', ul([
+        'Something known to have existed that the archive holds no copy of and no link to gets a <b>stub</b>: ＋ Add an item ▸ <b>Missing</b>. Its card shows ❔ and <b>Missing · to locate</b>; Kind ▸ missing lists them all.',
+        'Before adding one, read a source that shows it existed. Something planned and never made is not a stub. An object in a catalogue that is not digitised is not missing either: add it as <b>A link</b> to its catalogue page.',
+        'The description says, in order: that it is missing and to be located; what it is; where it is cited, as the citing paratext’s code with the page or time and a short quotation (each code becomes a link); and where it has been looked for.',
+        'When a copy is found, add it as an item of its own with the provenance carried over, and withdraw the stub, giving the new item’s code as the reason.'])],
       ['Withdrawing', '<p>Withdrawing takes an item out of the list for the whole crew. It asks for a reason, kept with the record, and for the item’s code typed in (for several, their number). The file stays in the repository, with its history. <b>Withdrawn</b>, in the left panel, lists them, with who withdrew each and why; select them there and <b>Bring back</b>.</p>'],
       ['Linking to one', ul([
         'In an annotation, note or finding, write its code, as <span class="mono">P-XXXXX</span>. It shows as a link, <b>Paratext:</b> and its title.',
