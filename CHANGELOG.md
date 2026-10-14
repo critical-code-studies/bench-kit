@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.57.0 (2026-10-14)
 
 - Paratexts: **stepping through** (your request, via the SPACEWAR! session). An item opened from the list has ‹ Back · 12 of 56 in Photos · Next › under its title, through the list as it stood (collection, filters, search, sort), and ← → step. **Sequences**: fixed orders across collections and filters (a run of logbooks, a deposition's volumes), kept on the catalogue as `sequences: [{ id, name, codes, note }]`; an item in one has a bar for it too, with any stub in the run shown as itself in its place; Sequences ▸ ＋ Add to… (or a new one), ↑ ↓ to reorder, × to take out; exported to Dublin Core as dc:relation isPartOf. In the README (Paratext rules ▸ Sequences) and Help ▸ Paratexts ▸ Stepping through.
 
