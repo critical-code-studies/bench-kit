@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.60.0 (2026-10-14)
 
 - ⚙ Settings ▸ Paratexts: **Fetch ahead**, how many items either side of an open one to fetch into this browser: Off, 1 (the default), 2, 3, 5 or 10 each way, in the list it came from and in each sequence it is in, nearest first; its small alternates are fetched whenever it is on.
 
