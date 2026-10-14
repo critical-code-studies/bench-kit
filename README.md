@@ -229,13 +229,13 @@ When a source shows that a document, recording, file, program or object existed,
 2. **Keep it apart from a located item.** An object in a known catalogue that has not been digitised is located: catalogue it as a link (`kind: "link"`) to its catalogue page, with the holder and reference. A stub is for something no one can currently point to.
 3. **The record.** `kind: "missing"`, no `file`, no `url`. Title as the source cites it; date, creator and genre as far as the sources give them. Add an item ▸ Missing makes one in the bench; a script sets `kind: "missing"`.
 4. **The description**, in this order:
-   - `Missing: not held; to be located.`
+   - `Provenance found but item not available or missing.` (this line exactly, so stubs can be found by it)
    - What it is, in two to four sentences, from the sources.
    - **Provenance**: every place it is cited, each as the citing item's paratext code with the page (printed and PDF) or the timestamp and a short quotation, for example `Cited in P-XXXXX, p. 132 (PDF p. 133): "…"`. A citing source not in the archive is given as a full reference; better, catalogue it first and cite its code.
    - **Looked for**: where it has been searched for and not found, with dates, so the next search does not repeat them.
 5. **When a copy turns up**, add it as an item of its own (a file, or a link), carry the provenance into its description, and withdraw the stub giving the new item's code as the reason. The stub's history stays in the repository.
 
-The bench shows a stub with ❔ and **Missing · to locate** on its card, its description in place of a file (each P- code a link to the citing item), and **missing** under the Kind filter.
+The bench shows a stub with ❔ and **Not available or missing** on its card (in small capitals; the box heads its description **Provenance found but item not available or missing**), its description in place of a file (each P- code a link to the citing item), and **missing** under the Kind filter.
 
 ## Tests
 

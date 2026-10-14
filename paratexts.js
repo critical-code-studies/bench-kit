@@ -393,7 +393,7 @@
         // and the collections at the foot
         '<div class="px-meta"><div class="px-ctop"><span class="px-code mono">' + esc(it.code) + '</span>' + summary1(it) + '</div>' +
         '<b class="px-ctitle">' + esc(it.title) + '</b>' +
-        '<div class="px-cline">' + ((genreOf(it) || [])[1] ? '<span class="px-s px-genre">' + esc(genreOf(it)[1]) + '</span>' : '') + (it.date ? '<span class="px-cdate">' + esc(it.date) + '</span>' : '') + (it.kind === 'missing' ? '<span class="px-s px-misschip" title="Known to have existed; the archive holds no copy and no link. The record says where it is cited.">Missing · to locate</span>' : '') + trChips(it) + gapChips(it) + '</div>' +
+        '<div class="px-cline">' + ((genreOf(it) || [])[1] ? '<span class="px-s px-genre">' + esc(genreOf(it)[1]) + '</span>' : '') + (it.date ? '<span class="px-cdate">' + esc(it.date) + '</span>' : '') + (it.kind === 'missing' ? '<span class="px-s px-misschip" title="Provenance found but item not available or missing: known to have existed, and the archive holds no copy and no link. The record says where it is cited.">Not available or missing</span>' : '') + trChips(it) + gapChips(it) + '</div>' +
         '<div class="px-tags">' + (it.tags || []).map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join('') + (it.versions || []).map(function (v) { return '<span class="fd-tag px-v">' + esc(vShort(v)) + '</span>'; }).join('') + '</div>' +
         (inColl(it).some(function (id) { return id !== F.c; }) ? '<div class="px-cfoot">' + collChips(it) + '</div>' : '') + '</div></li>';
     }).join('') + '</ul>';
@@ -1128,7 +1128,7 @@
     if (!it.file && it.kind === 'missing') {
       // the description, each citing paratext's code a link to it (SW.md makes the links)
       var body = SW.md ? SW.md(it.description || '') : '<p>' + esc(it.description || '') + '</p>';
-      pv.innerHTML = '<div class="px-missing"><p class="px-misshead">❔ Missing: not held, to be located</p><div class="note-md">' + body + '</div></div>';
+      pv.innerHTML = '<div class="px-missing"><p class="px-misshead">❔ Provenance found but item not available or missing</p><div class="note-md">' + body + '</div></div>';
       return;
     }
     if (!it.file) {
@@ -1365,7 +1365,7 @@
       '<div class="px-linkin" hidden><label><span>Link</span><input class="px-url" type="url" placeholder="https://… a YouTube, Vimeo or Internet Archive recording, an audio or video file, or a page"></label>' +
       '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="text">Text file</option><option value="software">Code</option><option value="link">Web page or document</option><option value="other">Other</option></select></label>' +
       '<p class="hint">Catalogued with nothing copied: it plays or shows here from where it is held.</p></div>' +
-      '<div class="px-missin" hidden><p class="hint">A stub for something known to have existed that the archive holds no copy of and no link to. Before adding it, read a source that shows it existed. In the description: that it is missing and to be located; what it is; where it is cited, as the citing paratext’s code (P-XXXXX) with the page or time and a short quotation, or a reference; and where it has been looked for. When a copy is found, add it as an item of its own, carrying the provenance over, and withdraw this stub giving the new code as the reason.</p></div>' +
+      '<div class="px-missin" hidden><p class="hint">A stub for something known to have existed that the archive holds no copy of and no link to. Before adding it, read a source that shows it existed. In the description: the line “Provenance found but item not available or missing”; what it is; where it is cited, as the citing paratext’s code (P-XXXXX) with the page or time and a short quotation, or a reference; and where it has been looked for. When a copy is found, add it as an item of its own, carrying the provenance over, and withdraw this stub giving the new code as the reason.</p></div>' +
       fieldsHTML(blank) + (into ? '<label class="check px-into"><input type="checkbox" class="px-intoc" checked> Into the collection “' + esc(into.name) + '”</label>' : '') + '<div class="px-acts"><button class="btn" data-a="up">Upload</button> <span class="hint px-msg"></span></div>';
     document.body.appendChild(d);
     d.addEventListener('close', function () { d.remove(); });
@@ -1377,7 +1377,7 @@
       drop.hidden = mode !== 'file'; SW.$('.px-linkin', d).hidden = mode !== 'link'; SW.$('.px-missin', d).hidden = mode !== 'missing';
       SW.$('[data-a="up"]', d).textContent = mode === 'file' ? 'Upload' : 'Add';
       var ds = SW.$('[data-k="description"]', d);
-      if (mode === 'missing' && ds && !ds.value.trim()) ds.value = 'Missing: not held; to be located.\n\nWhat it is: \n\nCited in: P-XXXXX, p. … : “…”\n\nLooked for: ';
+      if (mode === 'missing' && ds && !ds.value.trim()) ds.value = 'Provenance found but item not available or missing.\n\nWhat it is: \n\nCited in: P-XXXXX, p. … : “…”\n\nLooked for: ';
     });
     SW.$('.px-url', d).addEventListener('change', function (e) {   // the kind guessed from the address
       var u = e.target.value, k = SW.$('.px-lkind', d);

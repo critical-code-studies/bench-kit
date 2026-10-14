@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts, missing items: the wording is "Provenance found but item not available or missing" (your wording), in small capitals: the box's heading, the first line of a stub's description (the Add ▸ Missing prefill, and the README rule, which asks for the line exactly so stubs can be found by it), and in Help; the card's chip reads **Not available or missing**, the full line in its tooltip. It had been "Missing: not held, to be located" and "Missing · to locate".
+
 ## 0.56.0 (2026-10-14)
 
 - Paratexts: **what a filter hides**. When a filter (Tag, Version, Type, Language, Kind, or the collection open on the left) hides items that match the rest, the count says so and names it, with a button to clear that one filter: "12 of 255 · 3 more hidden by Language: German [Clear Language]"; an empty list says "None with these filters. 1 match is hidden by Language: German [Clear Language] [Clear all]". Nothing is reset under the reader, and a search is never counted as the culprit. (A stub catalogued in English could not be found with the Language filter left on German, and was taken for not created; the ELIZA session's account and proposal.)
