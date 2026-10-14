@@ -77,9 +77,29 @@
   // One blob URL per file, not per record: an alternate carries its record's code, so keying the
   // cache by code alone handed every translation the original's text.
   function ukey(it) { return it.code + '|' + (it.file || ''); }
+  var inflight = {};   // a file being fetched: a second request for it waits on the first
   function blobOf(it) {
     if (urls[ukey(it)]) return Promise.resolve(urls[ukey(it)]);
     if (!it.file) return Promise.reject(new Error('A linked item: nothing held here.'));
+    if (inflight[ukey(it)]) return inflight[ukey(it)];
+    var p = blobOf0(it);
+    inflight[ukey(it)] = p;
+    return p.then(function (u) { delete inflight[ukey(it)]; return u; }, function (e) { delete inflight[ukey(it)]; throw e; });
+  }
+  // Fetching ahead: once an item is open, the items either side of it (in the list it came from
+  // and in each sequence it is in) and its small alternates are fetched quietly, one at a time,
+  // into the browser's cache, so Back, Next and a switch of reading open at once. Large files
+  // (over 25 MB; an alternate over 5 MB) are left to be fetched when asked for.
+  var aheadQ = [], aheadOn = false;
+  function fetchAhead(list) {
+    list.forEach(function (x) { if (x && x.file && (x.size || 0) < 25e6 && !urls[ukey(x)] && aheadQ.indexOf(x) < 0) aheadQ.push(x); });
+    if (aheadOn) return; aheadOn = true;
+    (function next() {
+      var x = aheadQ.shift(); if (!x) { aheadOn = false; return; }
+      blobOf(x).then(function () { setTimeout(next, 150); }, function () { setTimeout(next, 150); });
+    })();
+  }
+  function blobOf0(it) {
     var key = 'files/' + it.file + '?' + (it.size || 0);
     return cacheGet(key).then(function (hit) { return hit ? hit.blob() : null; }).then(function (b) {
       if (b) return b;
@@ -354,6 +374,8 @@
       '<div class="px-ch"><span>Collections</span><button class="icon-btn" data-px="newc" title="A new collection">＋</button></div>' +
       tree + (editing && editing.mode === 'new' && !editing.parent ? editRow(0, '') : '') +
       (!colls().length && !editing ? '<p class="hint px-navfoot">None yet: ＋ makes one; then drag items onto it, or tick them and Add to.</p>' : '') +
+      '<div class="px-ch"><span>Sequences</span><button class="icon-btn" data-px="newseq" title="A new sequence: a fixed order, such as a run of logbooks">＋</button></div>' +
+      (seqs().length ? seqs().map(function (q) { return '<div class="px-coll px-seqrow" data-seqopen="' + esc(q.id) + '" tabindex="0" title="' + esc((q.note ? q.note + ' ' : '') + 'Click to edit') + '"><span class="px-cn">⛓ ' + esc(q.name) + '</span><span class="px-cnt">' + seqCodes(q).length + '</span></div>'; }).join('') : '<p class="hint px-navfoot">None yet: ＋ makes one, or tick items and choose ⛓ Sequence.</p>') +
       (wd || F.c === '_wd' ? row('_wd', '⊘', 'Withdrawn', wd, '', 0, 'px-wdrow') : '') +
       (colls().length ? '<p class="hint px-navfoot">Drag items onto a collection to put them in it. From inside a collection a drag moves them; hold ⌥ to add them instead.</p>' : '');
     var inp = SW.$('.px-cin', nav); if (inp) { inp.focus(); inp.select(); }
@@ -433,6 +455,7 @@
     bar.innerHTML = '<b>' + n + ' selected</b>' + (n < cur.length ? '<button class="btn ghost" data-px="selall">All ' + cur.length + '</button>' : '') +
       (F.c === '_wd' ? '' : '<select data-px="to" title="Put the selected items in a collection"><option value="">Add to a collection…</option>' + treeOpts(c0 ? [c0.id] : []) + '<option value="_new">＋ A new collection…</option></select>') +
       (c0 ? '<button class="btn ghost" data-px="out" title="Take them out of this collection (they stay in the catalogue)">Out of “' + esc(c0.name) + '”</button>' : '') +
+      (F.c === '_wd' ? '' : '<span class="px-tagadd"><select data-px="seqpick" title="Put the selected items, in the list’s order, in a sequence">' + seqs().map(function (q) { return '<option value="' + esc(q.id) + '">⛓ ' + esc(q.name) + '</option>'; }).join('') + '<option value="_new">⛓ A new sequence</option></select><button class="btn ghost" data-px="toseq" title="Open the sequence with these added at the end, to order and save">Sequence…</button></span>') +
       '<span class="px-tagadd"><input class="px-tagin" placeholder="A tag"><button class="btn ghost" data-px="tag" title="Add this tag to each">Tag</button></span>' +
       (n === 2 ? '<button class="btn" data-px="sbs" title="The two side by side, to zoom and pan together">Side by side</button>' : '') +
       exportMenu('data-pxx') +
@@ -470,6 +493,9 @@
       if (act === 'clearf') { var fk = b.dataset.k; (fk === '*' ? ['tag', 'v', 'genre', 'lang', 'kind', 'c'] : [fk]).forEach(function (x) { setF(x, ''); }); paint(body); return; }
       if (act === 'reload') { body.innerHTML = '<p class="hint">Reading the catalogue again…</p>'; P.load(true).then(function () { paint(body); }, function (err) { body.innerHTML = '<p class="badge err">' + SW.esc(err.message) + '</p>'; }); return; }
       if (act === 'newc') { editing = { mode: 'new', parent: '' }; paintNav(body); return; }
+      if (act === 'newseq') { seqEditor(null); return; }
+      var sqo = t.closest('[data-seqopen]'); if (sqo) { seqEditor(sqo.dataset.seqopen); return; }
+      if (act === 'toseq') { var sv = SW.$('[data-px="seqpick"]', body); seqEditor(sv && sv.value !== '_new' ? sv.value : null, { append: selCodes() }); return; }
       if (act === 'subc' && crow) { editing = { mode: 'new', parent: crow.dataset.c }; paintNav(body); return; }
       if (act === 'ren' && crow) { editing = { mode: 'ren', id: crow.dataset.c }; paintNav(body); return; }
       if (act === 'delc' && crow) { delColl(crow.dataset.c); return; }
@@ -1181,7 +1207,7 @@
     var esc = SW.esc, mine = seqsOf(it.code), others = seqs().filter(function (q) { return mine.indexOf(q) < 0; });
     return '<span class="px-lab">Sequences</span><span>' + (mine.length ? mine.map(function (q) {
       var cs = seqCodes(q), i = cs.indexOf(it.code);
-      return '<span class="fd-tag px-cchip" title="' + esc(q.note || q.name) + '">⛓ ' + esc(q.name) + ' · ' + (i + 1) + '/' + cs.length +
+      return '<span class="fd-tag px-cchip" title="' + esc(q.note || q.name) + '"><a href="#" data-seqedit="' + esc(q.id) + '" title="Edit the sequence">⛓ ' + esc(q.name) + '</a> · ' + (i + 1) + '/' + cs.length +
         '<button data-seqmv="-1" data-seq="' + esc(q.id) + '" title="Earlier in the sequence"' + (i > 0 ? '' : ' disabled') + '>↑</button><button data-seqmv="1" data-seq="' + esc(q.id) + '" title="Later in the sequence"' + (i < cs.length - 1 ? '' : ' disabled') + '>↓</button><button data-unseq="' + esc(q.id) + '" title="Take it out of this sequence">×</button></span>';
     }).join(' ') : '<span class="faint">none</span>') +
       ' <select class="px-addseq" title="Put it in a sequence, at the end"><option value="">＋ Add to…</option>' + others.map(function (q) { return '<option value="' + esc(q.id) + '">' + esc(q.name) + ' (' + (q.codes || []).length + ')</option>'; }).join('') + '<option value="_new">＋ A new sequence…</option></select></span>';
@@ -1197,6 +1223,84 @@
         var x = byCode(c);
         return '<li class="px-relrow"><button class="px-cite" data-relgo="' + esc(c) + '" title="Open it"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(x.title) + '</b>' + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' · <span class="faint">' + esc(x.date) + '</span>' : '') + '</button><button class="icon-btn px-relx" data-unrel="' + esc(c) + '" title="Unlink (both ways)">×</button></li>';
       }).join('') + '</ul>' : '');
+  }
+  // The sequence editor: a box to make or change a sequence (its name, its note, its members in
+  // order: drag, ↑ ↓, ×, and add by code or title), saved in one commit. opts.append adds codes
+  // (a selection) at the end; opts.after runs once it is saved.
+  function seqEditor(id, opts) {
+    opts = opts || {};
+    var esc = SW.esc, q0 = seqs().filter(function (q) { return q.id === id; })[0];
+    var w = { name: q0 ? q0.name : '', note: q0 ? q0.note || '' : '', codes: q0 ? (q0.codes || []).slice() : [] };
+    (opts.append || []).forEach(function (c) { if (w.codes.indexOf(c) < 0) w.codes.push(c); });
+    var start = JSON.stringify(w), dragI = -1;
+    var d = SW.el('dialog', { class: 'tray-big px-dlg px-seqdlg' });
+    d.innerHTML = '<div class="tray-bighead"><b>⛓ ' + (q0 ? 'Sequence' : 'A new sequence') + '</b><span class="refhelp-acts"><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
+      '<p class="hint">A fixed order across collections and filters: a run of logbooks, a deposition’s volumes, a transcript’s parts. Put a missing member in as its stub, so the gap shows. Drag a row, or use ↑ ↓, to order it.</p>' +
+      '<div class="px-fields"><label><span>Name</span><input class="px-sqname" value="' + esc(w.name) + '" placeholder="e.g. The RLE PDP-1 logbooks"></label>' +
+      '<label><span>Note</span><input class="px-sqnote" value="' + esc(w.note) + '" placeholder="what the run is, and what is missing from it"></label></div>' +
+      '<ol class="px-sqlist"></ol>' +
+      '<div class="px-sqadd"><input class="px-sqin" list="px-sqopts" placeholder="Add an item: its code, or start typing its title"><datalist id="px-sqopts">' +
+        cat.items.filter(live).map(function (it) { return '<option value="' + esc(it.code + ' — ' + it.title) + '">'; }).join('') + '</datalist><button class="btn ghost" data-sq="add">Add</button></div>' +
+      '<div class="px-acts"><button class="btn" data-sq="save">Save</button> <button class="btn ghost" data-sq="cancel">Cancel</button> <span class="hint px-msg"></span>' +
+        (q0 ? '<button class="btn ghost px-wd" data-sq="del" title="Delete the sequence (its items stay in the catalogue)">Delete the sequence…</button>' : '') + '</div>';
+    document.body.appendChild(d);
+    d.addEventListener('close', function () { d.remove(); });
+    var list = SW.$('.px-sqlist', d), msg = SW.$('.px-msg', d);
+    function read() { w.name = SW.$('.px-sqname', d).value.trim(); w.note = SW.$('.px-sqnote', d).value.trim(); }
+    function paintL() {
+      list.innerHTML = w.codes.length ? w.codes.map(function (c, i) {
+        var x = byCode(c);
+        return '<li class="px-sqrow" draggable="true" data-i="' + i + '"><span class="px-sqgrip" title="Drag to move">⋮⋮</span><span class="px-sqn">' + (i + 1) + '</span>' +
+          '<span class="px-code mono">' + esc(c) + '</span> <span class="px-sqt">' + (x ? esc(x.title) + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' <span class="faint">' + esc(x.date) + '</span>' : '') : '<span class="faint">not in the catalogue</span>') + '</span>' +
+          '<span class="px-sqbtns"><button class="icon-btn" data-sqmv="-1" title="Earlier"' + (i ? '' : ' disabled') + '>↑</button><button class="icon-btn" data-sqmv="1" title="Later"' + (i < w.codes.length - 1 ? '' : ' disabled') + '>↓</button><button class="icon-btn" data-sqdel title="Take it out of the sequence">×</button></span></li>';
+      }).join('') : '<li class="hint">No items yet: add them below, or tick them in the list and choose ⛓ Sequence in the bar that appears.</li>';
+    }
+    function add() {
+      var inp = SW.$('.px-sqin', d), v = inp.value.trim(), m = /P-[0-9A-Z]{5}/i.exec(v), code = m ? m[0].toUpperCase() : '';
+      if (!code) { var t = v.toLowerCase(), hit = cat.items.filter(function (x) { return live(x) && x.title.toLowerCase().indexOf(t) >= 0; }); if (v && hit.length === 1) code = hit[0].code; }
+      if (!code || !byCode(code)) { msg.textContent = v ? 'No item with that code or title.' : 'Give a code or a title.'; return; }
+      if (w.codes.indexOf(code) >= 0) { msg.textContent = code + ' is in it already.'; return; }
+      w.codes.push(code); inp.value = ''; msg.textContent = ''; paintL(); inp.focus();
+    }
+    function saveIt() {
+      read();
+      if (!w.name) { msg.textContent = 'Give it a name.'; SW.$('.px-sqname', d).focus(); return Promise.resolve(false); }
+      msg.textContent = 'Saving…';
+      var sid = q0 ? q0.id : 's' + Math.random().toString(36).slice(2, 8);
+      return save('Sequence ' + w.name + ': ' + (q0 ? 'changed' : 'made') + ', ' + w.codes.length + ' items, by ' + me(), function (c) {
+        c.sequences = c.sequences || [];
+        var q = c.sequences.filter(function (x) { return x.id === sid; })[0];
+        if (!q) { q = { id: sid }; c.sequences.push(q); }
+        q.name = w.name; q.note = w.note; q.codes = w.codes.slice();
+      }).then(function () { start = JSON.stringify(w); SW.toast('Saved: ⛓ ' + w.name, 3000); refresh(); var b = SW.$('#view-paratexts .px-body'); if (b) paintNav(b); if (opts.after) opts.after(); return true; },
+        function (err) { msg.textContent = err.message; return false; });
+    }
+    guardClose(d, function () { read(); return JSON.stringify(w) !== start ? 'Changes to this sequence will be lost: Save keeps them.' : ''; }, saveIt);
+    d.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t === d || t.closest('[data-x]') || t.closest('[data-sq="cancel"]')) { d.__leave(); return; }
+      if (t.closest('[data-sq="add"]')) { add(); return; }
+      if (t.closest('[data-sq="save"]')) { saveIt().then(function (ok) { if (ok) d.close(); }); return; }
+      if (t.closest('[data-sq="del"]')) {
+        if (!confirm('Delete the sequence “' + (q0.name) + '”? Its ' + q0.codes.length + ' items stay in the catalogue.')) return;
+        save('Sequence ' + q0.name + ': deleted, by ' + me(), function (c) { c.sequences = (c.sequences || []).filter(function (x) { return x.id !== q0.id; }); })
+          .then(function () { start = JSON.stringify(w); d.close(); refresh(); var b = SW.$('#view-paratexts .px-body'); if (b) paintNav(b); if (opts.after) opts.after(); }, function (err) { msg.textContent = err.message; });
+        return;
+      }
+      var row = t.closest('.px-sqrow'); if (!row) return; var i = +row.dataset.i;
+      var mv = t.closest('[data-sqmv]');
+      if (mv) { read(); var j = i + (+mv.dataset.sqmv); if (j >= 0 && j < w.codes.length) { var x = w.codes[i]; w.codes[i] = w.codes[j]; w.codes[j] = x; paintL(); } return; }
+      if (t.closest('[data-sqdel]')) { read(); w.codes.splice(i, 1); paintL(); }
+    });
+    SW.$('.px-sqin', d).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); add(); } });
+    list.addEventListener('dragstart', function (e) { var r = e.target.closest('.px-sqrow'); if (!r) return; dragI = +r.dataset.i; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(dragI)); } catch (x) {} r.classList.add('dragging'); });
+    list.addEventListener('dragover', function (e) { if (dragI < 0) return; e.preventDefault(); var r = e.target.closest('.px-sqrow'); SW.$$('.px-sqrow', list).forEach(function (x) { x.classList.toggle('over', x === r); }); });
+    list.addEventListener('dragend', function () { dragI = -1; SW.$$('.px-sqrow', list).forEach(function (x) { x.classList.remove('over', 'dragging'); }); });
+    list.addEventListener('drop', function (e) {
+      e.preventDefault(); var r = e.target.closest('.px-sqrow'); if (dragI < 0 || !r) return;
+      read(); var j = +r.dataset.i, x = w.codes.splice(dragI, 1)[0]; w.codes.splice(j, 0, x); dragI = -1; paintL();
+    });
+    paintL(); d.showModal(); SW.$(q0 ? '.px-sqin' : '.px-sqname', d).focus();
   }
   function openItem(code, ctx) {
     var it = byCode(code); if (!it) { SW.toast(code + ' is not in the catalogue.', 4000); return; }
@@ -1217,6 +1321,13 @@
     d.addEventListener('close', function () { d.remove(); });
     d.showModal();
     showFile(it, SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
+    setTimeout(function () {   // fetching ahead: its neighbours (list, sequences) and small alternates
+      if (!d.isConnected) return;
+      var near = [];
+      SW.$$('.px-stepbar [data-step]', d).forEach(function (b) { if (b.dataset.step) near.push(byCode(b.dataset.step)); });
+      altList(it).forEach(function (a) { if ((a.size || 0) < 5e6) near.unshift(altItem(it, a)); });
+      fetchAhead(near);
+    }, 700);
     d.addEventListener('click', function (e) {   // ☰ closes on a choice, or a click anywhere else
       SW.$$('details.px-filemenu[open]', d).forEach(function (x) { if (!x.contains(e.target) || e.target.closest('.px-menu a')) setTimeout(function () { x.open = false; }, 0); });
     });
@@ -1298,6 +1409,7 @@
         if (other === code || !byCode(other)) { SW.toast(other + (other === code ? ' is this item.' : ' is not in the catalogue.'), 4000); return; }
         relSave('linked as related', other, true); return;
       }
+      var se = e.target.closest('[data-seqedit]'); if (se) { e.preventDefault(); seqEditor(se.dataset.seqedit, { after: seqs0 }); return; }
       var sm = e.target.closest('[data-seqmv]');
       if (sm) { var dir = +sm.dataset.seqmv, sid = sm.dataset.seq; seqSave('moved in a sequence', function (S) { S.forEach(function (q) { if (q.id !== sid) return; var i = q.codes.indexOf(code), j = i + dir; if (i < 0 || j < 0 || j >= q.codes.length) return; q.codes[i] = q.codes[j]; q.codes[j] = code; }); }); return; }
       var us = e.target.closest('[data-unseq]');
@@ -1454,7 +1566,7 @@
       '<div class="px-linkin" hidden><label><span>Link</span><input class="px-url" type="url" placeholder="https://… a YouTube, Vimeo or Internet Archive recording, an audio or video file, or a page"></label>' +
       '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="text">Text file</option><option value="software">Code</option><option value="link">Web page or document</option><option value="other">Other</option></select></label>' +
       '<p class="hint">Catalogued with nothing copied: it plays or shows here from where it is held.</p></div>' +
-      '<div class="px-missin" hidden><p class="hint">A stub for something known to have existed that the archive holds no copy of and no link to. Before adding it, read a source that shows it existed. In the description: the line “Provenance found but item not available or missing”; what it is; where it is cited, as the citing paratext’s code (P-XXXXX) with the page or time and a short quotation, or a reference; and where it has been looked for. When a copy is found, add it as an item of its own, carrying the provenance over, and withdraw this stub giving the new code as the reason.</p></div>' +
+      '<div class="px-missin" hidden><p class="hint">A stub for something known to have existed that the archive holds no copy of and no link to. Before adding it, read a source that shows it existed. In the description: the line “Provenance found but item not available or missing”; what it is; where it is cited, as the citing paratext’s code (P-XXXXX) with the page or time and a short quotation, or a reference; and, after “Searched:”, where it has been looked for and not found. When a copy is found, add it as an item of its own, carrying the provenance over, and withdraw this stub giving the new code as the reason.</p></div>' +
       fieldsHTML(blank) + (into ? '<label class="check px-into"><input type="checkbox" class="px-intoc" checked> Into the collection “' + esc(into.name) + '”</label>' : '') + '<div class="px-acts"><button class="btn" data-a="up">Upload</button> <span class="hint px-msg"></span></div>';
     document.body.appendChild(d);
     d.addEventListener('close', function () { d.remove(); });
@@ -1466,7 +1578,7 @@
       drop.hidden = mode !== 'file'; SW.$('.px-linkin', d).hidden = mode !== 'link'; SW.$('.px-missin', d).hidden = mode !== 'missing';
       SW.$('[data-a="up"]', d).textContent = mode === 'file' ? 'Upload' : 'Add';
       var ds = SW.$('[data-k="description"]', d);
-      if (mode === 'missing' && ds && !ds.value.trim()) ds.value = 'Provenance found but item not available or missing.\n\nWhat it is: \n\nCited in: P-XXXXX, p. … : “…”\n\nLooked for: ';
+      if (mode === 'missing' && ds && !ds.value.trim()) ds.value = 'Provenance found but item not available or missing.\n\nWhat it is: \n\nCited in: P-XXXXX, p. … : “…”\n\nSearched: ';
     });
     SW.$('.px-url', d).addEventListener('change', function (e) {   // the kind guessed from the address
       var u = e.target.value, k = SW.$('.px-lkind', d);

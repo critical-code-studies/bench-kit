@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: **fetching ahead** (your question). Once an item is open, the items either side of it (in the list it came from, and in each sequence it is in) and its small alternates (a transcript beside a recording) are fetched quietly, one at a time, into the browser's cache, so Back, Next and switching readings open at once; files over 25 MB (an alternate over 5 MB) wait until asked for. Two requests for one file now share one download. Unchanged: the catalogue is one file, kept in the browser after the first visit; a card's picture loads only as it comes into view (images under 6 MB); a file only when its item is opened, then cached.
+- Paratexts: the **sequence editor** (your request): a box to make and change sequences whole, from Sequences in the left panel (＋ for a new one, a name to edit it), from a sequence's name in an item's box, or from ticked items (⛓ Sequence… in the selection bar adds them, in the list's order, at the end). Name, note, members in order (drag a row, or ↑ ↓; ×), Add by code or by title, Save in one commit, Delete the sequence (its items stay); closing with changes unsaved asks first.
+- Paratexts, missing items: the description's last part is **Searched:** (your wording; it was "Looked for:"), in the Add ▸ Missing prefill, the README rule and Help.
+
 ## 0.58.0 (2026-10-14)
 
 - Paratexts: **Related** items (your request, via the SPACEWAR! session): links with no order, `related: [P-codes]` on each item, written both ways. Listed in the item's box like Cited in, each opening the other; ＋ Add… (a code) and × link and unlink both ways; codes not in the catalogue skipped; Dublin Core dc:relation "references: <code> <title>". A bench save keeps the field (checked). README (Paratext rules ▸ Sequences) and Help ▸ Paratexts ▸ Stepping through.

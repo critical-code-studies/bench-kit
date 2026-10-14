@@ -333,3 +333,18 @@ body.px-leiden .px-gap > .px-gapleiden { display: block; }
 .px-relrow .px-cite { flex: 1; }
 .px-reladd { font-size: 11.5px; padding: 0 7px; margin-left: 6px; }
 .px-related:empty { display: none; }
+
+/* the sequence editor */
+.px-seqdlg { width: min(760px, 94vw); }
+.px-sqlist { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 3px; max-height: 50vh; overflow: auto; }
+.px-sqrow { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--line-soft, var(--line)); border-radius: 5px; background: var(--bg); font-size: 13px; }
+.px-sqrow.over { border-color: var(--beam); box-shadow: 0 -2px 0 var(--beam); }
+.px-sqrow.dragging { opacity: .45; }
+.px-sqgrip { cursor: grab; color: var(--text-faint); letter-spacing: -2px; user-select: none; }
+.px-sqn { min-width: 1.6em; text-align: right; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.px-sqt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.px-sqbtns { display: inline-flex; gap: 2px; }
+.px-sqbtns button[disabled] { opacity: .3; }
+.px-sqadd { display: flex; gap: 6px; margin: 6px 0 10px; }
+.px-sqadd input { flex: 1; font: 13px var(--sans); padding: 4px 7px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+.px-seqrow { cursor: pointer; }
