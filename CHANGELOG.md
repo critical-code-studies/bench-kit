@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.56.0 (2026-10-14)
 
 - Paratexts: **what a filter hides**. When a filter (Tag, Version, Type, Language, Kind, or the collection open on the left) hides items that match the rest, the count says so and names it, with a button to clear that one filter: "12 of 255 · 3 more hidden by Language: German [Clear Language]"; an empty list says "None with these filters. 1 match is hidden by Language: German [Clear Language] [Clear all]". Nothing is reset under the reader, and a search is never counted as the culprit. (A stub catalogued in English could not be found with the Language filter left on German, and was taken for not created; the ELIZA session's account and proposal.)
 - Paratexts: a stub's description, and any reading taller than its box, starts at the top: the box centred what it shows, so a long text overflowed upward and its first lines could not be reached.
