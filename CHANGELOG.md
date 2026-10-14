@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: **stepping through** (your request, via the SPACEWAR! session). An item opened from the list has ‹ Back · 12 of 56 in Photos · Next › under its title, through the list as it stood (collection, filters, search, sort), and ← → step. **Sequences**: fixed orders across collections and filters (a run of logbooks, a deposition's volumes), kept on the catalogue as `sequences: [{ id, name, codes, note }]`; an item in one has a bar for it too, with any stub in the run shown as itself in its place; Sequences ▸ ＋ Add to… (or a new one), ↑ ↓ to reorder, × to take out; exported to Dublin Core as dc:relation isPartOf. In the README (Paratext rules ▸ Sequences) and Help ▸ Paratexts ▸ Stepping through.
+
 ## 0.56.1 (2026-10-14)
 
 - Paratexts, missing items: the wording is "Provenance found but item not available or missing" (your wording), in small capitals: the box's heading, the first line of a stub's description (the Add ▸ Missing prefill, and the README rule, which asks for the line exactly so stubs can be found by it), and in Help; the card's chip reads **Not available or missing**, the full line in its tooltip. It had been "Missing: not held, to be located" and "Missing · to locate".

@@ -237,6 +237,12 @@ When a source shows that a document, recording, file, program or object existed,
 
 The bench shows a stub with ❔ and **Not available or missing** on its card (in small capitals; the box heads its description **Provenance found but item not available or missing**), its description in place of a file (each P- code a link to the citing item), and **missing** under the Kind filter.
 
+### Sequences
+
+A fixed order that cuts across collections and filters (a run of logbooks, the volumes of a deposition, a transcript's parts, the issues of a newsletter) is a **sequence**, kept on the catalogue beside the collections: `sequences: [{ id, name, codes: [P-codes in order], note }]`. An item can be in several. Put the run's missing members in it as stubs, so the gap shows as you step through. In an item's box, Sequences ▸ ＋ Add to… puts it at the end of one (or makes a new one), ↑ ↓ move it, × takes it out (an emptied sequence goes). A sequence exports to Dublin Core as `dc:relation` "isPartOf: <name> (n of N)".
+
+An item opened from the list also steps through that list as it stood when it was opened (the collection, filters, search and sort): "‹ Back · 12 of 56 in Photos · Next ›", and ← → step through the first bar. An item in a sequence shows a bar for each.
+
 ## Tests
 
 A bench's `tests/annotations.html` loads its values (`window.BENCH_TESTS = { link: { v, l, name }, text, lineKey }`, in its `tests/annotations.test.js`) and the kit's `tests/run.js`, nothing else: the runner reads the bench's `index.html` and loads its scripts in their order, all but `kit/shell.js`, so a script added to the page is in the tests too; then it runs the kit's tests and reports, a script that fails to load among the failures. `tests/annotations.test.js` checks the annotation system's pure parts (Markdown, links, ghosts, open and resolved, mentions); `tests/kit.test.js` checks the version list (on a made-up list, and the bench's own for consistency: ids, descent, chains, lines, files, references), builds (the bench's first version with files, fetched), changes to the Help menu, the beam, octal and a name's pop-up. A new test file goes in `tests/` and in run.js's list; the benches need no change. The template has the page and the values.

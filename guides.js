@@ -54,6 +54,9 @@
         'At the top: <b>Share</b>, ＋ My notes, ⤓ Download, the file on GitHub with its history.',
         '<b>⤓ Export</b> saves its record: <b>CSL-JSON</b> or <b>RIS</b> to import into Zotero (File ▸ Import; creators as Family, Given, separated by semicolons; the archive and its reference go to Zotero’s Archive and Loc. in Archive), or <b>Dublin Core</b> (oai_dc XML). The read-only box has it too.',
         'Under ⋯: <b>Withdraw from the list</b>.'])],
+      ['Stepping through', ul([
+        'An item opened from the list has <b>‹ Back</b> and <b>Next ›</b> under its title, through the list as it stood (the collection, filters, search and sort): “12 of 56 in Photos”. ' + k('←') + ' ' + k('→') + ' step too.',
+        'A <b>sequence</b> is a fixed order across collections, such as a run of logbooks or a deposition’s volumes. In an item’s box, Sequences ▸ ＋ Add to… puts it at the end of one or starts a new one; ↑ ↓ move it, × takes it out. An item in a sequence has a bar for it as well, and a missing member shows as itself in its place.'])],
       ['Missing items', ul([
         'Something known to have existed that the archive holds no copy of and no link to gets a <b>stub</b>: ＋ Add an item ▸ <b>Missing</b>. Its card shows ❔ and <b>Not available or missing</b>; Kind ▸ missing lists them all.',
         'Before adding one, read a source that shows it existed. Something planned and never made is not a stub. An object in a catalogue that is not digitised is not missing either: add it as <b>A link</b> to its catalogue page.',

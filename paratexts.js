@@ -491,7 +491,7 @@
       if (crow && !t.closest('.px-cedit')) { setF('c', crow.dataset.c); sel = {}; editing = null; paintNav(body); paintList(body); return; }
       var card = t.closest('[data-code]'); if (!card) return;
       if (t.closest('[data-pick]') || e.metaKey || e.ctrlKey || e.shiftKey) { pick(card.dataset.code, e.shiftKey); selUpdate(body); return; }
-      openItem(card.dataset.code);
+      openItem(card.dataset.code, listCtx());
     };
     body.onkeydown = function (e) {
       var t = e.target, cl = t.classList;
@@ -503,7 +503,7 @@
       if (cl && cl.contains('px-tagin') && e.key === 'Enter') { e.preventDefault(); var tb = SW.$('[data-px="tag"]', body); if (tb) tb.click(); return; }
       if (e.key !== 'Enter' && e.key !== ' ') return;
       if (t.matches && t.matches('[data-c]')) { e.preventDefault(); t.click(); return; }
-      if (t.matches && t.matches('[data-code]')) { e.preventDefault(); if (e.key === ' ') { pick(t.dataset.code, e.shiftKey); selUpdate(body); } else openItem(t.dataset.code); }
+      if (t.matches && t.matches('[data-code]')) { e.preventDefault(); if (e.key === ' ') { pick(t.dataset.code, e.shiftKey); selUpdate(body); } else openItem(t.dataset.code, listCtx()); }
     };
     body.onfocusout = function (e) { var t = e.target; if (t.classList && t.classList.contains('px-cin') && !t.dataset.done) { t.dataset.done = 1; commitEdit(body, t.value); } };
     // Dragging: items onto a collection (moved from the one shown, or added with ⌥); a collection
@@ -644,7 +644,7 @@
         el('date', it.date) + el('type', [dcType(it), (genreOf(it) || [])[1]]) + el('format', [it.mime, it.extent]) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
-        el('relation', (it.refs || []).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))
+        el('relation', (it.refs || []).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))
           .concat(altList(it).map(function (a) { return 'hasVersion: ' + (a.label || 'alternate') + ' [' + (a.lang || '') + ']' + (altNote(a) ? ' (' + altNote(a) + ')' : ''); }))) + el('coverage', it.coverage) + el('rights', it.rights) + '</oai_dc:dc>\n';
     }).join('') + '</records>\n';
   }
@@ -1152,16 +1152,51 @@
       else pv.innerHTML = '<p class="hint">No preview for this kind of file: ⤓ Download to open it.</p>';
     }, function (e) { pv.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
   }
-  function openItem(code) {
+  // ---------- stepping through: the list it was opened from, and its sequences ----------
+  // The list as it stands (collection, filters, search, sort) when an item is opened from it.
+  function listCtx() {
+    var lab = F.c === '_wd' ? 'Withdrawn' : F.c === '_none' ? 'Not in a collection' : inC() ? (coll(F.c) || {}).name || 'this collection' : 'All';
+    var filtered = ['tag', 'v', 'genre', 'lang', 'kind', 'q'].some(function (k) { return F[k]; });
+    return { codes: cur.map(function (x) { return x.code; }), label: lab + (filtered ? ', as filtered' : '') };
+  }
+  // Sequences: fixed orders kept on the catalogue, across collections and filters (a run of
+  // logbooks, a deposition's volumes, a transcript's parts): cat.sequences = [{ id, name, codes:
+  // [P-codes, in order], note }]. An item can be in several. A stub in a run shows as itself.
+  function seqs() { return (cat && cat.sequences) || []; }
+  function seqsOf(code) { return seqs().filter(function (q) { return (q.codes || []).indexOf(code) >= 0; }); }
+  function seqCodes(q) { return (q.codes || []).filter(function (c) { return byCode(c); }); }
+  function stepBar(kind, codes, code, label, tip) {
+    var esc = SW.esc, i = codes.indexOf(code); if (i < 0 || codes.length < 2) return '';
+    var prev = codes[i - 1], next = codes[i + 1], tt = function (c) { var x = c && byCode(c); return x ? esc(c + ': ' + x.title) : ''; };
+    return '<div class="px-stepbar" data-stepkind="' + kind + '"><button class="btn ghost" data-step="' + esc(prev || '') + '"' + (prev ? ' title="' + tt(prev) + ' (←)"' : ' disabled') + '>‹ Back</button>' +
+      '<span class="px-steppos" title="' + esc(tip || '') + '">' + (i + 1) + ' of ' + codes.length + ' in ' + esc(label) + '</span>' +
+      '<button class="btn ghost" data-step="' + esc(next || '') + '"' + (next ? ' title="' + tt(next) + ' (→)"' : ' disabled') + '>Next ›</button></div>';
+  }
+  function stepBars(it, ctx) {
+    var out = ctx && ctx.codes ? stepBar('list', ctx.codes, it.code, ctx.label, 'The list it was opened from, as it stood') : '';
+    seqsOf(it.code).forEach(function (q) { out += stepBar('seq', seqCodes(q), it.code, '⛓ ' + q.name, q.note || 'A sequence: a fixed order'); });
+    return out;
+  }
+  function seqsHTML(it) {
+    var esc = SW.esc, mine = seqsOf(it.code), others = seqs().filter(function (q) { return mine.indexOf(q) < 0; });
+    return '<span class="px-lab">Sequences</span><span>' + (mine.length ? mine.map(function (q) {
+      var cs = seqCodes(q), i = cs.indexOf(it.code);
+      return '<span class="fd-tag px-cchip" title="' + esc(q.note || q.name) + '">⛓ ' + esc(q.name) + ' · ' + (i + 1) + '/' + cs.length +
+        '<button data-seqmv="-1" data-seq="' + esc(q.id) + '" title="Earlier in the sequence"' + (i > 0 ? '' : ' disabled') + '>↑</button><button data-seqmv="1" data-seq="' + esc(q.id) + '" title="Later in the sequence"' + (i < cs.length - 1 ? '' : ' disabled') + '>↓</button><button data-unseq="' + esc(q.id) + '" title="Take it out of this sequence">×</button></span>';
+    }).join(' ') : '<span class="faint">none</span>') +
+      ' <select class="px-addseq" title="Put it in a sequence, at the end"><option value="">＋ Add to…</option>' + others.map(function (q) { return '<option value="' + esc(q.id) + '">' + esc(q.name) + ' (' + (q.codes || []).length + ')</option>'; }).join('') + '<option value="_new">＋ A new sequence…</option></select></span>';
+  }
+  function openItem(code, ctx) {
     var it = byCode(code); if (!it) { SW.toast(code + ' is not in the catalogue.', 4000); return; }
     var esc = SW.esc, d = SW.el('dialog', { class: 'tray-big px-dlg' });
     var gh0 = it.file ? 'https://github.com/' + REPO + '/blob/main/' + it.file.split('/').map(encodeURIComponent).join('/') : '';
     d.innerHTML = '<div class="tray-bighead"><span class="px-code mono" data-copy="' + esc(it.code) + '" title="Its code: click to copy">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +
       '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + fileMenu(it, gh0) + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
+      '<div class="px-stepbars">' + stepBars(it, ctx) + '</div>' +
       '<div class="px-cols"><div class="px-view' + (altList(it).length || gapCount(it) ? ' px-withalts' : '') + '">' +
       (altList(it).length || gapCount(it) ? '<div class="px-viewbar">' + (gapCount(it) ? SW.flip.html('gaps', [['kintsugi', 'Kintsugi', 'Gaps drawn as seams in gold, with what is known of each.'], ['leiden', 'Leiden', 'Gaps in Leiden’s notation, as a quotation or an export carries them.']]) : '') + altBar(it) + (altList(it).length ? '<p class="px-altcap" aria-live="polite" hidden></p>' : '') + '</div>' : '') +
       '<div class="px-pv"><p class="hint">Opening…</p></div></div><div class="px-side">' + fieldsHTML(it) +
-      '<div class="px-colls">' + collsHTML(it) + '</div>' +
+      '<div class="px-colls">' + collsHTML(it) + '</div><div class="px-colls px-seqs">' + seqsHTML(it) + '</div>' +
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
       (it.withdrawn ? '<p class="badge px-wdnote">Withdrawn ' + esc(SW.fmtDate(it.withdrawn)) + (it.withdrawnBy ? ' by ' + esc(it.withdrawnBy) : '') + (it.withdrawnWhy ? ': ' + esc(it.withdrawnWhy) : '') + '</p>' : '') +
       '<div class="px-linkline">Use the code <span class="mono">' + esc(it.code) + '</span> in an annotation to link it. <button class="btn ghost" data-copy="' + esc(it.code) + '">Copy the code</button></div>' +
@@ -1205,6 +1240,25 @@
     }
     SW.mdTools(SW.$('.px-cbox textarea', d));
     function colls0() { it = byCode(code); var b = SW.$('.px-colls', d); if (b) b.innerHTML = collsHTML(it); }
+    function seqs0() { it = byCode(code); var b = SW.$('.px-seqs', d); if (b) b.innerHTML = seqsHTML(it); var sb = SW.$('.px-stepbars', d); if (sb) sb.innerHTML = stepBars(it, ctx); }
+    function seqSave(label, change) { return save('Paratext ' + code + ': ' + label + ', by ' + me(), function (c) { c.sequences = c.sequences || []; change(c.sequences); }).then(seqs0, function (err) { SW.toast(err.message, 5000); }); }
+    function step(to) { if (to && byCode(to)) d.__leave(function () { openItem(to, ctx); }); }
+    d.addEventListener('keydown', function (e) {   // ← → step through the first bar (the list it came from, else its first sequence)
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' || e.metaKey || e.ctrlKey || e.altKey) return;
+      var t = e.target; if (t.closest && t.closest('input, textarea, select, [contenteditable="true"], .px-zone')) return;
+      var bar = SW.$('.px-stepbar', d); if (!bar) return;
+      var bs = SW.$$('[data-step]', bar), to = (e.key === 'ArrowLeft' ? bs[0] : bs[1]).dataset.step;
+      if (to) { e.preventDefault(); step(to); }
+    });
+    d.addEventListener('change', function (e) {
+      if (!e.target.classList.contains('px-addseq')) return;
+      var v = e.target.value; e.target.value = ''; if (!v) return;
+      if (v === '_new') {
+        var nm = prompt('A name for the new sequence (a fixed order: a run of logbooks, the volumes of a deposition)'); if (!nm || !nm.trim()) return;
+        var id = 's' + Math.random().toString(36).slice(2, 8);
+        seqSave('a new sequence, ' + nm.trim(), function (S) { S.push({ id: id, name: nm.trim(), codes: [code], note: '' }); });
+      } else seqSave('added to a sequence', function (S) { S.forEach(function (q) { if (q.id === v && q.codes.indexOf(code) < 0) q.codes.push(code); }); });
+    });
     d.addEventListener('change', function (e) {
       if (!e.target.classList.contains('px-addc')) return;
       var v = e.target.value; e.target.value = ''; if (!v) return;
@@ -1213,6 +1267,11 @@
     });
     d.addEventListener('click', function (e) {
       if (e.target === d || e.target.closest('[data-x]')) { d.__leave(); return; }
+      var stp = e.target.closest('[data-step]'); if (stp) { step(stp.dataset.step); return; }
+      var sm = e.target.closest('[data-seqmv]');
+      if (sm) { var dir = +sm.dataset.seqmv, sid = sm.dataset.seq; seqSave('moved in a sequence', function (S) { S.forEach(function (q) { if (q.id !== sid) return; var i = q.codes.indexOf(code), j = i + dir; if (i < 0 || j < 0 || j >= q.codes.length) return; q.codes[i] = q.codes[j]; q.codes[j] = code; }); }); return; }
+      var us = e.target.closest('[data-unseq]');
+      if (us) { var uid = us.dataset.unseq; seqSave('taken out of a sequence', function (S) { S.forEach(function (q) { if (q.id === uid) q.codes = q.codes.filter(function (x) { return x !== code; }); }); for (var k = S.length - 1; k >= 0; k--) if (S[k].id === uid && !S[k].codes.length) S.splice(k, 1); }); return; }
       var xp = e.target.closest('[data-xp]');
       if (xp) { var xd = xp.closest('details'); if (xd) xd.open = false; exportItems(xp.dataset.xp, [byCode(code)], code); return; }
       var uc = e.target.closest('[data-uncoll]');
