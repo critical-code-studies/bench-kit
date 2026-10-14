@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.59.0 (2026-10-14)
 
 - Paratexts: **fetching ahead** (your question). Once an item is open, the items either side of it (in the list it came from, and in each sequence it is in) and its small alternates (a transcript beside a recording) are fetched quietly, one at a time, into the browser's cache, so Back, Next and switching readings open at once; files over 25 MB (an alternate over 5 MB) wait until asked for. Two requests for one file now share one download. Unchanged: the catalogue is one file, kept in the browser after the first visit; a card's picture loads only as it comes into view (images under 6 MB); a file only when its item is opened, then cached.
 - Paratexts: the **sequence editor** (your request): a box to make and change sequences whole, from Sequences in the left panel (＋ for a new one, a name to edit it), from a sequence's name in an item's box, or from ticked items (⛓ Sequence… in the selection bar adds them, in the list's order, at the end). Name, note, members in order (drag a row, or ↑ ↓; ×), Add by code or by title, Save in one commit, Delete the sequence (its items stay); closing with changes unsaved asks first.
