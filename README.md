@@ -232,10 +232,22 @@ When a source shows that a document, recording, file, program or object existed,
    - `Provenance found but item not available or missing.` (this line exactly, so stubs can be found by it)
    - What it is, in two to four sentences, from the sources.
    - **Provenance**: every place it is cited, each as the citing item's paratext code with the page (printed and PDF) or the timestamp and a short quotation, for example `Cited in P-XXXXX, p. 132 (PDF p. 133): "…"`. A citing source not in the archive is given as a full reference; better, catalogue it first and cite its code.
+   - **Request:**, only when a holder can be asked (see To locate and to request, below).
    - **Searched:** where it has been searched for and not found, with dates, so the next search does not repeat them. The description's last part begins `Searched:`.
 5. **When a copy turns up**, add it as an item of its own (a file, or a link), carry the provenance into its description, and withdraw the stub giving the new item's code as the reason. The stub's history stays in the repository.
 
 The bench shows a stub with ❔ and **Not available or missing** on its card (in small capitals; the box heads its description **Provenance found but item not available or missing**), its description in place of a file (each P- code a link to the citing item), and **missing** under the Kind filter.
+
+### To locate and to request
+
+Two tags mark what is still to be done about things the archive does not hold. Spell them exactly so; Tag ▸ to-locate and Tag ▸ to-request then list each as a worklist.
+
+- `to-locate`: no holder is known. Every stub carries it, with `missing`.
+- `to-request`: a holder is known and can be asked, for a scan or a digital use copy, a viewing, a login, or whether the thing survives. It goes on a link record for an undigitised object in a catalogue, on a finding aid where a request is the next step, and on a stub once a likely holder has been named. A stub can carry both.
+
+The request itself goes in the description, as a paragraph beginning `Request:` (in a stub, just before `Searched:`, which stays last), on link records as well as stubs: the holder; the collection and the object, box and folder, or reel number; the part wanted (pages, a segment); and the form wanted (a scan, a use copy, an answer). For example: `Request: MIT Libraries, Department of Distinctive Collections, Tapes of Tech Square (ToTS), MC-0741: copies of the SHRDLU; files on AI reels 1000, 1117 and 1227, or whether the images of those reels survive.`
+
+When a copy arrives, add it as an item of its own (step 5 above) and take `to-request` off the record it answers, or withdraw the stub.
 
 ### Sequences
 

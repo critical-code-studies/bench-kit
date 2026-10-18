@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratext rules: **to locate and to request** (your request). Two tags with fixed spellings, `to-locate` (every stub; no holder known) and `to-request` (a known holder could be asked: an undigitised object in a catalogue, a finding aid, a stub with a likely holder), and a `Request:` paragraph in the description saying whom to ask and for what (holder, collection and number, part, form), before `Searched:` in a stub. In the README (Paratext rules, and the stub rule's description order), Help ▸ Paratexts ▸ Missing items, and the hint under ＋ Add ▸ Missing. No new field or display: Tag ▸ to-request is the worklist.
+
 ## 0.60.0 (2026-10-14)
 
 - ⚙ Settings ▸ Paratexts: **Fetch ahead**, how many items either side of an open one to fetch into this browser: Off, 1 (the default), 2, 3, 5 or 10 each way, in the list it came from and in each sequence it is in, nearest first; its small alternates are fetched whenever it is on.
