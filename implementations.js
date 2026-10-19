@@ -228,7 +228,8 @@
   function norm(l) { return l.replace(/\s+/g, ' ').trim().toUpperCase(); }
   // Lisp read by definition (kit/lispdefs.js): the dialect from the language field where it says, else guessed
   function dialectOf(r, text) {
-    var L = rootWin.SWLispDefs, p = String((r.progLanguage || '') + ' ' + (r.lispDialect || '')).toLowerCase();
+    var L = rootWin.SWLispDefs; if (r.lispDialect && L.DIALECTS[r.lispDialect]) return r.lispDialect;   // an entry may name its reader outright
+    var p = String(r.progLanguage || '').toLowerCase();
     return /pdp-?6/.test(p) ? 'pdp6' : /interlisp/.test(p) ? 'interlisp' : /bbn/.test(p) ? 'bbn' : /common lisp|clisp|corman|sbcl/.test(p) ? 'cl' : /maclisp|franz|lisp 1\.6|stanford lisp/.test(p) ? 'maclisp' : L.detect(text);
   }
   function byFunction(A, B, la, lb) {
