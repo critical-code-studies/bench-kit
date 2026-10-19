@@ -244,6 +244,86 @@ Three fields say what an item is, kept apart. **Type** (`genre`) says what the t
 
 Both lists can be extended without a release of the kit. ＋ New type… at the foot of the Type list, and ＋ New medium… at the foot of the Medium list, add one to the archive's own list, in one commit, for the whole crew: the catalogue keeps them as `types: [{ id, label, group, dcmi, note, by, added }]` and `media: [{ id, label, by, added }]`. A bench's config can add types too (`paratexts.genres`, `[[group, [[id, label, dcmi, csl, ris]]]]`). An id the kit already defines keeps the kit's definition, so a type the kit later takes in replaces the archive's without changing a record. Types the kit has retired (transcript, papertape, cards, magtape) keep a label, marked "older type", for the records that carry them, and are not offered.
 
+**Standard terms.** Every type and medium is mapped to a standard term, so that a record leaves the bench in terms other systems read: the Library of Congress Genre/Form Terms (LCGFT) where they have one, the Getty Art & Architecture Thesaurus (AAT) for what LCGFT lacks (logs, depositions and legal documents, memorandums, printouts, paper tapes, punched cards), and for media the RDA carrier types, with the AAT term beside them where it is closer (RDA has no term for paper tape, and DECtape and other magnetic tape are one RDA term). Each mapping carries its SKOS sense: exact, close, broad (the standard term is wider than the bench's, as Periodicals for a journal article) or narrow. The terms were checked against id.loc.gov and vocab.getty.edu on 19 October 2026. Two types have none: presentation Slides (LCGFT's Slides are photographic transparencies) and Other. The bench keeps its own labels and shows the standard terms in the item's box under More metadata; the Dublin Core export writes each term's label and URI as `dc:type` (for the type) or `dc:format` (for the medium). A type or medium added in an archive with ＋ New… can be given its own standard term, an id.loc.gov or vocab.getty.edu link and its label (`std: { uri, label }`).
+
+| Type | Standard term | Match |
+|---|---|---|
+| Journal article | LCGFT Periodicals (gf2014026139) | broad |
+| Magazine article | LCGFT Periodicals (gf2014026139) | broad |
+| Newspaper article | AAT clippings (information artifacts) (300026867) | close |
+| Review (of a book, film or program) | LCGFT Reviews (gf2014026168) | exact |
+| Book | AAT books (300028051) | exact |
+| Book chapter | AAT books (300028051) | broad |
+| Conference paper | LCGFT Conference papers and proceedings (gf2014026068) | exact |
+| Thesis or dissertation | LCGFT Academic theses (gf2014026039) | exact |
+| Technical report | LCGFT Technical reports (gf2015026093) | exact |
+| Preprint or working paper | AAT preprints (300451332) | exact |
+| Abstract or bibliography entry | LCGFT Abstracts (gf2014026038) | close |
+| Newsletter or bulletin | LCGFT Newsletters (gf2014026131) | exact |
+| Manual or user guide | LCGFT Handbooks and manuals (gf2014026109) | exact |
+| Program write-up or description (e.g. DECUS) | AAT manuals (instructional materials) (300026395) | close |
+| Catalogue entry or price list | LCGFT Catalogs (gf2014026057) | exact |
+| Specification or standard | LCGFT Standards (Reference works) (gf2020026074) | close |
+| Letter | AAT letters (correspondence) (300026879) | exact |
+| Memo | AAT memorandums (300026906) | exact |
+| Email or direct message | AAT electronic mail (300149026) | exact |
+| Newsgroup or mailing-list post (Usenet, ARPANET lists) | LCGFT Online discussion forums (gf2022026103) | close |
+| Notes or notebook | LCGFT Notebooks (gf2014026133) | close |
+| Log or logbook (operating log, register) | AAT logs (records) (300202545) | exact |
+| Minutes or agenda | LCGFT Minutes (Records) (gf2014026128) | exact |
+| Proposal or grant | AAT proposals (300027261) | exact |
+| Legal document (filing, deposition, contract) | AAT legal documents (300027590) | exact |
+| Patent | LCGFT Patents (gf2011026438) | exact |
+| Program listing (printed) | AAT printouts (300028467) | broad |
+| Printout or run output | AAT printouts (300028467) | exact |
+| Program on a carrier (tape, cards, disk: give the Medium) | AAT programs (computer) (300312188) | close |
+| Source code file | AAT programs (computer) (300312188) | broad |
+| Source repository | LCGFT Software (gf2022026086) | broad |
+| Emulator or simulation | LCGFT Software (gf2022026086) | broad |
+| Dataset | LCGFT Data sets (gf2018026119) | exact |
+| Advertisement | LCGFT Advertisements (gf2017027215) | exact |
+| Brochure or flyer | LCGFT Fliers (Ephemera) (gf2017026133) | close |
+| Press release | LCGFT Press releases (gf2014026153) | exact |
+| Poster | LCGFT Posters (gf2014026152) | exact |
+| Event programme | LCGFT Programs (Publications) (gf2014026156) | exact |
+| Photograph | LCGFT Photographs (gf2017027249) | exact |
+| Drawing, diagram or schematic | AAT diagrams (300015387) | close |
+| Flowchart | AAT flow charts (300026859) | exact |
+| Screenshot | AAT screenshots (300456758) | exact |
+| Map or plan | LCGFT Maps (gf2011026387) | exact |
+| Slides | none |  |
+| Interview or oral history | LCGFT Interviews (gf2014026115) | exact |
+| Lecture, talk or panel | LCGFT Lectures (gf2014026122) | close |
+| Broadcast (radio or television) | LCGFT Television programs (gf2011026673) | close |
+| Film | LCGFT Motion pictures (gf2011026406) | exact |
+| Audio recording | LCGFT Sound recordings (gf2011026594) | exact |
+| Video recording | LCGFT Video recordings (gf2011026723) | exact |
+| Web page | AAT Web pages (documents) (300264578) | exact |
+| Blog post | LCGFT Blogs (gf2014026051) | exact |
+| Social media post | AAT social media (300312269) | close |
+| Computer or hardware | AAT computers (300024521) | close |
+| Object or artefact | AAT artifacts (object genre) (300117127) | exact |
+| Exhibition or display (physical or online) | AAT exhibitions (events) (300054766) | close |
+| Finding aid or archival description | LCGFT Finding aids (gf2014026103) | exact |
+| Other | none |  |
+
+| Medium | RDA carrier type | Getty AAT |
+|---|---|---|
+| Paper | sheet (close) | paper (fiber product) (close) |
+| Microfilm or microfiche | microfiche (broad) | microfiche (broad) |
+| Punched cards | computer card (exact) | punched cards (exact) |
+| Paper tape | other computer carrier (broad) | paper tapes (exact) |
+| Magnetic tape | computer tape reel (close) | magnetic tapes (exact) |
+| DECtape | computer tape reel (broad) | magnetic tapes (broad) |
+| Disk (floppy or hard) | computer disc (exact) | floppy disks (narrow) |
+| ROM cartridge | computer chip cartridge (exact) |  |
+| Data cassette | computer tape cassette (exact) |  |
+| Photographic print | sheet (broad) | photographic prints (exact) |
+| Photographic film (negatives, slides, cine) | film reel (close) | slides (photographs) (narrow) |
+| Videotape | videocassette (close) | videotapes (exact) |
+| Audio tape | audiocassette (close) | audiotapes (exact) |
+| Born digital | online resource (close) |  |
+
 ### To locate and to request
 
 Two tags mark what is still to be done about things the archive does not hold. Spell them exactly so; Tag ▸ to-locate and Tag ▸ to-request then list each as a worklist.
