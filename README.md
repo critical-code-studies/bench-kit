@@ -238,6 +238,12 @@ When a source shows that a document, recording, file, program or object existed,
 
 The bench shows a stub with ❔ and **Not available or missing** on its card (in small capitals; the box heads its description **Provenance found but item not available or missing**), its description in place of a file (each P- code a link to the citing item), and **missing** under the Kind filter.
 
+### Type and Medium
+
+Three fields say what an item is, kept apart. **Type** (`genre`) says what the thing is: a memo scanned to PDF is a memo, an oral-history transcript is an interview, a deposition transcript is a legal document. It is required in ＋ Add an item and chosen from a list in ten groups (Published writing, Documentation, Correspondence and papers, Program text, Promotion and events, Images, Recordings and their transcripts, Web, Objects and archives, Other), with a find box beside it. **Medium** (`medium`, optional) names the carrier, for a program or an object: paper tape, punched cards, DECtape, a disk, a ROM cartridge, a data cassette, a photographic print. It is left empty for a scan of a document. **Kind** (`kind`) is how the bench shows the file; it is worked out from the file, and chosen as Shows as only for a link. The Dublin Core type is derived from Type (DCMI type, under More metadata, overrides it), and Medium goes into `dc:format`.
+
+Both lists can be extended without a release of the kit. ＋ New type… at the foot of the Type list, and ＋ New medium… at the foot of the Medium list, add one to the archive's own list, in one commit, for the whole crew: the catalogue keeps them as `types: [{ id, label, group, dcmi, note, by, added }]` and `media: [{ id, label, by, added }]`. A bench's config can add types too (`paratexts.genres`, `[[group, [[id, label, dcmi, csl, ris]]]]`). An id the kit already defines keeps the kit's definition, so a type the kit later takes in replaces the archive's without changing a record. Types the kit has retired (transcript, papertape, cards, magtape) keep a label, marked "older type", for the records that carry them, and are not offered.
+
 ### To locate and to request
 
 Two tags mark what is still to be done about things the archive does not hold. Spell them exactly so; Tag ▸ to-locate and Tag ▸ to-request then list each as a worklist.

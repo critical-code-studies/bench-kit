@@ -397,7 +397,7 @@
     // the languages the catalogue has, by name
     function languagesIn() { var have = {}; items.forEach(function (it) { readIn(it).forEach(function (l) { have[l] = 1; }); }); return Object.keys(have).map(function (l) { return [l, langLabel(l)]; }).sort(function (a, b) { return a[1].localeCompare(b[1]); }); }
     // the types the catalogue has, in the vocabulary's order
-    function genresIn() { var have = {}; items.forEach(function (it) { if (it.genre) have[it.genre] = 1; }); return Object.keys(GENRE_BY).filter(function (g) { return have[g]; }).map(function (g) { return GENRE_BY[g]; }).concat(Object.keys(have).filter(function (g) { return !GENRE_BY[g]; }).map(function (g) { return [g, g]; })); }
+    function genresIn() { syncTypes(); var have = {}; items.forEach(function (it) { if (it.genre) have[it.genre] = 1; }); return Object.keys(GENRE_BY).filter(function (g) { return have[g]; }).map(function (g) { return GENRE_BY[g]; }).concat(Object.keys(have).filter(function (g) { return !GENRE_BY[g]; }).map(function (g) { return [g, g]; })); }
     function seg(act, v, label, on, tip) { return '<button class="' + (on ? 'on' : '') + '" data-px="' + act + '" data-v="' + v + '" title="' + tip + '">' + label + '</button>'; }
     body.innerHTML = '<div class="px-shell"><nav class="px-nav" aria-label="Collections"></nav><div class="px-main">' +
       '<div class="toolbar px-bar" style="position:static;padding-left:0">' +
@@ -643,33 +643,123 @@
   // ---------- one paratext ----------
   // ---------- what an item is: its type, beside its file's kind ----------
   // A paratext's type (`genre`): what the thing is, not the format of the file that holds it (a
-  // memo scanned to PDF is a memo). [id, label, DCMI type (null: from the file), CSL type, RIS type],
-  // in groups; SW.BENCH.paratexts.genres adds a bench's own, [[group, [[id, label, dcmi, csl, ris]]]].
-  var GENRES = [
-    ['Texts', [['article', 'Article (journal or magazine)', 'Text', 'article-journal', 'JOUR'], ['press', 'Newspaper or periodical article', 'Text', 'article-newspaper', 'NEWS'],
+  // memo scanned to PDF is a memo) and not its carrier (`medium`: paper tape, DECtape). Each type is
+  // [id, label, DCMI type (null: from the file), CSL type, RIS type], in groups. The kit's list is
+  // extended without a release, in two places: SW.BENCH.paratexts.genres in a bench's config
+  // ([[group, [[id, label, dcmi, csl, ris]]]]), and the catalogue's own `types` ([{ id, label, group,
+  // dcmi, note, by, added }]), which the crew add from the Type picker (＋ New type…). An id already
+  // defined keeps its first definition. Retired ids keep a label, for the records that still carry them,
+  // and are not offered.
+  var KIT_TYPES = [
+    ['Published writing', [['article', 'Journal article', 'Text', 'article-journal', 'JOUR'], ['magazine', 'Magazine article', 'Text', 'article-magazine', 'MGZN'],
+      ['press', 'Newspaper article', 'Text', 'article-newspaper', 'NEWS'], ['review', 'Review (of a book, film or program)', 'Text', 'review', 'JOUR'],
       ['book', 'Book', 'Text', 'book', 'BOOK'], ['chapter', 'Book chapter', 'Text', 'chapter', 'CHAP'], ['conference', 'Conference paper', 'Text', 'paper-conference', 'CPAPER'],
-      ['thesis', 'Thesis or dissertation', 'Text', 'thesis', 'THES'], ['report', 'Report or technical report', 'Text', 'report', 'RPRT'], ['preprint', 'Preprint or working paper', 'Text', 'article', 'UNPB'],
-      ['manual', 'Manual or documentation', 'Text', 'document', 'GEN'], ['memo', 'Memo', 'Text', 'document', 'GEN'], ['letter', 'Letter or correspondence', 'Text', 'personal_communication', 'PCOMM'],
-      ['email', 'Electronic mail or message (ARPANET, Usenet)', 'Text', 'personal_communication', 'PCOMM'], ['notes', 'Notes or notebook', 'Text', 'manuscript', 'MANSCPT'], ['minutes', 'Minutes or agenda', 'Text', 'document', 'GEN'],
-      ['proposal', 'Proposal or grant', 'Text', 'document', 'GRANT'], ['patent', 'Patent', 'Text', 'patent', 'PAT'], ['newsletter', 'Newsletter or bulletin', 'Text', 'article-magazine', 'MGZN'],
-      ['pressrel', 'Press release', 'Text', 'document', 'GEN'], ['transcript', 'Transcript', 'Text', 'document', 'GEN'], ['programme', 'Programme or catalogue', 'Text', 'document', 'CTLG'], ['findingaid', 'Finding aid or archival description', 'Text', 'document', 'GEN'],
-      ['ephemera', 'Brochure, flyer or advertisement', 'Text', 'document', 'PAMP']]],
-    ['Computing', [['listing', 'Program listing', 'Text', 'document', 'COMP'], ['printout', 'Printout or run output', 'Text', 'document', 'COMP'],
-      ['cards', 'Punched cards', 'PhysicalObject', 'document', 'GEN'], ['papertape', 'Paper tape', 'PhysicalObject', 'document', 'GEN'], ['magtape', 'Magnetic tape or disk', 'PhysicalObject', 'document', 'GEN'],
-      ['software', 'Software or source code', 'Software', 'software', 'COMP'], ['repo', 'Source repository', 'Software', 'software', 'COMP'], ['emulator', 'Emulator or simulation', 'Software', 'software', 'COMP'],
-      ['dataset', 'Dataset', 'Dataset', 'dataset', 'DATA']]],
+      ['thesis', 'Thesis or dissertation', 'Text', 'thesis', 'THES'], ['report', 'Technical report', 'Text', 'report', 'RPRT'], ['preprint', 'Preprint or working paper', 'Text', 'article', 'UNPB'],
+      ['abstract', 'Abstract or bibliography entry', 'Text', 'article', 'ABST'], ['newsletter', 'Newsletter or bulletin', 'Text', 'article-magazine', 'MGZN']]],
+    ['Documentation', [['manual', 'Manual or user guide', 'Text', 'document', 'GEN'], ['writeup', 'Program write-up or description (e.g. DECUS)', 'Text', 'document', 'GEN'],
+      ['catalogue', 'Catalogue entry or price list', 'Text', 'document', 'CTLG'], ['spec', 'Specification or standard', 'Text', 'standard', 'STAND']]],
+    ['Correspondence and papers', [['letter', 'Letter', 'Text', 'personal_communication', 'PCOMM'], ['memo', 'Memo', 'Text', 'document', 'GEN'],
+      ['email', 'Email or direct message', 'Text', 'personal_communication', 'PCOMM'], ['post', 'Newsgroup or mailing-list post (Usenet, ARPANET lists)', 'Text', 'post', 'ELEC'],
+      ['notes', 'Notes or notebook', 'Text', 'manuscript', 'MANSCPT'], ['log', 'Log or logbook (operating log, register)', 'Text', 'manuscript', 'MANSCPT'],
+      ['minutes', 'Minutes or agenda', 'Text', 'document', 'GEN'], ['proposal', 'Proposal or grant', 'Text', 'document', 'GRANT'],
+      ['legal', 'Legal document (filing, deposition, contract)', 'Text', 'legal_case', 'CASE'], ['patent', 'Patent', 'Text', 'patent', 'PAT']]],
+    ['Program text', [['listing', 'Program listing (printed)', 'Text', 'document', 'COMP'], ['printout', 'Printout or run output', 'Text', 'document', 'COMP'],
+      ['program', 'Program on a carrier (tape, cards, disk: give the Medium)', 'Software', 'software', 'COMP'], ['software', 'Source code file', 'Software', 'software', 'COMP'],
+      ['repo', 'Source repository', 'Software', 'software', 'COMP'], ['emulator', 'Emulator or simulation', 'Software', 'software', 'COMP'], ['dataset', 'Dataset', 'Dataset', 'dataset', 'DATA']]],
+    ['Promotion and events', [['advert', 'Advertisement', 'Text', 'document', 'GEN'], ['ephemera', 'Brochure or flyer', 'Text', 'document', 'PAMP'],
+      ['pressrel', 'Press release', 'Text', 'document', 'GEN'], ['poster', 'Poster', 'StillImage', 'graphic', 'ART'], ['programme', 'Event programme', 'Text', 'document', 'GEN']]],
     ['Images', [['photo', 'Photograph', 'StillImage', 'graphic', 'FIGURE'], ['diagram', 'Drawing, diagram or schematic', 'StillImage', 'figure', 'FIGURE'], ['flowchart', 'Flowchart', 'StillImage', 'figure', 'FIGURE'],
-      ['screenshot', 'Screenshot', 'StillImage', 'graphic', 'FIGURE'], ['map', 'Map or plan', 'StillImage', 'map', 'MAP'], ['poster', 'Poster', 'StillImage', 'graphic', 'ART'], ['slides', 'Slides', 'Text', 'document', 'SLIDE']]],
-    ['Sound and moving image', [['audio', 'Audio recording', 'Sound', 'song', 'SOUND'], ['interview', 'Oral history or interview', null, 'interview', 'SOUND'], ['talk', 'Lecture or talk', null, 'speech', 'GEN'],
-      ['film', 'Film', 'MovingImage', 'motion_picture', 'MPCT'], ['video', 'Video recording', 'MovingImage', 'motion_picture', 'VIDEO'], ['broadcast', 'Broadcast (radio or television)', null, 'broadcast', 'VIDEO']]],
-    ['Objects', [['hardware', 'Computer or hardware', 'PhysicalObject', 'document', 'GEN'], ['artefact', 'Object or artefact', 'PhysicalObject', 'document', 'GEN']]],
-    ['The web', [['webpage', 'Web page', 'InteractiveResource', 'webpage', 'ELEC'], ['blog', 'Blog post', 'Text', 'post-weblog', 'BLOG'], ['social', 'Social media post', 'Text', 'post', 'ELEC'],
-      ['exhibit', 'Online exhibition', 'InteractiveResource', 'webpage', 'ELEC']]],
+      ['screenshot', 'Screenshot', 'StillImage', 'graphic', 'FIGURE'], ['map', 'Map or plan', 'StillImage', 'map', 'MAP'], ['slides', 'Slides', 'Text', 'document', 'SLIDE']]],
+    ['Recordings and their transcripts', [['interview', 'Interview or oral history', null, 'interview', 'SOUND'], ['talk', 'Lecture, talk or panel', null, 'speech', 'GEN'],
+      ['broadcast', 'Broadcast (radio or television)', null, 'broadcast', 'VIDEO'], ['film', 'Film', 'MovingImage', 'motion_picture', 'MPCT'],
+      ['audio', 'Audio recording', 'Sound', 'song', 'SOUND'], ['video', 'Video recording', 'MovingImage', 'motion_picture', 'VIDEO']]],
+    ['Web', [['webpage', 'Web page', 'InteractiveResource', 'webpage', 'ELEC'], ['blog', 'Blog post', 'Text', 'post-weblog', 'BLOG'], ['social', 'Social media post', 'Text', 'post', 'ELEC']]],
+    ['Objects and archives', [['hardware', 'Computer or hardware', 'PhysicalObject', 'document', 'GEN'], ['artefact', 'Object or artefact', 'PhysicalObject', 'document', 'GEN'],
+      ['exhibit', 'Exhibition or display (physical or online)', null, 'webpage', 'ELEC'], ['findingaid', 'Finding aid or archival description', 'Text', 'document', 'GEN']]],
     ['Other', [['other', 'Other', null, 'document', 'GEN']]]
   ];
-  ((B.paratexts || {}).genres || []).forEach(function (g) {
-    var have = GENRES.filter(function (x) { return x[0] === g[0]; })[0];
-    if (have) have[1] = have[1].concat(g[1]); else GENRES.splice(GENRES.length - 1, 0, [g[0], g[1].slice()]);
+  // retired types: shown on the records that carry them, not offered (a transcript takes the type of
+  // what it transcribes; a tape or deck of cards is a program, or an object, with its Medium)
+  var RETIRED = [['transcript', 'Transcript (older type)', 'Text', 'document', 'GEN'], ['papertape', 'Paper tape (older type)', 'PhysicalObject', 'document', 'GEN'],
+    ['cards', 'Punched cards (older type)', 'PhysicalObject', 'document', 'GEN'], ['magtape', 'Magnetic tape or disk (older type)', 'PhysicalObject', 'document', 'GEN']];
+  var GENRES = [], GENRE_BY = {}, typesSig = null;
+  function addType(group, e) {
+    if (!e || !e[0] || GENRE_BY[e[0]]) return;   // an id already defined keeps its first definition
+    var g = GENRES.filter(function (x) { return x[0] === group; })[0];
+    if (!g) { g = [group, []]; GENRES.splice(GENRES.length - 1, 0, g); }   // a new group, before Other
+    g[1].push(e); GENRE_BY[e[0]] = e;
+  }
+  // the kit's list, then the bench's, then the catalogue's; rebuilt when the catalogue's types change
+  function syncTypes() {
+    var ct = (cat && cat.types) || [], sig = JSON.stringify(ct);
+    if (sig === typesSig) return; typesSig = sig;
+    GENRES = KIT_TYPES.map(function (g) { return [g[0], g[1].slice()]; }); GENRE_BY = {};
+    GENRES.forEach(function (g) { g[1].forEach(function (e) { GENRE_BY[e[0]] = e; }); });
+    ((B.paratexts || {}).genres || []).forEach(function (g) { g[1].forEach(function (e) { addType(g[0], e); }); });
+    ct.forEach(function (t) { addType(t.group || 'Added in this archive', [t.id, t.label || t.id, t.dcmi || null, t.csl || 'document', t.ris || 'GEN']); });
+    RETIRED.forEach(function (e) { if (!GENRE_BY[e[0]]) GENRE_BY[e[0]] = e; });
+  }
+  syncTypes();
+  // the carrier (`medium`), optional: set on programs and physical objects. The catalogue's `media`
+  // ([{ id, label, by, added }]) adds to it, from the Medium picker (＋ New medium…).
+  var KIT_MEDIA = [['paper', 'Paper'], ['microform', 'Microfilm or microfiche'], ['cards', 'Punched cards'], ['papertape', 'Paper tape'], ['magtape', 'Magnetic tape'],
+    ['dectape', 'DECtape'], ['disk', 'Disk (floppy or hard)'], ['cartridge', 'ROM cartridge'], ['cassette', 'Data cassette'], ['print', 'Photographic print'],
+    ['film', 'Photographic film (negatives, slides, cine)'], ['videotape', 'Videotape'], ['audiotape', 'Audio tape'], ['digital', 'Born digital']];
+  function media() { var out = KIT_MEDIA.slice(), have = {}; out.forEach(function (m) { have[m[0]] = 1; }); ((cat && cat.media) || []).forEach(function (m) { if (m.id && !have[m.id]) { have[m.id] = 1; out.push([m.id, m.label || m.id]); } }); return out; }
+  function mediumLabel(id) { var m = media().filter(function (x) { return x[0] === id; })[0]; return m ? m[1] : id || ''; }
+  function mediumOpts(cur) {
+    return '<option value="">—</option>' + media().map(function (m) { return '<option value="' + SW.esc(m[0]) + '"' + (m[0] === cur ? ' selected' : '') + '>' + SW.esc(m[1]) + '</option>'; }).join('') +
+      (cur && !media().some(function (m) { return m[0] === cur; }) ? '<option value="' + SW.esc(cur) + '" selected>' + SW.esc(cur) + '</option>' : '') + '<option value="__new">＋ New medium…</option>';
+  }
+  function slugOf(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32); }
+  // ＋ New type… and ＋ New medium…: a small box, then one commit adding it to the catalogue
+  function newVocab(which) {
+    return new Promise(function (ok) {
+      var esc = SW.esc, q = SW.el('dialog', { class: 'ini-dlg px-newtype' }), fin = false;
+      var groups = GENRES.map(function (g) { return g[0]; });
+      q.innerHTML = '<form method="dialog" class="settings"><h2>' + (which === 'type' ? 'A new type' : 'A new medium') + '</h2>' +
+        '<p class="hint">' + (which === 'type' ? 'For a kind of thing no type in the list describes. It is added to this archive’s list for the whole crew, and a later release of the kit may take it in.' : 'For a carrier no medium in the list describes. It is added to this archive’s list for the whole crew.') + '</p>' +
+        '<label><span>Name</span><input class="px-nt-label" placeholder="' + (which === 'type' ? 'e.g. Questionnaire' : 'e.g. Magnetic card') + '"></label>' +
+        (which === 'type' ? '<label><span>Group</span><select class="px-nt-group">' + groups.map(function (g) { return '<option>' + esc(g) + '</option>'; }).join('') + '</select></label>' +
+          '<label><span>DCMI type</span><select class="px-nt-dcmi"><option value="">from the file</option>' + DCMI.map(function (t) { return '<option>' + t + '</option>'; }).join('') + '</select></label>' +
+          '<label><span>Note</span><input class="px-nt-note" placeholder="what it covers, for the next person"></label>' : '') +
+        '<p class="hint px-nt-msg"></p><div class="row"><button type="button" class="btn ghost" data-u="no">Cancel</button><button type="button" class="btn" data-u="yes">Add</button></div></form>';
+      document.body.appendChild(q);
+      function finish(v) { if (fin) return; fin = true; if (q.open) q.close(); q.remove(); ok(v); }
+      q.addEventListener('cancel', function (e) { e.preventDefault(); finish(null); });
+      q.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-u]'); if (!b) { if (e.target === q) finish(null); return; }
+        if (b.dataset.u === 'no') { finish(null); return; }
+        var label = SW.$('.px-nt-label', q).value.trim(), id = slugOf(label), msg = SW.$('.px-nt-msg', q);
+        if (!label || !id) { msg.textContent = 'Give it a name.'; return; }
+        var clash = which === 'type' ? GENRE_BY[id] || GENRES.some(function (g) { return g[1].some(function (e2) { return e2[1].toLowerCase() === label.toLowerCase(); }); }) : media().some(function (m) { return m[0] === id || m[1].toLowerCase() === label.toLowerCase(); });
+        if (clash) { msg.textContent = 'That is in the list already.'; return; }
+        var rec = { id: id, label: label, by: me(), added: now() };
+        if (which === 'type') { rec.group = SW.$('.px-nt-group', q).value; var dc = SW.$('.px-nt-dcmi', q).value; if (dc) rec.dcmi = dc; var nt = SW.$('.px-nt-note', q).value.trim(); if (nt) rec.note = nt; }
+        b.disabled = true; msg.textContent = 'Saving…';
+        save('Paratexts: ' + which + ' “' + label + '” added to the list, by ' + me(), function (c) { var k = which === 'type' ? 'types' : 'media'; c[k] = c[k] || []; if (!c[k].some(function (x) { return x.id === id; })) c[k].push(rec); })
+          .then(function () { syncTypes(); finish(id); }, function (err) { b.disabled = false; msg.textContent = err.message; });
+      });
+      q.showModal(); SW.$('.px-nt-label', q).focus();
+    });
+  }
+  // the Type and Medium pickers: ＋ New… opens the box above; the Type picker's find box narrows its list
+  document.addEventListener('change', function (e) {
+    var t = e.target; if (!t.matches || !t.matches('select[data-k="genre"], select[data-k="medium"]') || t.value !== '__new') return;
+    var which = t.dataset.k === 'genre' ? 'type' : 'medium', was = t.dataset.was || '';
+    newVocab(which).then(function (id) {
+      t.innerHTML = which === 'type' ? genreOpts(id || was) : mediumOpts(id || was);
+      t.value = id || was; t.dataset.was = t.value;
+    });
+  });
+  document.addEventListener('focusin', function (e) { var t = e.target; if (t.matches && t.matches('select[data-k="genre"], select[data-k="medium"]')) t.dataset.was = t.value; });
+  document.addEventListener('input', function (e) {
+    var t = e.target; if (!t.classList || !t.classList.contains('px-tfind')) return;
+    var sel = t.parentNode.querySelector('select[data-k="genre"]'); if (!sel) return;
+    var q = t.value.trim().toLowerCase(), hits = [];
+    SW.$$('option', sel).forEach(function (o) { var on = !q || !o.value || o.value === '__new' || o.textContent.toLowerCase().indexOf(q) >= 0 || (o.parentNode.label || '').toLowerCase().indexOf(q) >= 0; o.hidden = !on; if (on && q && o.value && o.value !== '__new') hits.push(o); });
+    SW.$$('optgroup', sel).forEach(function (g) { g.hidden = !SW.$$('option', g).some(function (o) { return !o.hidden; }); });
+    if (hits.length === 1) sel.value = hits[0].value;
   });
   // ---------- languages, by name ----------
   // a record's language (BCP 47) by its name; SW.BENCH.paratexts.languages { code: name } adds a
@@ -696,12 +786,13 @@
     }).join('');
   }
   function langLabel(code) { return LANGS[code] || code; }
-  var GENRE_BY = {}; GENRES.forEach(function (g) { g[1].forEach(function (e) { GENRE_BY[e[0]] = e; }); });
-  function genreOf(it) { return it && it.genre ? GENRE_BY[it.genre] || [it.genre, it.genre, null, 'document', 'GEN'] : null; }
+  function genreOf(it) { syncTypes(); return it && it.genre ? GENRE_BY[it.genre] || [it.genre, it.genre, null, 'document', 'GEN'] : null; }
   function genreOpts(cur) {
+    syncTypes();
     return '<option value="">—</option>' + GENRES.map(function (g) {
       return '<optgroup label="' + SW.esc(g[0]) + '">' + g[1].map(function (e) { return '<option value="' + SW.esc(e[0]) + '"' + (e[0] === cur ? ' selected' : '') + '>' + SW.esc(e[1]) + '</option>'; }).join('') + '</optgroup>';
-    }).join('') + (cur && !GENRE_BY[cur] ? '<option value="' + SW.esc(cur) + '" selected>' + SW.esc(cur) + '</option>' : '');
+    }).join('') + (cur && GENRE_BY[cur] && !GENRES.some(function (g) { return g[1].some(function (e) { return e[0] === cur; }); }) ? '<option value="' + SW.esc(cur) + '" selected>' + SW.esc(GENRE_BY[cur][1]) + '</option>' : cur && !GENRE_BY[cur] ? '<option value="' + SW.esc(cur) + '" selected>' + SW.esc(cur) + '</option>' : '') +
+      '<option value="__new">＋ New type…</option>';
   }
   // file names read as text: program source (kind software) and plain text (kind text)
   var CODE_EXT = /^\.(bas|lisp|lsp|l|mad|slip|c|h|cc|cpp|js|py|asm|mac|mid|f|for|f77|pas|java|rb|pl|pm|sh|el|cl|scm|snobol|sno|cob|cbl|pli|pl1|tec|apl|fth|forth|lgo|logo|pop|p|tcl|awk|m|s)$/i;
@@ -714,7 +805,7 @@
   // The record: [key, label, kind, placeholder, group]. The 'dc' group, the rest of Dublin Core's fifteen
   // elements, folds away under More metadata; the archive fields say where the original is kept.
   var DCMI = ['Collection', 'Dataset', 'Event', 'Image', 'InteractiveResource', 'MovingImage', 'PhysicalObject', 'Service', 'Software', 'Sound', 'StillImage', 'Text'];
-  var FIELDS = [['title', 'Title'], ['genre', 'Type', 'genre'], ['date', 'Date', '', EX.date || 'e.g. 1970-05-17, or 1970'], ['creator', 'Creator'], ['source', 'Source', '', 'where this copy came from'],
+  var FIELDS = [['title', 'Title'], ['genre', 'Type', 'genre'], ['medium', 'Medium', 'medium'], ['date', 'Date', '', EX.date || 'e.g. 1970-05-17, or 1970'], ['creator', 'Creator'], ['source', 'Source', '', 'where this copy came from'],
     ['archive', 'Held at', '', 'the archive with the original, ' + (EX.archive || 'e.g. Computer History Museum'), 'more'], ['archiveId', 'Archive ref', '', 'its catalogue number, or box and folder', 'more'], ['archiveUrl', 'Archive link', 'url', 'https://… the original in its archive’s catalogue', 'more'], ['url', 'Online at', 'url', 'https://… a recording or page to play or show here', 'more'],
     ['rights', 'Rights', '', '', 'more'], ['accessioned', 'Accession date', '', 'the day it came into the collection', 'more'], ['description', 'Description', 'area'],
     ['tags', 'Tags', 'list', 'comma separated'], ['versions', 'Versions', 'list', EX.versions || 'version ids, comma separated'], ['refs', 'References', 'list', EX.refs || 'e.g. [REF: …]', 'more'],
@@ -726,7 +817,8 @@
       var v = it[f[0]], val = f[2] === 'list' ? (v || []).join(', ') : (v || ''), ph = f[3] || '';
       var inp = f[2] === 'area' ? '<textarea data-k="' + f[0] + '" rows="3">' + SW.esc(val) + '</textarea>' :
         f[2] === 'dcmi' ? '<select data-k="' + f[0] + '"><option value="">—</option>' + DCMI.map(function (t) { return '<option' + (t === val ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>' :
-        f[2] === 'genre' ? '<select data-k="genre" title="What the item is: a memo scanned to PDF is a memo">' + genreOpts(val) + '</select>' :
+        f[2] === 'genre' ? '<span class="px-tpick"><input class="px-tfind" type="search" placeholder="Find a type" aria-label="Find a type"><select data-k="genre" title="What the item is: a memo scanned to PDF is a memo">' + genreOpts(val) + '</select></span>' :
+        f[2] === 'medium' ? '<select data-k="medium" title="The carrier, for a program or an object: paper tape, DECtape, a disk. Leave it empty for a scan of a document.">' + mediumOpts(val) + '</select>' :
         '<input data-k="' + f[0] + '"' + (f[2] === 'url' ? ' type="url"' : '') + ' value="' + SW.esc(val) + '" placeholder="' + SW.esc(ph) + '">';
       return '<label><span>' + f[1] + '</span>' + inp + '</label>';
     }
@@ -744,7 +836,7 @@
     function el(n, v) { return (Array.isArray(v) ? v : [v]).filter(function (y) { return y; }).map(function (y) { return '  <dc:' + n + '>' + x(String(y)) + '</dc:' + n + '>\n'; }).join(''); }
     return '<?xml version="1.0" encoding="UTF-8"?>\n<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">\n' + items.map(function (it) {
       return '<oai_dc:dc>\n' + el('title', it.title) + el('creator', it.creator) + el('subject', it.tags) + el('description', [it.description].concat(gapsAll(it).map(gapLine))) + el('publisher', it.publisher) + el('contributor', it.contributor) +
-        el('date', it.date) + el('type', [dcType(it), (genreOf(it) || [])[1]]) + el('format', [it.mime, it.extent]) +
+        el('date', it.date) + el('type', [dcType(it), (genreOf(it) || [])[1]]) + el('format', [it.mime, it.extent, it.medium ? 'Medium: ' + mediumLabel(it.medium) : '']) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
         el('relation', (it.refs || []).concat(relOf(it).map(function (r) { return 'references: ' + r + ' ' + byCode(r).title; })).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); })).concat(corpusOf(it) ? ['isPartOf: ' + corpusName(corpusOf(it))] : []).concat(corpora().filter(function (c) { return c.id !== corpusOf(it) && inAlso(it, c.id); }).map(function (c) { return 'isPartOf: ' + c.name; }))
@@ -780,7 +872,7 @@
       if (it.archiveId) o.archive_location = it.archiveId;
       if (it.language) o.language = it.language;
       if (it.rights) o.license = it.rights;
-      if (it.mime) o.medium = it.mime;
+      if (it.medium || it.mime) o.medium = it.medium ? mediumLabel(it.medium) : it.mime;
       if (x.DOI) o.DOI = x.DOI; if (x.ISBN) o.ISBN = x.ISBN;
       o.URL = okURL(it.url) ? it.url.trim() : okURL(it.archiveUrl) ? it.archiveUrl.trim() : x.URL || benchLink(it);
       if ((it.tags || []).length) o.keyword = it.tags.join(', ');
@@ -813,7 +905,7 @@
     var o = {};
     SW.$$('[data-k]', box).forEach(function (el) {
       var k = el.dataset.k, f = FIELDS.filter(function (x) { return x[0] === k; })[0];
-      o[k] = f && f[2] === 'list' ? el.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : el.value.trim();
+      o[k] = f && f[2] === 'list' ? el.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : el.value === '__new' ? '' : el.value.trim();
     });
     return o;
   }
