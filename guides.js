@@ -25,7 +25,7 @@
         'Open the token form: its name, owner, a year’s expiry and the permission it needs (Contents, read and write) are filled in. ' + tokenBtn(),
         'On the form, under <b>Repository access</b>, choose <b>Only select repositories</b> and then <b>' + BP.repo + '</b>. GitHub will not take the repository from a link, so this step is by hand.',
         '<b>Generate token</b>, copy it, and paste it into the bench: ⚙ Settings, Paratexts, then <b>Save and test</b>. Help ▸ Joining the annotation group, step 5, has the same box.',
-        'The token stays in this browser, and is sent to nobody but GitHub. On another computer, paste it there too.'])],
+        'The token stays in this browser, and is sent to nobody but GitHub. On another computer, paste it there too. Each browser keeps its own, and Safari clears what a site has stored after seven days without a visit; a token that is lost, or has expired, is replaced by making a new one from the same form (Only select repositories, the paratexts repository) and pasting it in. The old one can be deleted on GitHub under Settings ▸ Developer settings ▸ Fine-grained tokens.'])],
       ['Inviting someone', '<p>Send them the four steps above with the link, which is what the button below copies. Two things to know before you do.</p>' + ul([
         'They must be a member of the <b>' + BP.org + '</b> organisation first, so invite them there before sending the steps.',
         'The token is <b>read and write</b>. Whoever holds one can add, change and withdraw paratexts. Every change is a commit in ' + BP.org + '/' + BP.repo + ' under their initials, so nothing is anonymous and nothing is lost, but there is no reading-only form of this link. Send it to people you mean to catalogue with.',

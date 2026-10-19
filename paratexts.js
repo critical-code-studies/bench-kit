@@ -21,7 +21,11 @@
   P.configured = function () { return !!token(); };
   // A token form with everything filled in but the repository (GitHub's links cannot choose that)
   var TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new?name=' + plus(BP.tokenName || BNAME + ' research bench') + '&description=' + plus('Paratexts in the ' + BNAME + ' research bench (' + RNAME + ')') + '&target_name=' + ORG + '&expires_in=366&contents=write';
-  var STEPS = 'Paratexts in the ' + BNAME + ' research bench: setting up\n\n1. Accept the invitation to the ' + ORG + ' organisation on GitHub (sent by email).\n2. Open ' + TOKEN_URL + '\n   The name, owner, expiry and permission are filled in.\n3. Under Repository access choose Only select repositories, then ' + RNAME + '.\n4. Generate token, copy it, and paste it into the bench: ⚙ Settings, Paratexts (' + SW.BASE_URI + '?tab=paratexts).\n\nThe token stays in your browser; keep it to yourself.';
+  // what to do when the token has gone: shown in ⚙ Settings, the join steps and Paratexts' own steps
+  var LOST = 'If the token is lost (in another browser or on another computer, or when Safari clears a site’s stored data after seven days without a visit) or has expired, make a new one: open the token form again, choose Only select repositories and ' + RNAME + ', generate it, and paste it here. The old one can be deleted on GitHub under Settings ▸ Developer settings ▸ Fine-grained tokens.';
+  P.LOST = LOST;
+  var STEPS = 'Paratexts in the ' + BNAME + ' research bench: setting up\n\n1. Accept the invitation to the ' + ORG + ' organisation on GitHub (sent by email).\n2. Open ' + TOKEN_URL + '\n   The name, owner, expiry and permission are filled in.\n3. Under Repository access choose Only select repositories, then ' + RNAME + '.\n4. Generate token, copy it, and paste it into the bench: ⚙ Settings, Paratexts (' + SW.BASE_URI + '?tab=paratexts).\n\nThe token stays in your browser; keep it to yourself.\n\n' + LOST.replace('paste it here', 'paste it into the bench');
+
 
   // ---------- GitHub ----------
   function gh(method, path, body, accept) {
@@ -380,6 +384,7 @@
         '<li><a class="btn" href="' + SW.esc(TOKEN_URL) + '" target="_blank" rel="noopener">Open the token form ↗</a> Its name, owner (' + ORG + '), a year’s expiry and the permission it needs (Contents, read and write) are filled in.</li>' +
         '<li>Under <b>Repository access</b>, choose <b>Only select repositories</b>, then <b>' + RNAME + '</b>: the one choice the link cannot make. If GitHub asks for a reason, “the ' + BNAME + ' research bench” will do.</li>' +
         '<li><b>Generate token</b>, copy it, and paste it into ⚙ Settings, Paratexts. It stays in this browser only; on another computer, paste it there too.</li></ol>' +
+        '<p class="hint">' + SW.esc(LOST.replace('paste it here', 'paste it into ⚙ Settings')) + '</p>' +
         '<p><button class="btn" data-px="settings">Open ⚙ Settings</button> <button class="btn ghost" data-copy="' + SW.esc(STEPS) + '" title="These steps as text, to send to someone joining the crew">Copy the steps</button></p></div>';
       body.onclick = function (e) { if (e.target.closest('[data-px="settings"]')) SW.settings ? SW.settings.open('px') : SW.$('#btn-settings') && SW.$('#btn-settings').click(); };
       return;
@@ -1037,6 +1042,9 @@
     function fit() { st = { z: 1, cx: 0.5, cy: 0.5 }; place(); }
     var size = null;   // the picture's size where it is not its pixels (a PDF page's own, in points)
     img.onload = function () { w = size ? size[0] : img.naturalWidth; h = size ? size[1] : img.naturalHeight; place(); };
+    // laid out again whenever the pane gets or changes its size: a picture already in the cache can load
+    // before its box is laid out (an item opened first from a list), when place() has no width to fit to
+    if (root.ResizeObserver) new ResizeObserver(function () { if (w) soon(); }).observe(box);
     pv.addEventListener('click', function (e) {
       var b = e.target.closest('[data-zz]'); if (!b) return;
       var k = b.dataset.zz;

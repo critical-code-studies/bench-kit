@@ -1126,7 +1126,7 @@
         '<ol class="ah-steps"><li><a class="btn ghost" href="' + esc(P.TOKEN_URL) + '" target="_blank" rel="noopener noreferrer">Open the token form ↗</a> (its name, owner, expiry and permission are filled in).</li>' +
         '<li>Under <b>Repository access</b>, choose <b>Only select repositories</b>, then <b>' + esc(BP.repo || '') + '</b>; then <b>Generate token</b> and copy it.</li></ol>' +
         '<div class="js-form"><label><span>GitHub token</span><span class="js-pw"><input data-j="gh" type="password" value="' + esc(SW.store.get('gh.token', '')) + '" placeholder="github_pat_…" autocomplete="new-password" data-lpignore="true" data-1p-ignore><button class="btn ghost" data-show="gh">Show</button></span></label></div>' +
-        '<p><button class="btn" data-a="gh">Save and test</button></p>' + ok('gh') : '') +
+        '<p><button class="btn" data-a="gh">Save and test</button></p>' + (P.LOST ? '<p class="hint">' + esc(P.LOST) + '</p>' : '') + ok('gh') : '') +
 
       '</div></section><section class="js-step js-then"><div class="js-num" aria-hidden="true">✓</div><div class="js-body"><h3>Then</h3><ul class="ah-steps">' +
       '<li>Annotate: select lines in Read and click <b>✎ Annotate</b>, or hover a line number and click <b>+A</b>. Help ▸ Advanced annotation covers formatting, links between annotations, searching and the rest.</li>' +

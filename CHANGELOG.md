@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Paratexts: a picture (or PDF page) in an item that has alternates, such as a transcript or a translation, showed an empty pane at "100%" (reported by David on the ELIZA bench, P-OO3ET). The zoom box sat in the inner pane's centred grid and, its picture being placed absolutely, had no width to fit to; it now fills the pane. The box is also laid out again whenever its size changes, so a picture that loads before its box is laid out is fitted when the box arrives.
+- Tokens: what to do when the GitHub token is lost (another browser or computer, Safari clearing a site's data after seven days without a visit) or has expired, in ⚙ Settings, the join steps, Paratexts' own steps, the steps to send and Help: make a new one from the same form and paste it in; the old one can be deleted on GitHub. Asked for by David.
+
 ## 0.65.2 (2026-10-19)
 
 - Tokens (reported by David: a GitHub token was lost between bench versions). Nothing in the kit removes a token, and the benches' storage prefixes have not changed, but three paths could overwrite or expose one, and they are closed. ⚙ Settings now writes a token only when the box differs from the token held, and an emptied box removes a token only after a confirmation; the join form's GitHub and Hypothesis buttons ask the same before removing one. The token boxes are marked autocomplete="new-password" (with the LastPass and 1Password opt-outs), so a browser's password manager does not fill them with a saved password. The backup file (My notes ▸ Back up) no longer includes the GitHub token, as it already left out Hypothesis's, and settings in it are keyed by the bench's own prefix.
