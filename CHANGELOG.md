@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.66.0 (2026-10-19)
 
 - **Implementations** (new `implementations.js`, `implementations.css`): the Implementations tab as a kit module, from the ELIZA bench's view (eliza 0.1.82), for any bench that sets `SW.BENCH.implementations`. The ELIZA-specific parts are now the bench's: root labels from the catalogue's `variorum`, the credit at the foot from `credit`, and a feature that needs more than yes or no (ELIZA's delimiters) through `feature: { cell, cls, key }`. Compare reads Lisp by definition through `lispdefs.js` (the dialect from the entry's language: PDP-6, BBN-LISP and Interlisp, Maclisp and its relatives, Common Lisp), marking an unbalanced definition. Alternates held privately are named, with the paratext that holds them. I-codes open through the kit's Go to a code. README ▸ Implementations sets out the catalogue, publication and clearance, and how a bench adds the tab.
 
