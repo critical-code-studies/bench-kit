@@ -157,23 +157,48 @@
   function corpusOf(it) { return String(it.corpus || ''); }
   function corpusName(id) { return !id ? PX_NAME : (corpusDef(id) || {}).name || ('Undeclared corpus \u201c' + id + '\u201d'); }
   function corpusNote(id) { return !id ? '' : (corpusDef(id) || {}).note || ''; }
-  // An id that no `corpora` entry declares is a mistake, so it is shown as an error and is not
-  // treated as a corpus of its own: it is listed in the menu with ⚠ and marked on the item.
+  // An id that no `corpora` entry declares is an error: it is listed in the menu with ⚠ and
+  // marked on the item.
   function corpusBad(it) { var id = corpusOf(it); return !!id && !corpusDef(id); }
   function corpusing() { return corpora().length > 0 || (cat ? cat.items : []).some(function (it) { return !!corpusOf(it); }); }
-  function inCorpus(it) { return F.corpus === '_all' ? true : corpusOf(it) === (F.corpus || ''); }
-  // every corpus id declared or in use, declared ones first, each with its live count
+  // An item has one home, its `corpus` (or the paratexts). A corpus may also list, in `also`,
+  // paratexts that belong to its set: its view shows them beside its own items, and they stay
+  // paratexts, so the default view and its counts are unchanged. A code in `also` that is not in
+  // the catalogue is skipped, as Related skips one; a code whose item has a corpus of its own is
+  // an error, marked ⚠.
+  function alsoOf(id) { var d = corpusDef(id); return d && Array.isArray(d.also) ? d.also : []; }
+  function inAlso(it, id) { return !!id && alsoOf(id).indexOf(it.code) >= 0; }
+  function alsoBad(it, id) { return inAlso(it, id) && !!corpusOf(it) && corpusOf(it) !== id; }
+  function inCorpus(it) { var cur = F.corpus || ''; return F.corpus === '_all' || corpusOf(it) === cur || inAlso(it, cur); }
+  function inCorpusId(it, id) { return corpusOf(it) === id || inAlso(it, id); }
+  // every corpus id declared or in use, declared ones first, each with its live count (its own
+  // items and the paratexts it also lists, each once) and how many of each
   function corporaIn() {
     var lv = (cat ? cat.items : []).filter(live), seen = {}, out = [];
-    corpora().forEach(function (c) { seen[c.id] = 1; out.push({ id: c.id, name: c.name, note: c.note || '', n: lv.filter(function (it) { return corpusOf(it) === c.id; }).length, bad: false }); });
-    lv.forEach(function (it) { var id = corpusOf(it); if (id && !seen[id]) { seen[id] = 1; out.push({ id: id, name: corpusName(id), note: '', n: lv.filter(function (x) { return corpusOf(x) === id; }).length, bad: true }); } });
+    corpora().forEach(function (c) {
+      seen[c.id] = 1;
+      var own = lv.filter(function (it) { return corpusOf(it) === c.id; }).length, listed = lv.filter(function (it) { return corpusOf(it) !== c.id && inAlso(it, c.id); });
+      var px = listed.filter(function (it) { return !corpusOf(it); }).length;
+      out.push({ id: c.id, name: c.name, note: c.note || '', n: own + listed.length, own: own, also: px, nbad: listed.length - px, bad: listed.length > px });
+    });
+    lv.forEach(function (it) { var id = corpusOf(it); if (id && !seen[id]) { seen[id] = 1; var n = lv.filter(function (x) { return corpusOf(x) === id; }).length; out.push({ id: id, name: corpusName(id), note: '', n: n, own: n, also: 0, bad: true, undeclared: true }); } });
     return out;
   }
-  function corpusChip(it) {
-    var id = corpusOf(it);
-    if (!id || id === (F.corpus || '')) return '';
-    return '<span class="px-cx' + (corpusBad(it) ? ' px-cx-bad' : '') + '" title="' + SW.esc(corpusBad(it) ? 'This item names a corpus the catalogue does not declare in corpora.' : (corpusNote(id) || corpusName(id))) + '">' + SW.esc(corpusName(id)) + '</span>';
+  // the item's home, marked where it differs from the corpus in view: on an item from another
+  // corpus, and (as Paratexts) on a paratext a corpus also lists
+  function chipFor(it, title) {
+    var id = corpusOf(it), bad = corpusBad(it) || alsoBad(it, F.corpus || '');
+    return '<span class="px-cx' + (bad ? ' px-cx-bad' : '') + '" title="' + SW.esc(title || (corpusBad(it) ? 'This item names a corpus the catalogue does not declare in corpora.' : alsoBad(it, F.corpus || '') ? 'Listed in this corpus\u2019s also, but its home is another corpus.' : (corpusNote(id) || corpusName(id)))) + '">' + SW.esc(corpusName(id)) + '</span>';
   }
+  function corpusChip(it) {
+    var home = corpusOf(it), cur = F.corpus || '';
+    if (home === cur) return '';
+    if (!home && (cur === '' || F.corpus === '_all')) return '';
+    return chipFor(it, !home ? 'A paratext, listed in this corpus too' : '');
+  }
+  // the same mark on a link to an item (Related, a sequence's rows), shown whenever the item's
+  // home is a corpus
+  function homeChip(it) { return it && corpusOf(it) ? chipFor(it) : ''; }
 
   // A change to the catalogue, shown at once and then saved (made again on the newest copy)
   var busyN = 0;
@@ -321,8 +346,10 @@
       return k;
     }
     ['corpus', 'tag', 'v', 'genre', 'lang', 'kind'].forEach(function (k) {
-      // the corpus is in force at its default too: '' means the paratexts only, not no filter
-      if (k === 'corpus' ? !corpusing() || F.corpus === '_all' : !F[k]) return;
+      // the corpus is in force at its default too, where '' means the paratexts only; it is told
+      // only while something narrows the list (a search, a filter, a collection), since the
+      // left panel and the menu already give each corpus's count
+      if (k === 'corpus' ? !corpusing() || F.corpus === '_all' || !(F.q || F.tag || F.v || F.genre || F.lang || F.kind || (F.c && F.c !== '_wd')) : !F[k]) return;
       var n = b.filter(function (it) { return passes(it, k); }).length - nShown;
       if (n > 0) out.push({ k: k, label: lab(k), n: n });
     });
@@ -409,7 +436,8 @@
     nav.innerHTML = '<button class="btn px-addbtn" data-px="add" title="Upload a file with its details, to the crew’s repository">＋ Add an item</button>' + row('', '▤', 'All', lv.length) + row('_none', '◌', 'Not in a collection', lv.filter(function (it) { return !inColl(it).length; }).length) +
       (corpusing() ? '<div class="px-ch"><span>Corpora</span></div>' +
         [{ id: '', name: PX_NAME, note: 'The paratexts proper: every item not put in a corpus.', n: cat.items.filter(live).filter(function (it) { return !corpusOf(it); }).length, bad: false }].concat(corporaIn()).map(function (c) {
-          return '<div class="px-coll px-corow' + ((F.corpus || '') === c.id ? ' on' : '') + (c.bad ? ' px-cx-bad' : '') + '" data-corpus="' + esc(c.id) + '" tabindex="0" title="' + esc(c.bad ? 'Not declared in the catalogue\u2019s corpora: a mistake to correct, not a corpus' : c.note || c.name) + '"><span class="px-cn">' + (c.bad ? '⚠' : '▤') + ' ' + esc(c.name) + '</span><span class="px-cnt">' + c.n + '</span></div>';
+          var tip = c.undeclared ? 'Not declared in the catalogue\u2019s corpora.' : (c.note ? c.note + ' ' : '') + (c.also || c.nbad ? c.own + ' of its own and ' + c.also + ' ' + (c.also === 1 ? 'paratext' : 'paratexts') + ' listed in it' + (c.nbad ? '; ⚠ ' + c.nbad + ' listed in its also ' + (c.nbad === 1 ? 'has' : 'have') + ' another corpus as home' : '') + '.' : '');
+          return '<div class="px-coll px-corow' + ((F.corpus || '') === c.id ? ' on' : '') + (c.bad ? ' px-cx-bad' : '') + '" data-corpus="' + esc(c.id) + '" tabindex="0" title="' + esc(tip.trim() || c.name) + '"><span class="px-cn">' + (c.bad ? '⚠' : '▤') + ' ' + esc(c.name) + '</span><span class="px-cnt">' + c.n + '</span></div>';
         }).join('') + '<div class="px-coll px-corow' + (F.corpus === '_all' ? ' on' : '') + '" data-corpus="_all" tabindex="0" title="Every item, whatever its corpus"><span class="px-cn">▦ Every corpus</span><span class="px-cnt">' + cat.items.filter(live).length + '</span></div>' : '') +
       '<div class="px-ch"><span>Collections</span><button class="icon-btn" data-px="newc" title="A new collection">＋</button></div>' +
       tree + (editing && editing.mode === 'new' && !editing.parent ? editRow(0, '') : '') +
@@ -426,7 +454,9 @@
     Object.keys(sel).forEach(function (k) { if (!cur.some(function (it) { return it.code === k; })) delete sel[k]; });
     var hid = hiddenBy(cur.length), cnt = SW.$('.px-count', body);
     var bc = F.c === '_wd' ? b : b.filter(inCorpus);
-    if (cnt) cnt.innerHTML = cur.length + ' of ' + bc.length + (corpusing() && F.c !== '_wd' ? ' in ' + SW.esc(F.corpus === '_all' ? 'every corpus' : corpusName(F.corpus || '')) : '') + (cur.length ? hiddenHTML(hid) : '');
+    var nAlso = F.corpus && F.corpus !== '_all' && F.c !== '_wd' ? bc.filter(function (it) { return !corpusOf(it) && inAlso(it, F.corpus); }).length : 0;
+    if (cnt) cnt.innerHTML = cur.length + ' of ' + bc.length + (corpusing() && F.c !== '_wd' ? ' in ' + SW.esc(F.corpus === '_all' ? 'every corpus' : corpusName(F.corpus || '')) : '') +
+      (nAlso ? ', ' + nAlso + ' of them also in ' + SW.esc(PX_NAME) : '') + (cur.length ? hiddenHTML(hid) : '');
     var head = '';
     if (inC()) head = '<div class="px-crumbs"><a data-c="" title="All the paratexts">All</a>' + pathOf(F.c).map(function (c) { return ' › ' + (c.id === F.c ? '<b>' + esc(c.name) + '</b>' : '<a data-c="' + esc(c.id) + '">' + esc(c.name) + '</a>'); }).join('') + '</div>';
     else if (F.c === '_none') head = '<div class="px-crumbs"><b>Not in a collection</b></div>';
@@ -714,7 +744,7 @@
         el('date', it.date) + el('type', [dcType(it), (genreOf(it) || [])[1]]) + el('format', [it.mime, it.extent]) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
-        el('relation', (it.refs || []).concat(relOf(it).map(function (r) { return 'references: ' + r + ' ' + byCode(r).title; })).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); })).concat(corpusOf(it) ? ['isPartOf: ' + corpusName(corpusOf(it))] : [])
+        el('relation', (it.refs || []).concat(relOf(it).map(function (r) { return 'references: ' + r + ' ' + byCode(r).title; })).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); })).concat(corpusOf(it) ? ['isPartOf: ' + corpusName(corpusOf(it))] : []).concat(corpora().filter(function (c) { return c.id !== corpusOf(it) && inAlso(it, c.id); }).map(function (c) { return 'isPartOf: ' + c.name; }))
           .concat(altList(it).map(function (a) { return 'hasVersion: ' + (a.label || 'alternate') + ' [' + (a.lang || '') + ']' + (altNote(a) ? ' (' + altNote(a) + ')' : ''); }))) + el('coverage', it.coverage) + el('rights', it.rights) + '</oai_dc:dc>\n';
     }).join('') + '</records>\n';
   }
@@ -1265,7 +1295,7 @@
     return '<h4 class="fd-rh">Related <span class="faint">' + (r.length || '') + '</span> <button class="btn ghost px-reladd" data-a="addrel" title="Link another item to this one (both ways)">＋ Add…</button></h4>' +
       (r.length ? '<ul class="px-citelist">' + r.map(function (c) {
         var x = byCode(c);
-        return '<li class="px-relrow"><button class="px-cite" data-relgo="' + esc(c) + '" title="Open it"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(x.title) + '</b>' + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' · <span class="faint">' + esc(x.date) + '</span>' : '') + '</button><button class="icon-btn px-relx" data-unrel="' + esc(c) + '" title="Unlink (both ways)">×</button></li>';
+        return '<li class="px-relrow"><button class="px-cite" data-relgo="' + esc(c) + '" title="Open it"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(x.title) + '</b>' + homeChip(x) + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' · <span class="faint">' + esc(x.date) + '</span>' : '') + '</button><button class="icon-btn px-relx" data-unrel="' + esc(c) + '" title="Unlink (both ways)">×</button></li>';
       }).join('') + '</ul>' : '');
   }
   // The sequence editor: a box to make or change a sequence (its name, its note, its members in
@@ -1295,7 +1325,7 @@
       list.innerHTML = w.codes.length ? w.codes.map(function (c, i) {
         var x = byCode(c);
         return '<li class="px-sqrow" draggable="true" data-i="' + i + '"><span class="px-sqgrip" title="Drag to move">⋮⋮</span><span class="px-sqn">' + (i + 1) + '</span>' +
-          '<span class="px-code mono">' + esc(c) + '</span> <span class="px-sqt">' + (x ? esc(x.title) + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' <span class="faint">' + esc(x.date) + '</span>' : '') : '<span class="faint">not in the catalogue</span>') + '</span>' +
+          '<span class="px-code mono">' + esc(c) + '</span> <span class="px-sqt">' + (x ? esc(x.title) + homeChip(x) + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' <span class="faint">' + esc(x.date) + '</span>' : '') : '<span class="faint">not in the catalogue</span>') + '</span>' +
           '<span class="px-sqbtns"><button class="icon-btn" data-sqmv="-1" title="Earlier"' + (i ? '' : ' disabled') + '>↑</button><button class="icon-btn" data-sqmv="1" title="Later"' + (i < w.codes.length - 1 ? '' : ' disabled') + '>↓</button><button class="icon-btn" data-sqdel title="Take it out of the sequence">×</button></span></li>';
       }).join('') : '<li class="hint">No items yet: add them below, or tick them in the list and choose ⛓ Sequence in the bar that appears.</li>';
     }
