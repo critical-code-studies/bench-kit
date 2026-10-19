@@ -153,7 +153,7 @@
   // By function (kit/lispdefs.js): where both versions are Lisp, their definitions matched by
   // name and compared as tokens. A version's Lisp dialect is its lispDialect, or read from its
   // dialect or the bench's lang (pdp6, maclisp, bbn or interlisp, cl).
-  var LISPD = { maclisp: 'maclisp', pdp6: 'pdp6', 'pdp6-lisp': 'pdp6', 'stanford-lisp': 'maclisp', franz: 'maclisp', bbn: 'bbn', 'bbn-lisp': 'bbn', interlisp: 'bbn', cl: 'cl', 'common-lisp': 'cl' };
+  var LISPD = { maclisp: 'maclisp', pdp6: 'pdp6', 'pdp6-lisp': 'pdp6', 'stanford-lisp': 'maclisp', franz: 'maclisp', bbn: 'bbn', 'bbn-lisp': 'bbn', interlisp: 'interlisp', cl: 'cl', 'common-lisp': 'cl' };
   function lispOf(b) {
     if (!root.SWLispDefs || !b) return null;
     return b.v.lispDialect || LISPD[String(b.dialect || b.v.dialect || '').toLowerCase()] || LISPD[String(BEN.lang || '').toLowerCase()] || null;

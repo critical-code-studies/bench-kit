@@ -18,7 +18,7 @@
  *   In bbn, pdp6 and maclisp a " opens a string only after a space or a parenthesis and only
  *   if another closes it on the same line (readers of the time took " as a letter: SHRDLU's
  *   dictionary defines the word " and its grammar quotes it as '"); in cl a string runs to its
- *   closing ". In maclisp and cl 'X reads as QUOTE X; in bbn and pdp6 ' is a letter, as the
+ *   closing ". In maclisp, interlisp and cl 'X reads as QUOTE X; in bbn and pdp6 ' is a letter, as the
  *   scripts of 1966 to 1972 write DON'T, YOU'RE and I'M plainly (White's Maclisp DOCTOR of 1978
  *   writes DON/'T). Case is folded (fold: false keeps it). detect(text) guesses a dialect.
  *
@@ -36,7 +36,7 @@
  * closed there and marked broken, and so is one still open at the end of the text.
  *
  * API (root.SWLispDefs, and module.exports in Node):
- *   detect(text) -> 'bbn' | 'maclisp' | 'cl' (pdp6 is never guessed: name it)
+ *   detect(text) -> 'bbn' | 'maclisp' | 'cl' (pdp6 and interlisp are never guessed: name them)
  *   read(text, dialect, opt) -> tokens [{ t, k: '(' | ')' | 'atom' | 'str', line, col }]
  *   forms(tokens) -> the top-level forms, as nested arrays with line, end and broken
  *   defs(texts, dialect, opt) -> { list: [{ key, name, kind, tokens, file, line, end, broken }],
@@ -51,7 +51,9 @@
   'use strict';
 
   var DIALECTS = {
-    bbn: { label: 'BBN-LISP and Interlisp', escape: '%', semi: false, bars: false, supers: true, strings: 'line', quote: false },
+    bbn: { label: 'BBN-LISP', escape: '%', semi: false, bars: false, supers: true, strings: 'line', quote: false },
+    // Interlisp reads as BBN-LISP did, except that ' is QUOTE (the read macro came with it, after the BBN-LISP of the 1960s)
+    interlisp: { label: 'Interlisp', escape: '%', semi: false, bars: false, supers: true, strings: 'line' },
     pdp6: { label: 'PDP-6 Lisp', escape: '/', semi: false, bars: false, supers: false, strings: 'line', quote: false },
     maclisp: { label: 'Maclisp', escape: '/', semi: true, bars: true, supers: false, strings: 'line' },
     cl: { label: 'Common Lisp', escape: '\\', semi: true, bars: true, supers: false, strings: 'full' }
