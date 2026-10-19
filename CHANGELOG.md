@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.66.1 (2026-10-19)
 
 - lispdefs.js: a reader of its own for Interlisp (`interlisp`), as BBN-LISP's but with ' as QUOTE, the read macro Interlisp has and the BBN-LISP of the 1960s lacked; Compare and Implementations map Interlisp to it.
 - lispdefs.js: in the bbn and pdp6 readers ' is a letter, not QUOTE. The ELIZA scripts of 1966 to 1972 (Cosell's BBN-LISP tapes, the PDP-6 adaptation on Samson's DECtape) write DON'T, YOU'RE and I'M plainly; read with ' as QUOTE, YOU'RE and I'M folded into YOU and I, and Implementations' Compare of the two Samson scripts fell from 123 definitions in common (115 identical) to 119 (111). White's Maclisp DOCTOR of 1978 writes DON/'T, so maclisp and cl keep ' as QUOTE. Two collations added (the Samson scripts; SCRIP 4 to Cosell's SCRIP 4.1 tape), two checks in tests/lispdefs.test.js.

@@ -1,7 +1,7 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.66.0
+**Version:** 0.66.1
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
