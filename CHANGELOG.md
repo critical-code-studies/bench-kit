@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.65.2 (2026-10-19)
 
 - Tokens (reported by David: a GitHub token was lost between bench versions). Nothing in the kit removes a token, and the benches' storage prefixes have not changed, but three paths could overwrite or expose one, and they are closed. ⚙ Settings now writes a token only when the box differs from the token held, and an emptied box removes a token only after a confirmation; the join form's GitHub and Hypothesis buttons ask the same before removing one. The token boxes are marked autocomplete="new-password" (with the LastPass and 1Password opt-outs), so a browser's password manager does not fill them with a saved password. The backup file (My notes ▸ Back up) no longer includes the GitHub token, as it already left out Hypothesis's, and settings in it are keyed by the bench's own prefix.
 
