@@ -83,6 +83,10 @@ dialog.px-dlg { width: min(96vw, 1200px); }
 .px-pick[aria-pressed="true"] { background: var(--beam); border-color: var(--beam); opacity: 1; }
 .px-pick[aria-pressed="true"]::after { content: '✓'; color: var(--bg); font-size: 13px; line-height: 17px; display: block; text-align: center; }
 .px-cl { font-size: 11px; color: var(--text-faint); margin-right: 5px; white-space: nowrap; }
+/* corpus: a chip on an item from a corpus other than the one in view, and the left panel's rows */
+.px-cline .px-cx { margin-left: 0; margin-right: 6px; }
+.px-cx { font-size: 10.5px; color: var(--text-faint); border: 1px solid var(--border, currentColor); border-radius: 3px; padding: 0 4px; margin-left: 6px; white-space: nowrap; vertical-align: 1px; font-weight: normal; }
+.px-cx-bad, .px-corow.px-cx-bad .px-cn { color: var(--danger, #b3261e); border-color: var(--danger, #b3261e); }
 .px-dragging .px-coll[data-c]:not([data-c="_none"]):not([data-c="_wd"]):not([data-c=""]) { background: color-mix(in srgb, var(--beam) 7%, transparent); }
 .px-tablewrap { overflow-x: auto; }
 .px-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }

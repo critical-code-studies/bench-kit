@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased (proposal/corpus)
+
+- Paratexts: **corpora** (proposed from the ELIZA bench; schema from the SHRDLU bench). A corpus is a bulk body of material from one source, kept in the catalogue but out of the default list: declared on the catalogue as `corpora: [{ id, name, note }]`, each of its items carrying `corpus: "<id>"`; an item with none is a paratext, so a catalogue without corpora is unchanged and shows no new control. Where there is one: **Corpus** first in the bar and **Corpora** in the left panel, each with its count (Paratexts, each corpus, Every corpus); the count line, the left panel's counts and the empty-list message are of the corpus in view. A search covers every corpus and reports the rest through the hidden-by line ("3 more hidden by Corpus: Paratexts only", with Clear); Clear all widens to every corpus. An item from another corpus carries the corpus's name beside its title, in the list and on the card. Unscoped: byCode, Related and sequence links, Withdrawn, the Tag, Type, Language and Kind menus, and the export. Dublin Core: `dc:relation` "isPartOf: <corpus name>". An id not declared in `corpora` is marked ⚠ in the menu, the panel and on the item. In the README (Paratext rules ▸ Corpora) and Help ▸ Paratexts ▸ Corpora.
+
 ## 0.61.0 (2026-10-18)
 
 - Paratext rules: **to locate and to request** (your request). Two tags with fixed spellings, `to-locate` (every stub; no holder known) and `to-request` (a known holder could be asked: an undigitised object in a catalogue, a finding aid, a stub with a likely holder), and a `Request:` paragraph in the description saying whom to ask and for what (holder, collection and number, part, form), before `Searched:` in a stub. In the README (Paratext rules, and the stub rule's description order), Help ▸ Paratexts ▸ Missing items, and the hint under ＋ Add ▸ Missing. No new field or display: Tag ▸ to-request is the worklist.

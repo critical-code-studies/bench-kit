@@ -144,6 +144,37 @@
     return treeOrder().filter(function (o) { return excl.indexOf(o.c.id) < 0; }).map(function (o) { return '<option value="' + SW.esc(o.c.id) + '">' + '   '.repeat(o.depth) + SW.esc(o.c.name) + '</option>'; }).join('');
   }
 
+  // Corpora: a bulk body of material from one source, kept in the catalogue but out of the
+  // default list, so that it cannot crowd out the paratexts proper. An item with no `corpus`
+  // is a paratext, which is every item until one is deliberately put in a corpus; a corpus is
+  // declared once on the catalogue as `corpora: [{ id, name, note }]`. Nothing else is scoped
+  // by it: a code resolves whatever its corpus (byCode reads the whole catalogue), Related and
+  // sequence links open across corpora, Withdrawn and the Tag, Type, Language and Kind menus
+  // cover all of them, and the export writes every corpus.
+  var PX_NAME = 'Paratexts';
+  function corpora() { return (cat && cat.corpora) || []; }
+  function corpusDef(id) { return id ? corpora().filter(function (c) { return c.id === id; })[0] || null : null; }
+  function corpusOf(it) { return String(it.corpus || ''); }
+  function corpusName(id) { return !id ? PX_NAME : (corpusDef(id) || {}).name || ('Undeclared corpus \u201c' + id + '\u201d'); }
+  function corpusNote(id) { return !id ? '' : (corpusDef(id) || {}).note || ''; }
+  // An id that no `corpora` entry declares is a mistake, so it is shown as an error and is not
+  // treated as a corpus of its own: it is listed in the menu with ⚠ and marked on the item.
+  function corpusBad(it) { var id = corpusOf(it); return !!id && !corpusDef(id); }
+  function corpusing() { return corpora().length > 0 || (cat ? cat.items : []).some(function (it) { return !!corpusOf(it); }); }
+  function inCorpus(it) { return F.corpus === '_all' ? true : corpusOf(it) === (F.corpus || ''); }
+  // every corpus id declared or in use, declared ones first, each with its live count
+  function corporaIn() {
+    var lv = (cat ? cat.items : []).filter(live), seen = {}, out = [];
+    corpora().forEach(function (c) { seen[c.id] = 1; out.push({ id: c.id, name: c.name, note: c.note || '', n: lv.filter(function (it) { return corpusOf(it) === c.id; }).length, bad: false }); });
+    lv.forEach(function (it) { var id = corpusOf(it); if (id && !seen[id]) { seen[id] = 1; out.push({ id: id, name: corpusName(id), note: '', n: lv.filter(function (x) { return corpusOf(x) === id; }).length, bad: true }); } });
+    return out;
+  }
+  function corpusChip(it) {
+    var id = corpusOf(it);
+    if (!id || id === (F.corpus || '')) return '';
+    return '<span class="px-cx' + (corpusBad(it) ? ' px-cx-bad' : '') + '" title="' + SW.esc(corpusBad(it) ? 'This item names a corpus the catalogue does not declare in corpora.' : (corpusNote(id) || corpusName(id))) + '">' + SW.esc(corpusName(id)) + '</span>';
+  }
+
   // A change to the catalogue, shown at once and then saved (made again on the newest copy)
   var busyN = 0;
   function busy(d) { busyN += d; var el = view && SW.$('.px-busy', view); if (el) el.textContent = busyN ? 'Saving…' : ''; }
@@ -257,6 +288,7 @@
   }
   // an item passes the filters (all but `skip`, to count what that one filter hides)
   function passes(it, skip) {
+      if (skip !== 'corpus' && F.c !== '_wd' && !inCorpus(it)) return false;
       if (skip !== 'tag' && F.tag && (it.tags || []).indexOf(F.tag) < 0) return false;
       if (skip !== 'v' && F.v && (it.versions || []).indexOf(F.v) < 0) return false;
       if (skip !== 'kind' && F.kind && it.kind !== F.kind) return false;
@@ -285,15 +317,17 @@
       if (k === 'genre') return 'Type: ' + ((genreOf({ genre: F.genre }) || [])[1] || F.genre);
       if (k === 'lang') return 'Language: ' + langLabel(F.lang);
       if (k === 'kind') return 'Kind: ' + F.kind;
+      if (k === 'corpus') return 'Corpus: ' + corpusName(F.corpus || '') + ' only';
       return k;
     }
-    ['tag', 'v', 'genre', 'lang', 'kind'].forEach(function (k) {
-      if (!F[k]) return;
+    ['corpus', 'tag', 'v', 'genre', 'lang', 'kind'].forEach(function (k) {
+      // the corpus is in force at its default too: '' means the paratexts only, not no filter
+      if (k === 'corpus' ? !corpusing() || F.corpus === '_all' : !F[k]) return;
       var n = b.filter(function (it) { return passes(it, k); }).length - nShown;
       if (n > 0) out.push({ k: k, label: lab(k), n: n });
     });
     if (F.c && F.c !== '_wd') {   // the collection open on the left is a filter too
-      var n = cat.items.filter(live).filter(function (it) { return passes(it); }).length - nShown;
+      var n = cat.items.filter(live).filter(inCorpus).filter(function (it) { return passes(it); }).length - nShown;
       if (n > 0) out.push({ k: 'c', label: F.c === '_none' ? 'Not in a collection' : 'Collection: ' + ((coll(F.c) || {}).name || ''), n: n });
     }
     return out;
@@ -340,6 +374,8 @@
     function seg(act, v, label, on, tip) { return '<button class="' + (on ? 'on' : '') + '" data-px="' + act + '" data-v="' + v + '" title="' + tip + '">' + label + '</button>'; }
     body.innerHTML = '<div class="px-shell"><nav class="px-nav" aria-label="Collections"></nav><div class="px-main">' +
       '<div class="toolbar px-bar" style="position:static;padding-left:0">' +
+      (corpusing() ? '<label class="check" title="Which body of material to list. A search still reports what it finds in the others.">Corpus <select data-f="corpus">' + opt('', PX_NAME, F.corpus || '') +
+        corporaIn().map(function (c) { return opt(c.id, (c.bad ? '⚠ ' : '') + c.name + ' (' + c.n + ')', F.corpus || ''); }).join('') + opt('_all', 'Every corpus', F.corpus || '') + '</select></label>' : '') +
       '<input type="search" data-f="q" placeholder="Find (code, title, words)" value="' + esc(F.q || '') + '">' +
       '<label class="check">Tag <select data-f="tag">' + opt('', 'All', F.tag || '') + tags.map(function (g) { return opt(g, g, F.tag); }).join('') + '</select></label>' +
       '<label class="check">Version <select data-f="v">' + opt('', 'All', F.v || '') + vids.map(function (v) { return opt(v, vShort(v), F.v); }).join('') + '</select></label>' +
@@ -356,7 +392,7 @@
   }
   function paintNav(body) {
     var nav = SW.$('.px-nav', body); if (!nav) return;
-    var esc = SW.esc, lv = cat.items.filter(live), wd = cat.items.length - lv.length;
+    var esc = SW.esc, lv = cat.items.filter(live).filter(inCorpus), wd = cat.items.filter(function (it) { return !live(it); }).length;
     function row(id, icon, label, n, extra, depth, cls) {
       var isC = !!coll(id);
       return '<div class="px-coll' + ((F.c || '') === id ? ' on' : '') + (cls ? ' ' + cls : '') + '" data-c="' + esc(id) + '"' + (isC ? ' draggable="true"' : '') + ' style="--d:' + (depth || 0) + '" tabindex="0" title="' + esc(isC ? pathName(id) + ': drag items here to put them in it, or drag the collection onto another' : label) + '">' +
@@ -371,6 +407,10 @@
       return r;
     }).join('');
     nav.innerHTML = '<button class="btn px-addbtn" data-px="add" title="Upload a file with its details, to the crew’s repository">＋ Add an item</button>' + row('', '▤', 'All', lv.length) + row('_none', '◌', 'Not in a collection', lv.filter(function (it) { return !inColl(it).length; }).length) +
+      (corpusing() ? '<div class="px-ch"><span>Corpora</span></div>' +
+        [{ id: '', name: PX_NAME, note: 'The paratexts proper: every item not put in a corpus.', n: cat.items.filter(live).filter(function (it) { return !corpusOf(it); }).length, bad: false }].concat(corporaIn()).map(function (c) {
+          return '<div class="px-coll px-corow' + ((F.corpus || '') === c.id ? ' on' : '') + (c.bad ? ' px-cx-bad' : '') + '" data-corpus="' + esc(c.id) + '" tabindex="0" title="' + esc(c.bad ? 'Not declared in the catalogue\u2019s corpora: a mistake to correct, not a corpus' : c.note || c.name) + '"><span class="px-cn">' + (c.bad ? '⚠' : '▤') + ' ' + esc(c.name) + '</span><span class="px-cnt">' + c.n + '</span></div>';
+        }).join('') + '<div class="px-coll px-corow' + (F.corpus === '_all' ? ' on' : '') + '" data-corpus="_all" tabindex="0" title="Every item, whatever its corpus"><span class="px-cn">▦ Every corpus</span><span class="px-cnt">' + cat.items.filter(live).length + '</span></div>' : '') +
       '<div class="px-ch"><span>Collections</span><button class="icon-btn" data-px="newc" title="A new collection">＋</button></div>' +
       tree + (editing && editing.mode === 'new' && !editing.parent ? editRow(0, '') : '') +
       (!colls().length && !editing ? '<p class="hint px-navfoot">None yet: ＋ makes one; then drag items onto it, or tick them and Add to.</p>' : '') +
@@ -385,15 +425,16 @@
     var esc = SW.esc, b = base(); cur = shown();
     Object.keys(sel).forEach(function (k) { if (!cur.some(function (it) { return it.code === k; })) delete sel[k]; });
     var hid = hiddenBy(cur.length), cnt = SW.$('.px-count', body);
-    if (cnt) cnt.innerHTML = cur.length + ' of ' + b.length + (cur.length ? hiddenHTML(hid) : '');
+    var bc = F.c === '_wd' ? b : b.filter(inCorpus);
+    if (cnt) cnt.innerHTML = cur.length + ' of ' + bc.length + (corpusing() && F.c !== '_wd' ? ' in ' + SW.esc(F.corpus === '_all' ? 'every corpus' : corpusName(F.corpus || '')) : '') + (cur.length ? hiddenHTML(hid) : '');
     var head = '';
     if (inC()) head = '<div class="px-crumbs"><a data-c="" title="All the paratexts">All</a>' + pathOf(F.c).map(function (c) { return ' › ' + (c.id === F.c ? '<b>' + esc(c.name) + '</b>' : '<a data-c="' + esc(c.id) + '">' + esc(c.name) + '</a>'); }).join('') + '</div>';
     else if (F.c === '_none') head = '<div class="px-crumbs"><b>Not in a collection</b></div>';
     else if (F.c === '_wd') head = '<div class="px-crumbs"><b>Withdrawn</b>: out of the list, their files kept. Tick them and Bring back to restore them.</div>';
     var sub = inC() ? kidsOf(F.c) : [];
-    if (sub.length) head += '<ul class="px-folders">' + sub.map(function (c) { var n = cat.items.filter(function (it) { return live(it) && inColl(it).indexOf(c.id) >= 0; }).length; return '<li class="px-folder" data-c="' + esc(c.id) + '" tabindex="0">📁 ' + esc(c.name) + ' <span class="faint">' + n + '</span></li>'; }).join('') + '</ul>';
+    if (sub.length) head += '<ul class="px-folders">' + sub.map(function (c) { var n = cat.items.filter(function (it) { return live(it) && inCorpus(it) && inColl(it).indexOf(c.id) >= 0; }).length; return '<li class="px-folder" data-c="' + esc(c.id) + '" tabindex="0">📁 ' + esc(c.name) + ' <span class="faint">' + n + '</span></li>'; }).join('') + '</ul>';
     main.innerHTML = head + '<div class="px-selbar" hidden></div>' + (cur.length ? (VW.mode === 'list' ? listHTML(cur) : gridHTML(cur)) :
-      '<p class="hint px-none">' + (b.length || hid.length ? 'None with these filters. ' + hiddenHTML(hid, true) : F.c === '_wd' ? 'Nothing withdrawn.' : inC() ? 'Nothing in this collection yet: drag items onto it on the left, or tick them and Add to.' : 'Nothing here.') + '</p>');
+      '<p class="hint px-none">' + (bc.length || hid.length ? 'None with these filters. ' + hiddenHTML(hid, true) : F.c === '_wd' ? 'Nothing withdrawn.' : inC() ? 'Nothing in this collection yet: drag items onto it on the left, or tick them and Add to.' : 'Nothing here.') + '</p>');
     selUpdate(body);
     // the pictures, as they come into view (small ones only: a large scan stays an icon here)
     var io = new IntersectionObserver(function (ents) {
@@ -415,7 +456,7 @@
         // and the collections at the foot
         '<div class="px-meta"><div class="px-ctop"><span class="px-code mono">' + esc(it.code) + '</span>' + summary1(it) + '</div>' +
         '<b class="px-ctitle">' + esc(it.title) + '</b>' +
-        '<div class="px-cline">' + ((genreOf(it) || [])[1] ? '<span class="px-s px-genre">' + esc(genreOf(it)[1]) + '</span>' : '') + (it.date ? '<span class="px-cdate">' + esc(it.date) + '</span>' : '') + (it.kind === 'missing' ? '<span class="px-s px-misschip" title="Provenance found but item not available or missing: known to have existed, and the archive holds no copy and no link. The record says where it is cited.">Not available or missing</span>' : '') + trChips(it) + gapChips(it) + '</div>' +
+        '<div class="px-cline">' + corpusChip(it) + ((genreOf(it) || [])[1] ? '<span class="px-s px-genre">' + esc(genreOf(it)[1]) + '</span>' : '') + (it.date ? '<span class="px-cdate">' + esc(it.date) + '</span>' : '') + (it.kind === 'missing' ? '<span class="px-s px-misschip" title="Provenance found but item not available or missing: known to have existed, and the archive holds no copy and no link. The record says where it is cited.">Not available or missing</span>' : '') + trChips(it) + gapChips(it) + '</div>' +
         '<div class="px-tags">' + (it.tags || []).map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join('') + (it.versions || []).map(function (v) { return '<span class="fd-tag px-v">' + esc(vShort(v)) + '</span>'; }).join('') + '</div>' +
         (inColl(it).some(function (id) { return id !== F.c; }) ? '<div class="px-cfoot">' + collChips(it) + '</div>' : '') + '</div></li>';
     }).join('') + '</ul>';
@@ -428,7 +469,7 @@
       l.map(function (it) {
         var a = avg(it);
         return '<tr class="px-row" data-code="' + esc(it.code) + '" tabindex="0" draggable="true"><td><button class="px-pick" data-pick aria-pressed="false" title="Select"></button></td><td><div class="px-thumb px-mini" data-kind="' + esc(it.kind) + '">' + thumb(it) + '</div></td>' +
-          '<td class="mono px-code-c">' + esc(it.code) + '</td><td><b>' + esc(it.title) + '</b>' + ((it.tags || []).length ? ' ' + it.tags.map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join(' ') : '') + '</td>' +
+          '<td class="mono px-code-c">' + esc(it.code) + '</td><td><b>' + esc(it.title) + '</b>' + corpusChip(it) + ((it.tags || []).length ? ' ' + it.tags.map(function (g) { return '<span class="fd-tag">' + esc(g) + '</span>'; }).join(' ') : '') + '</td>' +
           '<td class="px-genre-c">' + esc((genreOf(it) || [])[1] || '') + '</td>' +
           '<td class="num">' + esc(it.date || '') + '</td><td>' + esc(it.creator || '') + '</td><td>' + esc(it.kind || '') + '</td><td class="num">' + fmtSize(it.size) + '</td>' +
           '<td>' + (a ? SW.stars(a.avg, (Math.round(a.avg * 10) / 10) + ' from ' + a.n + ': ' + a.who.join('; ')) : '') + '</td>' +
@@ -475,6 +516,7 @@
     body.oninput = function (e) { if (e.target.dataset.f === 'q') { clearTimeout(qt); qt = setTimeout(function () { setF('q', e.target.value); paintList(body); }, 300); } };
     body.onchange = function (e) {
       var t = e.target;
+      if (t.dataset.f === 'corpus') { setF('corpus', t.value); sel = {}; paint(body); return; }
       if (t.dataset.f) { setF(t.dataset.f, t.value); paintList(body); return; }
       if (t.dataset.px === 'sort') { setView({ sort: t.value, dir: defDir(t.value) }); paintList(body); return; }
       if (t.dataset.px === 'to') {
@@ -490,7 +532,7 @@
       var rb = t.closest('[data-cardrate]');
       if (rb) { e.stopPropagation(); rateIt(rb.dataset.rcode, paintStars(rb, 'cardrate')); return; }
       if (act === 'add') { addBox(); return; }
-      if (act === 'clearf') { var fk = b.dataset.k; (fk === '*' ? ['tag', 'v', 'genre', 'lang', 'kind', 'c'] : [fk]).forEach(function (x) { setF(x, ''); }); paint(body); return; }
+      if (act === 'clearf') { var fk = b.dataset.k; (fk === '*' ? ['tag', 'v', 'genre', 'lang', 'kind', 'c', 'corpus'] : [fk]).forEach(function (x) { setF(x, x === 'corpus' && corpusing() ? '_all' : ''); }); paint(body); return; }
       if (act === 'reload') { body.innerHTML = '<p class="hint">Reading the catalogue again…</p>'; P.load(true).then(function () { paint(body); }, function (err) { body.innerHTML = '<p class="badge err">' + SW.esc(err.message) + '</p>'; }); return; }
       if (act === 'newc') { editing = { mode: 'new', parent: '' }; paintNav(body); return; }
       if (act === 'newseq') { seqEditor(null); return; }
@@ -514,6 +556,8 @@
       if (act === 'restore') { var cr = selCodes(); sel = {}; change(who(cr) + ': brought back', each(cr, unwithdraw)); return; }
       var th = t.closest('th[data-sort]');
       if (th) { var k = th.dataset.sort; setView(VW.sort === k ? { dir: -(VW.dir || 1) } : { sort: k, dir: defDir(k) }); var ss = SW.$('[data-px="sort"]', body); if (ss) ss.value = VW.sort; paintList(body); return; }
+      var corow = t.closest('[data-corpus]');
+      if (corow) { setF('corpus', corow.dataset.corpus); sel = {}; editing = null; paint(body); return; }
       if (crow && !t.closest('.px-cedit')) { setF('c', crow.dataset.c); sel = {}; editing = null; paintNav(body); paintList(body); return; }
       var card = t.closest('[data-code]'); if (!card) return;
       if (t.closest('[data-pick]') || e.metaKey || e.ctrlKey || e.shiftKey) { pick(card.dataset.code, e.shiftKey); selUpdate(body); return; }
@@ -528,7 +572,7 @@
       }
       if (cl && cl.contains('px-tagin') && e.key === 'Enter') { e.preventDefault(); var tb = SW.$('[data-px="tag"]', body); if (tb) tb.click(); return; }
       if (e.key !== 'Enter' && e.key !== ' ') return;
-      if (t.matches && t.matches('[data-c]')) { e.preventDefault(); t.click(); return; }
+      if (t.matches && t.matches('[data-c], [data-corpus]')) { e.preventDefault(); t.click(); return; }
       if (t.matches && t.matches('[data-code]')) { e.preventDefault(); if (e.key === ' ') { pick(t.dataset.code, e.shiftKey); selUpdate(body); } else openItem(t.dataset.code, listCtx()); }
     };
     body.onfocusout = function (e) { var t = e.target; if (t.classList && t.classList.contains('px-cin') && !t.dataset.done) { t.dataset.done = 1; commitEdit(body, t.value); } };
@@ -670,7 +714,7 @@
         el('date', it.date) + el('type', [dcType(it), (genreOf(it) || [])[1]]) + el('format', [it.mime, it.extent]) +
         el('identifier', [it.code, SW.BASE_URI + '?code=' + it.code].concat(it.identifier || [], okURL(it.url) ? [it.url] : [], okURL(it.archiveUrl) ? [it.archiveUrl] : [])) +
         el('source', [it.source, [it.archive, it.archiveId].filter(Boolean).join(', ')]) + el('language', it.language) +
-        el('relation', (it.refs || []).concat(relOf(it).map(function (r) { return 'references: ' + r + ' ' + byCode(r).title; })).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); }))
+        el('relation', (it.refs || []).concat(relOf(it).map(function (r) { return 'references: ' + r + ' ' + byCode(r).title; })).concat(seqsOf(it.code).map(function (q) { var cs = seqCodes(q); return 'isPartOf: ' + q.name + ' (' + (cs.indexOf(it.code) + 1) + ' of ' + cs.length + ')'; })).concat((it.versions || []).map(function (v) { return (B.relation || BNAME + ' ') + vShort(v); })).concat(corpusOf(it) ? ['isPartOf: ' + corpusName(corpusOf(it))] : [])
           .concat(altList(it).map(function (a) { return 'hasVersion: ' + (a.label || 'alternate') + ' [' + (a.lang || '') + ']' + (altNote(a) ? ' (' + altNote(a) + ')' : ''); }))) + el('coverage', it.coverage) + el('rights', it.rights) + '</oai_dc:dc>\n';
     }).join('') + '</records>\n';
   }
