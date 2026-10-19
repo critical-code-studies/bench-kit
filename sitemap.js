@@ -69,7 +69,9 @@
 
   SW.sitemapHTML = function () {
     var groups = [['Tabs', []]];
-    SW.$$('#tabs > button').forEach(function (b) {
+    SW.$$('#tabs > button, #tabs > a.tabs-link').forEach(function (b) {
+      // a link in the tab row to a page of its own (an archive beside the bench): its title says what it is
+      if (b.tagName === 'A') { if (b.getAttribute('href')) groups[0][1].push({ href: b.getAttribute('href'), name: b.textContent.trim(), text: b.title || '' }); return; }
       if (b.dataset.tab) { groups[0][1].push({ href: 'index.html?tab=' + b.dataset.tab, name: b.textContent.trim(), text: b.title || (b.dataset.tab === 'read' ? 'The listing, annotated' : '') }); return; }
       if (!b.dataset.menu) return;
       var g = [b.textContent.replace('▾', '').trim(), []];
