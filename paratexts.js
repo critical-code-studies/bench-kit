@@ -144,7 +144,7 @@
     return treeOrder().filter(function (o) { return excl.indexOf(o.c.id) < 0; }).map(function (o) { return '<option value="' + SW.esc(o.c.id) + '">' + '   '.repeat(o.depth) + SW.esc(o.c.name) + '</option>'; }).join('');
   }
 
-  // Corpora: a bulk body of material from one source, kept in the catalogue but out of the
+  // Corpora: a bulk body of material taken in as a set (one collector's, or one search's), kept in the catalogue but out of the
   // default list, so that it cannot crowd out the paratexts proper. An item with no `corpus`
   // is a paratext, which is every item until one is deliberately put in a corpus; a corpus is
   // declared once on the catalogue as `corpora: [{ id, name, note }]`. Nothing else is scoped
