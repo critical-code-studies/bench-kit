@@ -1117,7 +1117,7 @@
       '<label><span>Initials</span><input data-j="initials" maxlength="4" value="' + esc(SW.store.get('initials', '')) + '" placeholder="e.g. AB" autocomplete="off"></label>' +
       '<label><span>Name</span><input data-j="name" value="' + esc(SW.store.get('name', '')) + '" autocomplete="name"></label>' +
       '<label><span>Group</span><input data-j="group" value="' + esc(grp) + '" placeholder="the group’s link, or its ID" autocomplete="off"></label>' +
-      '<label><span>API token</span><span class="js-pw"><input data-j="token" type="password" value="' + esc(SW.store.get('token', '')) + '" placeholder="6879-…" autocomplete="off"><button class="btn ghost" data-show="token">Show</button></span></label>' +
+      '<label><span>API token</span><span class="js-pw"><input data-j="token" type="password" value="' + esc(SW.store.get('token', '')) + '" placeholder="6879-…" autocomplete="new-password" data-lpignore="true" data-1p-ignore><button class="btn ghost" data-show="token">Show</button></span></label>' +
       '</div><p><button class="btn" data-a="hyp">Save and test</button></p>' + ok('hyp') +
       '<p class="hint">Every annotation you write is signed with your initials. These are kept in this browser only (⚙ Settings has them too); on another computer, enter them again.</p>' +
 
@@ -1125,7 +1125,7 @@
         '<p>The scans, clippings and documents are in a private GitHub repository. If GitHub has emailed you an invitation to the <b>' + esc(BP.org || '') + '</b> organisation, accept it, then:</p>' +
         '<ol class="ah-steps"><li><a class="btn ghost" href="' + esc(P.TOKEN_URL) + '" target="_blank" rel="noopener noreferrer">Open the token form ↗</a> (its name, owner, expiry and permission are filled in).</li>' +
         '<li>Under <b>Repository access</b>, choose <b>Only select repositories</b>, then <b>' + esc(BP.repo || '') + '</b>; then <b>Generate token</b> and copy it.</li></ol>' +
-        '<div class="js-form"><label><span>GitHub token</span><span class="js-pw"><input data-j="gh" type="password" value="' + esc(SW.store.get('gh.token', '')) + '" placeholder="github_pat_…" autocomplete="off"><button class="btn ghost" data-show="gh">Show</button></span></label></div>' +
+        '<div class="js-form"><label><span>GitHub token</span><span class="js-pw"><input data-j="gh" type="password" value="' + esc(SW.store.get('gh.token', '')) + '" placeholder="github_pat_…" autocomplete="new-password" data-lpignore="true" data-1p-ignore><button class="btn ghost" data-show="gh">Show</button></span></label></div>' +
         '<p><button class="btn" data-a="gh">Save and test</button></p>' + ok('gh') : '') +
 
       '</div></section><section class="js-step js-then"><div class="js-num" aria-hidden="true">✓</div><div class="js-body"><h3>Then</h3><ul class="ah-steps">' +
@@ -1145,7 +1145,7 @@
         var ini = val('initials').toUpperCase();
         if (!ini) { say('hyp', 'err', 'Give your initials first.'); return; }
         SW.store.set('initials', ini); SW.store.set('name', val('name'));
-        SW.store.set('group', N.groupId(val('group'))); SW.store.set('token', val('token'));
+        SW.store.set('group', N.groupId(val('group'))); if (val('token') || !SW.store.get('token', '') || confirm('Remove the Hypothesis API token from this browser?')) SW.store.set('token', val('token'));
         N.forget(); if (SW.state.v) N.invalidate(SW.state.v);
         if (!val('group') || !val('token')) { say('hyp', 'warn', 'Saved. Without ' + (!val('group') ? 'the group' : 'a token') + ', annotations are kept as drafts here.'); return; }
         say('hyp', '', 'Checking…');
@@ -1156,6 +1156,7 @@
         return;
       }
       if (a && a.dataset.a === 'gh' && P) {
+        if (!val('gh') && SW.store.get('gh.token', '') && !confirm('Remove the GitHub token from this browser?')) return;
         SW.store.set('gh.token', val('gh')); P.reset();
         if (!val('gh')) { say('gh', 'warn', 'No token: Paratexts will show how to get one.'); return; }
         say('gh', '', 'Checking…');

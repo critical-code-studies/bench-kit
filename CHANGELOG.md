@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Tokens (reported by David: a GitHub token was lost between bench versions). Nothing in the kit removes a token, and the benches' storage prefixes have not changed, but three paths could overwrite or expose one, and they are closed. ⚙ Settings now writes a token only when the box differs from the token held, and an emptied box removes a token only after a confirmation; the join form's GitHub and Hypothesis buttons ask the same before removing one. The token boxes are marked autocomplete="new-password" (with the LastPass and 1Password opt-outs), so a browser's password manager does not fill them with a saved password. The backup file (My notes ▸ Back up) no longer includes the GitHub token, as it already left out Hypothesis's, and settings in it are keyed by the bench's own prefix.
+
 ## 0.65.1 (2026-10-19)
 
 - Codes: an implementation's code (I- and five letters or figures) written in an annotation, note, finding or paratext description is a link, like A-, R-, C- and P- codes, and Go to a code (# in the top bar, ?code= in a link) opens it where a bench has Implementations (SW.implementations.open); elsewhere it says so.

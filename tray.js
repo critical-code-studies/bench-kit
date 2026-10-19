@@ -555,7 +555,7 @@
 
   // ---------- one file with everything ----------
   // My notes (and their bin), drafts, the settings kept in this browser (never
-  // the Hypothesis token), and a copy of the group's annotations and findings
+  // a token, Hypothesis's or GitHub's), and a copy of the group's annotations and findings
   // with their replies and reactions, as they stood when the file was made.
   SW.backup = {
     save: function () {
@@ -564,8 +564,8 @@
       try {
         for (var i = 0; i < localStorage.length; i++) {
           var k = localStorage.key(i);
-          if (k.indexOf(PRE) !== 0 || k === PRE + 'token' || k === PRE + 'tray' || k === PRE + 'drafts') continue;
-          settings[k.slice(8)] = localStorage.getItem(k);
+          if (k.indexOf(PRE) !== 0 || k === PRE + 'token' || k === PRE + 'gh.token' || k === PRE + 'tray' || k === PRE + 'drafts') continue;
+          settings[k.slice(PRE.length)] = localStorage.getItem(k);
         }
       } catch (e) {}
       var group = SW.notes && SW.notes.configured() ? SW.notes.listAll({ reactions: true }) : Promise.resolve([]);
@@ -593,7 +593,7 @@
           (b.drafts || []).forEach(function (x) { if (!have[x.id]) { d.push(x); nd++; } });
           if (nd) SW.store.set('drafts', d);
           var ns = 0;
-          Object.keys(b.settings || {}).forEach(function (k) { if (k !== 'token' && localStorage.getItem(PRE + k) == null) { localStorage.setItem(PRE + k, b.settings[k]); ns++; } });
+          Object.keys(b.settings || {}).forEach(function (k) { if (k !== 'token' && k !== 'gh.token' && localStorage.getItem(PRE + k) == null) { localStorage.setItem(PRE + k, b.settings[k]); ns++; } });
           SW.toast('Restored ' + n + ' note' + (n === 1 ? '' : 's') + ', ' + nd + ' draft' + (nd === 1 ? '' : 's') + ', ' + ns + ' setting' + (ns === 1 ? '' : 's') + '. Reload to see them everywhere.', 7000);
         }).catch(function (e) { SW.toast('Could not restore it: ' + e.message, 5000); });
       };

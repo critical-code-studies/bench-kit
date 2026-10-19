@@ -32,7 +32,7 @@
       '<p class="hint">' + (ST.groupHint || 'Annotations are shared through a private Hypothesis group. Paste the group link from your invitation (it fills in the group), and a personal API token (hypothes.is/account/developer). Without them, annotations are kept as drafts in this browser and can be exported or published later.') + '</p>' +
       '<label>Group link or ID <input id="set-group" placeholder="' + esc(ST.groupPlaceholder || 'The group link from your invitation') + '" autocomplete="off"></label>' +
       '<label for="set-token">API token</label>' +
-      '<div class="token-row"><input id="set-token" type="password" placeholder="6879-…" autocomplete="off" spellcheck="false"><button id="set-token-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
+      '<div class="token-row"><input id="set-token" type="password" placeholder="6879-…" autocomplete="new-password" data-lpignore="true" data-1p-ignore spellcheck="false"><button id="set-token-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l"><button id="set-test" type="button" class="btn ghost">Test connection</button> <span class="hint" id="set-check"></span></p>' +
       '<p class="row-l"><a class="btn ghost" href="https://hypothes.is/account/developer" target="_blank" rel="noopener">Open the token page ↗</a> <button type="button" class="btn ghost" id="set-hypsteps">Copy the steps to send</button></p>' +
       '<p class="hint"><button type="button" class="btn ghost" id="set-join">New to this? How to join the group</button> An account, the group and your token, step by step.</p>' + rows('anno') + '</section>' +
@@ -40,7 +40,7 @@
       '<section class="set-pane" data-sp="px">' +
       '<p class="hint">The paratexts are kept in a private GitHub repository shared with the crew (' + esc((BP.org || '') + '/' + (BP.repo || '')) + '). Paste a fine-grained token limited to that repository, with Contents read and write (Paratexts, in the menu, says how). It is kept in this browser only.</p>' +
       '<label for="set-ghtoken">GitHub token</label>' +
-      '<div class="token-row"><input id="set-ghtoken" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><button id="set-ghtoken-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
+      '<div class="token-row"><input id="set-ghtoken" type="password" placeholder="github_pat_…" autocomplete="new-password" data-lpignore="true" data-1p-ignore spellcheck="false"><button id="set-ghtoken-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l">' + (PX.TOKEN_URL ? '<a class="btn ghost" href="' + esc(PX.TOKEN_URL) + '" target="_blank" rel="noopener">Open the token form ↗</a> ' : '') +
       (PX.STEPS ? '<button type="button" class="btn ghost" id="set-ghsteps">Copy the steps to send</button>' : '') + '</p>' +
       '<p class="hint">The form arrives with its name, owner, a year’s expiry and the permission filled in; <b>Only select repositories</b> and <b>' + esc(BP.repo || '') + '</b> are chosen by hand. The token is read and write, so send the steps only to people who are to catalogue. Help ▸ Paratexts says the same at length.</p>' +
@@ -83,6 +83,13 @@
     return d;
   }
 
+  // a token written only when it differs from the one held; an empty box removes one only when confirmed
+  function keepToken(key, v, what) {
+    var was = String(SW.store.get(key, '') || '').trim();
+    if (v === was) return false;
+    if (!v && was && !confirm('Remove the ' + what + ' from this browser? The bench will ask for one again.')) return false;
+    SW.store.set(key, v); return true;
+  }
   S.open = function (tab) {
     var dlg = SW.$('#dlg-settings') || build(), B = SW.BENCH || {};
     S.show(tab || SW.store.get('set.tab', 'you'));
@@ -161,10 +168,11 @@
       SW.store.set('initials', SW.$('#set-initials').value.trim().toUpperCase());
       SW.store.set('name', SW.$('#set-name').value.trim());
       SW.store.set('group', SW.notes.groupId(grp.value));
-      SW.store.set('token', tok.value.trim());
+      // the tokens: written only when changed in the box (so a box a browser filled, or left empty, does not
+      // overwrite one held), and taken out only when asked
+      keepToken('token', tok.value.trim(), 'Hypothesis API token');
       SW.store.set('px.ahead', +SW.$('#set-ahead').value);
-      var gwas = SW.store.get('gh.token', ''); SW.store.set('gh.token', gtok.value.trim());
-      if (gwas !== gtok.value.trim() && SW.paratexts) SW.paratexts.reset();
+      if (keepToken('gh.token', gtok.value.trim(), 'GitHub token') && SW.paratexts) SW.paratexts.reset();
       SW.notes.forget();
       SW.notes.invalidate(SW.state.v);
       SW.toast('Saved');
