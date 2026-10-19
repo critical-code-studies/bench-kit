@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.65.1 (2026-10-19)
 
 - Codes: an implementation's code (I- and five letters or figures) written in an annotation, note, finding or paratext description is a link, like A-, R-, C- and P- codes, and Go to a code (# in the top bar, ?code= in a link) opens it where a bench has Implementations (SW.implementations.open); elsewhere it says so.
 
