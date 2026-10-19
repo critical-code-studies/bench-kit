@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.65.3 (2026-10-19)
 
 - Paratexts: a picture (or PDF page) in an item that has alternates, such as a transcript or a translation, showed an empty pane at "100%" (reported by David on the ELIZA bench, P-OO3ET). The zoom box sat in the inner pane's centred grid and, its picture being placed absolutely, had no width to fit to; it now fills the pane. The box is also laid out again whenever its size changes, so a picture that loads before its box is laid out is fitted when the box arrives.
 - Tokens: what to do when the GitHub token is lost (another browser or computer, Safari clearing a site's data after seven days without a visit) or has expired, in ⚙ Settings, the join steps, Paratexts' own steps, the steps to send and Help: make a new one from the same form and paste it in; the old one can be deleted on GitHub. Asked for by David.
