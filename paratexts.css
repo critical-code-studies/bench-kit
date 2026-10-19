@@ -37,6 +37,8 @@ dialog.px-dlg { width: min(96vw, 1200px); }
 .px-drop { display: block; border: 2px dashed var(--line); border-radius: 8px; padding: 18px; text-align: center; color: var(--text-dim); margin: 6px 0 12px; cursor: pointer; }
 .px-drop.on { border-color: var(--beam); color: var(--text); }
 .px-drop input { display: none; }
+/* the Add box's three modes: the panels not in use stay hidden (their display rules would otherwise show them) */
+.px-drop[hidden], .px-linkin[hidden], .px-missin[hidden] { display: none; }
 .px-rx .fd-rate button.on { color: var(--star, var(--kin)); }
 .px-shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; align-items: start; }
 .px-nav { position: sticky; top: 8px; font-size: 13px; border-right: 1px solid var(--line-soft); padding-right: 10px; max-height: calc(100vh - 120px); overflow: auto; }

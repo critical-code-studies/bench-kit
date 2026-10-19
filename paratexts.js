@@ -366,7 +366,7 @@
       (h.length > 1 || empty ? ' <button class="btn ghost px-clearf" data-px="clearf" data-k="*">Clear all</button>' : '');
   }
   function thumb(it) { return it.kind === 'image' && urls[ukey(it)] ? '<img alt="" src="' + urls[ukey(it)] + '">' : ICON[it.kind] || ICON.file; }
-  function fmtSize(n) { return !n ? '' : n < 1e6 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; }
+  function fmtSize(n) { return !n ? '' : n < 1024 ? n + ' bytes' : n < 1e6 ? Math.round(n / 1024) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; }
   function render() {
     view = SW.$('#view-paratexts'); if (!view) return;
     done = true;
@@ -703,10 +703,13 @@
       return '<optgroup label="' + SW.esc(g[0]) + '">' + g[1].map(function (e) { return '<option value="' + SW.esc(e[0]) + '"' + (e[0] === cur ? ' selected' : '') + '>' + SW.esc(e[1]) + '</option>'; }).join('') + '</optgroup>';
     }).join('') + (cur && !GENRE_BY[cur] ? '<option value="' + SW.esc(cur) + '" selected>' + SW.esc(cur) + '</option>' : '');
   }
+  // file names read as text: program source (kind software) and plain text (kind text)
+  var CODE_EXT = /^\.(bas|lisp|lsp|l|mad|slip|c|h|cc|cpp|js|py|asm|mac|mid|f|for|f77|pas|java|rb|pl|pm|sh|el|cl|scm|snobol|sno|cob|cbl|pli|pl1|tec|apl|fth|forth|lgo|logo|pop|p|tcl|awk|m|s)$/i;
+  var TEXT_EXT = /^\.(txt|text|md|markdown|csv|tsv|srt|vtt|me|lst|log|1st)$/i;
   // a first guess from the file or the link, only where none is given
   function guessGenre(mime, kind) {
     var m = String(mime || ''), k = kind || '';
-    return /^image\//.test(m) || k === 'image' ? 'photo' : /^audio\//.test(m) || k === 'audio' ? 'audio' : /^video\//.test(m) || k === 'video' ? 'video' : k === 'link' ? 'webpage' : k === 'software' ? 'software' : '';
+    return /^audio\//.test(m) || k === 'audio' ? 'audio' : /^video\//.test(m) || k === 'video' ? 'video' : k === 'link' ? 'webpage' : k === 'software' ? 'software' : '';
   }
   // The record: [key, label, kind, placeholder, group]. The 'dc' group, the rest of Dublin Core's fifteen
   // elements, folds away under More metadata; the archive fields say where the original is kept.
@@ -714,8 +717,8 @@
   var FIELDS = [['title', 'Title'], ['genre', 'Type', 'genre'], ['date', 'Date', '', EX.date || 'e.g. 1970-05-17, or 1970'], ['creator', 'Creator'], ['source', 'Source', '', 'where this copy came from'],
     ['archive', 'Held at', '', 'the archive with the original, ' + (EX.archive || 'e.g. Computer History Museum'), 'more'], ['archiveId', 'Archive ref', '', 'its catalogue number, or box and folder', 'more'], ['archiveUrl', 'Archive link', 'url', 'https://… the original in its archive’s catalogue', 'more'], ['url', 'Online at', 'url', 'https://… a recording or page to play or show here', 'more'],
     ['rights', 'Rights', '', '', 'more'], ['accessioned', 'Accession date', '', 'the day it came into the collection', 'more'], ['description', 'Description', 'area'],
-    ['tags', 'Tags', 'list', 'comma separated'], ['versions', 'Versions', 'list', EX.versions || 'version ids, comma separated', 'more'], ['refs', 'References', 'list', EX.refs || 'e.g. [REF: …]', 'more'],
-    ['type', 'Type', 'dcmi', '', 'dc'], ['publisher', 'Publisher', '', EX.publisher || 'e.g. MIT Press', 'dc'], ['contributor', 'Contributors', 'list', 'comma separated', 'dc'],
+    ['tags', 'Tags', 'list', 'comma separated'], ['versions', 'Versions', 'list', EX.versions || 'version ids, comma separated'], ['refs', 'References', 'list', EX.refs || 'e.g. [REF: …]', 'more'],
+    ['type', 'DCMI type', 'dcmi', '', 'dc'], ['publisher', 'Publisher', '', EX.publisher || 'e.g. MIT Press', 'dc'], ['contributor', 'Contributors', 'list', 'comma separated', 'dc'],
     ['language', 'Language', '', 'e.g. en', 'dc'], ['extent', 'Extent', '', 'a duration or size, e.g. 1 h 12 min, 34 pp.', 'dc'], ['coverage', 'Coverage', '', 'a place or a period', 'dc'], ['identifier', 'Identifiers', 'list', 'DOI, ISBN, URL; comma separated', 'dc']];
   function okURL(u) { return /^https?:\/\/\S+$/i.test(String(u || '').trim()); }
   function fieldsHTML(it) {
@@ -1248,7 +1251,7 @@
       else if (it.kind === 'video' || /^video\//.test(it.mime || '')) { pv.innerHTML = strip + '<video class="px-video" controls preload="metadata" src="' + u + '"></video>'; mediaGaps(it, pv); done(); }
       else if (it.kind === 'image') { zoomImage(it, pv, u); done(); }
       else if (it.kind === 'pdf') { zoomPdf(it, pv, u); done(); }
-      else if (/^text\//.test(it.mime || '')) fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = strip + (gapText(it, t) || preHTML(it, t)); done(); });
+      else if (/^text\//.test(it.mime || '') || it.kind === 'text' || it.kind === 'software') fetch(u).then(function (r) { return r.text(); }).then(function (t) { pv.innerHTML = strip + (gapText(it, t) || preHTML(it, t)); done(); });
       else pv.innerHTML = '<p class="hint">No preview for this kind of file: ⤓ Download to open it.</p>';
     }, function (e) { pv.innerHTML = '<p class="badge err">' + esc(e.message) + '</p>'; });
   }
@@ -1633,13 +1636,13 @@
   // ---------- adding ----------
   function addBox() {
     var esc = SW.esc, d = SW.el('dialog', { class: 'tray-big px-dlg px-add' });
-    var blank = { title: '', date: '', creator: '', source: '', rights: '', accessioned: now().slice(0, 10), description: '', tags: [], versions: SW.state.v ? [SW.state.v] : [], refs: [] };
+    var blank = { title: '', date: '', creator: '', source: '', rights: '', accessioned: now().slice(0, 10), description: '', tags: [], versions: [], refs: [] };
     var into = coll(F.c);
     d.innerHTML = '<div class="tray-bighead"><b>Add an item</b><span class="refhelp-acts"><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
       '<div class="px-seg px-addmode"><button class="on" data-mode="file">A file</button><button data-mode="link">A link</button><button data-mode="missing" title="Something known to have existed that the archive holds no copy of and no link to">Missing</button></div>' +
       '<label class="px-drop"><input type="file" class="px-file"><span>Choose a file, or drop one here: a scan, photograph, PDF, text, audio or video (up to 50 MB).</span></label>' +
       '<div class="px-linkin" hidden><label><span>Link</span><input class="px-url" type="url" placeholder="https://… a YouTube, Vimeo or Internet Archive recording, an audio or video file, or a page"></label>' +
-      '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="text">Text file</option><option value="software">Code</option><option value="link">Web page or document</option><option value="other">Other</option></select></label>' +
+      '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="">— choose —</option><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="text">Text file</option><option value="software">Code</option><option value="link">Web page or document</option><option value="other">Other</option></select></label>' +
       '<p class="hint">Catalogued with nothing copied: it plays or shows here from where it is held.</p></div>' +
       '<div class="px-missin" hidden><p class="hint">A stub for something known to have existed that the archive holds no copy of and no link to. Before adding it, read a source that shows it existed. In the description: the line “Provenance found but item not available or missing”; what it is; where it is cited, as the citing paratext’s code (P-XXXXX) with the page or time and a short quotation, or a reference; and, after “Searched:”, where it has been looked for and not found. Tag it to-locate; if a holder can be asked, tag it to-request too and say what to ask for in a paragraph beginning “Request:”, before “Searched:”. When a copy is found, add it as an item of its own, carrying the provenance over, and withdraw this stub giving the new code as the reason.</p></div>' +
       fieldsHTML(blank) + (into ? '<label class="check px-into"><input type="checkbox" class="px-intoc" checked> Into the collection “' + esc(into.name) + '”</label>' : '') + '<div class="px-acts"><button class="btn" data-a="up">Upload</button> <span class="hint px-msg"></span></div>';
@@ -1657,6 +1660,7 @@
     });
     SW.$('.px-url', d).addEventListener('change', function (e) {   // the kind guessed from the address
       var u = e.target.value, k = SW.$('.px-lkind', d);
+      delete SW.$('[data-a="up"]', d).dataset.again;
       if (/\.(mp3|m4a|wav|ogg|oga|flac|aac)(\?|$)/i.test(u)) k.value = 'audio';
       else if (/youtube\.com|youtu\.be|vimeo\.com|\.(mp4|webm|mov|m4v)(\?|$)/i.test(u)) k.value = 'video';
       else if (/\.(png|jpe?g|gif|webp|tiff?|svg)(\?|$)/i.test(u)) k.value = 'image';
@@ -1667,7 +1671,8 @@
     });
     function pick(f) {
       file = f; if (!f) return;
-      SW.$('.px-drop span', d).textContent = f.name + ' (' + Math.round(f.size / 1024).toLocaleString('en-GB') + ' KB)';
+      delete SW.$('[data-a="up"]', d).dataset.again;   // a new file is checked again
+      SW.$('.px-drop span', d).textContent = f.name + ' (' + fmtSize(f.size) + ')';
       var t = SW.$('[data-k="title"]', d); if (t && !t.value) t.value = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
       var g = SW.$('[data-k="genre"]', d); if (g && !g.value) g.value = guessGenre(f.type, '');
     }
@@ -1681,11 +1686,15 @@
       if (e.target === d || e.target.closest('[data-x]')) { d.__leave(); return; }
       var a = e.target.closest('[data-a="up"]'); if (!a) return;
       var msg = SW.$('.px-msg', d), o = readFields(d), ic = SW.$('.px-intoc', d);
+      Object.keys(o).forEach(function (k) { if (o[k] === '' || Array.isArray(o[k]) && !o[k].length) delete o[k]; });   // no empty fields kept
+      o.tags = o.tags || [];
       if (ic && ic.checked) o.collections = [into.id];
       if (!o.accessioned) o.accessioned = now().slice(0, 10);
+      if (!o.genre) { msg.textContent = 'Choose its Type: what the thing is.'; return; }
       if (mode === 'missing') {
         if (!o.title) { msg.textContent = 'Give it a title, as it is cited.'; return; }
         if (!/\bP-[A-Z0-9]{5}\b|cited/i.test(o.description || '') || /P-XXXXX/.test(o.description || '')) { msg.textContent = 'Say in the description where it is cited: the citing paratext’s code (P-…) with the page, or a reference.'; return; }
+        ['missing', 'to-locate'].forEach(function (g) { if (o.tags.indexOf(g) < 0) o.tags.push(g); });   // the stub rule's tags
         a.disabled = true; msg.textContent = 'Recording it in the catalogue…';
         P.load(true).then(function () {
           var code = newCode();
@@ -1699,6 +1708,10 @@
         var url = SW.$('.px-url', d).value.trim(), lk = SW.$('.px-lkind', d).value;
         if (!okURL(url)) { msg.textContent = 'Give the link (https://…).'; return; }
         if (!o.title) { msg.textContent = 'Give it a title.'; return; }
+        if (!lk) { msg.textContent = 'Choose how it shows: video, audio, image, PDF, text, code or a web page.'; return; }
+        var nu = function (x) { return String(x || '').trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); };
+        var dupL = (cat ? cat.items : []).filter(function (x) { return !x.withdrawn && [x.url, x.archiveUrl].concat(x.identifier || []).map(nu).indexOf(nu(url)) >= 0; })[0];
+        if (dupL && !a.dataset.again) { a.dataset.again = 1; msg.textContent = 'This link is already catalogued as ' + dupL.code + ' (' + dupL.title + '). Add again to add it anyway.'; return; }
         o.url = url; a.disabled = true; msg.textContent = 'Recording it in the catalogue…';
         P.load(true).then(function () {
           var code = newCode();
@@ -1711,17 +1724,27 @@
       if (!file) { msg.textContent = 'Choose a file first.'; return; }
       if (file.size > 50e6) { msg.textContent = 'Too large for the repository (50 MB at most).'; return; }
       if (!o.title) { msg.textContent = 'Give it a title.'; return; }
+      var dupF = (cat ? cat.items : []).filter(function (x) { return !x.withdrawn && x.size === file.size && (x.name || '').toLowerCase() === file.name.toLowerCase(); })[0];
+      if (dupF && !a.dataset.again) { a.dataset.again = 1; msg.textContent = 'A file of this name and size is held as ' + dupF.code + ' (' + dupF.title + '). Upload again to add it anyway.'; return; }
       a.disabled = true; msg.textContent = 'Uploading…';
       P.load(true).then(function () {
         var code = newCode(), ext = (file.name.match(/\.[A-Za-z0-9]+$/) || [''])[0].toLowerCase(), path = 'files/' + code + ext;
         var mime = file.type || '', kind = mime === 'application/pdf' ? 'pdf' : /^image\//.test(mime) ? 'image' : /^text\//.test(mime) ? 'text' : /^audio\//.test(mime) ? 'audio' : /^video\//.test(mime) ? 'video' : 'file';
+        if (CODE_EXT.test(ext)) { kind = 'software'; if (!/^text\//.test(mime)) mime = 'text/plain'; }   // source code, read as text
+        else if (kind === 'file' && TEXT_EXT.test(ext)) { kind = 'text'; mime = 'text/plain'; }
+        var fileSha = null;
         return fileB64(file).then(function (b64) {
           return gh('PUT', '/contents/' + path, { message: 'Paratext ' + code + ': ' + o.title + ', added by ' + me(), content: b64 });
-        }).then(function () {
+        }).then(function (r) {
+          fileSha = r && r.content && r.content.sha;
           msg.textContent = 'Recording it in the catalogue…';
           return save('Paratext ' + code + ': catalogued, by ' + me(), function (c) {
             c.items.push(Object.assign({ code: code, file: path, name: file.name, kind: kind, mime: mime, size: file.size }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me() }));
-          }).then(function () { return code; });
+          }).then(function () { return code; }, function (err) {
+            // the record could not be saved: the file just uploaded is taken out again, so none is left without a record
+            if (!fileSha) throw err;
+            return gh('DELETE', '/contents/' + path, { message: 'Paratext ' + code + ': upload taken back, its record not saved, by ' + me(), sha: fileSha }).then(function () { throw err; }, function () { throw new Error(err.message + ' The file ' + path + ' was uploaded but has no record: tell whoever keeps the archive.'); });
+          });
         });
       }).then(function (code) { d.close(); refresh(); SW.toast(code + ' added'); openItem(code); }, function (err) { a.disabled = false; msg.textContent = err.message; });
     });
