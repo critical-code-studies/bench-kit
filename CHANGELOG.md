@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.64.1 (2026-10-19)
 
 - Site map: a link in the tab row to a page of its own (`<a class="tabs-link">`, such as the ELIZA bench's Implementations) is listed under Tabs, with its title as the description. Asked for by the ELIZA session, whose Implementations page the generator was leaving out.
 
