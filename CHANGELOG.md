@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.63.0 (2026-10-19)
 
 - Paratexts: **a new Type list, and Medium** (decided after review with the three benches). Type says what the thing is, in ten groups and 58 types. New types: magazine article, review, abstract or bibliography entry, program write-up, catalogue entry, specification, newsgroup or mailing-list post, log or logbook, legal document (taken in from the Spacewar bench), program on a carrier, advertisement. Exhibition now covers physical displays. Retired, with a label kept for the records that carry them: transcript (a transcript takes the type of what it transcribes), paper tape, punched cards, magnetic tape (now a program or an object with its Medium). **Medium** (new, optional) names the carrier: paper, microform, punched cards, paper tape, magnetic tape, DECtape, disk, ROM cartridge, data cassette, photographic print, photographic film, videotape, audio tape, born digital; it goes into Dublin Core's format and CSL's medium. **Extensible without a release:** ＋ New type… and ＋ New medium… at the foot of each list add one to the archive's own list (`types`, `media` in the catalogue), in one commit; a bench's config can still add types; a kit type keeps its definition over an archive's of the same id. A find box beside the Type list narrows it as you type. README (Paratext rules ▸ Type and Medium) and Help.
 
