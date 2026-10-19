@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.64.0 (2026-10-19)
 
 - Paratexts: **standard terms for every type and medium.** Each kit type is mapped to the Library of Congress Genre/Form Terms or, where LCGFT has no term, the Getty Art & Architecture Thesaurus; each medium to an RDA carrier type, with the AAT term beside it where closer; each mapping marked exact, close, broad or narrow (SKOS), all checked against id.loc.gov and vocab.getty.edu. Presentation slides and Other have none. Shown in the item's box (Standard terms, linked) and the read-only box; exported in Dublin Core as `dc:type` and `dc:format` labels and URIs. ＋ New type… and ＋ New medium… take an optional standard term (`std: { uri, label }`). The bench's own labels are unchanged. The mapping table is in the README (Paratext rules ▸ Type and Medium).
 
