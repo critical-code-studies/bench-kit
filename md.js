@@ -37,8 +37,8 @@
     });
     s = s.replace(/(^|[\s(])((?:https?:\/\/)[^\s<]+?)(?=[.,;:!?)]*(?:\s|$|&lt;))/g, function (m, pre, u) { u = unesc(u); return pre + stash(mdLink(u, u, true)); });
     s = s.replace(/\\(&gt;|&lt;|&amp;|[\\`*_\[\]~#+\-.!()])/g, function (m, c) { return stash(c); });   // \* is a plain *
-    // A-…, R-…, C-…, P-…: a code of the bench's, a link to what it names
-    s = s.replace(/(^|[\s(>\[,;])([ARCP]-[0-9A-Z]{5})(?![\w-])/g, function (m, pre, code) {
+    // A-…, R-…, C-…, P-…, I-… (an implementation): a code of the bench's, a link to what it names
+    s = s.replace(/(^|[\s(>\[,;])([ARCPI]-[0-9A-Z]{5})(?![\w-])/g, function (m, pre, code) {
       if (code.charAt(0) === 'P') {   // a paratext: by its title once the catalogue is read (the code until then, or without access)
         var PT = SW.paratexts, t = PT && PT.titleOf(code);
         if (!t && PT) PT.want();

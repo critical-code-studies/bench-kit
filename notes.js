@@ -734,7 +734,8 @@
     if ((m = /^F(\d+)$/.exec(code))) { SW.findings.openBench('F' + m[1]); return; }
     if (/^[A-Z]{1,4}-N\d+$/.test(code)) { SW.tray.reveal(code); return; }
     if (/^P-[0-9A-Z]{5}$/.test(code)) { SW.paratexts.peek(code); return; }
-    if (!(m = /^([ARC])-([0-9A-Z]{5})$/.exec(code))) { SW.toast('Not a code: A-, R-, C- or P- and five letters or figures, F and a number, or initials-N and a number.', 6000); return; }
+    if (/^I-[0-9A-Z]{5}$/.test(code)) { if (SW.implementations && SW.implementations.open) SW.implementations.open(code); else SW.toast(code + ' is an implementation, and this bench has no Implementations.', 6000); return; }
+    if (!(m = /^([ARC])-([0-9A-Z]{5})$/.exec(code))) { SW.toast('Not a code: A-, R-, C-, P- or I- and five letters or figures, F and a number, or initials-N and a number.', 6000); return; }
     if (m[1] === 'C') { SW.findings.openRef(code); return; }
     N.listAll().then(function (all) {
       var n = all.filter(function (x) { return x.id && x.source !== 'buildlog' && N.code(x).slice(2) === m[2]; })[0];

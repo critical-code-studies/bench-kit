@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Codes: an implementation's code (I- and five letters or figures) written in an annotation, note, finding or paratext description is a link, like A-, R-, C- and P- codes, and Go to a code (# in the top bar, ?code= in a link) opens it where a bench has Implementations (SW.implementations.open); elsewhere it says so.
+
 ## 0.65.0 (2026-10-19)
 
 - **Compare ▸ By function, for Lisp** (new `lispdefs.js`). Where both versions are Lisp, Compare offers By function beside Text, the bench's Definitions and Routines: the two versions' definitions matched by name and compared as tokens, with parentheses, layout and case left out, so that BBN-LISP's DEFINEQ, Maclisp's DEFPROP … EXPR and DEFUN read alike. A row each: the definition, its kind, where it is in each version (as a reference), its length in tokens, the similarity, and identical, changed, only in A or only in B; fold unchanged hides the identical; a row opens the two definitions side by side in the side panel; Word and Markdown export. Readers for BBN-LISP and Interlisp, MIT PDP-6 Lisp, Maclisp (with Stanford Lisp 1.6 and Franz), and Common Lisp; definitions by DEFINEQ, DEFPROP, DEFUN, DEFMACRO, DE, DF, DM, Micro-Planner's theorems, SHRDLU's PDEFINE and DEFS, DEFLIST and Common Lisp's defining forms. A form left open where the next definition begins at the margin (a damaged copy, a lost parenthesis) is closed there and marked unbalanced. A version's dialect is its `lispDialect`, or its `dialect` or the bench's `lang` where these name a Lisp; a bench loads `kit/lispdefs.js` before `kit/compare.js`. The module stands alone, for the ELIZA bench's Implementations to use. Asked for by the SHRDLU session; from the ELIZA Implementations viewer's by-function compare, rewritten with a reader per dialect.
