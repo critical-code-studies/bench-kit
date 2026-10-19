@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.62.1 (2026-10-19)
 
 - Paratexts ▸ ＋ Add an item, after testing: the three modes (A file, A link, Missing) now show only their own part of the box (all three showed at once). The Versions field is shown and starts empty; it was hidden under More metadata and filled with the version in view, so every item added was tied to it. A Type is required. A link's Shows as starts unchosen and must be chosen (it started at Video, so a page was catalogued as a video). A scan is no longer guessed to be a photograph. A stub gets the tags missing and to-locate. Program source (.lisp, .bas, .c and the like) is kept as text (kind software, text/plain) and shows as text in the box. A file of the same name and size, or a link already catalogued (url, archive link or identifier), is named before it is added again. When the record cannot be saved after the file is uploaded, the file is taken out again, so none is left without a record. Empty fields are not saved. The Dublin Core type field is labelled DCMI type (two fields were labelled Type). Small files show their size in bytes.
 - Paratext rules ▸ Corpora: a corpus is a bulk set gathered by one collector or by one search (it said one source), and a program's early ports and reconstructions are named as paratexts. The same in Help ▸ Paratexts ▸ Corpora.
