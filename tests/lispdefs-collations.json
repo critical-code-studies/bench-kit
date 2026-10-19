@@ -64,6 +64,37 @@
   "note": "Hand collation: 189 in common, 187 identical."
  },
  {
+  "name": "ELIZA: Cosell's DOCTOR script on Samson's DECtape, earlier state to SCRIP 4 (I-HDTE9 to I-UM0AG)",
+  "root": "eliza",
+  "a": "files/I-HDTE9.txt",
+  "aDialect": "pdp6",
+  "b": "files/I-UM0AG.txt",
+  "bDialect": "pdp6",
+  "want": {
+   "matched": 123,
+   "identical": 115,
+   "changed": 8,
+   "onlyA": 1,
+   "onlyB": 14
+  },
+  "note": "Scripts write DON'T, YOU'RE and I'M with a plain apostrophe; read with ' as QUOTE, YOU'RE and I'M fold into YOU and I and the counts fall to 119 and 111. The earlier state carries damaged words (TRANSLATIML, OVERJ)."
+ },
+ {
+  "name": "ELIZA: SCRIP 4 on Samson's DECtape to Cosell's paper tape SCRIP 4.1, 2 July 1966 (I-UM0AG to I-9G8JQ)",
+  "root": "eliza",
+  "a": "files/I-UM0AG.txt",
+  "aDialect": "pdp6",
+  "b": "files/I-9G8JQ.txt",
+  "bDialect": "bbn",
+  "want": {
+   "matched": 134,
+   "identical": 106,
+   "changed": 28,
+   "onlyA": 3,
+   "onlyB": 0
+  }
+ },
+ {
   "name": "SHRDLU: GRAMAR, the ITS copy (gramar.28) to Winograd's Stanford distribution (gramar)",
   "root": "shrdlu",
   "a": "its/as-found/gramar.28",

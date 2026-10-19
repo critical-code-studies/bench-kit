@@ -18,8 +18,9 @@
  *   In bbn, pdp6 and maclisp a " opens a string only after a space or a parenthesis and only
  *   if another closes it on the same line (readers of the time took " as a letter: SHRDLU's
  *   dictionary defines the word " and its grammar quotes it as '"); in cl a string runs to its
- *   closing ". 'X reads as
- *   QUOTE X everywhere. Case is folded (fold: false keeps it). detect(text) guesses a dialect.
+ *   closing ". In maclisp and cl 'X reads as QUOTE X; in bbn and pdp6 ' is a letter, as the
+ *   scripts of 1966 to 1972 write DON'T, YOU'RE and I'M plainly (White's Maclisp DOCTOR of 1978
+ *   writes DON/'T). Case is folded (fold: false keeps it). detect(text) guesses a dialect.
  *
  * Definitions: DEFINEQ entries (LAMBDA, NLAMBDA); DEFPROP name (LAMBDA …) EXPR, FEXPR, LEXPR or
  * MACRO; DEFUN (Maclisp's FEXPR, MACRO and (name prop) forms too), DEFMACRO, DE, DF, DM;
@@ -50,8 +51,8 @@
   'use strict';
 
   var DIALECTS = {
-    bbn: { label: 'BBN-LISP and Interlisp', escape: '%', semi: false, bars: false, supers: true, strings: 'line' },
-    pdp6: { label: 'PDP-6 Lisp', escape: '/', semi: false, bars: false, supers: false, strings: 'line' },
+    bbn: { label: 'BBN-LISP and Interlisp', escape: '%', semi: false, bars: false, supers: true, strings: 'line', quote: false },
+    pdp6: { label: 'PDP-6 Lisp', escape: '/', semi: false, bars: false, supers: false, strings: 'line', quote: false },
     maclisp: { label: 'Maclisp', escape: '/', semi: true, bars: true, supers: false, strings: 'line' },
     cl: { label: 'Common Lisp', escape: '\\', semi: true, bars: true, supers: false, strings: 'full' }
   };
@@ -84,7 +85,7 @@
       if (c === ')') { close(); i++; continue; }
       if (D.supers && c === '[') { open(); supers.push(depth); i++; continue; }
       if (D.supers && c === ']') { var to = supers.length ? supers.pop() - 1 : 0; while (depth > to) close(); i++; continue; }
-      if (c === "'") { push('atom', 'QUOTE'); i++; continue; }
+      if (c === "'" && D.quote !== false) { push('atom', 'QUOTE'); i++; continue; }
       if (dialect === 'cl' && c === '#' && s.charAt(i + 1) === "'") { push('atom', 'FUNCTION'); i += 2; continue; }
       if (dialect === 'cl' && (c === '`' || c === ',')) { var m = s.substr(i, 2) === ',@' ? ',@' : c; push('atom', m); i += m.length; continue; }
       if (c === '"' && (D.strings === 'full' || i === bol || /[\s()]/.test(s.charAt(i - 1)))) {
@@ -109,7 +110,7 @@
           a += s.slice(i + 1, k2).replace(new RegExp('\\' + D.escape + '(.)', 'g'), '$1'); for (var q = i; q < k2 && q < n; q++) if (s.charAt(q) === '\n') line++;
           i = k2 + 1; continue;
         }
-        if (/\s/.test(e) || e === '(' || e === ')' || e === "'" || (e === ';' && D.semi) || (D.supers && (e === '[' || e === ']')) ||
+        if (/\s/.test(e) || e === '(' || e === ')' || (e === "'" && D.quote !== false) || (e === ';' && D.semi) || (D.supers && (e === '[' || e === ']')) ||
             (dialect === 'cl' && (e === '"' || e === '`' || e === ','))) break;
         a += e; i++;
       }

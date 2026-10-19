@@ -19,6 +19,8 @@
   eq('Common Lisp: #\', #| |#, \\ in strings, backquote', toks('(f #| x #| y |# |# #\'g "a\\"b" `(,c ,@d))', 'cl'), '( F FUNCTION G "A"B" ` ( , C ,@ D ) )');
   eq('PDP-6 Lisp: ; is a letter', toks('(QUOTE (/. ! ? : ;)) (A)', 'pdp6'), '( QUOTE ( . ! ? : ; ) ) ( A )');
   eq('Maclisp: " after a quote mark is a letter, so a " in a comment opens nothing', toks('(F \'") (G) ;IF " FOLLOWS', 'maclisp'), '( F QUOTE " ) ( G )');
+  eq('PDP-6 Lisp and BBN-LISP: \' is a letter', [toks("(DEFPROP YOU'RE I'M TRANSLATION)", 'pdp6'), toks("(DON'T 'X)", 'bbn')], ["( DEFPROP YOU'RE I'M TRANSLATION )", "( DON'T 'X )"]);
+  eq('Maclisp: \' is QUOTE, and /\' a letter', toks("(DON/'T 'X)", 'maclisp'), "( DON'T QUOTE X )");
   eq('the lines', L.read('(a\n b)', 'maclisp').map(function (t) { return t.line; }), [1, 1, 2, 2]);
   eq('a dialect guessed', [L.detect('(DEFINEQ (F (LAMBDA NIL NIL)))'), L.detect('(DEFUN F () NIL)'), L.detect("(defun f (&key x) #'car)")], ['bbn', 'maclisp', 'cl']);
 

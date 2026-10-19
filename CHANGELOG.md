@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- lispdefs.js: in the bbn and pdp6 readers ' is a letter, not QUOTE. The ELIZA scripts of 1966 to 1972 (Cosell's BBN-LISP tapes, the PDP-6 adaptation on Samson's DECtape) write DON'T, YOU'RE and I'M plainly; read with ' as QUOTE, YOU'RE and I'M folded into YOU and I, and Implementations' Compare of the two Samson scripts fell from 123 definitions in common (115 identical) to 119 (111). White's Maclisp DOCTOR of 1978 writes DON/'T, so maclisp and cl keep ' as QUOTE. Two collations added (the Samson scripts; SCRIP 4 to Cosell's SCRIP 4.1 tape), two checks in tests/lispdefs.test.js.
+
 ## 0.66.0 (2026-10-19)
 
 - **Implementations** (new `implementations.js`, `implementations.css`): the Implementations tab as a kit module, from the ELIZA bench's view (eliza 0.1.82), for any bench that sets `SW.BENCH.implementations`. The ELIZA-specific parts are now the bench's: root labels from the catalogue's `variorum`, the credit at the foot from `credit`, and a feature that needs more than yes or no (ELIZA's delimiters) through `feature: { cell, cls, key }`. Compare reads Lisp by definition through `lispdefs.js` (the dialect from the entry's language: PDP-6, BBN-LISP and Interlisp, Maclisp and its relatives, Common Lisp), marking an unbalanced definition. Alternates held privately are named, with the paratext that holds them. I-codes open through the kit's Go to a code. README ▸ Implementations sets out the catalogue, publication and clearance, and how a bench adds the tab.
