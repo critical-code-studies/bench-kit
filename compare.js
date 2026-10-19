@@ -150,6 +150,54 @@
     return { c: c, rows: rows };
   }
 
+  // By function (kit/lispdefs.js): where both versions are Lisp, their definitions matched by
+  // name and compared as tokens. A version's Lisp dialect is its lispDialect, or read from its
+  // dialect or the bench's lang (pdp6, maclisp, bbn or interlisp, cl).
+  var LISPD = { maclisp: 'maclisp', pdp6: 'pdp6', 'pdp6-lisp': 'pdp6', 'stanford-lisp': 'maclisp', franz: 'maclisp', bbn: 'bbn', 'bbn-lisp': 'bbn', interlisp: 'bbn', cl: 'cl', 'common-lisp': 'cl' };
+  function lispOf(b) {
+    if (!root.SWLispDefs || !b) return null;
+    return b.v.lispDialect || LISPD[String(b.dialect || b.v.dialect || '').toLowerCase()] || LISPD[String(BEN.lang || '').toLowerCase()] || null;
+  }
+  function lispTexts(b) {
+    var out = [];
+    b.parts.forEach(function (p, pi) {
+      if (!cst.supplied && !SW.mainPart(p)) return;
+      if (p.role === 'doc') return;
+      var t = typeof p.text === 'string' ? p.text : (b.lines[pi] || []).map(function (L) { return L.raw; }).join('\n');
+      out.push({ name: String(pi), text: t });
+    });
+    return out;
+  }
+  function defsDiff(el, A, B) {
+    var D = root.SWLispDefs, r = D.compare({ texts: lispTexts(A), dialect: lispOf(A) }, { texts: lispTexts(B), dialect: lispOf(B) });
+    function where(X, d) { return d ? { html: SW.refTag(X.v.id, +d.file, d.line, d.end, X.parts.length), sort: (+d.file) * 1e6 + d.line } : ''; }
+    var shown = r.rows.filter(function (x) { return !(cst.fold && x.status === 'identical'); });
+    var rows = shown.map(function (x) {
+      var dmg = [x.a && x.a.broken ? 'A' : '', x.b && x.b.broken ? 'B' : ''].filter(Boolean).join(' and ');
+      var row = [x.key, x.kind, where(A, x.a), x.a ? x.a.tokens.length : '', where(B, x.b), x.b ? x.b.tokens.length : '', x.sim == null ? '' : Math.round(x.sim * 100),
+                 dmg ? { html: SW.esc(x.status) + ' <span class="badge warn" title="The form does not close before the next definition at the margin (or the end of the file): a lost or added parenthesis, or a damaged copy">unbalanced in ' + dmg + '</span>', sort: x.status } : x.status];
+      row.def = x; return row;
+    });
+    var pad = SW.el('div', { class: 'pad', style: 'max-width:none' });
+    pad.innerHTML = '<div class="legend"><span><b>' + r.matched + '</b> definitions in both, <b>' + r.identical + '</b> identical, ' + r.changed + ' changed; ' + r.onlyA + ' only in ' + SW.esc(short(A.v.label)) + ', ' + r.onlyB + ' only in ' + SW.esc(short(B.v.label)) + '</span>' +
+      '<span class="muted">Read as ' + SW.esc(D.DIALECTS[lispOf(A)].label) + (lispOf(A) !== lispOf(B) ? ' and ' + SW.esc(D.DIALECTS[lispOf(B)].label) : '') + '. Definitions are matched by name and compared as tokens, with parentheses, layout and case left out, so DEFINEQ, DEFPROP and DEFUN read alike. ' +
+      (r.otherA + r.otherB ? (r.otherA + r.otherB) + ' top-level forms define nothing and are left out. ' : '') + (r.brokenA.length + r.brokenB.length ? (r.brokenA.length + r.brokenB.length) + ' unbalanced, closed at the next definition and marked. ' : '') + (cst.fold && r.identical ? r.identical + ' identical definitions are folded (untick fold unchanged to list them). ' : '') + 'Click a row to see the two side by side.</span></div>';
+    pad.appendChild(SW.table(['Definition', 'Kind', short(A.v.label), 'Tokens', short(B.v.label), 'Tokens', 'Sim %', 'Status'], rows, {
+      cls: ['mono', '', 'mono', 'num', 'mono', 'num', 'num', ''],
+      onRow: function (row, e) {
+        if (e.target.closest('.swref')) return;
+        var x = row.def;
+        function src(X, d) {
+          if (!d) return '<p class="hint">Not defined in ' + SW.esc(X.v.label) + '.</p>';
+          var t = lispTexts(X).filter(function (f) { return f.name === d.file; })[0], ls = t ? t.text.replace(/\r\n?/g, '\n').split('\n').slice(d.line - 1, d.end) : [];
+          return '<h4>' + SW.esc(X.v.label) + ' ' + SW.refTag(X.v.id, +d.file, d.line, d.end, X.parts.length) + '</h4><pre class="code">' + SW.esc(ls.join('\n')) + '</pre>';
+        }
+        SW.drawer(x.key + ' · ' + x.status + (x.sim != null && x.status !== 'identical' ? ', ' + Math.round(x.sim * 100) + '% alike' : ''), src(A, x.a) + src(B, x.b));
+      } }));
+    el.appendChild(pad);
+    return { r: r, rows: rows };
+  }
+
   // Overview and back, for a zoomable chart. The first press goes out to the whole
   // chart and remembers the zoom and place; the next press returns there. Zooming
   // any other way forgets it.
@@ -340,7 +388,7 @@
     SW.state.b = bid;
     var tb = SW.el('div', { class: 'toolbar' });
     tb.innerHTML = '<b>' + SW.esc(A.v.label) + '</b> <span class="muted">against</span> <select id="cp-b">' + options(bid) + '</select><span class="sep"></span>' +
-      ['text', 'constants', 'routines'].map(function (m) { return '<button class="btn' + (cst.mode === m ? ' on' : '') + '" data-m="' + m + '">' + { text: 'Text', constants: (BEN.compareDefs || {}).label || 'Definitions', routines: 'Routines' }[m] + '</button>'; }).join('') +
+      ['text', 'constants', 'routines', 'functions'].filter(function (m) { return (m !== 'constants' || BEN.compareDefs) && (m !== 'functions' || lispOf(A) && lispOf({ v: V.byId(bid) || {} })); }).map(function (m) { return '<button class="btn' + (cst.mode === m ? ' on' : '') + '" data-m="' + m + '"' + (m === 'functions' ? ' title="The definitions of the two versions matched by name and compared as Lisp, whatever their layout or defining form"' : '') + '>' + { text: 'Text', constants: (BEN.compareDefs || {}).label || 'Definitions', routines: 'Routines', functions: 'By function' }[m] + '</button>'; }).join('') +
       '<span class="sep"></span>' +
       '<label class="check" title="Compare the code only: comments (after ' + SW.esc(CB.comment || ';') + ') are left out, so a changed comment does not count as a change"><input type="checkbox" data-o="noComments"' + (cst.noComments ? ' checked' : '') + '> ignore comments</label>' +
       (CB.normalised ? '<label class="check" title="Normalised: the text as the assembler read it, after the documented normalisations for this version (for example a transcription&#39;s &quot;.sx1&quot; read as the overlined variable &quot;~sx1&quot;, or modern &quot;//&quot; comments read as MACRO comments). Unticked: the source exactly as held in sources/. Normalised lines are marked with a violet rule by their line numbers."><input type="checkbox" data-o="norm"' + (cst.norm ? ' checked' : '') + '> normalised</label>' : '') +
@@ -362,6 +410,15 @@
       if (cst.mode === 'text') {
         r = textDiff(body, A, B);
         exp.appendChild(SW.exportButtons(function () { return textDoc(A, B, r); }, BEN.slug + '-' + A.v.id + '-vs-' + B.v.id));
+      } else if (cst.mode === 'functions' && lispOf(A) && lispOf(B)) {
+        r = defsDiff(body, A, B);
+        exp.appendChild(SW.exportButtons(function () {
+          return { title: A.v.label + ' and ' + B.v.label + ': by function', blocks: [
+            { type: 'p', text: r.r.matched + ' definitions in both, ' + r.r.identical + ' identical, ' + r.r.changed + ' changed; ' + r.r.onlyA + ' only in ' + A.v.label + ', ' + r.r.onlyB + ' only in ' + B.v.label + '. Matched by name, compared as tokens with parentheses, layout and case left out (kit/lispdefs.js).' },
+            SW.tableBlock('Definitions', ['Definition', 'Kind', A.v.label, 'Tokens', B.v.label, 'Tokens', 'Sim %', 'Status'], r.r.rows.map(function (x) {
+              return [x.key, x.kind, x.a ? SW.refText(A.v.id, +x.a.file, x.a.line, x.a.end, A.parts.length) : '', x.a ? x.a.tokens.length : '', x.b ? SW.refText(B.v.id, +x.b.file, x.b.line, x.b.end, B.parts.length) : '', x.b ? x.b.tokens.length : '', x.sim == null ? '' : Math.round(x.sim * 100), x.status];
+            }))] };
+        }, BEN.slug + '-' + A.v.id + '-vs-' + B.v.id + '-functions'));
       } else if (cst.mode === 'constants') {
         r = symbolsDiff(body, A, B);
         exp.appendChild(SW.exportButtons(function () {

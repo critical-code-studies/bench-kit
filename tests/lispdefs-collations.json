@@ -1,0 +1,114 @@
+[
+ {
+  "name": "ELIZA: Cosell's BBN-LISP DOCTOR, 1966, to the PDP-6 adaptation on Samson's DECtape (I-HJHZT to I-2N9J5)",
+  "a": "files/I-HJHZT.txt",
+  "aDialect": "bbn",
+  "b": "files/I-2N9J5.txt",
+  "bDialect": "pdp6",
+  "want": {
+   "matched": 13,
+   "identical": 2,
+   "changed": 11,
+   "onlyA": 5,
+   "onlyB": 10
+  },
+  "root": "eliza",
+  "note": "Hand collation (test viewer, 19 October 2026): 13 in common, 2 identical. The PDP-6 file is read with ; as a letter, so DISPRINT, which the viewer's reader lost after the punctuation list (/. /, /( /) ! ? : ;), is counted: only in B 10, not 9."
+ },
+ {
+  "name": "ELIZA: the PDP-6 adaptation to DECUS 10-105, Stanford Lisp 1.6, 1970 (I-2N9J5 to I-Y7TBL)",
+  "a": "files/I-2N9J5.txt",
+  "aDialect": "pdp6",
+  "b": "private/I-Y7TBL.lsp",
+  "bDialect": "maclisp",
+  "want": {
+   "matched": 21,
+   "identical": 16,
+   "changed": 5,
+   "onlyA": 2,
+   "onlyB": 1
+  },
+  "root": "eliza",
+  "note": "Hand collation: 21 in common, 16 identical. DISPRINT counted (only in A 2, not 1)."
+ },
+ {
+  "name": "ELIZA: the PDP-6 adaptation to JonL White's ITS Maclisp DOCTOR, 1978 (I-2N9J5 to I-1NCM1)",
+  "a": "files/I-2N9J5.txt",
+  "aDialect": "pdp6",
+  "b": "files/I-1NCM1.txt",
+  "bDialect": "maclisp",
+  "want": {
+   "matched": 19,
+   "identical": 10,
+   "changed": 9,
+   "onlyA": 4,
+   "onlyB": 170
+  },
+  "root": "eliza",
+  "note": "Hand collation: 19 in common, 10 identical. DISPRINT counted (only in A 4, not 3)."
+ },
+ {
+  "name": "ELIZA: JonL White's DOCTOR to Franz Lisp, 4.1BSD, 1981 (I-1NCM1 to I-QG5NJ)",
+  "a": "files/I-1NCM1.txt",
+  "aDialect": "maclisp",
+  "b": "private/I-QG5NJ.l",
+  "bDialect": "maclisp",
+  "want": {
+   "matched": 189,
+   "identical": 187,
+   "changed": 2,
+   "onlyA": 0,
+   "onlyB": 3
+  },
+  "root": "eliza",
+  "note": "Hand collation: 189 in common, 187 identical."
+ },
+ {
+  "name": "SHRDLU: GRAMAR, the ITS copy (gramar.28) to Winograd's Stanford distribution (gramar)",
+  "root": "shrdlu",
+  "a": "its/as-found/gramar.28",
+  "aDialect": "maclisp",
+  "b": "original/code/gramar",
+  "bDialect": "maclisp",
+  "want": {
+   "matched": 12,
+   "identical": 12,
+   "changed": 0,
+   "onlyA": 0,
+   "onlyB": 0
+  },
+  "note": "The ITS and Stanford copies of the grammar: every definition identical, the PDEFINE programs included."
+ },
+ {
+  "name": "SHRDLU: SMSPEC, the ITS copy (smspec.94) to the Stanford distribution (smspec)",
+  "root": "shrdlu",
+  "a": "its/as-found/smspec.94",
+  "aDialect": "maclisp",
+  "b": "original/code/smspec",
+  "bDialect": "maclisp",
+  "want": {
+   "matched": 32,
+   "identical": 29,
+   "changed": 3,
+   "onlyA": 1,
+   "onlyB": 1
+  },
+  "note": "The Stanford copy is damaged in SMONE3 and the function after it (bytes changed: a ; read as (, NG as ^DG, SMPOSS2 as SMPORS2). Both forms are read as broken, closed at the next defining form; SMONE3, SMPOSS and SMRELATE differ; SMPOSS2 is only in the ITS copy and SMPORS2 only in Stanford's."
+ },
+ {
+  "name": "SHRDLU: DICTIO, the ITS copy (dictio.73) to the Stanford distribution (dictio)",
+  "root": "shrdlu",
+  "a": "its/as-found/dictio.73",
+  "aDialect": "maclisp",
+  "b": "original/code/dictio",
+  "bDialect": "maclisp",
+  "want": {
+   "matched": 375,
+   "identical": 375,
+   "changed": 0,
+   "onlyA": 0,
+   "onlyB": 0
+  },
+  "note": "The dictionary: every DEFS word identical."
+ }
+]

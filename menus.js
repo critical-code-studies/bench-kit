@@ -35,7 +35,7 @@
   function H() { return B.menus || {}; }
 
   var VERSIONS = [['about', 'This version', 'Its record, sources and annotations'],
-                  ['compare', 'Compare', 'Two versions side by side'],
+                  ['compare', 'Compare', 'Two versions side by side: line by line, by routine, and by function where both are Lisp'],
                   ['genealogy', 'Genealogy', 'How the versions descend']];
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
