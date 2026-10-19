@@ -18,15 +18,16 @@
  *   In bbn, pdp6 and maclisp a " opens a string only after a space or a parenthesis and only
  *   if another closes it on the same line (readers of the time took " as a letter: SHRDLU's
  *   dictionary defines the word " and its grammar quotes it as '"); in cl a string runs to its
- *   closing ". In maclisp, interlisp and cl 'X reads as QUOTE X; in bbn and pdp6 ' is a letter, as the
+ *   closing ". In maclisp and cl 'X reads as QUOTE X; in bbn and pdp6 ' is a letter, as the
  *   scripts of 1966 to 1972 write DON'T, YOU'RE and I'M plainly (White's Maclisp DOCTOR of 1978
- *   writes DON/'T). Case is folded (fold: false keeps it). detect(text) guesses a dialect.
+ *   writes DON/'T); in interlisp ' is QUOTE at the start of an atom and a letter inside one, as
+ *   the Interlisp DOCTORs of 1983 and 1985 write (YOU DON'T SEEM QUITE CERTAIN %.). Case is folded (fold: false keeps it). detect(text) guesses a dialect.
  *
  * Definitions: DEFINEQ entries (LAMBDA, NLAMBDA); DEFPROP name (LAMBDA …) EXPR, FEXPR, LEXPR or
  * MACRO; DEFUN (Maclisp's FEXPR, MACRO and (name prop) forms too), DEFMACRO, DE, DF, DM;
  * Micro-Planner's theorems (DEFPROP name (THCONSE …) THEOREM, THANTE, THERASING, and DEFTHEOREM);
  * SHRDLU's grammar programs (PDEFINE) and dictionary words (DEFS, keyed "word (word)");
- * DEFLIST entries as properties;
+ * DEFLIST entries, Interlisp's PUTPROPS and Cosell's RPLQQ as properties (a script's "word RULES");
  * other DEFPROPs as properties, named "name indicator"; DEFVAR, DEFPARAMETER, DEFCONSTANT, RPAQ
  * and RPAQQ as variables; DEFSTRUCT, DEFMETHOD and DEFGENERIC. A function, fexpr, macro or
  * theorem is keyed by its name alone, so a function that became a macro still pairs. Where a
@@ -53,7 +54,7 @@
   var DIALECTS = {
     bbn: { label: 'BBN-LISP', escape: '%', semi: false, bars: false, supers: true, strings: 'line', quote: false },
     // Interlisp reads as BBN-LISP did, except that ' is QUOTE (the read macro came with it, after the BBN-LISP of the 1960s)
-    interlisp: { label: 'Interlisp', escape: '%', semi: false, bars: false, supers: true, strings: 'line' },
+    interlisp: { label: 'Interlisp', escape: '%', semi: false, bars: false, supers: true, strings: 'line', quote: 'first' },
     pdp6: { label: 'PDP-6 Lisp', escape: '/', semi: false, bars: false, supers: false, strings: 'line', quote: false },
     maclisp: { label: 'Maclisp', escape: '/', semi: true, bars: true, supers: false, strings: 'line' },
     cl: { label: 'Common Lisp', escape: '\\', semi: true, bars: true, supers: false, strings: 'full' }
@@ -68,7 +69,9 @@
 
   function read(text, dialect, opt) {
     var D = DIALECTS[dialect] || DIALECTS.maclisp, fold = !(opt && opt.fold === false);
-    var s = String(text).replace(/\r\n?/g, '\n').replace(/[\f\u0003]/g, ' '), out = [], line = 1, i = 0, n = s.length, supers = [], depth = 0, bol = 0;
+    var s = String(text).replace(/\r\n?/g, '\n').replace(/[\f\u0003]/g, ' ');
+    if (dialect === 'interlisp') s = s.replace(/\u0006[\s\S]/g, '');   // Interlisp's font changes in a pretty-printed file (^F and the font's number)
+    var out = [], line = 1, i = 0, n = s.length, supers = [], depth = 0, bol = 0;
     function up(x) { return fold ? x.toUpperCase() : x; }
     function push(k, t, at) { out.push({ t: t, k: k, line: line, col: (at == null ? i : at) - bol }); }
     function open() { push('(', '('); depth++; }
@@ -112,7 +115,7 @@
           a += s.slice(i + 1, k2).replace(new RegExp('\\' + D.escape + '(.)', 'g'), '$1'); for (var q = i; q < k2 && q < n; q++) if (s.charAt(q) === '\n') line++;
           i = k2 + 1; continue;
         }
-        if (/\s/.test(e) || e === '(' || e === ')' || (e === "'" && D.quote !== false) || (e === ';' && D.semi) || (D.supers && (e === '[' || e === ']')) ||
+        if (/\s/.test(e) || e === '(' || e === ')' || (e === "'" && D.quote !== false && D.quote !== 'first') || (e === ';' && D.semi) || (D.supers && (e === '[' || e === ']')) ||
             (dialect === 'cl' && (e === '"' || e === '`' || e === ','))) break;
         a += e; i++;
       }
@@ -124,7 +127,7 @@
   // top-level forms as trees: a list is an array; an atom or string its text; with lines. A
   // form still open where a defining form begins at the left margin (a damaged copy, a lost
   // parenthesis) is closed there and marked broken, so that it does not swallow what follows.
-  var HEADS = /^(DEFUN|DEFPROP|DEFINEQ|DE|DF|DM|DEFMACRO|DEFTHEOREM|PDEFINE|DEFS|DEFLIST|DEFVAR|DEFPARAMETER|DEFCONSTANT|DEFSTRUCT|DEFGENERIC|DEFMETHOD|RPAQQ?)$/;
+  var HEADS = /^(DEFUN|DEFPROP|PUTPROPS|DEFINEQ|DE|DF|DM|DEFMACRO|DEFTHEOREM|PDEFINE|DEFS|DEFLIST|DEFVAR|DEFPARAMETER|DEFCONSTANT|DEFSTRUCT|DEFGENERIC|DEFMETHOD|RPAQQ?)$/;
   function forms(tokens) {
     var top = [], stack = [], cur = null;
     tokens.forEach(function (tk, ti) {
@@ -172,6 +175,9 @@
       if (h === 'DEFUN' && typeof rest[0] === 'string' && FN[rest[0]] && rest[0] !== 'EXPR' || h === 'DEFUN' && rest[0] === 'EXPR') { kind = FN[rest[0]]; rest = rest.slice(1); }
       add(nm, kind, rest);
     } else if (h === 'DEFTHEOREM') add(f[1], 'theorem', f.slice(2));
+    else if (h === 'PUTPROPS' || h === 'RPLQQ') {   // Interlisp's (PUTPROPS atom prop value …) and Cosell's (RPLQQ atom prop value): properties, as DEFPROP's
+      for (var pi = 2; pi + 1 < f.length; pi += 2) add(f[1], 'property', [f[pi + 1]], nameOf(f[1]) + ' ' + nameOf(f[pi]));
+    }
     else if (h === 'PDEFINE') add(f[1], 'grammar', f.slice(2));
     else if (h === 'DEFS') add(f[1], 'word', f.slice(2), nameOf(f[1]) + ' (word)');
     else if (h === 'DEFLIST') {   // (DEFLIST indicator (atom value) …), or Lisp 1.5's (DEFLIST ((atom value) …) indicator)

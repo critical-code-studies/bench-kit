@@ -95,6 +95,37 @@
   }
  },
  {
+  "name": "ELIZA: Cosell's SCRIP 4.1 paper tape, 2 July 1966, to DOCTOR in Interlisp-10, January 1983 (I-9G8JQ to I-CHOTQ)",
+  "root": "eliza",
+  "a": "files/I-9G8JQ.txt",
+  "aDialect": "bbn",
+  "b": "private/I-CHOTQ.1",
+  "bDialect": "interlisp",
+  "want": {
+   "matched": 131,
+   "identical": 90,
+   "changed": 41,
+   "onlyA": 3,
+   "onlyB": 64
+  },
+  "note": "DEFPROP against PUTPROPS, keyed word and property. The Interlisp file writes DON'T and YOU'RE inside its rules; with ' read as QUOTE everywhere the pair reads 125 in common and 81 identical. Its font-change codes (^F and a number) are stripped."
+ },
+ {
+  "name": "ELIZA: DOCTOR in Interlisp-10, 1983, to Interlisp-D, Xerox Koto LispUsers, 1985 (I-CHOTQ to I-0LBW9)",
+  "root": "eliza",
+  "a": "private/I-CHOTQ.1",
+  "aDialect": "interlisp",
+  "b": "private/I-0LBW9.1",
+  "bDialect": "interlisp",
+  "want": {
+   "matched": 195,
+   "identical": 182,
+   "changed": 13,
+   "onlyA": 0,
+   "onlyB": 0
+  }
+ },
+ {
   "name": "SHRDLU: GRAMAR, the ITS copy (gramar.28) to Winograd's Stanford distribution (gramar)",
   "root": "shrdlu",
   "a": "its/as-found/gramar.28",

@@ -21,6 +21,7 @@
   eq('Maclisp: " after a quote mark is a letter, so a " in a comment opens nothing', toks('(F \'") (G) ;IF " FOLLOWS', 'maclisp'), '( F QUOTE " ) ( G )');
   eq('PDP-6 Lisp and BBN-LISP: \' is a letter', [toks("(DEFPROP YOU'RE I'M TRANSLATION)", 'pdp6'), toks("(DON'T 'X)", 'bbn')], ["( DEFPROP YOU'RE I'M TRANSLATION )", "( DON'T 'X )"]);
   eq('Maclisp: \' is QUOTE, and /\' a letter', toks("(DON/'T 'X)", 'maclisp'), "( DON'T QUOTE X )");
+  eq('Interlisp: \' is QUOTE at the start of an atom, a letter inside one', toks("(YOU DON'T 'X)", 'interlisp'), "( YOU DON'T QUOTE X )");
   eq('the lines', L.read('(a\n b)', 'maclisp').map(function (t) { return t.line; }), [1, 1, 2, 2]);
   eq('a dialect guessed', [L.detect('(DEFINEQ (F (LAMBDA NIL NIL)))'), L.detect('(DEFUN F () NIL)'), L.detect("(defun f (&key x) #'car)")], ['bbn', 'maclisp', 'cl']);
 
@@ -39,6 +40,9 @@
   eq('a damaged form closes where the next definition begins, and is marked', [dmg.list.map(function (d) { return [d.key, d.line, d.end, !!d.broken]; }), dmg.broken],
      [[['F', 1, 2, true], ['K', 3, 3, false], ['M', 4, 4, true]], ['F', 'M']]);
   eq('a DEFINEQ entry at the margin named like a defining form is an entry', L.defs('(DEFINEQ\n(DEFPROP (LAMBDA (X) X))\n(G (LAMBDA NIL NIL)))', 'bbn').list.map(function (d) { return d.key; }), ['DEFPROP', 'G']);
+  eq('PUTPROPS and RPLQQ: properties, as DEFPROP', [defs('(PUTPROPS MY PRIORITY 2 RULES (A))', 'interlisp'), defs('(RPLQQ MY RULES (A))', 'bbn')],
+     [[['MY PRIORITY', 'property', '2'], ['MY RULES', 'property', 'A']], [['MY RULES', 'property', 'A']]]);
+  eq('Interlisp: font changes in a pretty-printed file left out', toks('(PUTPROPS \u0006\u0002SORRY PRIORITY\u0006\u0001 2)', 'interlisp'), '( PUTPROPS SORRY PRIORITY 2 )');
   eq('forms that define nothing are counted', L.defs('(DECLARE (SPECIAL X)) (SETQ X 1) (DEFUN F () X)', 'maclisp').other, 2);
 
   T.group('Lisp definitions: comparing');

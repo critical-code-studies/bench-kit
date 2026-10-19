@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- lispdefs.js, Interlisp: ' is QUOTE at the start of an atom and a letter inside one, as the Interlisp DOCTORs of 1983 and 1985 write (YOU DON'T SEEM QUITE CERTAIN %.); the font changes in a pretty-printed Interlisp file (^F and the font's number) are left out of its symbols; Interlisp's PUTPROPS and Cosell's RPLQQ are read as properties, keyed like DEFPROP ("word RULES"), so scripts compare across BBN-LISP, PDP-6 Lisp and Interlisp. Cosell's SCRIP 4.1 tape of 1966 against the Interlisp-10 DOCTOR of 1983: 131 entries in common, 90 identical (125 and 81 with ' read as QUOTE inside atoms). Two collations, three checks.
+
 ## 0.66.1 (2026-10-19)
 
 - lispdefs.js: a reader of its own for Interlisp (`interlisp`), as BBN-LISP's but with ' as QUOTE, the read macro Interlisp has and the BBN-LISP of the 1960s lacked; Compare and Implementations map Interlisp to it.
