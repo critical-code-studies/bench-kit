@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.67.0 (2026-10-21)
 
 - **Help ▸ Implementations** (guides.js), for a bench that sets `SW.BENCH.implementations`: what an entry records and its statuses; descent (relation, route, confidence, evidence); List, Read, Tree and Matrix, with the Tree's lines and nodes explained; Compare (features, texts by line, Lisp by function, side by side); what is published and what is held awaiting clearance; I-codes and links. In Help ▾ after Paratexts, and opened by `&help=implementations`. Help ▸ Codes, links and sharing lists the I-code where the bench has the tab. Until now the tab was described in the README only.
 
