@@ -25,7 +25,7 @@
   if (B.tagsHint) SW.$('#note-tags').placeholder = B.tagsHint;
   // picker: false leaves the version picker (with its reference and language) out of the top bar;
   // the versions are then chosen from Read ▾
-  if (B.picker === false) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); }
+  if (B.picker === false) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); var hb = SW.$('header.bar'); if (hb) hb.classList.add('no-pick'); }   // .no-pick: the name stays, bench.css
 
   function fillPicker() {
     var sel = SW.$('#pick-a'); if (!sel) return;

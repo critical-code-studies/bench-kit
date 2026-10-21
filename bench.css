@@ -455,10 +455,13 @@ dialog.wire-dlg { width: min(560px, 94vw); }
 .seg-btns { display: inline-flex; gap: 2px; }
 /* Narrower windows: the top bar gives way (label words, then the tape strip) so its buttons stay on screen */
 @media (max-width: 1240px) {
-  .brand-name b, .bench-ver, .pick > span { display: none; }
+  /* the bench's name and version give way to the version picker; a bar without one keeps them */
+  .bar:not(.no-pick) .brand-name b, .bar:not(.no-pick) .bench-ver, .pick > span { display: none; }
   .bar { gap: 10px; }
   .bar-right { gap: 2px; }
 }
+/* a bar without the picker gives up the name only where its buttons fill it */
+@media (max-width: 380px) { .bar.no-pick .brand-name b, .bar.no-pick .bench-ver { display: none; } }
 /* the tab row stops where the side panel begins, as the page does */
 @media (min-width: 861px) {
   body.drawer-open .tabs { margin-right: 380px; }
@@ -1090,7 +1093,7 @@ ul.reading a { overflow-wrap: anywhere; }
 @media (max-width: 860px) {
   body { overflow: auto; }
   .bar { flex-wrap: wrap; }
-  .brand-name b { display: none; }
+  .bar:not(.no-pick) .brand-name b { display: none; }
   .run { grid-template-columns: 1fr !important; height: auto; }
   body.drawer-open main { margin-right: 0; }
   .drawer { width: 100%; }

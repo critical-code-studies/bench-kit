@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Top bar: a bench without the version picker (`picker: false`) keeps its name and version at every width down to 380 px; the rules that hid them below 1240 px and 860 px, to make room for the picker, now apply only where there is one (reported by David on the Melville bench, whose name had gone from the bar on most laptop screens). The shell marks such a bar `.no-pick`.
+
 ## 0.74.0 (2026-10-21)
 
 - **Versions ▸ Collate** in place of Versions ▸ Compare, for the two versions set out line by line, by routine or by function (David's decision), so that Compare names Book's side-by-side reading. The view keeps its name in links and settings (`tab=compare`, `SW.BENCH.compare`, `compareDefs`), so links and benches go on working; a bench whose own words name it (a Versions ▾ list of its own, a tour stop, a title in its index.html) changes them itself. My notes names the view Collate.
