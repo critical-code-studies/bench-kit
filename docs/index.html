@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bench-kit</title>
+  <meta name="description" content="bench-kit: the shared modules of the research benches for critical code studies, for reading, comparing, tracing and annotating the versions of a program's source code, or of a text, with a group.">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #f6f3ec; --surface: #fffdf8; --text: #1d1f23; --dim: #5d5f63; --line: #ddd6c7;
+      --accent: #8a5a12; --gold: #b8862a; --code-bg: #efe9dc;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #121418; --surface: #191c21; --text: #e9e5da; --dim: #a3a49f; --line: #2c3037;
+        --accent: #e0b25a; --gold: #d6a640; --code-bg: #1f2329;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #121418; --surface: #191c21; --text: #e9e5da; --dim: #a3a49f; --line: #2c3037;
+      --accent: #e0b25a; --gold: #d6a640; --code-bg: #1f2329;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.6 var(--serif); }
+    a { color: var(--accent); }
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
+    header.top { border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 14px; padding: 18px 0; text-decoration: none; color: var(--text); }
+    .brand img { width: 40px; height: 40px; border-radius: 9px; box-shadow: 0 0 0 1px var(--line); }
+    .brand b { font: 600 22px/1 var(--mono); letter-spacing: -0.01em; }
+    .brand span { font: 13px/1.3 var(--sans); color: var(--dim); }
+    .hero { padding-top: 48px; padding-bottom: 28px; display: grid; grid-template-columns: 1fr; gap: 28px; }
+    .hero h1 { font: 600 clamp(30px, 4.6vw, 46px)/1.12 var(--serif); margin: 0; max-width: 20em; }
+    .hero p { margin: 0; max-width: 40em; }
+    .hero .meta { font: 14px/1.5 var(--sans); color: var(--dim); }
+    .hero .meta a { margin-right: 14px; }
+    figure { margin: 0; }
+    figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #111; }
+    figcaption { font: 13.5px/1.45 var(--sans); color: var(--dim); margin-top: 8px; }
+    section { padding: 36px 0; border-top: 1px solid var(--line); }
+    h2 { font: 600 28px/1.2 var(--serif); margin: 0 0 18px; }
+    h3 { font: 600 21px/1.25 var(--serif); margin: 0 0 4px; }
+    .sub { font: 14px/1.4 var(--sans); color: var(--dim); margin: 0 0 14px; }
+    p { margin: 0 0 14px; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px 32px; margin: 0; }
+    .features div { border-left: 3px solid var(--line); padding-left: 14px; }
+    .features dt { font: 600 15px/1.3 var(--sans); margin-bottom: 4px; }
+    .features dd { margin: 0; font-size: 16.5px; line-height: 1.55; }
+    .case { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; padding: 26px 0; }
+    .case + .case { border-top: 1px dashed var(--line); }
+    .case .shots { display: grid; gap: 16px; }
+    .case.text-only { grid-template-columns: minmax(0, 1fr); max-width: 44em; }
+    .lead { font: 14px/1.45 var(--sans); color: var(--dim); margin-top: 14px; }
+    code, pre { font-family: var(--mono); font-size: 14px; }
+    pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 0 0 14px; }
+    ol.steps { padding-left: 1.3em; margin: 0 0 14px; max-width: 44em; }
+    ol.steps li { margin-bottom: 6px; }
+    .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 40px; }
+    footer { border-top: 1px solid var(--line); padding: 22px 0 40px; font: 13.5px/1.5 var(--sans); color: var(--dim); }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
+    footer img { width: 22px; height: 22px; vertical-align: middle; }
+    @media (max-width: 760px) {
+      body { font-size: 17px; }
+      .case { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+      .hero { padding-top: 32px; padding-bottom: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="logo.svg" alt=""><span><b>bench-kit</b><br>modules for research benches</span></a>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap hero">
+      <h1>Research benches for the close reading of code and texts in their versions</h1>
+      <p>A research bench is a website for the critical reading of a program's source code, or of a text, across its surviving versions. It sets each version out line by line as it is held, compares any two, draws how they descend from one another, and lets a group annotate them together, with the documents that surround the program kept beside its code. bench-kit holds the modules the benches share. It began on 11 October 2026, when the Spacewar! and SHRDLU benches, which had until then copied code between them, were given one set of modules; the ELIZA bench followed, and the Melville bench, whose texts are prose, is the first to use the kit for something other than a program.</p>
+      <p>The kit is plain JavaScript and CSS, with no build step and nothing to install, served by GitHub Pages and released under the GNU General Public License (version 3). A bench includes it as a git submodule and gives its own names, texts and readers in a configuration file, so that what is particular to a program (its language, its machine, the way its files are assembled or run) stays in the bench and the rest is in common.</p>
+      <p class="meta"><a href="https://github.com/critical-code-studies/bench-kit">Repository</a><a href="https://github.com/critical-code-studies/bench-template">bench-template</a><a href="https://github.com/critical-code-studies/bench-kit/blob/main/CHANGELOG.md">Changes</a>Version <span data-kit-version>0.70.0</span></p>
+      <figure>
+        <a href="img/spacewar-run.jpg" title="Open the picture at full size"><img src="img/spacewar-run.jpg" width="1440" height="813" alt="The Spacewar! bench's Run view: two ships and the central star on the round scope of an emulated PDP-1, beside the Macro source with the line being executed highlighted."></a>
+        <figcaption>Spacewar! 3.1 (24 September 1962) assembled from its source and running on an emulated PDP-1, with the listing following the program as it runs.</figcaption>
+      </figure>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <h2>What a bench does</h2>
+        <dl class="features">
+          <div><dt>Read</dt><dd>Each version's files line by line, as held, with a search, the language highlighted, a citation for any line or range, a reading edition to print or save as Word, and export to Markdown.</dd></div>
+          <div><dt>Compare</dt><dd>Two versions side by side as text, routine by routine, or, where both are Lisp, definition by definition, so that BBN-LISP's DEFINEQ and Maclisp's DEFPROP and DEFUN are read alike.</dd></div>
+          <div><dt>Genealogy</dt><dd>A stemma of the versions, drawn as textual scholars draw the family of a text, and flows and trees of what each version keeps from its parent, moves, edits or drops.</dd></div>
+          <div><dt>Annotation</dt><dd>Through a private Hypothesis group, with replies, reactions and rich text. An annotation also shows, as a ghost, on the matching lines of the other versions.</dd></div>
+          <div><dt>Findings and My notes</dt><dd>Findings set out what the bench and the group have established, each with its evidence; My notes is a private tray of excerpts, figures and paragraphs gathered for writing.</dd></div>
+          <div><dt>Paratexts</dt><dd>Scans, documents, recordings and links in a private GitHub repository, catalogued in Dublin Core with Library of Congress, Getty and RDA terms, and arranged in collections, sequences and corpora.</dd></div>
+          <div><dt>Implementations</dt><dd>A public catalogue of a program's copies, ports, translations and reimplementations, with each one's parents, the route by which it came and the evidence for it, drawn as a tree and compared.</dd></div>
+          <div><dt>References</dt><dd>Every version and file has a short reference, and its source a Software Heritage identifier, so that a citation names the text as the bench read it.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>The benches</h2>
+
+        <article class="case">
+          <div>
+            <h3>SHRDLU</h3>
+            <p class="sub">Terry Winograd, MIT Artificial Intelligence Laboratory, 1968–70 · MacLisp and Micro-Planner</p>
+            <p>SHRDLU took typed English and answered by moving blocks and pyramids on a simulated table with a simulated arm. The bench holds five versions, three of them as source: the MIT files as they were found on ITS, Winograd's Stanford distribution, and Eric Swenson's 2024 restoration for the PDP-10. A MacLisp reader indexes the sources, and an interpreter runs SHRDLU in the browser from each version's own files, recording every repair it needs in order to do so; Read marks those repairs in gold, after kintsugi.</p>
+            <p>The Graphics tab draws the blocks world from the program's own data file, each object's shape and colour from DISPLAY-AS and its place and size from ATABLE. The bench's catalogue of implementations holds 47 entries.</p>
+            <p class="lead">The Critical Code Studies SHRDLU project, led by David M. Berry and Mark C. Marino.</p>
+          </div>
+          <div class="shots">
+            <figure>
+              <a href="img/shrdlu-graphics.jpg" title="Open the picture at full size"><img src="img/shrdlu-graphics.jpg" width="1440" height="813" loading="lazy" alt="The SHRDLU bench's Graphics tab: the blocks world drawn in three dimensions, green, red and blue blocks, two pyramids and a box holding a pyramid."></a>
+              <figcaption>The blocks world as SHRDLU's data file sets it out.</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <article class="case">
+          <div>
+            <h3>Spacewar!</h3>
+            <p class="sub">MIT, 1961–62 · Macro assembly for the DEC PDP-1</p>
+            <p>The bench assembles each surviving version of the Macro source and runs it on an emulated PDP-1, the listing beside the scope following the program counter, with a trace, a profile, a record of the writes to memory, and breakpoints. The SHRDLU bench was first built from this one, and much of the kit, its frame among them, was written here before it was shared.</p>
+            <p>Compare sets two versions side by side, folding the lines they share. The catalogue of implementations holds 56 entries, the program's copies, ports and re-creations.</p>
+          </div>
+          <div class="shots">
+            <figure>
+              <a href="img/spacewar-compare.jpg" title="Open the picture at full size"><img src="img/spacewar-compare.jpg" width="1440" height="813" loading="lazy" alt="The Spacewar! bench's Compare view: two texts of Spacewar! 3.1 side by side, unchanged runs folded, a changed repeat line marked."></a>
+              <figcaption>Two witnesses of Spacewar! 3.1 compared: 98 per cent of their lines are shared.</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <article class="case">
+          <div>
+            <h3>ELIZA</h3>
+            <p class="sub">Joseph Weizenbaum, MIT Project MAC, 1964–66 · MAD-SLIP on the IBM 7094 under CTSS</p>
+            <p>The bench is built around the MAD-SLIP source recovered from Weizenbaum's papers in the MIT archives in 2021. It reads the program in layers: the DOCTOR script, ELIZA itself, and the SLIP routines ELIZA calls, each in its versions.</p>
+            <p>The Implementations tab, which the kit took from this bench, catalogues 138 implementations in their families, from Bernie Cosell's BBN-LISP DOCTOR of 1966 to the BASIC ELIZAs of the microcomputer magazines, and compares any two. Lisp texts are compared by definition, each read in its own dialect: BBN-LISP, PDP-6 Lisp, Interlisp, Maclisp or Common Lisp. The bench is the companion to <i>Inventing ELIZA: How the First Chatbot Shaped the Future of AI</i> (MIT Press, 2026).</p>
+          </div>
+          <div class="shots">
+            <figure>
+              <a href="img/eliza-tree.jpg" title="Open the picture at full size"><img src="img/eliza-tree.jpg" width="1440" height="813" loading="lazy" alt="The ELIZA bench's Implementations tree: families of implementations as lanes, from the original MAD-SLIP source through Cosell's DOCTOR to the Creative Computing BASIC versions, with lines of descent between them."></a>
+              <figcaption>The descent of ELIZA's implementations, by family and date. Solid lines are established, dashed probable, dotted possible.</figcaption>
+            </figure>
+            <figure>
+              <a href="img/eliza-read.jpg" title="Open the picture at full size"><img src="img/eliza-read.jpg" width="1440" height="813" loading="lazy" alt="The ELIZA bench's Read view: the MAD-SLIP source of ELIZA 1965b, labels and SLIP calls coloured, card sequence numbers in the right margin."></a>
+              <figcaption>ELIZA 1965b in Read, with the card sequence numbers of the original deck.</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <article class="case text-only">
+          <div>
+            <h3>Melville</h3>
+            <p class="sub">Herman Melville, <i>Billy Budd</i> and the short tales · prose, from TEI</p>
+            <p>The first bench whose texts are prose. It reads the Melville Electronic Library's TEI of <i>Billy Budd</i> in the browser, from MEL's own repository at a fixed commit, and copies none of it into its own. From the one encoding it makes four versions: the manuscript before revision, the manuscript's last readings, a diplomatic text with every addition and deletion, and MEL's reading text. Each is divided leaf by leaf, so that Compare can set the manuscript beside the reading text one leaf at a time. The manuscript is in the Houghton Library, Harvard University (bMS 188 (363)).</p>
+            <p>The bench led to the kit's options for texts that are not code (no comment mark, the Compare modes a bench offers, its own words for its text), and a reading view that typesets the TEI's structure, the manuscript's hands and its stages of revision is being prepared from it. MEL's transcription is not reproduced on this page.</p>
+            <p class="lead">A research project of David M. Berry and Michael Jonik (University of Sussex).</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap cols">
+        <div>
+          <h2>Starting a bench</h2>
+          <p>A new bench starts from <a href="https://github.com/critical-code-studies/bench-template">bench-template</a>, which runs on an invented example with the kit already in place.</p>
+          <ol class="steps">
+            <li>Make a repository from the template and clone it with its submodule.</li>
+            <li>Put the sources under <code>source/</code>, a folder for each version.</li>
+            <li>Describe the versions and how they descend in <code>versions.js</code>.</li>
+            <li>Give the bench its names, its language and its references in <code>config.js</code>.</li>
+            <li>Turn on GitHub Pages.</li>
+          </ol>
+          <pre>git clone --recurse-submodules https://github.com/YOUR-ORG/YOUR-BENCH</pre>
+          <p>The template's README takes each step in turn, and the kit's README lists every setting and hook a bench can give.</p>
+        </div>
+        <div>
+          <h2>How the kit changes</h2>
+          <p>A change is made in the kit first and released with a version number and a tag; each bench then moves its submodule to that release when it is ready, and records the move in its own changelog. The kit's tests run in every bench on each push, so that a change which would break one of them shows before that bench takes it.</p>
+          <p>A feature written for one bench that would serve the others is moved into the kit. The Implementations tab came from ELIZA in this way, the Functional overview from the template, and the options for prose from Melville.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><img src="logo.svg" alt=""> bench-kit <span data-kit-version>0.70.0</span></span>
+      <span>David M. Berry</span>
+      <span>GNU General Public License v3.0</span>
+      <a href="https://github.com/critical-code-studies/bench-kit">github.com/critical-code-studies/bench-kit</a>
+    </div>
+  </footer>
+</body>
+</html>

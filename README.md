@@ -1,7 +1,8 @@
 # bench-kit
 
 **Author:** David M. Berry  
-**Version:** 0.70.0
+**Version:** 0.70.0  
+**Site:** <https://critical-code-studies.github.io/bench-kit/>, what the kit is, with the benches built on it (from `docs/`)
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
@@ -396,7 +397,7 @@ node tools/collate-lisp.js a.lisp b.lisp --a-dialect pdp6 --rows
 node tools/collate-lisp.js --check tests/lispdefs-collations.json --root eliza=<eliza>/_tmp/implementations/out --root shrdlu=<shrdlu>/source
 ```
 
-`tools/kit-release.js` releases the kit itself, run from the kit's repository: the version in `base.js` (`SW.KIT`, which the benches show and `release.js` reports), a dated heading in `CHANGELOG.md` over the notes written under `## Unreleased`, a commit and a tag. `next` raises the last number, `minor` the middle one; pushing stays with you.
+`tools/kit-release.js` releases the kit itself, run from the kit's repository: the version in `base.js` (`SW.KIT`, which the benches show and `release.js` reports), in the README and on the site (`docs/index.html`, each `data-kit-version`), a dated heading in `CHANGELOG.md` over the notes written under `## Unreleased`, a commit and a tag. `next` raises the last number, `minor` the middle one; pushing stays with you.
 
 ```bash
 node tools/kit-release.js minor --author "Name <address>"
