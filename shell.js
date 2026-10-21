@@ -178,7 +178,11 @@
     SW.$('#btn-larger').onclick = function () { SW.setCodeSize(SW.codeSize() + 1); };
     // ◐: to the last light theme from a dark one, and back.
     SW.$('#btn-theme').onclick = function () {
-      theme(SW.themeInfo().dark ? SW.store.get('theme.light', 'paper') : SW.store.get('theme.dark', 'phosphor'));
+      // the other kind: the last theme of that kind used here, if it still is of that kind (a bench may
+      // have changed which of its themes are dark), or else the first of that kind
+      var want = !SW.themeInfo().dark, last = SW.store.get(want ? 'theme.dark' : 'theme.light', null);
+      var to = SW.THEMES.filter(function (x) { return x.id === last && !!x.dark === want; })[0] || SW.THEMES.filter(function (x) { return !!x.dark === want; })[0];
+      if (to) theme(to.id);
     };
     SW.$('#drawer-close').onclick = SW.closeDrawer;
     // the tab row, scrolled sideways on a narrow screen: a fade while more lies to the right

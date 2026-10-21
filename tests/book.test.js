@@ -18,6 +18,7 @@
   eq('a deletion at B: in before revision and at A, out from B', [0, 1, 2, 3].map(function (s) { return at(s, [{ k: 'erased', change: 'B' }]); }), [true, true, false, false]);
   eq('added at A and deleted at C: in at A and B only', [0, 1, 2, 3].map(function (s) { return at(s, [{ k: 'added', change: 'A' }, { k: 'erased', change: 'C' }]); }), [false, true, true, false]);
   eq('deleted at A, reinstated at C: out at A and B, back at C', [0, 1, 2, 3].map(function (s) { return at(s, [{ k: 'reinstated', change: 'C' }, { k: 'erased', change: 'A' }]); }), [true, false, false, true]);
+  eq('a phrase deleted at B and reinstated at C: a word replaced inside it at A stays out', [0, 1, 2, 3].map(function (s) { return at(s, [{ k: 'reinstated', change: 'C' }, { k: 'erased', change: 'B' }, { k: 'erased', change: 'A' }]); }), [true, false, false, false]);
   eq('a change in no stage, or none, counts from the first', [[{ k: 'added', change: 'X' }], [{ k: 'added' }], [{ k: 'erased', change: 'X' }]].map(function (m) { return [at(0, m), at(1, m)]; }), [[false, true], [false, true], [true, false]]);
   eq('another hand: its addition never shown, its deletion never applied', [[{ k: 'added', hand: 'Q', change: 'A' }], [{ k: 'erased', hand: 'Q', change: 'A' }]].map(function (m) { return at(3, m, ['P']); }), [false, true]);
   eq('a mark with no hand counts with the hands the slider follows', [at(3, [{ k: 'erased', change: 'A' }], ['P']), at(3, [{ k: 'added', change: 'A' }], ['P'])], [false, true]);

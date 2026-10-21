@@ -21,7 +21,8 @@
  *     the versions that are one document read at different stages) are one text there;
  *   - for that text, a slider through SW.BENCH.doc.stages ([{ id, label, note }], in order):
  *     at a stage an addition is shown and a deletion applied when its change is at or before it,
- *     a deletion inside a reinstatement comes back at the reinstatement's stage, and a change in
+ *     the deletion a reinstatement encloses comes back at the reinstatement's stage (a deletion
+ *     further inside it does not), and a change in
  *     no stage (or one in SW.BENCH.doc.unplaced) counts from the first; 0 is the text before
  *     any revision. stageHands (a list of hands' k) limits the slider to those hands' revisions;
  *     the others are shown only in All revisions, which raises the additions and strikes the
@@ -30,8 +31,10 @@
  *     either is scrolled.
  * The text is set in sheets, a page to each, the page's image (IIIF) beside it; a click opens it
  * larger, with its lines, its reference and SW.BENCH.doc.imageCredit (HTML), and ← → move a page.
- * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, bb (the text beside)
- * and l (the place). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
+ * Images ▸ Large, Small or Off (folded away, a ▣ at each page break to open one), for both
+ * columns, kept for this browser and in the address as img.
+ * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, bb (the text beside),
+ * img and l (the place). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
  * them), so an annotation made here is the same as one made in Read; the group's annotations are
  * marked on their lines. A state of the text is annotated on the source version's lines.
  * kit/edition.js typesets a version from its document, raising the additions and striking the
@@ -58,7 +61,8 @@
       if (m.k === 'added') { if (!counts(m) || s === 0 || st(m) > s) return false; }
       else if (m.k === 'erased' && s > 0 && counts(m) && st(m) <= s) {
         var back = false;
-        for (var j = 0; j < i; j++) if (marks[j].k === 'reinstated' && counts(marks[j]) && st(marks[j]) <= s) back = true;
+        // a reinstatement brings back the deletion it encloses, not a deletion further inside that one
+        for (var j = i - 1; j >= 0 && marks[j].k !== 'erased'; j--) if (marks[j].k === 'reinstated' && counts(marks[j]) && st(marks[j]) <= s) back = true;
         if (!back) return false;
       }
     }
@@ -94,6 +98,11 @@
   var st = { stage: STAGES.length, all: false, hands: true, play: null, right: Q0.bb || null, first: true, own: false };
   if (Q0.stage != null && Q0.stage !== '') st.stage = Q0.stage === '0' ? 0 : (AT[Q0.stage] || STAGES.length);
   if (Q0.all === '1') st.all = true;
+  // the pages' images: large, small, or folded away (a marker at each page break opens one); kept for
+  // this browser, and in a link that asks for it
+  var IMG = ['large', 'small', 'off'];
+  st.img = IMG.indexOf(Q0.img) >= 0 ? Q0.img : IMG.indexOf(SW.store.get('book.img', 'large')) >= 0 ? SW.store.get('book.img', 'large') : 'large';
+  view.dataset.img = st.img;
   var cols = [], place = null, pending = null;   // place: in the first column's lines; pending: a link's, until it is set
 
   function inStates(vid) { return !!STATES && [STATES.source, STATES.first, STATES.last].indexOf(vid) >= 0; }
@@ -208,6 +217,11 @@
         col.pages.push(pg);
         sheet(pg);
         text.appendChild(pg.el = pageBreak(bl, p));
+        if (pg.iiif) {   // with the images folded away, the page's image is one click away here
+          var mk = SW.el('button', { class: 'bk-pb-img', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ', larger, with its details' }, '▣');
+          mk.onclick = function () { pageBox(col, col.pages.indexOf(pg)); };
+          pg.el.appendChild(mk);
+        }
         if (bl.n0 != null) col.byLine[p + ':' + bl.n0] = [pg.el];
         return;
       }
@@ -278,7 +292,7 @@
   function writeQ() {
     if (SW.state.tab !== 'book') return;
     // the version named is the one whose lines the place numbers: for a version's states, their source
-    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, bb: st.right, l: lineQ(place) });
+    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, bb: st.right, img: st.img !== 'large' ? st.img : null, l: lineQ(place) });
   }
   function linkTo(vid, a) { return SW.permalink({ v: vid, tab: 'book', l: lineQ(a), stage: inStates(vid) ? stageQ() : null, all: inStates(vid) && st.all ? 1 : null }); }
 
@@ -289,6 +303,8 @@
     var beside = '<label class="check" title="A second text facing this one, held at the same ' + esc(PAGE) + ' as either is scrolled">Beside <select id="bk-right"><option value="">nothing</option>' +
       list.filter(function (t) { return t !== textOf(left); }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === st.right ? ' selected' : '') + '>' + esc(textLabel(t)) + '</option>'; }).join('') + '</select></label>';
     tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
+      '<span class="bk-imgs" title="The ' + esc(PAGE) + 's’ images beside the text: large, small, or folded away (a ▣ at each ' + esc(PAGE) + ' opens it)">Images ' +
+        IMG.map(function (k) { return '<button class="btn' + (st.img === k ? ' on' : '') + '" data-img="' + k + '">' + { large: 'Large', small: 'Small', off: 'Off' }[k] + '</button>'; }).join('') + '</span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="Read at the place shown here, line by line">≡ Read here</button>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
         '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision">' +
@@ -297,6 +313,12 @@
         '<label class="check" title="Every revision at once: additions raised, deletions struck, each with its hand and stage"><input type="checkbox" id="bk-all"' + (st.all ? ' checked' : '') + '> ' + esc((W.all || 'All revisions').toLowerCase()) + '</label>' +
         (Object.keys(HANDS).length ? '<label class="check" title="Revisions coloured by hand"><input type="checkbox" id="bk-hands"' + (st.hands ? ' checked' : '') + '> hands</label>' : '') + '</div>' : '');
     tb.addEventListener('click', function (e) {
+      var im = e.target.closest('[data-img]');
+      if (im) {
+        st.img = im.dataset.img; view.dataset.img = st.img; SW.store.set('book.img', st.img);
+        SW.$$('[data-img]', tb).forEach(function (b) { b.classList.toggle('on', b === im); });
+        writeQ(); return;
+      }
       var t = e.target.closest('[data-text]');
       if (t) { stop(); var to = t.dataset.text; if (to === st.right) st.right = null; st.own = true; SW.select(to === textOf(SW.state.v) ? SW.state.v : to); return; }
       if (e.target.id === 'bk-prev') { stop(); st.stage = Math.max(0, st.stage - 1); apply(true); }

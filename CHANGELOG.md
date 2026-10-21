@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Book: **Images** ▸ Large, Small or Off, for the pages' images beside the text (asked for by David, to fold them away when reviewing). Off gives their room to the text and leaves a ▣ at each page break that opens the page larger, with its details. The choice holds for both columns with Beside, is kept for the browser, and rides in the address as `img`.
+- Book: a reinstatement brings back the deletion it encloses, not a deletion further inside that one. A phrase deleted and reinstated that held a word replaced earlier showed both words at the later stages ("perceptableperceptible", "vaingloryvainglorious" on the Melville bench).
+- The ◐ switch goes to the last theme of the other kind used in the browser only while that theme is still of that kind, or else to the bench's first theme of that kind. A browser that had seen a bench while its own theme was dark kept that theme as its dark one after the bench made it light, and ◐ then went from light to light (reported by David on the Melville bench, which had patched it in its core.js).
+
 ## 0.71.0 (2026-10-21)
 
 - **Book** (new `book.js`, `book.css`), for a bench whose reader gives each version a document beside its lines (`b.doc`), built with the Melville bench (from its prototype, js/book.js) and abstract enough for any bench: the bench gives its stages, states, hands and words in `SW.BENCH.doc`. A version's text set as a page, in sheets, a page to each, with the page's image on the right, larger in a box with its lines and reference on a click (asked for by David). Moving between versions at its centre (David's instruction): the texts in a row; a version's states as one text, with a slider through its stages of revision, the revisions fading out and in as it moves, ▶▶ to run through them, and All revisions; a second text Beside the first, held at the same page as either is scrolled. A selection is the version's lines (Annotate, Copy citation, Copy link, Read), the group's annotations are marked on their lines, a place from one of the states is found in their source, and the state rides in the address (`stage`, `all`, `bb`, `l`). Read's selection bar has 📖 Book where the version has a document. README ▸ Book.
