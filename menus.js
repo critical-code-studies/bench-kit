@@ -49,7 +49,8 @@
             ['Annotating and sharing', [['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
                                         ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
                                         ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
-                                        ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']]],
+                                        ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']]
+                                       .concat(B.implementations ? [['implementations', 'Implementations', 'Ports, translations and reimplementations: their descent, features and comparison']] : [])],
             ['Your bench', [['settings', 'Settings', 'Initials, group, theme, fonts'],
                             ['backup', 'Back up everything', 'Notes, drafts, settings and findings in one file'],
                             ['restore', 'Restore from a backup…', 'Brings back notes and drafts beside those here']]],

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Help ▸ Implementations** (guides.js), for a bench that sets `SW.BENCH.implementations`: what an entry records and its statuses; descent (relation, route, confidence, evidence); List, Read, Tree and Matrix, with the Tree's lines and nodes explained; Compare (features, texts by line, Lisp by function, side by side); what is published and what is held awaiting clearance; I-codes and links. In Help ▾ after Paratexts, and opened by `&help=implementations`. Help ▸ Codes, links and sharing lists the I-code where the bench has the tab. Until now the tab was described in the README only.
+
 ## 0.66.3 (2026-10-21)
 
 - Menus: a submenu opens as soon as the pointer reaches its item (it waited 120 ms, or 260 ms with a neighbour's list open, which read as lag; reported by David). While the pointer is crossing other items on its way into an open list (inside the triangle from where it was to that list's near edge) the list stays and the items crossed do not open; an item the pointer stops on opens within about a third of a second. Open lists elsewhere close after 150 ms (was 320 ms) unless the pointer is heading into them.

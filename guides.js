@@ -84,7 +84,8 @@
         '<span class="mono">A-XXXXX</span> an annotation, <span class="mono">R-XXXXX</span> a reply',
         '<span class="mono">C-XXXXX</span> a finding of the crew’s, <span class="mono">' + (EX.finding || 'F1') + '</span> one of the bench’s own',
         '<span class="mono">XX-N1</span> a note in My notes (your initials and its number)',
-        '<span class="mono">P-XXXXX</span> a paratext'])],
+        '<span class="mono">P-XXXXX</span> a paratext',
+        B.implementations ? '<span class="mono">I-XXXXX</span> an implementation (Help ▸ Implementations)' : null])],
       ['Going to one', ul([
         '<b>#</b> in the top bar: type a code and Enter.',
         'In an annotation, note or finding, a code written in the text becomes a link (a paratext’s shows as <b>Paratext:</b> and its title, and opens read-only where you are).',
@@ -99,6 +100,36 @@
         '<b>✉</b> lists what is new in the group’s annotations, replies to your own first.'])]
     ]]
   };
+
+  // Implementations, where the bench has the tab (kit/implementations.js)
+  if (B.implementations) GUIDES.implementations = ['Implementations', [
+    ['What they are', '<p>The program’s other texts: its copies, ports, translations, revisions and reimplementations, and the tapes, disks and listings that carry them. Paratexts are the documents around the program; implementations are the program written again, on other machines and in other languages. Each has an entry in a public catalogue kept in the bench’s repository, so the tab reads without a token.</p>' + ul([
+      'An entry gives the title, author, date, language, machine and operating system, its <b>family</b> (a line of implementations the catalogue groups together), its <b>status</b>, its <b>parents</b>, the bench’s <b>features</b> read in it, the paratexts that document it, and what it runs on (an interpreter or a system that is itself an entry).',
+      'Status says what survives: <b>held</b>, a copy is held; <b>linked</b>, a public copy is held elsewhere at a stable place; <b>printed</b>, the whole program text survives in print, its scan kept as a paratext; <b>attested</b>, known only from mentions; <b>lost</b>.'])],
+    ['Descent', ul([
+      'Each parent of an entry is another entry, or one of the bench’s own versions (shown as the original, in the variorum).',
+      'With it go the <b>relation</b> (port, adaptation, translation, revision, copy, reimplementation, inspired-by, recovery), the route it came by (<b>via</b> a publication, a print listing, a tape, DECUS, a network, a disk), the <b>confidence</b> (established, probable or possible) and the <b>evidence</b>, citing paratexts by their P-codes or findings.'])],
+    ['The views', ul([
+      '<b>List</b>: every entry, with its code, date, title, language, machine, family, status and whether its files are published. Click a heading to sort by it, again to reverse. <b>Features</b> adds a column for each of the bench’s features: ✓ present, ✗ absent, ? not yet read.',
+      '<b>Read</b>: one entry. Its record folds above its source. The strip under the record runs from its parents through the entry to its descendants, each with its relation, route and confidence; hover one for the evidence, click it to move along the descent. A source with several files has a button for each (the main file and its alternates); an alternate held privately is named, with the paratext that holds it.',
+      '<b>Tree</b>: the descent drawn with the families as lanes and the date across, the bench’s own versions in the top lane. A solid line is established, dashed probable, dotted possible. A filled node is held, a node with a dot printed, an open one attested, linked or lost. Hover a line for its relation and evidence; click a node to read the entry.',
+      '<b>Matrix</b>: every entry against the features, grouped by family and in date order; <b>only rows with a feature read</b> leaves out the rest.',
+      'Find (code, title, author, language, machine, date, description), family, status and published or not narrow the List, the Tree and the Matrix alike.'])],
+    ['Comparing two', ul([
+      'Open <b>Compare</b>, and choose each side by typing an I-code or a title, or with <b>Choose in the Tree</b>; ⇄ swaps them. From an entry in Read, <b>Compare with its parent</b> and <b>Compare with…</b> start it there.',
+      'The features first, side by side, the ones that differ marked and counted where both are known.',
+      'Then the texts. Two in related languages (Lisp with Lisp, BASIC with BASIC) are aligned line by line, without case or spacing, with the lines in common, those only in A and only in B, and a similarity.',
+      'Two Lisp texts are also compared <b>by function</b>: their definitions matched by name and compared as tokens, so that BBN-LISP’s DEFINEQ, Maclisp’s DEFPROP and DEFUN read alike and parentheses and layout are left out. Each entry is read in its own dialect, from its language. A definition still open where the next one begins (a parenthesis lost or gained in the copy) is marked <b>unbalanced</b>.',
+      'Two in different languages, or too long to align, are shown side by side.'])],
+    ['Published and held', ul([
+      'Every entry is public. A file is published only once its publication is cleared: by the author’s permission, a licence, the public domain, a release from the rights holder, or research fair dealing. The basis is recorded with the entry (Files, in its record).',
+      'Until then the file stays in the private paratext archive, awaiting clearance, and the entry says that it is held privately. A tape or disk with other programs on it stays private as a whole; its entry publishes what can be cleared and describes the rest.',
+      'Files published or Entry only, in the filters, lists one or the other.'])],
+    ['Linking to one', ul([
+      'Every entry has a code, <span class="mono">I-XXXXX</span>, shown in the List and on its record. Written in an annotation, note, finding or paratext description it becomes a link that opens the entry in Read.',
+      '<b>#</b> in the top bar opens one by its code, and a web link can carry one: <span class="mono">…/research/?code=I-XXXXX</span>.',
+      'While the tab is open the address carries its view, the entry read, the two compared, the filters and the feature columns, so a link copied from it opens the tab as it stands.'])]
+  ]];
 
   SW.guideAdd = function (name, g) { GUIDES[name] = g; };
   SW.guide = function (name) {
