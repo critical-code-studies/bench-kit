@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.73.0 (2026-10-21)
 
 - Book, after 0.72.0 (reported by David): the toolbar's buttons did nothing (the texts, ◀ ▶ ▶▶ for the stages, ≡ Read here). The view carried the image size as data-img, so every click inside it was read as a click on an image-size button; the toolbar now finds its controls within itself, by their own ids. The phone-width rules of book.css, broken by the same release (a block of rules put inside them), are whole again.
 - Book: **Images** is a slider for the pages' images' size and an **Off** that folds them away, the ▣ at each page break opening one; On brings them back at the size the slider had (asked for by David, in place of Large, Small and Off). Kept for the browser; in the address as `img=off` or `img=` a width.
