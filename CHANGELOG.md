@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.72.0 (2026-10-21)
 
 - Book: **Images** ▸ Large, Small or Off, for the pages' images beside the text (asked for by David, to fold them away when reviewing). Off gives their room to the text and leaves a ▣ at each page break that opens the page larger, with its details. The choice holds for both columns with Beside, is kept for the browser, and rides in the address as `img`.
 - Book: a reinstatement brings back the deletion it encloses, not a deletion further inside that one. A phrase deleted and reinstated that held a word replaced earlier showed both words at the later stages ("perceptableperceptible", "vaingloryvainglorious" on the Melville bench).
