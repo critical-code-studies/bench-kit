@@ -157,6 +157,7 @@ SW.BENCH = {
 | `findings`, `findingCats`, `findingsTitle`, `findingsSubtitle`, `findingsIntro`, `findingsSide`, `findingsRecheck` | `findings.js` | The bench's own findings (below), their categories, the view's texts (`findingsIntro` is HTML), the side shown first (`crew` or `bench`), the hover of Check again. Conventionally in `js/findings-data.js`, loaded before the kit. |
 | `tours`, `tourOffer` | `tours.js` | The guided tours and the offer made on a first visit (below). Conventionally in `js/tour.js`, loaded before the kit. |
 | `forks`, `start` | `shell.js` | The version picker's groups (`[[fork, label]]`, by each version's `fork`) and the version shown first. |
+| `picker` | `shell.js` | `false` leaves the version picker, with the version's reference and language, out of the top bar (the versions are chosen from Read ▾; Read's file header gives the reference). |
 | `shell` | `shell.js` | The bench's parts of the frame (hooks, below). |
 | `sitemap` | `menus.js`, `sitemap.js` | Where the bench has a `sitemap.html` (Help ▸ Site map): `true`, or how `tools/sitemap.js` writes it: `site` ([href, label], the project's site), `sitePages` ([[href, label]]), `intro` (HTML), `opens` (what a link opens when it names no version), `files` (a sentence on the files), `lost` (the line for a version with no text), `links` ({ pick: href } for a menu item that opens a page of its own). |
 | `menus` | `menus.js` | Versions ▾ and Help ▾, and the bench's own menus (hooks, below). |

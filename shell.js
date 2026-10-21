@@ -12,8 +12,8 @@
  *   query(q)      the bench's own parts of a link (a lens, a graphic, a view's settings), before
  *                 the view is chosen; it may set q.tab
  *   help          { name: fn } the bench's own Help items a link can open (&help=name)
- * and from SW.BENCH: forks (the picker's groups: [[fork, label]]), start (the version shown
- * first), examples.finding (in the code box). The bench's views register in SW.views
+ * and from SW.BENCH: forks (the picker's groups: [[fork, label]]), picker (false: no picker in the
+ * top bar), start (the version shown first), examples.finding (in the code box). The bench's views register in SW.views
  * ({ show(b), hide(), enter(b) }).
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -23,9 +23,12 @@
   function H() { return B.shell || {}; }
   function ORDER() { return H().views || ['read']; }
   if (B.tagsHint) SW.$('#note-tags').placeholder = B.tagsHint;
+  // picker: false leaves the version picker (with its reference and language) out of the top bar;
+  // the versions are then chosen from Read ▾
+  if (B.picker === false) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); }
 
   function fillPicker() {
-    var sel = SW.$('#pick-a');
+    var sel = SW.$('#pick-a'); if (!sel) return;
     var groups = B.forks || [[null, 'Versions']];
     sel.innerHTML = groups.map(function (g) {
       var vs = V.VERSIONS.filter(function (v) { return g[0] == null || v.fork === g[0]; })
@@ -85,7 +88,7 @@
     if (!V.byId(id)) id = B.start || V.VERSIONS.filter(function (v) { return v.build; })[0].id;
     if (SW.state.v && SW.state.v !== id) SW.state.sel = null;
     SW.state.v = id;
-    SW.$('#pick-a').value = id;
+    var pa = SW.$('#pick-a'); if (pa) pa.value = id;
     var v = V.byId(id), vl = SW.$('#vlang');
     if (vl) { var L = v && v.build && H().lang ? H().lang(v) : null; vl.textContent = L ? L.text : ''; vl.title = L && L.title || ''; }
     var vr = SW.$('#vref'); if (vr) { vr.textContent = v && v.build ? SW.refText(id) : ''; vr.dataset.copy = vr.textContent; vr.title = 'Click to copy. The bench’s reference to this source' + ((H().help || {}).refs ? ' (Help ▸ Referencing and versions)' : ''); }

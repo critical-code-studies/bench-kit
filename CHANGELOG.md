@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Top bar: `SW.BENCH.picker: false` leaves out the version picker with the version's reference and language, for a bench whose versions are chosen from Read ▾ (asked for by David, for the Melville bench). The frame no longer needs `#pick-a` or `#vref` on the page; a tour stop that outlines a missing element is passed over as before.
+
 ## 0.69.0 (2026-10-21)
 
 - About box: no **Author** row (asked for by David); the kit's author is given on its repository and README, and the bench's project and leads in Project. `SW.BENCH.about.author` is still used for the citation.
