@@ -31,6 +31,8 @@
 
   // ======================= Compare =======================
   var cview = SW.$('#view-compare');
+  // a bench whose texts have no comment mark (comment: false or [], or compare.comments: false) has no comment filter
+  function noMark() { var c = BEN.comment; return CB.comments === false || c === false || (Array.isArray(c) && !c.length); }
   var cst = { mode: 'text', noComments: false, ws: true, caseI: true, norm: true, supplied: false, fold: true };
 
   function keyOf(L) {
@@ -387,10 +389,13 @@
     var bid = SW.state.b && V.byId(SW.state.b) && V.byId(SW.state.b).build ? SW.state.b : defaultB(A.v.id);
     SW.state.b = bid;
     var tb = SW.el('div', { class: 'toolbar' });
+    var modes = (CB.modes || ['text', 'constants', 'routines', 'functions']).filter(function (m) { return (m !== 'constants' || BEN.compareDefs) && (m !== 'functions' || lispOf(A) && lispOf({ v: V.byId(bid) || {} })); });
+    if (modes.indexOf(cst.mode) < 0) cst.mode = modes[0] || 'text';
+    if (noMark()) cst.noComments = false;
     tb.innerHTML = '<b>' + SW.esc(A.v.label) + '</b> <span class="muted">against</span> <select id="cp-b">' + options(bid) + '</select><span class="sep"></span>' +
-      ['text', 'constants', 'routines', 'functions'].filter(function (m) { return (m !== 'constants' || BEN.compareDefs) && (m !== 'functions' || lispOf(A) && lispOf({ v: V.byId(bid) || {} })); }).map(function (m) { return '<button class="btn' + (cst.mode === m ? ' on' : '') + '" data-m="' + m + '"' + (m === 'functions' ? ' title="The definitions of the two versions matched by name and compared as Lisp, whatever their layout or defining form"' : '') + '>' + { text: 'Text', constants: (BEN.compareDefs || {}).label || 'Definitions', routines: 'Routines', functions: 'By function' }[m] + '</button>'; }).join('') +
+      modes.map(function (m) { return '<button class="btn' + (cst.mode === m ? ' on' : '') + '" data-m="' + m + '"' + (m === 'functions' ? ' title="The definitions of the two versions matched by name and compared as Lisp, whatever their layout or defining form"' : '') + '>' + { text: 'Text', constants: (BEN.compareDefs || {}).label || 'Definitions', routines: 'Routines', functions: 'By function' }[m] + '</button>'; }).join('') +
       '<span class="sep"></span>' +
-      '<label class="check" title="Compare the code only: comments (after ' + SW.esc(CB.comment || ';') + ') are left out, so a changed comment does not count as a change"><input type="checkbox" data-o="noComments"' + (cst.noComments ? ' checked' : '') + '> ignore comments</label>' +
+      (noMark() ? '' : '<label class="check" title="Compare the code only: comments (after ' + SW.esc(CB.comment || ';') + ') are left out, so a changed comment does not count as a change"><input type="checkbox" data-o="noComments"' + (cst.noComments ? ' checked' : '') + '> ignore comments</label>') +
       (CB.normalised ? '<label class="check" title="Normalised: the text as the assembler read it, after the documented normalisations for this version (for example a transcription&#39;s &quot;.sx1&quot; read as the overlined variable &quot;~sx1&quot;, or modern &quot;//&quot; comments read as MACRO comments). Unticked: the source exactly as held in sources/. Normalised lines are marked with a violet rule by their line numbers."><input type="checkbox" data-o="norm"' + (cst.norm ? ' checked' : '') + '> normalised</label>' : '') +
       '<label class="check" title="' + SW.esc((CB.supplied || [])[1] || 'Include the supplied and support files, not only the program files') + '"><input type="checkbox" data-o="supplied"' + (cst.supplied ? ' checked' : '') + '> ' + SW.esc((CB.supplied || [])[0] || 'supplied files') + '</label>' +
       '<label class="check" title="Collapse long runs of identical lines to a single bar (click it to open), so the differences stand together"><input type="checkbox" data-o="fold"' + (cst.fold ? ' checked' : '') + '> fold unchanged</label><span class="sep"></span><span id="cp-exp"></span>';

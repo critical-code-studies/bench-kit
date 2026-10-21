@@ -3,7 +3,8 @@
  * bench-date meta in index.html), what it is for, how it is built (with this kit), what is
  * inside, its sources, its catalogue of versions, its code and how to cite it, with the
  * welcome tour. The bench's own rows come from SW.BENCH.about:
- *   { icon (HTML), author, citeAuthor, purpose, techMore, inside, sources, code,
+ *   { icon (HTML), author, citeAuthor, project (HTML, a row after Author), purpose, techMore,
+ *     inside, sources, code,
  *     catalogue: { skip: [version ids not counted], held: 'held as source' } }
  * SW.about.open() shows it.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -41,6 +42,7 @@
       '<div class="about-head">' + (A.icon || '') + '<div><h2>' + SW.esc(B.title || 'Research Bench') + '</h2><div class="hint">Version ' + SW.esc(SW.VERSION) + (date ? ', ' + SW.esc(SW.fmtDate(date)) : '') + '</div></div></div>' +
       '<table class="about-meta">' +
         row('Author', SW.esc(A.author || '')) +
+        row('Project', A.project || '') +
         row('Version', SW.esc(SW.VERSION)) +
         row('Released', date ? SW.esc(SW.fmtDate(date)) : '') +
         row('Purpose', A.purpose || '') +

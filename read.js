@@ -58,6 +58,7 @@
     var view = SW.$('#view-read');
     var R = SW.views.read = {};
     var F = H.files || {}, X = H.repairs || {}, T = H.titles || {}, TB0 = H.toolbar, word = F.word || 'File';
+    var SRCW = ((SW.BENCH || {}).words || {}).source || 'Source';   // the text column's heading
     // the toolbar's own tools: the bench's (H.toolbar), else the layers' ◀ ▶ and breadcrumb (kit/layers.js)
     function TB() { return TB0 || (SW.layers && SW.layers.toolbar) || {}; }
     var build = null, notes = [], counts = {}, noted = {}, anchorSel = null;
@@ -383,8 +384,8 @@
           '<div class="lncols"><span class="n" title="The line’s number in the source file">Line</span>' +
           (H.words ? '<span class="a" title="' + (T.address || 'Where the line’s first word was placed in core memory, in octal') + '">Address</span>' +
             '<span class="w" title="' + (T.word || 'The machine word the line assembled to, in octal; “+N” means N more words followed (hover a row for the count)') + '">Word <button class="colfold" data-cf="0" title="Fold away Address and Word, for more room (View ▸ Addresses &amp; words brings them back too)">‹</button></span>' +
-            '<span class="t" title="' + (T.source || 'The source as written (or as the bench reads it, with Normalised text on in View)') + '"><button class="colfold cf-show" data-cf="1" title="Show Address and Word">›</button>Source</span>'
-            : '<span class="a"></span><span class="w"></span><span class="t" title="The source as held">Source</span>') +
+            '<span class="t" title="' + (T.source || 'The source as written (or as the bench reads it, with Normalised text on in View)') + '"><button class="colfold cf-show" data-cf="1" title="Show Address and Word">›</button>' + SW.esc(SRCW) + '</span>'
+            : '<span class="a"></span><span class="w"></span><span class="t" title="The source as held">' + SW.esc(SRCW) + '</span>') +
           (seqCol() ? '<span class="sq" title="The identification field: the card’s sequence number, in a gutter of its own (View)">Seq</span>' : '') +
           '<span class="mk" title="Initials of anyone who has annotated the line; click them to read">Annotations<button class="ann-cyc" data-ann title="Show all annotations, only yours, only open questions, or none (click to change)">' + SHOW[opts.show] + '</button><button class="ann-cyc ghost-sw' + (opts.ghosts ? ' on' : '') + '" data-ghosts aria-pressed="' + !!opts.ghosts + '" title="Ghosts: annotations made on other versions, shown faintly on the lines here that match">Ghosts</button></span></div></div>';
         if (opts.ruler && layoutOf(b, pi)) sec.insertAdjacentHTML('beforeend', rulerHTML(layoutOf(b, pi)));

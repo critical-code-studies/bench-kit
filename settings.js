@@ -52,7 +52,7 @@
       '<h2>Colour theme</h2><p class="hint">' + esc(ST.themeHint || 'The colours of the whole bench: listings, annotations and figures. The ◐ button in the top bar switches between your last light and dark themes.') + '</p>' +
       '<label>Theme <select id="set-theme"></select></label><div class="theme-swatches" id="set-theme-sw"></div>' +
       '<h2>Reading code</h2><p class="hint">Applies wherever code is shown: listings, comparisons, traces, tables. The A− and A+ buttons in the top bar change the size too.</p>' +
-      '<label>Code font <select id="set-font">' + [['system', 'System monospace'], ['JetBrains Mono'], ['IBM Plex Mono'], ['Source Code Pro'], ['Fira Code'], ['Courier Prime', 'Courier Prime (typewriter)'], ['Courier New']].map(function (f) { return '<option value="' + f[0] + '">' + (f[1] || f[0]) + '</option>'; }).join('') + '</select></label>' +
+      '<label>' + esc((B.words || {}).font || 'Code font') + ' <select id="set-font">' + [['system', 'System monospace'], ['JetBrains Mono'], ['IBM Plex Mono'], ['Source Code Pro'], ['Fira Code'], ['Courier Prime', 'Courier Prime (typewriter)'], ['Courier New']].map(function (f) { return '<option value="' + f[0] + '">' + (f[1] || f[0]) + '</option>'; }).join('') + '</select></label>' +
       rows('display') +
       '<label class="check-row"><span><input type="checkbox" id="set-noteshade"> Tint annotated lines</span><span class="hint">A faint ground on every line an annotation covers, in the listings.</span></label>' +
       '<label>Code size <span class="token-row"><input id="set-size" type="range" min="9" max="24" step="1"><span id="set-size-out" class="mono" style="min-width:3.5em"></span></span></label>' +

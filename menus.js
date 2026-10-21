@@ -14,6 +14,7 @@
  *                             given as a pick alone moves the kit's item there
  *                       drop  [pick]: items left out
  *                     Site map is in the list when SW.BENCH.sitemap is set (a sitemap.html).
+ *                     About the bench is always first in Help ▾, at the top level, not in a group.
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
  * Read ▾ (a tab button with data-menu="read" data-tabs="read") lists the versions in the version
  * picker's groups, unless the bench draws its own (kit/layers.js does, by layer). A bench that sets
@@ -172,8 +173,11 @@
   function menuHTML(which) {
     if (which === 'help') {
       var dm = document.querySelector('meta[name="bench-date"]');
-      // a submenu for each group, its first items named under it; the bench's version at the foot
-      return helpList().map(function (g) { return SW.menuSub(SW.esc(g[0]), SW.esc(firstOf(g[1])), g[1].map(function (h) { return item(h); }).join('')); }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
+      // About the bench first, at the top level, wherever the list has it (or not at all); then a
+      // submenu for each group, its first items named under it; the bench's version at the foot
+      var ab = null, G = helpList().map(function (g) { return [g[0], g[1].filter(function (h) { if (h[0] !== 'about') return true; ab = ab || h; return false; })]; })
+        .filter(function (g) { return g[1].length; });
+      return item(ab || ['about', 'About the bench', 'Version, sources, citation']) + G.map(function (g) { return SW.menuSub(SW.esc(g[0]), SW.esc(firstOf(g[1])), g[1].map(function (h) { return item(h); }).join('')); }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }
     if (which === 'versions') return (H().versions || VERSIONS).map(function (h) {
       var on = H().on && H().on(which, h[0]); if (on == null && SW.lenses) on = SW.lenses.on(which, h[0]); if (on == null) on = SW.state.tab === h[0];

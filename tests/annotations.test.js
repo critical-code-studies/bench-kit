@@ -88,7 +88,8 @@
   eq('nothing alike: no ghost', SW.ghostMatch(src, 0, 5, other, indexOf(other)), -1);
   var common = keys(['x', '\tterm', 'y', '\tterm', 'z']), one = keys(['q', '\tterm', 'r']);
   eq('a single common line with no context: no ghost', SW.ghostMatch(one, 1, 1, common, indexOf(common)), -1);
-  eq('comments and spacing set aside', SW.lineKey(T.lineKey[0]), T.lineKey[1]);
+  var cm = (SW.BENCH || {}).comment, noMark = cm === false || (Array.isArray(cm) && !cm.length);
+  eq(noMark ? 'spacing set aside' : 'comments and spacing set aside', SW.lineKey(T.lineKey[0]), T.lineKey[1]);
 
   window.T.group('Open and resolved');
   eq('none', N.statusOf([]).state, '');

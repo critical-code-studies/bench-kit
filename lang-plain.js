@@ -1,7 +1,8 @@
 /*
  * lang-plain.js - source text in any language, for bench-kit's genealogy and compare
  * (kit/genealogy.js), set by the bench rather than written for one language:
- *   SW.BENCH.comment   the marks that begin a comment to the end of the line ('#', or ['//', ';'])
+ *   SW.BENCH.comment   the marks that begin a comment to the end of the line ('#', or ['//', ';']);
+ *                      false or [] for none (prose); left out, '#'
  *   SW.BENCH.routine   a regular expression (a string) for the line that begins a routine, its
  *                      name in the first group ('^\\s*(?:def|class)\\s+(\\w+)' for Python)
  *   SW.BENCH.caseFold  true where case means nothing in the language (compared in lower case)

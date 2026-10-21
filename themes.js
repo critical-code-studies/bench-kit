@@ -33,7 +33,7 @@
     n = Math.max(9, Math.min(24, Math.round(n)));
     SW.store.set('codeSize', n);
     SW.applyCodeText();
-    SW.toast('Code text ' + n + ' px');
+    SW.toast((((SW.BENCH || {}).words || {}).text || 'Code text') + ' ' + n + ' px');
   };
 
   // ---------- hands: the people whose initials or names are written into the text ----------

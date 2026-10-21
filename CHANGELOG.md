@@ -1,5 +1,15 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Help ▾: **About the bench** is always first, at the top level, not inside The project (asked for by David). A bench's list that moves or leaves it out still has it there.
+- For benches whose texts are not code (asked for by the Melville bench, the first prose bench):
+  - Compare offers the modes in `SW.BENCH.compare.modes` (all four by default), and draws no ignore-comments box where the bench has no comment mark (`comment: false` or `[]`, or `compare.comments: false`).
+  - `comment: false` or `[]` means no comment mark, now documented; a bench that leaves `comment` out still gets `#`.
+  - The annotation test of `SW.lineKey` is labelled "spacing set aside" where the bench has no comment mark.
+  - `SW.BENCH.words`: `text` for the size toast ("Code text"), `font` for Settings ("Code font"), `source` for Read's column heading ("Source").
+- About box: a **Project** row after Author, from `SW.BENCH.about.project` (HTML), for the project and its collaborators where these are not the bench's author (asked for by David, for the Melville bench). Benches without it are unchanged.
+
 ## 0.67.0 (2026-10-21)
 
 - **Help ▸ Implementations** (guides.js), for a bench that sets `SW.BENCH.implementations`: what an entry records and its statuses; descent (relation, route, confidence, evidence); List, Read, Tree and Matrix, with the Tree's lines and nodes explained; Compare (features, texts by line, Lisp by function, side by side); what is published and what is held awaiting clearance; I-codes and links. In Help ▾ after Paratexts, and opened by `&help=implementations`. Help ▸ Codes, links and sharing lists the I-code where the bench has the tab. Until now the tab was described in the README only.

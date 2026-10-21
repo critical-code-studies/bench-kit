@@ -129,7 +129,7 @@ SW.BENCH = {
 
 | Setting | Read by | What it is |
 |---|---|---|
-| `about` | `about.js` | The About box's own rows: `icon` (HTML), `author`, `citeAuthor`, `purpose`, `techMore`, `inside`, `sources` (HTML), `code` (the repository), `catalogue: { skip: [ids], held: 'held as source' }`. |
+| `about` | `about.js` | The About box's own rows: `icon` (HTML), `author`, `citeAuthor`, `project` (HTML, a row after Author), `purpose`, `techMore`, `inside`, `sources` (HTML), `code` (the repository), `catalogue: { skip: [ids], held: 'held as source' }`. |
 | `theme` | `themes.js` | The default colour theme's `label` and `note`. |
 | `accent` | `themes.js` | `{ dark, light }`: the accent of figures exported on black and on white. |
 | `hands` | `themes.js`, `compare.js` | People named in the text: `[{ k, who, re, colour }]`. |
@@ -146,8 +146,9 @@ SW.BENCH = {
 | `implementations` | `implementations.js` | `{ url, base, title, credit, feature: { cell(id, v), cls(v, id), key(id, v) } }`: the catalogue (by default `implementations/catalogue.json`) and the folder of its files, the tab's heading, HTML for its foot (a credit to a collector, say), and how a feature whose value is more than yes or no is shown and compared. A bench without it has no Implementations. |
 | `examples` | `paratexts.js`, `guides.js` | Placeholders in the paratext forms: `date`, `archive`, `versions`, `refs`, `publisher`, `finding`. |
 | `lang` | `genealogy.js`, `compare.js` | The language of the texts: `macro`, `maclisp`, `plain`, or a bench's own (load `kit/lang-<lang>.js` before `kit/genealogy.js`). With `kit/lispdefs.js` loaded before `kit/compare.js`, Compare offers By function where both versions are Lisp: a version's `lispDialect` (`pdp6`, `maclisp`, `bbn`, `cl`), else its `dialect` or the bench's `lang` where these name a Lisp (`maclisp`, `interlisp`, `bbn-lisp`, `common-lisp` and the like). |
-| `comment`, `routine`, `caseFold` | `lang-plain.js`, `functional.js` | For `lang: 'plain'`: the comment mark (a string or a list), a regular expression for a routine's first line (its name in the first group), case meaning nothing. |
-| `compare` | `compare.js` | `comment` (the comment mark, for the hover), `normalised` (offer the normalised text), `supplied` ([label, hover] of the supplied-files option), `reading` (the word for building versions). |
+| `comment`, `routine`, `caseFold` | `lang-plain.js`, `functional.js` | For `lang: 'plain'`: the comment mark (a string or a list; `false` or `[]` for none, as in prose; left out, `#`), a regular expression for a routine's first line (its name in the first group), case meaning nothing. |
+| `compare` | `compare.js` | `comment` (the comment mark, for the hover), `normalised` (offer the normalised text), `supplied` ([label, hover] of the supplied-files option), `reading` (the word for building versions), `modes` (the modes offered, of `text`, `constants`, `routines` and `functions`; all by default), `comments: false` (no comment filter; also where `comment` is `false` or `[]`). |
+| `words` | `themes.js`, `settings.js`, `read.js` | The words for the bench's text where it is not code: `text` (the size toast, "Code text"), `font` (Settings, "Code font"), `source` (Read's column heading, "Source"). |
 | `comparePrefix` | `compare.js` | Before an export's title. |
 | `genealogy` | `compare.js` | `set` (the versions first shown), `line` (the line of descent first shown), `lineNames`. |
 | `compareDefs` | `compare.js` | Compare's second mode (hooks, below). |
