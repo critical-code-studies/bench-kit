@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.68.0 (2026-10-21)
 
 - Help ▾: **About the bench** is always first, at the top level, not inside The project (asked for by David). A bench's list that moves or leaves it out still has it there.
 - For benches whose texts are not code (asked for by the Melville bench, the first prose bench):
