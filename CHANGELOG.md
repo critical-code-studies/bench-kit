@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.72.1 (2026-10-21)
 
 - tools/release.js: `next` refuses pages whose `?v=` is not a version number (a stamp left by testing, such as `c1`, gave the next release the version "c2"; reported by the Melville session); an explicit version (`release.js 0.1.12 "…"`) releases from such pages and must itself be one. The README's Version line is set to the release whatever it said before, so the summary agrees with what was written.
 
