@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.74.2 (2026-10-21)
 
 - Versions ▾: Collate's line names the modes the bench offers (`compare.modes`; the second mode where `compareDefs.by` gives a phrase for it, as `leaf`; By function only where the texts are Lisp), so that the Melville bench reads "Two versions collated: line by line and by leaf"; `SW.BENCH.words.collate` sets it outright (asked for by the Melville session). A bench that gives none of these reads as before, less By function where its texts are not Lisp.
 
