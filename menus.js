@@ -35,9 +35,21 @@
   var SW = root.SW, B = SW.BENCH;
   function H() { return B.menus || {}; }
 
-  var VERSIONS = [['about', 'This version', 'Its record, sources and annotations'],
-                  ['compare', 'Collate', 'Two versions collated: line by line, by routine, and by function where both are Lisp'],
-                  ['genealogy', 'Genealogy', 'How the versions descend']];
+  // Collate's line in Versions ▾: the bench's own (SW.BENCH.words.collate), or the modes it offers
+  // (compare.modes, the second mode by compareDefs.by, By function where the texts are Lisp)
+  function collateText() {
+    var w = (B.words || {}).collate; if (w) return w;
+    var CB = B.compare || {}, lisp = /lisp/i.test(B.lang || '') || !!root.SWLispDefs;
+    // the second mode is named where the bench gives it a phrase (compareDefs.by: 'leaf' makes "by leaf")
+    var by = (B.compareDefs || {}).by, say = { text: 'line by line', constants: by ? 'by ' + by : '', routines: 'by routine', functions: 'by function where both are Lisp' };
+    var ms = (CB.modes || ['text', 'constants', 'routines', 'functions']).filter(function (m) { return say[m] && (m !== 'functions' || lisp); }).map(function (m) { return say[m]; });
+    return 'Two versions collated' + (ms.length ? ': ' + (ms.length > 1 ? ms.slice(0, -1).join(', ') + (ms.length > 2 ? ',' : '') + ' and ' + ms[ms.length - 1] : ms[0]) : '');
+  }
+  function VERSIONS() {
+    return [['about', 'This version', 'Its record, sources and annotations'],
+            ['compare', 'Collate', collateText()],
+            ['genealogy', 'Genealogy', 'How the versions descend']];
+  }
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
     var ex = (B.refHelp || {}).example;
@@ -179,7 +191,7 @@
         .filter(function (g) { return g[1].length; });
       return item(ab || ['about', 'About the bench', 'Version, sources, citation']) + G.map(function (g) { return SW.menuSub(SW.esc(g[0]), SW.esc(firstOf(g[1])), g[1].map(function (h) { return item(h); }).join('')); }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }
-    if (which === 'versions') return (H().versions || VERSIONS).map(function (h) {
+    if (which === 'versions') return (H().versions || VERSIONS()).map(function (h) {
       var on = H().on && H().on(which, h[0]); if (on == null && SW.lenses) on = SW.lenses.on(which, h[0]); if (on == null) on = SW.state.tab === h[0];
       return item(h, on);
     }).join('');

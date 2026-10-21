@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Versions ▾: Collate's line names the modes the bench offers (`compare.modes`; the second mode where `compareDefs.by` gives a phrase for it, as `leaf`; By function only where the texts are Lisp), so that the Melville bench reads "Two versions collated: line by line and by leaf"; `SW.BENCH.words.collate` sets it outright (asked for by the Melville session). A bench that gives none of these reads as before, less By function where its texts are not Lisp.
+
 ## 0.74.1 (2026-10-21)
 
 - Top bar: a bench without the version picker (`picker: false`) keeps its name and version at every width down to 380 px; the rules that hid them below 1240 px and 860 px, to make room for the picker, now apply only where there is one (reported by David on the Melville bench, whose name had gone from the bar on most laptop screens). The shell marks such a bar `.no-pick`.

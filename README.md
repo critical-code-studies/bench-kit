@@ -152,7 +152,7 @@ SW.BENCH = {
 | `lang` | `genealogy.js`, `compare.js` | The language of the texts: `macro`, `maclisp`, `plain`, or a bench's own (load `kit/lang-<lang>.js` before `kit/genealogy.js`). With `kit/lispdefs.js` loaded before `kit/compare.js`, Compare offers By function where both versions are Lisp: a version's `lispDialect` (`pdp6`, `maclisp`, `bbn`, `cl`), else its `dialect` or the bench's `lang` where these name a Lisp (`maclisp`, `interlisp`, `bbn-lisp`, `common-lisp` and the like). |
 | `comment`, `routine`, `caseFold` | `lang-plain.js`, `functional.js` | For `lang: 'plain'`: the comment mark (a string or a list; `false` or `[]` for none, as in prose; left out, `#`), a regular expression for a routine's first line (its name in the first group), case meaning nothing. |
 | `compare` | `compare.js` | `comment` (the comment mark, for the hover), `normalised` (offer the normalised text), `supplied` ([label, hover] of the supplied-files option), `reading` (the word for building versions), `modes` (the modes offered, of `text`, `constants`, `routines` and `functions`; all by default), `comments: false` (no comment filter; also where `comment` is `false` or `[]`). |
-| `words` | `themes.js`, `settings.js`, `read.js` | The words for the bench's text where it is not code: `text` (the size toast, "Code text"), `font` (Settings, "Code font"), `source` (Read's column heading, "Source"). |
+| `words` | `themes.js`, `settings.js`, `read.js` | The words for the bench's text where it is not code: `text` (the size toast, "Code text"), `font` (Settings, "Code font"), `source` (Read's column heading, "Source"), `collate` (Collate's line in Versions ▾; by default it names the modes the bench offers). |
 | `comparePrefix` | `compare.js` | Before an export's title. |
 | `genealogy` | `compare.js` | `set` (the versions first shown), `line` (the line of descent first shown), `lineNames`. |
 | `compareDefs` | `compare.js` | Collate's second mode (hooks, below). |
@@ -211,7 +211,7 @@ A bench drawing it in a lens calls `SW.functionalOverview.render(b, el, { inline
 
 **This version** (`SW.BENCH.version`): `rows(b)` (`[[label, html]]` after Date, Authors, Descends from, Status and Survives as: by default the files and how they are read), `after(v)` (HTML after the record), `notesHint` (the text above the version's annotations).
 
-**Collate's second mode** (`SW.BENCH.compareDefs`): `{ label, render(el, A, B, h), doc(A, B, r, h) }`; `render` draws the two builds' comparison into `el` and returns `{ crow, mrow, srow }`, `doc` gives the export; `h.vl(b)` names a version. Conventionally `js/compare-defs.js`.
+**Collate's second mode** (`SW.BENCH.compareDefs`): `{ label, by, render(el, A, B, h), doc(A, B, r, h) }` (`by`, a phrase for Versions ▾, as `leaf` for "by leaf"); `render` draws the two builds' comparison into `el` and returns `{ crow, mrow, srow }`, `doc` gives the export; `h.vl(b)` names a version. Conventionally `js/compare-defs.js`.
 
 **The reading edition** (`SW.BENCH.edition`): `source(p)` (a note after each source file), `built(b)` (the row saying how the text was read or assembled: `[label, text]`), `layout(raw, pad)` (a line as set on the page), `words` (offer addresses and words), `files` ([label, hover] of the option for support and documentation files).
 
