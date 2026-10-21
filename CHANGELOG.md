@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- tools/release.js: `next` refuses pages whose `?v=` is not a version number (a stamp left by testing, such as `c1`, gave the next release the version "c2"; reported by the Melville session); an explicit version (`release.js 0.1.12 "…"`) releases from such pages and must itself be one. The README's Version line is set to the release whatever it said before, so the summary agrees with what was written.
+
 ## 0.72.0 (2026-10-21)
 
 - Book: **Images** ▸ Large, Small or Off, for the pages' images beside the text (asked for by David, to fold them away when reviewing). Off gives their room to the text and leaves a ▣ at each page break that opens the page larger, with its details. The choice holds for both columns with Beside, is kept for the browser, and rides in the address as `img`.

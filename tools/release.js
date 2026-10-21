@@ -81,6 +81,11 @@ if (CHECK) {
 }
 if (problems.length) fail(problems.join('\n'));
 
+// a version is numbers and points (0.1.11); a stamp left on the pages by testing (?v=c1) is not one, and
+// "next" of it would be another stamp, so name the version instead (release.js 0.1.12 "…")
+const VER = /^\d+(\.\d+)+$/;
+if (want === 'next' && !VER.test(cur)) fail('the pages\' ?v= is "' + cur + '", not a version number: give the version to release (release.js X.Y.Z "…")');
+if (want !== 'next' && !VER.test(want)) fail('"' + want + '" is not a version number (X.Y.Z), or next');
 const next = want === 'next' ? cur.replace(/(\d+)$/, (n) => String(+n + 1)) : want;
 if (next === cur) fail('the version is already ' + cur);
 const now = new Date(), today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');   // the local day, not UTC's
@@ -124,9 +129,9 @@ if (!NOLOG) {
 
 ['README.md', path.join(dir, 'README.md')].filter((p, i, a) => a.indexOf(p) === i && fs.existsSync(p)).forEach((p) => {
   const s = fs.readFileSync(p, 'utf8');
-  const t = s.replace('**Version:** ' + cur + ' (bench-kit ', '**Version:** ' + next + ' (bench-kit ')
-    .replace(/(\*\*Version:\*\* [^ ]+ \(bench-kit )[^)]+\)/, (m, a) => a + kv + ')');
-  if (t !== s) { write(p, t); changes.push(p + ': Version ' + next + (/\(bench-kit /.test(t) ? ' (bench-kit ' + kv + ')' : '')); }
+  // the README's version line follows the release, whatever it said before
+  const t = s.replace(/(\*\*Version:\*\* )[^ ]+( \(bench-kit )[^)]+\)/, (m, a, b) => a + next + b + kv + ')');
+  if (t !== s) { write(p, t); changes.push(p + ': Version ' + next + ' (bench-kit ' + kv + ')'); }
 });
 
 console.log((DRY ? 'would release ' : 'released ') + cur + ' → ' + next + ', bench-kit ' + kv + ':\n' + changes.map((c) => '  ' + c).join('\n'));
