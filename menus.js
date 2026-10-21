@@ -39,7 +39,7 @@
   // (compare.modes, the second mode by compareDefs.by, By function where the texts are Lisp)
   function collateText() {
     var w = (B.words || {}).collate; if (w) return w;
-    var CB = B.compare || {}, lisp = /lisp/i.test(B.lang || '') || !!root.SWLispDefs;
+    var CB = B.compare || {}, lisp = SW.collateLisp ? SW.collateLisp() : false;   // kit/compare.js: a version held is Lisp
     // the second mode is named where the bench gives it a phrase (compareDefs.by: 'leaf' makes "by leaf")
     var by = (B.compareDefs || {}).by, say = { text: 'line by line', constants: by ? 'by ' + by : '', routines: 'by routine', functions: 'by function where both are Lisp' };
     var ms = (CB.modes || ['text', 'constants', 'routines', 'functions']).filter(function (m) { return say[m] && (m !== 'functions' || lisp); }).map(function (m) { return say[m]; });

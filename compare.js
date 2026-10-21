@@ -160,6 +160,8 @@
     if (!root.SWLispDefs || !b) return null;
     return b.v.lispDialect || LISPD[String(b.dialect || b.v.dialect || '').toLowerCase()] || LISPD[String(BEN.lang || '').toLowerCase()] || null;
   }
+  // whether any version held can be collated By function (Versions ▾ names it only then)
+  SW.collateLisp = function () { return !!root.SWLispDefs && (root.SWVersions ? root.SWVersions.VERSIONS : []).some(function (v) { return v.build && lispOf({ v: v }); }); };
   function lispTexts(b) {
     var out = [];
     b.parts.forEach(function (p, pi) {
