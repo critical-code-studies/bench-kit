@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.70.0 (2026-10-21)
 
 - Top bar: `SW.BENCH.picker: false` leaves out the version picker with the version's reference and language, for a bench whose versions are chosen from Read ▾ (asked for by David, for the Melville bench). The frame no longer needs `#pick-a` or `#vref` on the page; a tour stop that outlines a missing element is passed over as before.
 
