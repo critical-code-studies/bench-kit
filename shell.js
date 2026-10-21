@@ -1,7 +1,7 @@
 /*
  * shell.js - the bench's frame: start-up, the version picker, the tabs and the views drawn in
  * them, the colour theme, the buttons of the top bar, and what a link asks for (?v= version,
- * &tab=, &l= lines, &b= Compare's other version, &a= an annotation, &code=, &help=, &tour=,
+ * &tab=, &l= lines, &b= Collate's other version, &a= an annotation, &code=, &help=, &tour=,
  * &join=, &tr= a tracing). Loaded last. The bench's own parts come from SW.BENCH.shell:
  *   views         the views, in the order of the tabs (each has a section #view-<name>)
  *   alias         old view names and the views they became ({ sky: 'graphics' })

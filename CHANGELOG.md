@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Versions ▸ Collate** in place of Versions ▸ Compare, for the two versions set out line by line, by routine or by function (David's decision), so that Compare names Book's side-by-side reading. The view keeps its name in links and settings (`tab=compare`, `SW.BENCH.compare`, `compareDefs`), so links and benches go on working; a bench whose own words name it (a Versions ▾ list of its own, a tour stop, a title in its index.html) changes them itself. My notes names the view Collate.
+- Book: **Compare** in place of Compare with, its list reading "with" each text ("Compare with MEL reading text").
+- The site: Collate and Book among what a bench does; the Melville entry describes Book.
+
 ## 0.73.0 (2026-10-21)
 
 - Book, after 0.72.0 (reported by David): the toolbar's buttons did nothing (the texts, ◀ ▶ ▶▶ for the stages, ≡ Read here). The view carried the image size as data-img, so every click inside it was read as a click on an image-size button; the toolbar now finds its controls within itself, by their own ids. The phone-width rules of book.css, broken by the same release (a block of rules put inside them), are whole again.

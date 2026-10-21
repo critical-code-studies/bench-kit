@@ -27,7 +27,7 @@
  *     any revision. stageHands (a list of hands' k) limits the slider to those hands' revisions;
  *     the others are shown only in All revisions, which raises the additions and strikes the
  *     deletions. The revisions come and go as the slider moves;
- *   - Compare with: a second text facing the first, the two held at the same page break (facs) as
+ *   - Compare: a second text facing the first, the two held at the same page break (facs) as
  *     either is scrolled.
  * The text is set in sheets, a page to each, the page's image (IIIF) beside it; a click opens it
  * larger, with its lines, its reference and SW.BENCH.doc.imageCredit (HTML), ◀ ▶ (or ← →) for the
@@ -330,8 +330,8 @@
   function toolbar(left) {
     var tb = SW.el('div', { class: 'toolbar bk-bar' }), list = texts(), hasStates = cols.some(function (c) { return c.states; });
     var chips = list.map(function (t) { return '<button class="btn' + (t === textOf(left) ? ' on' : '') + '" data-text="' + esc(t) + '">' + esc(textLabel(t)) + '</button>'; }).join('');
-    var beside = '<label class="check" title="A second text facing this one, held at the same ' + esc(PAGE) + ' as either is scrolled">Compare with <select id="bk-right"><option value="">nothing</option>' +
-      list.filter(function (t) { return t !== textOf(left); }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === st.right ? ' selected' : '') + '>' + esc(textLabel(t)) + '</option>'; }).join('') + '</select></label>';
+    var beside = '<label class="check" title="A second text facing this one, held at the same ' + esc(PAGE) + ' as either is scrolled (Versions ▸ Collate sets two versions out line by line)">Compare <select id="bk-right"><option value="">with nothing</option>' +
+      list.filter(function (t) { return t !== textOf(left); }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === st.right ? ' selected' : '') + '>with ' + esc(textLabel(t)) + '</option>'; }).join('') + '</select></label>';
     tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
       '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; Off folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +

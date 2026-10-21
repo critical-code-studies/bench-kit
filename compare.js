@@ -1,5 +1,5 @@
 /*
- * compare.js - (part of bench-kit, github.com/critical-code-studies/bench-kit) Compare (two versions) and Genealogy (many versions).
+ * compare.js - (part of bench-kit, github.com/critical-code-studies/bench-kit) Collate (two versions, Versions ▸ Collate; the view is 'compare' in links) and Genealogy (many versions).
  */
 (function (root) {
   'use strict';
@@ -715,7 +715,7 @@
     o = o || { hidden: [], rerender: function () {} };
     function setHidden(list) { gst.hidden = list; SW.store.set('gen.hidden', list); o.rerender(); }
     gst.boxes = SW.store.get('gen.boxes', gst.boxes);
-    if (gst.gran === 'line') { body.innerHTML = '<p class="hint">Line granularity is too fine for the flow view; choose routine or section, or use Compare → Routines for a pair.</p>'; return; }
+    if (gst.gran === 'line') { body.innerHTML = '<p class="hint">Line granularity is too fine for the flow view; choose routine or section, or use Collate → Routines for a pair.</p>'; return; }
     var fl = G.flows(ts, { granularity: gst.gran });
     // Detail: the ribbons from the lines themselves (forks and joins where code was re-cut), or one to one
     gst.detail = SW.store.get('gen.detail', 'forks');

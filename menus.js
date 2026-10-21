@@ -3,7 +3,7 @@
  * a menu under it (a click outside, or Esc, closes it). Versions and Help are the kit's; the
  * lenses' menus are kit/lenses.js's (SW.BENCH.lenses.menus) and Graphics ▾ is kit/graphics.js's;
  * any other menu the bench draws itself. From SW.BENCH.menus:
- *   versions          [[pick, label, text]]: Versions ▾ (by default This version, Compare,
+ *   versions          [[pick, label, text]]: Versions ▾ (by default This version, Collate,
  *                     Genealogy); a pick that is a view goes to it
  *   help              Help ▾: changes to the kit's list (below), or the whole list as
  *                     [[group, [[pick, label, text]]]]; a pick opens the Help item of that name
@@ -36,7 +36,7 @@
   function H() { return B.menus || {}; }
 
   var VERSIONS = [['about', 'This version', 'Its record, sources and annotations'],
-                  ['compare', 'Compare', 'Two versions side by side: line by line, by routine, and by function where both are Lisp'],
+                  ['compare', 'Collate', 'Two versions collated: line by line, by routine, and by function where both are Lisp'],
                   ['genealogy', 'Genealogy', 'How the versions descend']];
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');

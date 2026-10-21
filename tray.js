@@ -103,7 +103,7 @@
   T.sync = function () { pulled = false; runSync(); };
   function where() {
     var v = SW.state.v && root.SWVersions.byId(SW.state.v);
-    return (v ? short(v) + ' · ' : '') + ({ read: 'Read', run: 'Run', analyse: SW.anLensName ? SW.anLensName() : 'Analyse', compare: 'Compare', genealogy: 'Genealogy', tape: 'Tape', graphics: 'Graphics', about: 'Versions', notes: 'My notes', findings: 'Findings' }[SW.state.tab] || SW.state.tab);
+    return (v ? short(v) + ' · ' : '') + ({ read: 'Read', run: 'Run', analyse: SW.anLensName ? SW.anLensName() : 'Analyse', compare: 'Collate', genealogy: 'Genealogy', tape: 'Tape', graphics: 'Graphics', about: 'Versions', notes: 'My notes', findings: 'Findings' }[SW.state.tab] || SW.state.tab);
   }
   // Undo: the whole of My notes as it was before each change, this session.
   var undoStack = [];
