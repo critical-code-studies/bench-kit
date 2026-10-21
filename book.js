@@ -27,12 +27,13 @@
  *     any revision. stageHands (a list of hands' k) limits the slider to those hands' revisions;
  *     the others are shown only in All revisions, which raises the additions and strikes the
  *     deletions. The revisions come and go as the slider moves;
- *   - Beside: a second text facing the first, the two held at the same page break (facs) as
+ *   - Compare with: a second text facing the first, the two held at the same page break (facs) as
  *     either is scrolled.
  * The text is set in sheets, a page to each, the page's image (IIIF) beside it; a click opens it
- * larger, with its lines, its reference and SW.BENCH.doc.imageCredit (HTML), and ← → move a page.
- * Images ▸ Large, Small or Off (folded away, a ▣ at each page break to open one), for both
- * columns, kept for this browser and in the address as img.
+ * larger, with its lines, its reference and SW.BENCH.doc.imageCredit (HTML), ◀ ▶ (or ← →) for the
+ * page before or after, ✕ to close.
+ * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
+ * for both columns, kept for this browser and in the address as img (off, or a width).
  * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, bb (the text beside),
  * img and l (the place). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
  * them), so an annotation made here is the same as one made in Read; the group's annotations are
@@ -98,12 +99,23 @@
   var st = { stage: STAGES.length, all: false, hands: true, play: null, right: Q0.bb || null, first: true, own: false };
   if (Q0.stage != null && Q0.stage !== '') st.stage = Q0.stage === '0' ? 0 : (AT[Q0.stage] || STAGES.length);
   if (Q0.all === '1') st.all = true;
-  // the pages' images: large, small, or folded away (a marker at each page break opens one); kept for
-  // this browser, and in a link that asks for it
-  var IMG = ['large', 'small', 'off'];
-  st.img = IMG.indexOf(Q0.img) >= 0 ? Q0.img : IMG.indexOf(SW.store.get('book.img', 'large')) >= 0 ? SW.store.get('book.img', 'large') : 'large';
-  view.dataset.img = st.img;
-  var cols = [], place = null, pending = null;   // place: in the first column's lines; pending: a link's, until it is set
+  // the pages' images: a width (a slider), and on or off (Off folds them away, leaving a ▣ at each
+  // page break, and On brings them back at the width they had); kept for this browser, and in a link
+  // that asks for it (img=off, or img=a width)
+  var IMGW = [100, 560], IMGW0 = 320;
+  function imgw(x) { x = Math.round(+x); return x >= IMGW[0] && x <= IMGW[1] ? x : null; }
+  st.imgW = imgw(SW.store.get('book.imgw', IMGW0)) || IMGW0;
+  st.imgOn = SW.store.get('book.imgon', true) !== false;
+  if (Q0.img === 'off') st.imgOn = false;
+  else if (Q0.img === 'small') { st.imgOn = true; st.imgW = 150; }   // a link from 0.72
+  else if (imgw(Q0.img)) { st.imgOn = true; st.imgW = imgw(Q0.img); }
+  function showImages() {
+    view.classList.toggle('bk-noimg', !st.imgOn);
+    view.style.setProperty('--bk-imgw', st.imgW + 'px');
+    (cols || []).forEach(function (c) { c.stale = true; });
+  }
+  var cols = [], place = null, pending = null;
+  showImages();   // place: in the first column's lines; pending: a link's, until it is set
 
   function inStates(vid) { return !!STATES && [STATES.source, STATES.first, STATES.last].indexOf(vid) >= 0; }
   function textOf(vid) { return inStates(vid) ? STATES.source : vid; }
@@ -158,29 +170,45 @@
     f.appendChild(SW.el('figcaption', {}, pg.facs || ''));
     return f;
   }
-  // the page larger, in a box over the view, with what is known of it; a click closes it, and
-  // the arrow keys go to the page before or after
+  // the page larger, in a box over the view, with what is known of it: ◀ ▶ (or the arrow keys) for
+  // the page before or after, ✕, Esc or a click elsewhere to close
   function pageBox(col, i) {
     var old = SW.$('dialog.bk-modal'); if (old) old.remove();
-    var pg = col.pages[i]; if (!pg || !pg.iiif) return;
-    var b = col.b, next = col.pages[i + 1], n1 = next && next.p === pg.p && next.n0 != null ? next.n0 - 1 : (b.lines[pg.p] || []).length;
-    var rows = [[(PAGE.charAt(0).toUpperCase() + PAGE.slice(1)), esc(pg.facs || '')], ['Text', esc(textLabel(col.vid))]];
-    if (b.parts.length > 1) rows.push(['Part', esc(b.parts[pg.p].src.split('/').pop())]);
-    if (pg.n0 != null) rows.push(['Lines', (n1 > pg.n0 ? 'll. ' + pg.n0 + '–' + n1 : 'l. ' + pg.n0) + ' ' + SW.refTag(b.v.id, pg.p, pg.n0, Math.max(pg.n0, n1), b.parts.length)]);
-    if (D.imageCredit) rows.push(['Image', D.imageCredit]);
-    rows.push(['Source', '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>']);
     var d = SW.el('dialog', { class: 'bk-modal' });
-    d.innerHTML = '<div class="bk-modal-in"><img src="' + esc(iiifURL(pg.iiif, 1600, 1600)) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '">' +
-      '<div class="bk-modal-meta"><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
-      '<p class="hint">Click anywhere to close' + (col.pages.length > 1 ? '; ← → for the ' + esc(PAGE) + ' before or after' : '') + '.</p></div></div>';
     document.body.appendChild(d);
-    d.addEventListener('click', function (e) { if (!e.target.closest('a, .swref')) d.close(); });
+    // the page before or after that has an image, or -1
+    function step(k, dir) { for (k += dir; k >= 0 && k < col.pages.length; k += dir) if (col.pages[k].iiif) return k; return -1; }
+    var P = PAGE.charAt(0).toUpperCase() + PAGE.slice(1);
+    function fill(k) {
+      i = k;
+      var pg = col.pages[k], b = col.b, next = col.pages[k + 1], n1 = next && next.p === pg.p && next.n0 != null ? next.n0 - 1 : (b.lines[pg.p] || []).length;
+      var rows = [[P, esc(pg.facs || '')], ['Text', esc(textLabel(col.vid))]];
+      if (b.parts.length > 1) rows.push(['Part', esc(b.parts[pg.p].src.split('/').pop())]);
+      if (pg.n0 != null) rows.push(['Lines', (n1 > pg.n0 ? 'll. ' + pg.n0 + '–' + n1 : 'l. ' + pg.n0) + ' ' + SW.refTag(b.v.id, pg.p, pg.n0, Math.max(pg.n0, n1), b.parts.length)]);
+      if (D.imageCredit) rows.push(['Image', D.imageCredit]);
+      rows.push(['Source', '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>']);
+      var prev = step(k, -1), nxt = step(k, 1), many = prev >= 0 || nxt >= 0;
+      d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><img src="' + esc(iiifURL(pg.iiif, 1600, 1600)) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '">' +
+        (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
+          '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
+        '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
+        '<p class="hint">' + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click elsewhere: close.</p></div></div>';
+      // the text beside follows, so the page closed on is the one in view
+      if (pg.el) col.el.scrollTop = Math.max(0, pg.el.offsetTop - 20);
+    }
+    function go(k) { if (k >= 0 && col.pages[k]) fill(k); }
+    d.addEventListener('click', function (e) {
+      var nav = e.target.closest('.bk-nav');
+      if (nav) { e.stopPropagation(); if (!nav.disabled) go(+nav.dataset.to); return; }
+      if (e.target.closest('a, .swref')) return;
+      d.close();
+    });
     d.addEventListener('keydown', function (e) {
-      var to = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : null;
-      for (; to != null && col.pages[to] && !col.pages[to].iiif; to += to > i ? 1 : -1);
-      if (to != null && col.pages[to]) { e.preventDefault(); d.close(); pageBox(col, to); var e2 = col.pages[to].el; if (e2) col.el.scrollTop = Math.max(0, e2.offsetTop - 20); }
+      var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (dir) { e.preventDefault(); go(step(i, dir)); }
     });
     d.addEventListener('close', function () { d.remove(); });
+    fill(i);
     d.showModal();
   }
   function spanEl(sp, p, notes) {
@@ -205,6 +233,7 @@
     // the text in sheets, one to a page, each with the page's image beside it
     function sheet(pg) {
       var sh = SW.el('div', { class: 'bk-sheet' });
+      if (pg) pg.sheet = sh;
       text = SW.el('div', { class: 'bk-text' });
       sh.appendChild(text);
       sh.appendChild(pg && pg.iiif ? figure(pg, col) : SW.el('div', { class: 'bk-fig bk-nofig' }));
@@ -269,6 +298,7 @@
       // a passage with nothing to show at this stage is left out
       col.blocks.forEach(function (bl) { bl.el.hidden = !bl.spans.some(function (x) { return x.on && x.text; }); });
     });
+    cols.forEach(function (c) { c.stale = true; });
     var lab = SW.$('#bk-stage-l', view); if (lab) lab.textContent = stageName(st.stage);
     var r = SW.$('#bk-stage', view); if (r) { r.value = st.stage; r.disabled = st.all; }
     writeQ();
@@ -292,7 +322,7 @@
   function writeQ() {
     if (SW.state.tab !== 'book') return;
     // the version named is the one whose lines the place numbers: for a version's states, their source
-    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, bb: st.right, img: st.img !== 'large' ? st.img : null, l: lineQ(place) });
+    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, bb: st.right, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place) });
   }
   function linkTo(vid, a) { return SW.permalink({ v: vid, tab: 'book', l: lineQ(a), stage: inStates(vid) ? stageQ() : null, all: inStates(vid) && st.all ? 1 : null }); }
 
@@ -300,11 +330,12 @@
   function toolbar(left) {
     var tb = SW.el('div', { class: 'toolbar bk-bar' }), list = texts(), hasStates = cols.some(function (c) { return c.states; });
     var chips = list.map(function (t) { return '<button class="btn' + (t === textOf(left) ? ' on' : '') + '" data-text="' + esc(t) + '">' + esc(textLabel(t)) + '</button>'; }).join('');
-    var beside = '<label class="check" title="A second text facing this one, held at the same ' + esc(PAGE) + ' as either is scrolled">Beside <select id="bk-right"><option value="">nothing</option>' +
+    var beside = '<label class="check" title="A second text facing this one, held at the same ' + esc(PAGE) + ' as either is scrolled">Compare with <select id="bk-right"><option value="">nothing</option>' +
       list.filter(function (t) { return t !== textOf(left); }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === st.right ? ' selected' : '') + '>' + esc(textLabel(t)) + '</option>'; }).join('') + '</select></label>';
     tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
-      '<span class="bk-imgs" title="The ' + esc(PAGE) + 's’ images beside the text: large, small, or folded away (a ▣ at each ' + esc(PAGE) + ' opens it)">Images ' +
-        IMG.map(function (k) { return '<button class="btn' + (st.img === k ? ' on' : '') + '" data-img="' + k + '">' + { large: 'Large', small: 'Small', off: 'Off' }[k] + '</button>'; }).join('') + '</span><span class="sep"></span>' +
+      '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; Off folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
+        '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
+        '<button class="btn' + (st.imgOn ? '' : ' on') + '" id="bk-imgoff" aria-pressed="' + !st.imgOn + '" title="' + (st.imgOn ? 'Fold the images away' : 'Show the images again') + '">Off</button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="Read at the place shown here, line by line">≡ Read here</button>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
         '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision">' +
@@ -313,20 +344,25 @@
         '<label class="check" title="Every revision at once: additions raised, deletions struck, each with its hand and stage"><input type="checkbox" id="bk-all"' + (st.all ? ' checked' : '') + '> ' + esc((W.all || 'All revisions').toLowerCase()) + '</label>' +
         (Object.keys(HANDS).length ? '<label class="check" title="Revisions coloured by hand"><input type="checkbox" id="bk-hands"' + (st.hands ? ' checked' : '') + '> hands</label>' : '') + '</div>' : '');
     tb.addEventListener('click', function (e) {
-      var im = e.target.closest('[data-img]');
-      if (im) {
-        st.img = im.dataset.img; view.dataset.img = st.img; SW.store.set('book.img', st.img);
-        SW.$$('[data-img]', tb).forEach(function (b) { b.classList.toggle('on', b === im); });
+      // controls are found by their own ids and attributes, within the toolbar only
+      var b0 = e.target.closest('button, input'); if (!b0 || !tb.contains(b0)) return;
+      if (b0.id === 'bk-imgoff') {
+        st.imgOn = !st.imgOn; SW.store.set('book.imgon', st.imgOn); showImages();
+        b0.classList.toggle('on', !st.imgOn); b0.setAttribute('aria-pressed', String(!st.imgOn)); b0.title = st.imgOn ? 'Fold the images away' : 'Show the images again';
+        var r0 = SW.$('#bk-imgw', tb); if (r0) r0.disabled = !st.imgOn;
         writeQ(); return;
       }
-      var t = e.target.closest('[data-text]');
+      var t = b0.dataset.text != null ? b0 : null;
       if (t) { stop(); var to = t.dataset.text; if (to === st.right) st.right = null; st.own = true; SW.select(to === textOf(SW.state.v) ? SW.state.v : to); return; }
       if (e.target.id === 'bk-prev') { stop(); st.stage = Math.max(0, st.stage - 1); apply(true); }
       if (e.target.id === 'bk-next') { stop(); st.stage = Math.min(STAGES.length, st.stage + 1); apply(true); }
       if (e.target.id === 'bk-play') { if (st.play) stop(); else play(); }
       if (e.target.id === 'bk-read') { var c = cols[0]; if (c) { var a = place || firstLine(c); if (a) SW.openAt(c.vid, a); else SW.setTab('read'); } }
     });
-    tb.addEventListener('input', function (e) { if (e.target.id === 'bk-stage') { stop(); st.stage = +e.target.value; apply(true); } });
+    tb.addEventListener('input', function (e) {
+      if (e.target.id === 'bk-stage') { stop(); st.stage = +e.target.value; apply(true); }
+      if (e.target.id === 'bk-imgw') { st.imgW = imgw(e.target.value) || IMGW0; SW.store.set('book.imgw', st.imgW); showImages(); writeQ(); }
+    });
     tb.addEventListener('change', function (e) {
       if (e.target.id === 'bk-all') { st.all = e.target.checked; stop(); apply(false); }
       if (e.target.id === 'bk-hands') { st.hands = e.target.checked; apply(false); }
@@ -380,40 +416,61 @@
   }
 
   // ---------- scrolling: the place, and two texts held at the same page break ----------
+  // Each column's page breaks are measured once (their tops, in the column) and looked up as it
+  // scrolls; they are measured again only after something changes the page's height: a stage, the
+  // images' size, the window's width. A scroll this view makes in the other column is not followed.
+  function measure(col) {
+    col.tops = col.pages.map(function (pg) { return pg.el ? pg.el.offsetTop : 0; });
+    col.byFacs = {}; col.pages.forEach(function (pg, k) { if (pg.facs && col.byFacs[pg.facs] == null) col.byFacs[pg.facs] = k; });
+    col.stale = false;
+  }
+  // the page at a height in the column: the last whose break is at or above it
+  function pageAt(col, y) {
+    if (col.stale || !col.tops) measure(col);
+    var lo = 0, hi = col.tops.length - 1, k = -1;
+    while (lo <= hi) { var mid = (lo + hi) >> 1; if (col.tops[mid] <= y) { k = mid; lo = mid + 1; } else hi = mid - 1; }
+    return k;
+  }
   function topSpan(col) {
-    // the line being read: the first at or below the height goTo brings a line to
-    var r0 = col.el.getBoundingClientRect().top + READ - 8, best = null;
-    var es = col.el.querySelectorAll('.bk-s[data-n]');
-    for (var i = 0; i < es.length; i++) { var r = es[i].getBoundingClientRect(); if (r.height && r.top >= r0) { best = es[i]; break; } }
-    return best;
+    // the line being read: the first at or below the height goTo brings a line to, looked for in the
+    // page there and the one after it
+    var y = col.el.scrollTop + READ - 8, k = Math.max(0, pageAt(col, y)), r0 = col.el.getBoundingClientRect().top + READ - 8;
+    var where = [col.pages[k], col.pages[k + 1]].filter(Boolean).map(function (pg) { return pg.sheet; }).filter(Boolean);
+    if (!where.length) where = [col.el];
+    for (var w = 0; w < where.length; w++) {
+      var es = where[w].querySelectorAll('.bk-s[data-n]');
+      for (var i = 0; i < es.length; i++) { var r = es[i].getBoundingClientRect(); if (r.height && r.top >= r0) return es[i]; }
+    }
+    return null;
   }
-  function pbAt(col) {
-    var r0 = col.el.getBoundingClientRect().top + 8, pbs = col.el.querySelectorAll('.bk-pb'), cur = null, next = null;
-    for (var i = 0; i < pbs.length; i++) { if (pbs[i].getBoundingClientRect().top <= r0) cur = pbs[i]; else { next = pbs[i]; break; } }
-    return { cur: cur, next: next };
+  function follow(col, other) {
+    var y = col.el.scrollTop + 8, k = pageAt(col, y);
+    if (k < 0) return;
+    var m = other.stale || !other.tops ? (measure(other), other.byFacs[col.pages[k].facs]) : other.byFacs[col.pages[k].facs];
+    if (m == null) return;
+    // as far into the matching page as this one is into its own
+    var top = col.tops[k], span = (k + 1 < col.tops.length ? col.tops[k + 1] : col.el.scrollHeight) - top;
+    var f = span > 0 ? Math.max(0, Math.min(1, (col.el.scrollTop - top) / span)) : 0;
+    var mtop = other.tops[m], mspan = (m + 1 < other.tops.length ? other.tops[m + 1] : other.el.scrollHeight) - mtop;
+    var to = Math.round(mtop + f * mspan);
+    if (Math.abs(other.el.scrollTop - to) < 2) return;
+    other.ignore = true;
+    other.el.scrollTop = to;
   }
-  var syncing = false, placeTimer = null, READ = 60;   // READ: how far below the column's top a line is brought
+  var placeTimer = null, READ = 60;   // READ: how far below the column's top a line is brought
+  window.addEventListener('resize', function () { cols.forEach(function (c) { c.stale = true; }); });
   function wireScroll() {
     cols.forEach(function (col, i) {
+      measure(col);
       // the reader's own scrolling (wheel, touch, keys, the scroll bar), not the page settling
       ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) { col.el.addEventListener(ev, function () { col.moved = true; }, { passive: true }); });
       col.el.onscroll = function () {
+        if (col.ignore) { col.ignore = false; return; }   // the other column moved this one
         clearTimeout(placeTimer);
         // the place follows the reader's scrolling, not a jump Book made itself
         placeTimer = setTimeout(function () { if (i === 0 && col.moved) { var e = topSpan(col); place = e ? { p: +e.dataset.p, n0: +e.dataset.n, n1: +e.dataset.n } : null; writeQ(); } }, 250);
-        if (syncing || cols.length < 2) return;
-        var other = cols[1 - i], at0 = pbAt(col);
-        if (!at0.cur || !at0.cur.dataset.facs) return;
-        var mate = other.el.querySelector('.bk-pb[data-facs="' + (window.CSS && CSS.escape ? CSS.escape(at0.cur.dataset.facs) : at0.cur.dataset.facs) + '"]');
-        if (!mate) return;
-        // as far into the matching page as this one is into its own
-        var top = at0.cur.offsetTop, span = (at0.next ? at0.next.offsetTop : col.el.scrollHeight) - top;
-        var f = span > 0 ? Math.max(0, Math.min(1, (col.el.scrollTop - top) / span)) : 0;
-        var mates = other.el.querySelectorAll('.bk-pb'), k = [].indexOf.call(mates, mate), mnext = mates[k + 1];
-        var mspan = (mnext ? mnext.offsetTop : other.el.scrollHeight) - mate.offsetTop;
-        syncing = true;
-        other.el.scrollTop = mate.offsetTop + f * mspan;
-        requestAnimationFrame(function () { syncing = false; });
+        if (cols.length < 2 || col.frame) return;
+        col.frame = requestAnimationFrame(function () { col.frame = 0; follow(col, cols[1 - i]); });
       };
     });
   }

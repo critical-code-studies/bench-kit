@@ -1,5 +1,12 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Book, after 0.72.0 (reported by David): the toolbar's buttons did nothing (the texts, ◀ ▶ ▶▶ for the stages, ≡ Read here). The view carried the image size as data-img, so every click inside it was read as a click on an image-size button; the toolbar now finds its controls within itself, by their own ids. The phone-width rules of book.css, broken by the same release (a block of rules put inside them), are whole again.
+- Book: **Images** is a slider for the pages' images' size and an **Off** that folds them away, the ▣ at each page break opening one; On brings them back at the size the slider had (asked for by David, in place of Large, Small and Off). Kept for the browser; in the address as `img=off` or `img=` a width.
+- Book: **Compare with** in place of Beside (asked for by David; Versions ▸ Compare stays the line-by-line comparison). Holding two texts at the same page is lighter: each column's page breaks are measured once, again after a stage, the images' size or the window's width changes, and looked up as it scrolls; a column follows the other once a frame, and does not answer the scroll it was given (the manuscript beside the reading text was slow to scroll; reported by David).
+- Book, a page's image enlarged: ◀ ▶ buttons either side of the image for the page before and after, large enough to tap, each disabled at the first or last page, and an ✕ to close; the arrow keys and Esc still work, a click on a button no longer closes the view, and the text behind follows to the page shown. The hint names the buttons (it named only the keys; reported by David).
+
 ## 0.72.1 (2026-10-21)
 
 - tools/release.js: `next` refuses pages whose `?v=` is not a version number (a stamp left by testing, such as `c1`, gave the next release the version "c2"; reported by the Melville session); an explicit version (`release.js 0.1.12 "…"`) releases from such pages and must itself be one. The README's Version line is set to the release whatever it said before, so the summary agrees with what was written.
