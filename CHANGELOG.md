@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.74.3 (2026-10-21)
 
 - Versions ▾: Collate's line names By function only where a version held is Lisp, by the test Collate itself uses (`SW.collateLisp`, kit/compare.js). It named it wherever the kit's Lisp reader was loaded, as on the ELIZA bench, which loads it for Implementations though none of its versions is Lisp (reported by the ELIZA session).
 
