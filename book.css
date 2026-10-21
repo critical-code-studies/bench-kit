@@ -1,0 +1,97 @@
+/* book.css - Book (kit/book.js): a version's text set as a page, one text or two facing, with
+   the stages of revision. On the bench's colour tokens; the bench's own serif where it has one.
+   Part of bench-kit (github.com/critical-code-studies/bench-kit). */
+#view-book .bk-bar { flex-wrap: wrap; gap: 6px 8px; }
+#view-book .bk-texts { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+#view-book .bk-stages { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; flex-basis: 100%; }
+#view-book .bk-stages input[type="range"] { width: min(340px, 46vw); accent-color: var(--amber); }
+#view-book .bk-stage-l { font-size: 13px; color: var(--text-dim); min-width: 14em; }
+
+#view-book .bk-cols { display: grid; grid-template-columns: minmax(0, 1fr); }
+#view-book .bk-cols.bk-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+#view-book .bk-col { position: relative; height: calc(100vh - var(--bk-top, 150px) - 4px); overflow: auto; padding: 20px 20px 120px; scroll-behavior: auto; }
+#view-book .bk-two .bk-col + .bk-col { border-left: 1px solid var(--line); }
+#view-book .bk-colhead { margin: 0 0 8px clamp(8px, 4vw, 56px); font: 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
+#view-book .bk-part { margin: 36px 0 10px clamp(8px, 4vw, 56px); font: 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
+
+.bk-page { max-width: none; margin: 0; font: 18px/1.65 var(--serif, Georgia, "Iowan Old Style", serif); color: var(--text); }
+/* a sheet to a page: the text on the left with a margin, the page's image on the right, held in
+   view while its text is read */
+.bk-sheet { display: grid; grid-template-columns: minmax(0, 38em) minmax(180px, 320px); gap: 0 40px; justify-content: start; padding-left: clamp(8px, 4vw, 56px); }
+.bk-fig { margin: 0; position: sticky; top: 12px; align-self: start; padding-top: 1.2em; }
+.bk-fig-b { display: block; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); cursor: zoom-in; width: 100%; }
+.bk-fig-b:hover { border-color: var(--amber); }
+/* a box of fixed shape, so the text does not move as the images load */
+.bk-fig-b img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: contain; }
+.bk-fig figcaption { font: 11px var(--mono); color: var(--text-faint); margin-top: 4px; }
+.bk-two .bk-sheet { grid-template-columns: minmax(0, 1fr) minmax(90px, 150px); gap: 0 20px; padding-left: 8px; }
+.bk-page p, .bk-page .bk-lg { margin: 0 0 0.9em; text-align: justify; hyphens: auto; }
+.bk-page h3.bk-head { font: 600 15px/1.5 var(--serif, Georgia, serif); letter-spacing: 0.14em; text-transform: uppercase; text-align: center; margin: 1.6em 0 1em; }
+.bk-page p.bk-l { margin: 0 0 0 2em; text-align: left; }
+.bk-page .bk-lg { margin-left: 2em; text-align: left; }
+.bk-page p.bk-margin { font-size: 14px; color: var(--text-dim); border-left: 2px solid var(--line); padding-left: 10px; text-align: left; }
+.bk-page p.bk-margin::before { content: attr(data-where); display: block; font: 10px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+.bk-page .bk-r-center { text-align: center; }
+.bk-page hr.bk-divider { border: 0; border-top: 1px solid var(--line); width: 30%; margin: 1.6em auto; }
+
+/* a page break: the page's number, and a small image of it where the document gives one */
+.bk-pb { display: flex; align-items: center; gap: 10px; margin: 1.2em 0 0.8em; color: var(--text-faint); font: 11px var(--mono); }
+.bk-pb::after { content: ""; flex: 1; border-top: 1px solid var(--line-soft); }
+
+/* a page larger, over the view, with its details; a click closes it */
+dialog.bk-modal { width: min(1240px, 96vw); max-width: 96vw; max-height: 94vh; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); cursor: zoom-out; }
+dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
+.bk-modal-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); max-height: 94vh; }
+.bk-modal-in img { display: block; width: 100%; height: min(90vh, 1600px); object-fit: contain; background: var(--surface-2); }
+.bk-modal-meta { padding: 16px 18px; overflow: auto; font-size: 13px; }
+.bk-modal-meta table { border-collapse: collapse; }
+.bk-modal-meta td { padding: 4px 8px 4px 0; vertical-align: top; border-top: 1px solid var(--line-soft); }
+.bk-modal-meta td:first-child { color: var(--text-dim); white-space: nowrap; }
+
+/* the marks */
+.bk-italic { font-style: italic; }
+.bk-bold { font-weight: 600; }
+.bk-smallcaps, .bk-small-caps { font-variant: small-caps; }
+.bk-sup, .bk-superscript { vertical-align: super; font-size: 0.75em; }
+.bk-underline { text-decoration: underline; }
+.bk-add { color: var(--amber); }
+.bk-hands .bk-add { color: var(--hand, var(--amber)); }
+.bk-stet { text-decoration: underline dotted; text-underline-offset: 3px; }
+.bk-unc { text-decoration: underline wavy var(--text-faint); text-underline-offset: 3px; }
+.bk-reg, .bk-cor { border-bottom: 1px dotted var(--text-faint); cursor: help; }
+.bk-res::before, .bk-supp::before { content: "["; color: var(--text-faint); }
+.bk-res::after, .bk-supp::after { content: "]"; color: var(--text-faint); }
+.bk-gap::before { content: "[…]"; color: var(--text-faint); }
+.bk-ref { border-bottom: 1px dotted var(--amber); cursor: pointer; }
+.bk-meta { font-size: 0.85em; color: var(--text-faint); font-style: italic; }
+.bk-all .bk-add { vertical-align: 0.45em; font-size: 0.78em; }
+.bk-all .bk-del { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 1.5px; color: var(--text-dim); }
+.bk-all.bk-hands .bk-del { text-decoration-color: var(--hand, var(--red)); }
+
+/* the revisions coming and going as the stage moves */
+.bk-s { transition: opacity 0.45s ease, font-size 0.45s ease, background-color 1.2s ease; border-radius: 2px; }
+.bk-s.bk-off { opacity: 0; font-size: 0; }
+.bk-s.bk-gone { display: none; }
+.bk-s.bk-new { animation: bk-arrive 1.4s ease; }
+.bk-s.bk-flash { animation: bk-arrive 1.6s ease; }
+@keyframes bk-arrive { from { background-color: var(--hl); } to { background-color: transparent; } }
+
+/* the group's annotations on their lines */
+.bk-noted { background-image: linear-gradient(transparent 88%, color-mix(in srgb, var(--amber) 55%, transparent) 88%); }
+.bk-nm { font: 11px var(--sans, system-ui); border: 1px solid var(--line); background: var(--surface-2); color: var(--text-dim); border-radius: 9px; padding: 0 5px; margin-right: 3px; vertical-align: 0.15em; cursor: pointer; }
+.bk-nm:hover { border-color: var(--amber); color: var(--text); }
+.bk-selpop { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.bk-selpop .selref { margin-right: 4px; }
+.bk-notepop { max-width: 32em; font: 14px/1.5 var(--serif, Georgia, serif); }
+
+@media (max-width: 760px) {
+  .bk-sheet, .bk-two .bk-sheet { grid-template-columns: minmax(0, 1fr) 96px; gap: 0 12px; padding-left: 4px; }
+  .bk-modal-in { grid-template-columns: minmax(0, 1fr); }
+  .bk-modal-in img { max-height: 70vh; }
+  #view-book .bk-cols.bk-two { grid-template-columns: minmax(0, 1fr); }
+  #view-book .bk-two .bk-col { height: auto; max-height: 70vh; }
+  #view-book .bk-two .bk-col + .bk-col { border-left: 0; border-top: 1px solid var(--line); }
+  .bk-page { font-size: 16px; }
+  .bk-page p { text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash { animation: none; } }

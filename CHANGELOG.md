@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book** (new `book.js`, `book.css`), for a bench whose reader gives each version a document beside its lines (`b.doc`), built with the Melville bench (from its prototype, js/book.js) and abstract enough for any bench: the bench gives its stages, states, hands and words in `SW.BENCH.doc`. A version's text set as a page, in sheets, a page to each, with the page's image on the right, larger in a box with its lines and reference on a click (asked for by David). Moving between versions at its centre (David's instruction): the texts in a row; a version's states as one text, with a slider through its stages of revision, the revisions fading out and in as it moves, ▶▶ to run through them, and All revisions; a second text Beside the first, held at the same page as either is scrolled. A selection is the version's lines (Annotate, Copy citation, Copy link, Read), the group's annotations are marked on their lines, a place from one of the states is found in their source, and the state rides in the address (`stage`, `all`, `bb`, `l`). Read's selection bar has 📖 Book where the version has a document. README ▸ Book.
+- Edition: a version with a document is typeset from it, a sheet to each of its pages, with its headings, verse, italics and its own notes, and the group's annotations as footnotes; a diplomatic version (`doc.diplomatic`, or the source of `doc.states`) has its additions raised and its deletions struck. The Word form has the same paragraphs.
+- Tests: `tests/book.test.js`, 16 checks on an invented document, in run.js's list.
+
 ## 0.70.0 (2026-10-21)
 
 - Top bar: `SW.BENCH.picker: false` leaves out the version picker with the version's reference and language, for a bench whose versions are chosen from Read ▾ (asked for by David, for the Melville bench). The frame no longer needs `#pick-a` or `#vref` on the page; a tour stop that outlines a missing element is passed over as before.

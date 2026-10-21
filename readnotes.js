@@ -375,7 +375,7 @@
         ['✎ Annotate', annotateSel], ['❝ Copy citation', copyCite], ['🔗 Copy link', copyLink],
         ['⤓ Word', function () { exportSel('docx'); }], ['⤓ Markdown', function () { exportSel('md'); }],
         ['▣ Figure', figureSel], ['★ Finding', findingSel], ['＋ My notes', function () { listingDoc(build, SW.state.sel).then(function (d) { d.title = SW.cite(build, SW.state.sel.p, SW.state.sel.n0, SW.state.sel.n1); var s = SW.state.sel; SW.tray.addDoc(d, { anchor: { p: s.p, n0: s.n0, n1: s.n1, src: build.parts[s.p].src }, quote: quote() }); }); }]
-      ].concat(X.selActs ? X.selActs() : [], [['✕', function () { SW.state.sel = null; paintSel(); SW.writeQuery(); }]]);   // the bench's own (Breakpoint, Run to here) before ✕
+      ].concat(build.doc && build.doc.some(Boolean) && SW.views.book ? [['📖 Book', function () { SW.setTab('book'); }]] : [], X.selActs ? X.selActs() : [], [['✕', function () { SW.state.sel = null; paintSel(); SW.writeQuery(); }]]);   // the bench's own (Breakpoint, Run to here) before ✕
       var s0 = SW.state.sel;
       if (s0) bar.appendChild(SW.el('span', { class: 'selref' }, SW.refTag(build.v.id, s0.p, s0.n0, s0.n1, build.parts.length)));
       acts.forEach(function (a) { bar.appendChild(SW.el('button', { class: 'btn', onclick: a[1] }, a[0])); });
