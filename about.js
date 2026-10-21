@@ -1,10 +1,12 @@
 /*
- * about.js - the About box: the bench's name, author, version and release date (the
+ * about.js - the About box: the bench's project and its leads, version and release date (the
  * bench-date meta in index.html), what it is for, how it is built (with this kit), what is
  * inside, its sources, its catalogue of versions, its code and how to cite it, with the
  * welcome tour. The bench's own rows come from SW.BENCH.about:
- *   { icon (HTML), author, citeAuthor, project (HTML, the first row: the project and its leads), purpose, techMore,
- *     inside, sources, code,
+ *   { icon (HTML), project (HTML, the first row: the project and its leads),
+ *     cite: { authors (the leads as cited: 'Berry, D. M. and Jonik, M.'), title },
+ *     author and citeAuthor (the citation's author where cite.authors is not given),
+ *     purpose, techMore, inside, sources, code,
  *     catalogue: { skip: [version ids not counted], held: 'held as source' } }
  * SW.about.open() shows it.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -26,9 +28,10 @@
     return vs.length + ' versions: ' + vs.filter(function (v) { return v.build; }).length + ' ' + (c.held || 'held as source') + ', ' +
       vs.filter(function (v) { return v.status === 'lost'; }).length + ' lost.';
   }
+  // the bench cited as the project's work: its leads and title from about.cite, where the bench gives them
   function citation(B, A) {
-    var date = dateOf(), url = SW.BASE_URI || location.href.split('?')[0];
-    return (A.citeAuthor || A.author || '') + ' (' + (date ? date.slice(0, 4) : new Date().getFullYear()) + ') ' + (B.title || 'Research Bench') +
+    var date = dateOf(), url = SW.BASE_URI || location.href.split('?')[0], C = A.cite || {};
+    return (C.authors || A.citeAuthor || A.author || '') + ' (' + (date ? date.slice(0, 4) : new Date().getFullYear()) + ') ' + (C.title || B.title || 'Research Bench') +
       ' (version ' + SW.VERSION + '). Available at: ' + url + ' (Accessed: ' + SW.fmtDate(SW.today()) + ').';
   }
   function row(label, html, attrs) { return html ? '<tr' + (attrs || '') + '><td>' + SW.esc(label) + '</td><td>' + html + '</td></tr>' : ''; }
@@ -51,11 +54,11 @@
         row('Sources', A.sources || '') +
         row('Catalogue', SW.esc(catalogue(A))) +
         row('Code', code) +
-        row('Author', SW.esc(A.author || '')) +
         '<tr><td>Cite as</td><td class="about-cite">' + SW.esc(cite) + '</td></tr>' +
       '</table>' +
       '<div class="row">' + (SW.tours ? '<button type="button" class="btn ghost" data-about="tour">Take the welcome tour</button>' : '') +
-        '<button type="button" class="btn ghost" data-about="cite">Copy citation</button><button value="close" class="btn">Close</button></div></form>';
+        '<button type="button" class="btn ghost" data-about="cite">Copy citation</button><button value="close" class="btn">Close</button></div>' +
+      '<a class="about-kitmark" href="' + SW.KIT.url + '" target="_blank" rel="noopener" title="bench-kit ' + SW.esc(SW.KIT.version) + ', the modules this bench is built on">A Bench Kit project</a></form>';
     document.body.appendChild(d);
     d.addEventListener('click', function (e) {
       var b = e.target.closest('[data-about]'); if (!b) return;

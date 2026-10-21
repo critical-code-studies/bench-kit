@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- About box: no **Author** row (asked for by David); the kit's author is given on its repository and README, and the bench's project and leads in Project. `SW.BENCH.about.author` is still used for the citation.
+- About box, Cite as: the bench is cited as the project's work, from `SW.BENCH.about.cite: { authors, title }` (the leads as cited, and the title), where the bench gives it (asked for by David); otherwise as before, from `citeAuthor` or `author` and the bench's title.
+- About box: at its foot, in small capitals, **A Bench Kit project**, linking to the kit's repository (asked for by David).
+
 ## 0.68.1 (2026-10-21)
 
 - About box: **Project** (the project the bench serves and its leads, `SW.BENCH.about.project`) is the first row; **Author** (the bench's author) moves down, after Code (asked for by David). A bench without a Project row starts at Version.

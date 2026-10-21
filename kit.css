@@ -55,6 +55,8 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .about-meta td { padding: 4px 8px; border-top: 1px solid var(--line-soft); vertical-align: top; line-height: 1.4; }
 .about-meta td:first-child { color: var(--text-dim); white-space: nowrap; width: 7em; }
 .about-cite { font-family: var(--serif, Georgia, serif); }
+.about-kitmark { display: block; margin-top: 10px; text-align: center; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); text-decoration: none; }
+.about-kitmark:hover { color: var(--accent); text-decoration: underline; }
 
 /* the Functional overview (functional.js) */
 .fo-chip { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
