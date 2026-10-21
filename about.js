@@ -3,7 +3,7 @@
  * bench-date meta in index.html), what it is for, how it is built (with this kit), what is
  * inside, its sources, its catalogue of versions, its code and how to cite it, with the
  * welcome tour. The bench's own rows come from SW.BENCH.about:
- *   { icon (HTML), author, citeAuthor, project (HTML, a row after Author), purpose, techMore,
+ *   { icon (HTML), author, citeAuthor, project (HTML, the first row: the project and its leads), purpose, techMore,
  *     inside, sources, code,
  *     catalogue: { skip: [version ids not counted], held: 'held as source' } }
  * SW.about.open() shows it.
@@ -41,7 +41,6 @@
     d.innerHTML = '<form method="dialog" class="settings about-box">' +
       '<div class="about-head">' + (A.icon || '') + '<div><h2>' + SW.esc(B.title || 'Research Bench') + '</h2><div class="hint">Version ' + SW.esc(SW.VERSION) + (date ? ', ' + SW.esc(SW.fmtDate(date)) : '') + '</div></div></div>' +
       '<table class="about-meta">' +
-        row('Author', SW.esc(A.author || '')) +
         row('Project', A.project || '') +
         row('Version', SW.esc(SW.VERSION)) +
         row('Released', date ? SW.esc(SW.fmtDate(date)) : '') +
@@ -52,6 +51,7 @@
         row('Sources', A.sources || '') +
         row('Catalogue', SW.esc(catalogue(A))) +
         row('Code', code) +
+        row('Author', SW.esc(A.author || '')) +
         '<tr><td>Cite as</td><td class="about-cite">' + SW.esc(cite) + '</td></tr>' +
       '</table>' +
       '<div class="row">' + (SW.tours ? '<button type="button" class="btn ghost" data-about="tour">Take the welcome tour</button>' : '') +

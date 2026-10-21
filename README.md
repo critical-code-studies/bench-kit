@@ -129,7 +129,7 @@ SW.BENCH = {
 
 | Setting | Read by | What it is |
 |---|---|---|
-| `about` | `about.js` | The About box's own rows: `icon` (HTML), `author`, `citeAuthor`, `project` (HTML, a row after Author), `purpose`, `techMore`, `inside`, `sources` (HTML), `code` (the repository), `catalogue: { skip: [ids], held: 'held as source' }`. |
+| `about` | `about.js` | The About box's own rows: `icon` (HTML), `author`, `citeAuthor`, `project` (HTML, the first row: the project and its leads; Author, the bench's author, comes after Code), `purpose`, `techMore`, `inside`, `sources` (HTML), `code` (the repository), `catalogue: { skip: [ids], held: 'held as source' }`. |
 | `theme` | `themes.js` | The default colour theme's `label` and `note`. |
 | `accent` | `themes.js` | `{ dark, light }`: the accent of figures exported on black and on white. |
 | `hands` | `themes.js`, `compare.js` | People named in the text: `[{ k, who, re, colour }]`. |

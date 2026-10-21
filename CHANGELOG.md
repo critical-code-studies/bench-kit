@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- About box: **Project** (the project the bench serves and its leads, `SW.BENCH.about.project`) is the first row; **Author** (the bench's author) moves down, after Code (asked for by David). A bench without a Project row starts at Version.
+
 ## 0.68.0 (2026-10-21)
 
 - Help ▾: **About the bench** is always first, at the top level, not inside The project (asked for by David). A bench's list that moves or leaves it out still has it there.
