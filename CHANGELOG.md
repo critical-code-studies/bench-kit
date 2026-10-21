@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## 0.66.3 (2026-10-21)
+
+- Menus: a submenu opens as soon as the pointer reaches its item (it waited 120 ms, or 260 ms with a neighbour's list open, which read as lag; reported by David). While the pointer is crossing other items on its way into an open list (inside the triangle from where it was to that list's near edge) the list stays and the items crossed do not open; an item the pointer stops on opens within about a third of a second. Open lists elsewhere close after 150 ms (was 320 ms) unless the pointer is heading into them.
+
 ## 0.66.2 (2026-10-19)
 
 - Implementations: an entry can name its Lisp reader in `lispDialect` (bbn, interlisp, pdp6, maclisp, cl), for a text whose language field says one thing and whose file is written in another (Cosell's 1969/72 script packaged as runnable Common Lisp).

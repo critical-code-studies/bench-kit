@@ -117,17 +117,38 @@
       if (body.hidden) subOpen(sub, e.detail === 0); else if (!hover) subClose(sub);
     });
     if (hover) {
+      // the pointer's last few positions, to tell whether it is heading into an open list
+      var pts = [];
+      el.addEventListener('mousemove', function (e) { pts.push([e.clientX, e.clientY]); if (pts.length > 4) pts.shift(); });
+      // heading into o's list: the pointer now inside the triangle from where it was to the list's near edge
+      function aiming(o) {
+        var body = o.querySelector(':scope > .menu-subbody'); if (!body || body.hidden || pts.length < 2) return false;
+        var r = body.getBoundingClientRect(), p = pts[pts.length - 1], q = pts[0];
+        if (p[0] === q[0] && p[1] === q[1]) return false;
+        var x = r.left >= p[0] ? r.left : r.right, a = [x, r.top - 24], b = [x, r.bottom + 24];
+        function side(u, v, w) { return (v[0] - u[0]) * (w[1] - u[1]) - (v[1] - u[1]) * (w[0] - u[0]); }
+        var s1 = side(q, a, p), s2 = side(a, b, p), s3 = side(b, q, p);
+        return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0);
+      }
       el.addEventListener('mouseover', function (e) {
         var sub = e.target.closest('.menu-sub'); if (!sub) return;
-        // a submenu reached: the openers crossed on the way to it do not open (the pointer's path
-        // from an item to its list runs over its neighbours)
+        // a submenu reached: the openers crossed on the way to it do not open
         timers.forEach(function (t, k) { if (k !== sub && !k.contains(sub)) clearTimeout(t); });
         if (sub.classList.contains('open')) { clearTimeout(timers.get(sub)); if (!e.target.closest('.menu-subopen')) return; }   // back in an open one: it stays
-        // a neighbour's list open: wait a little longer before switching, for a pointer on its way there
-        var openNear = SW.$$(':scope > .menu-sub.open', sub.parentNode).some(function (o) { return o !== sub; });
-        clearTimeout(timers.get(sub)); timers.set(sub, setTimeout(function () { subOpen(sub); }, openNear ? 260 : 120));
-        // the open ones not on the pointer's way close, after a moment
-        SW.$$('.menu-sub.open', el).forEach(function (o) { if (!o.contains(e.target)) { clearTimeout(timers.get(o)); timers.set(o, setTimeout(function () { if (!o.matches(':hover')) subClose(o); }, 320)); } });
+        // an opener opens at once, unless the pointer is crossing it on its way into a neighbour's open
+        // list; then it waits, and opens if the pointer has stopped there
+        var near = SW.$$(':scope > .menu-sub.open', sub.parentNode).filter(function (o) { return o !== sub; })[0], tries = 0;
+        clearTimeout(timers.get(sub));
+        (function attempt() {
+          if (!sub.querySelector(':scope > .menu-subopen').matches(':hover')) return;
+          if (near && near.classList.contains('open') && aiming(near) && tries++ < 4) { timers.set(sub, setTimeout(attempt, 90)); return; }
+          subOpen(sub);
+        })();
+        // the open ones elsewhere close, unless the pointer is heading into them
+        SW.$$('.menu-sub.open', el).forEach(function (o) {
+          if (o.contains(e.target) || o === near) return;
+          clearTimeout(timers.get(o)); timers.set(o, setTimeout(function () { if (!o.matches(':hover') && !aiming(o)) subClose(o); }, 150));
+        });
       });
     }
     el.addEventListener('keydown', function (e) {
