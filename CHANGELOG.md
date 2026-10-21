@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.74.1 (2026-10-21)
 
 - Top bar: a bench without the version picker (`picker: false`) keeps its name and version at every width down to 380 px; the rules that hid them below 1240 px and 860 px, to make room for the picker, now apply only where there is one (reported by David on the Melville bench, whose name had gone from the bar on most laptop screens). The shell marks such a bar `.no-pick`.
 
