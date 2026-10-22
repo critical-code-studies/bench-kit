@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.75.0 (2026-10-22)
 
 - Book: a page's image can come from the bench's own files, `SW.BENCH.doc.image(pb)` giving its URL, or `{ src, large }` (large for the enlarged view), in place of the IIIF service, so that a bench can serve its images itself (asked for by David, for the Melville bench's leaves). A page with neither shows none.
 
