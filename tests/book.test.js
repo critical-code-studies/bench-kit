@@ -23,6 +23,13 @@
   eq('another hand: its addition never shown, its deletion never applied', [[{ k: 'added', hand: 'Q', change: 'A' }], [{ k: 'erased', hand: 'Q', change: 'A' }]].map(function (m) { return at(3, m, ['P']); }), [false, true]);
   eq('a mark with no hand counts with the hands the slider follows', [at(3, [{ k: 'erased', change: 'A' }], ['P']), at(3, [{ k: 'added', change: 'A' }], ['P'])], [false, true]);
 
+  T.group('Book: deletions struck');
+  function sk(s, marks) { var r = K.struckAt(marks, s, AT, null); return r.on ? (r.struck ? 'struck' : 'in') : 'out'; }
+  eq('a deletion at B: in, then struck from B', [0, 1, 2, 3].map(function (s) { return sk(s, [{ k: 'erased', change: 'B' }]); }), ['in', 'in', 'struck', 'struck']);
+  eq('an addition at A deleted at C: out, in, in, struck', [0, 1, 2, 3].map(function (s) { return sk(s, [{ k: 'added', change: 'A' }, { k: 'erased', change: 'C' }]); }), ['out', 'in', 'in', 'struck']);
+  eq('deleted at A, reinstated at C: plain again at C', [1, 2, 3].map(function (s) { return sk(s, [{ k: 'reinstated', change: 'C' }, { k: 'erased', change: 'A' }]); }), ['struck', 'struck', 'in']);
+  eq('the revisions of a stage: made at that stage only', [0, 1, 2, 3].map(function (s) { return K.madeAt([{ k: 'added', change: 'B' }], s, AT, null); }), [false, false, true, false]);
+
   T.group('Book: setting the text');
   eq('a space between spans on different lines', K.join('the end', { s: 'of it', n: 4 }, 3), true);
   eq('none on the same line, after a space, or after a divided word', [K.join('the', { s: ' end', n: 3 }, 3), K.join('the ', { s: 'end', n: 4 }, 3), K.join('divi-', { s: 'ded', n: 4 }, 3)], [false, false, false]);

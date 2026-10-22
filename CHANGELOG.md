@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Book: **Strike deletions**, beside the stage slider (asked for by David). The deletions made up to the stage stay in the text, struck through in red, or in the hand's colour with hands on, each drawn through as the slider reaches it; a reinstated word is plain again at its stage; the revisions made at the stage itself are marked more strongly; additions as before. Kept for the browser, and in the address as `del=strike`. Four checks in tests/book.test.js.
+
 ## 0.75.0 (2026-10-22)
 
 - Book: a page's image can come from the bench's own files, `SW.BENCH.doc.image(pb)` giving its URL, or `{ src, large }` (large for the enlarged view), in place of the IIIF service, so that a bench can serve its images itself (asked for by David, for the Melville bench's leaves). A page with neither shows none.

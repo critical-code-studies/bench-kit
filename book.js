@@ -26,7 +26,9 @@
  *     no stage (or one in SW.BENCH.doc.unplaced) counts from the first; 0 is the text before
  *     any revision. stageHands (a list of hands' k) limits the slider to those hands' revisions;
  *     the others are shown only in All revisions, which raises the additions and strikes the
- *     deletions. The revisions come and go as the slider moves;
+ *     deletions. The revisions come and go as the slider moves; with Strike deletions the
+ *     deletions made up to the stage stay, struck through in red, and the revisions made at the
+ *     stage itself are marked more strongly;
  *   - Compare: a second text facing the first, the two held at the same page break (facs) as
  *     either is scrolled.
  * The text is set in sheets, a page to each, the page's image beside it (from the bench's own files
@@ -35,7 +37,7 @@
  * page before or after, ✕ to close.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
  * for both columns, kept for this browser and in the address as img (off, or a width).
- * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, bb (the text beside),
+ * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the text beside),
  * img and l (the place). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
  * them), so an annotation made here is the same as one made in Read; the group's annotations are
  * marked on their lines. A state of the text is annotated on the source version's lines.
@@ -70,6 +72,19 @@
     }
     return true;
   };
+  // with deletions struck rather than taken out: a span is in the text when its additions are, and
+  // struck when, at that stage, it would otherwise be taken out
+  function noDel(m) { return m.k !== 'erased' && m.k !== 'reinstated'; }
+  K.struckAt = function (marks, s, at, hands) {
+    var inText = K.shownAt(marks.filter(noDel), s, at, hands);
+    return { on: inText, struck: inText && !K.shownAt(marks, s, at, hands) };
+  };
+  // whether a revision in the span was made at stage s itself (by the hands the slider follows)
+  K.madeAt = function (marks, s, at, hands) {
+    return s > 0 && marks.some(function (m) {
+      return (m.k === 'added' || m.k === 'erased' || m.k === 'reinstated') && (!hands || !m.hand || hands.indexOf(m.hand) >= 0) && m.change && at[m.change] === s;
+    });
+  };
   // a selection from one span to another as the lines it covers: start and end are
   // { n, c0, c1, off } (off: characters into the span, or null for the span's start or end)
   K.selection = function (a, b) {
@@ -100,6 +115,8 @@
   var st = { stage: STAGES.length, all: false, hands: true, play: null, right: Q0.bb || null, first: true, own: false };
   if (Q0.stage != null && Q0.stage !== '') st.stage = Q0.stage === '0' ? 0 : (AT[Q0.stage] || STAGES.length);
   if (Q0.all === '1') st.all = true;
+  // deletions struck in red at the stage, not taken out (Strike deletions): kept for this browser, and in a link as del=strike
+  st.strike = Q0.del === 'strike' || (Q0.del == null && SW.store.get('book.del', '') === 'strike');
   // the pages' images: a width (a slider), and on or off (Off folds them away, leaving a ▣ at each
   // page break, and On brings them back at the width they had); kept for this browser, and in a link
   // that asks for it (img=off, or img=a width)
@@ -293,9 +310,18 @@
       if (!col.states) return;
       // a span going out fades and closes up, then leaves the line, so the spaces either side of
       // it close up too; one coming in returns to the line, opens, and is marked for a moment
-      var arriving = [], leaving = [];
+      var arriving = [], leaving = [], hands = D.stageHands || null, strike = st.strike && !st.all;
       col.spans.forEach(function (x) {
-        x.on = st.all ? true : K.shownAt(x.marks, st.stage, AT, D.stageHands || null);
+        var t = strike ? K.struckAt(x.marks, st.stage, AT, hands) : null;
+        x.on = st.all ? true : t ? t.on : K.shownAt(x.marks, st.stage, AT, hands);
+        // struck at this stage: a deletion newly made is drawn through as it is reached
+        var struck = !!(t && t.struck), wasStruck = x.el.classList.contains('bk-struck');
+        if (struck !== wasStruck) {
+          x.el.classList.toggle('bk-struck', struck);
+          if (struck && animate && !reduce) { x.el.classList.add('bk-strike-in'); (function (e) { setTimeout(function () { e.classList.remove('bk-strike-in'); }, 700); })(x.el); }
+        }
+        // the revisions made at this very stage, marked more strongly
+        x.el.classList.toggle('bk-now', strike && K.madeAt(x.marks, st.stage, AT, hands));
         var was = !x.el.classList.contains('bk-off');
         if (x.on === was) return;
         x.el.classList.remove('bk-new');
@@ -331,7 +357,7 @@
   function writeQ() {
     if (SW.state.tab !== 'book') return;
     // the version named is the one whose lines the place numbers: for a version's states, their source
-    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, bb: st.right, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place) });
+    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, del: st.strike && cols.some(function (c) { return c.states; }) ? 'strike' : null, bb: st.right, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place) });
   }
   function linkTo(vid, a) { return SW.permalink({ v: vid, tab: 'book', l: lineQ(a), stage: inStates(vid) ? stageQ() : null, all: inStates(vid) && st.all ? 1 : null }); }
 
@@ -350,6 +376,7 @@
         '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision">' +
         '<button class="btn ghost" id="bk-next" title="The stage after">▶</button><button class="btn ghost" id="bk-play" title="Run through the stages, one by one">' + (st.play ? '❚❚' : '▶▶') + '</button>' +
         '<span class="bk-stage-l" id="bk-stage-l"></span>' +
+        '<label class="check" title="Deletions made up to this stage struck through, in red (or in the hand’s colour), rather than taken out; the revisions of this stage marked more strongly"><input type="checkbox" id="bk-strike"' + (st.strike ? ' checked' : '') + (st.all ? ' disabled' : '') + '> strike deletions</label>' +
         '<label class="check" title="Every revision at once: additions raised, deletions struck, each with its hand and stage"><input type="checkbox" id="bk-all"' + (st.all ? ' checked' : '') + '> ' + esc((W.all || 'All revisions').toLowerCase()) + '</label>' +
         (Object.keys(HANDS).length ? '<label class="check" title="Revisions coloured by hand"><input type="checkbox" id="bk-hands"' + (st.hands ? ' checked' : '') + '> hands</label>' : '') + '</div>' : '');
     tb.addEventListener('click', function (e) {
@@ -373,7 +400,8 @@
       if (e.target.id === 'bk-imgw') { st.imgW = imgw(e.target.value) || IMGW0; SW.store.set('book.imgw', st.imgW); showImages(); writeQ(); }
     });
     tb.addEventListener('change', function (e) {
-      if (e.target.id === 'bk-all') { st.all = e.target.checked; stop(); apply(false); }
+      if (e.target.id === 'bk-all') { st.all = e.target.checked; stop(); var sk = SW.$('#bk-strike', tb); if (sk) sk.disabled = st.all; apply(false); }
+      if (e.target.id === 'bk-strike') { st.strike = e.target.checked; SW.store.set('book.del', st.strike ? 'strike' : ''); apply(true); }
       if (e.target.id === 'bk-hands') { st.hands = e.target.checked; apply(false); }
       if (e.target.id === 'bk-right') { st.right = e.target.value || null; draw(SW.state.v); }
     });

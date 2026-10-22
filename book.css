@@ -90,6 +90,13 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-all.bk-hands .bk-del { text-decoration-color: var(--hand, var(--red)); }
 
 /* the revisions coming and going as the stage moves */
+/* Strike deletions: a deletion made by the stage stays, struck through in red (the hand's colour
+   with hands on), drawn through as it is reached; this stage's own revisions marked more strongly */
+.bk-s.bk-struck { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 1.5px; color: var(--text-dim); }
+.bk-hands .bk-s.bk-struck { text-decoration-color: var(--hand, var(--red)); }
+.bk-s.bk-strike-in { animation: bk-strike 0.6s ease; }
+@keyframes bk-strike { from { text-decoration-color: transparent; color: var(--text); } }
+.bk-s.bk-now { background-color: color-mix(in srgb, var(--hl) 55%, transparent); box-shadow: 0 1px 0 var(--amber); }
 .bk-s { transition: opacity 0.45s ease, font-size 0.45s ease, background-color 1.2s ease; border-radius: 2px; }
 .bk-s.bk-off { opacity: 0; font-size: 0; }
 .bk-s.bk-gone { display: none; }
@@ -116,4 +123,4 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
   .bk-page { font-size: 16px; }
   .bk-page p { text-align: left; }
 }
-@media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash, .bk-s.bk-strike-in { animation: none; } }
