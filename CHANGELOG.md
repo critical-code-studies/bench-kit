@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Book: a page's image can come from the bench's own files, `SW.BENCH.doc.image(pb)` giving its URL, or `{ src, large }` (large for the enlarged view), in place of the IIIF service, so that a bench can serve its images itself (asked for by David, for the Melville bench's leaves). A page with neither shows none.
+
 ## 0.74.3 (2026-10-21)
 
 - Versions ▾: Collate's line names By function only where a version held is Lisp, by the test Collate itself uses (`SW.collateLisp`, kit/compare.js). It named it wherever the kit's Lisp reader was loaded, as on the ELIZA bench, which loads it for Implementations though none of its versions is Lisp (reported by the ELIZA session).

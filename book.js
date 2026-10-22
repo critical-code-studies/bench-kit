@@ -29,7 +29,8 @@
  *     deletions. The revisions come and go as the slider moves;
  *   - Compare: a second text facing the first, the two held at the same page break (facs) as
  *     either is scrolled.
- * The text is set in sheets, a page to each, the page's image (IIIF) beside it; a click opens it
+ * The text is set in sheets, a page to each, the page's image beside it (from the bench's own files
+ * where SW.BENCH.doc.image gives one, else the page's IIIF service); a click opens it
  * larger, with its lines, its reference and SW.BENCH.doc.imageCredit (HTML), ◀ ▶ (or ← →) for the
  * page before or after, ✕ to close.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
@@ -153,6 +154,12 @@
     doc.blocks.forEach(function (bl) { if (bl.t === 'note') out[bl.id] = bl.spans.map(function (s) { return s.s; }).join('').trim(); });
     return out;
   }
+  // a page's image from the bench's own files: SW.BENCH.doc.image(pb) gives a URL (the image beside the
+  // text), or { src, large } (large for the enlarged view), or nothing to use the page's IIIF service
+  function ownImage(bl) {
+    var x = D.image ? D.image(bl) : null;
+    return !x ? null : typeof x === 'string' ? { src: x } : x.src ? x : null;
+  }
   // a IIIF image: the service's whole image, or one fitted to a width (w) or a box (w by h)
   function iiifURL(x, w, h) { return x.id + '/full/' + (w && h ? '!' + w + ',' + h : w ? w + ',' : x.v === 2 ? 'full' : 'max') + '/0/default.jpg'; }
   // a page break: a rule with the page's name in the text, and the page's image beside it
@@ -164,7 +171,7 @@
   function figure(pg, col) {
     var f = SW.el('figure', { class: 'bk-fig' });
     var btn = SW.el('button', { class: 'bk-fig-b', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ': click to see it larger, with its details' });
-    btn.appendChild(SW.el('img', { src: iiifURL(pg.iiif, 400), alt: PAGE + ' ' + (pg.facs || ''), loading: 'lazy' }));
+    btn.appendChild(SW.el('img', { src: pg.img ? pg.img.src : iiifURL(pg.iiif, 400), alt: PAGE + ' ' + (pg.facs || ''), loading: 'lazy' }));
     btn.onclick = function () { pageBox(col, col.pages.indexOf(pg)); };
     f.appendChild(btn);
     f.appendChild(SW.el('figcaption', {}, pg.facs || ''));
@@ -177,7 +184,7 @@
     var d = SW.el('dialog', { class: 'bk-modal' });
     document.body.appendChild(d);
     // the page before or after that has an image, or -1
-    function step(k, dir) { for (k += dir; k >= 0 && k < col.pages.length; k += dir) if (col.pages[k].iiif) return k; return -1; }
+    function step(k, dir) { for (k += dir; k >= 0 && k < col.pages.length; k += dir) if (col.pages[k].has) return k; return -1; }
     var P = PAGE.charAt(0).toUpperCase() + PAGE.slice(1);
     function fill(k) {
       i = k;
@@ -186,9 +193,10 @@
       if (b.parts.length > 1) rows.push(['Part', esc(b.parts[pg.p].src.split('/').pop())]);
       if (pg.n0 != null) rows.push(['Lines', (n1 > pg.n0 ? 'll. ' + pg.n0 + '–' + n1 : 'l. ' + pg.n0) + ' ' + SW.refTag(b.v.id, pg.p, pg.n0, Math.max(pg.n0, n1), b.parts.length)]);
       if (D.imageCredit) rows.push(['Image', D.imageCredit]);
-      rows.push(['Source', '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>']);
+      rows.push(['Source', pg.iiif ? '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>' :
+        '<a href="' + esc(pg.img.large || pg.img.src) + '" target="_blank" rel="noopener">the image ↗</a>']);
       var prev = step(k, -1), nxt = step(k, 1), many = prev >= 0 || nxt >= 0;
-      d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><img src="' + esc(iiifURL(pg.iiif, 1600, 1600)) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '">' +
+      d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><img src="' + esc(pg.img && pg.img.large ? pg.img.large : pg.iiif ? iiifURL(pg.iiif, 1600, 1600) : pg.img.src) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '">' +
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
@@ -236,17 +244,18 @@
       if (pg) pg.sheet = sh;
       text = SW.el('div', { class: 'bk-text' });
       sh.appendChild(text);
-      sh.appendChild(pg && pg.iiif ? figure(pg, col) : SW.el('div', { class: 'bk-fig bk-nofig' }));
+      sh.appendChild(pg && pg.has ? figure(pg, col) : SW.el('div', { class: 'bk-fig bk-nofig' }));
       box.appendChild(sh);
     }
     doc.blocks.forEach(function (bl) {
       if (bl.t === 'note') return;
       if (bl.t === 'pb') {
-        var pg = { facs: bl.facs, iiif: bl.iiif, p: p, n0: bl.n0 };
+        var pg = { facs: bl.facs, iiif: bl.iiif, img: ownImage(bl), p: p, n0: bl.n0 };
+        pg.has = !!(pg.img || pg.iiif);
         col.pages.push(pg);
         sheet(pg);
         text.appendChild(pg.el = pageBreak(bl, p));
-        if (pg.iiif) {   // with the images folded away, the page's image is one click away here
+        if (pg.has) {   // with the images folded away, the page's image is one click away here
           var mk = SW.el('button', { class: 'bk-pb-img', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ', larger, with its details' }, '▣');
           mk.onclick = function () { pageBox(col, col.pages.indexOf(pg)); };
           pg.el.appendChild(mk);
