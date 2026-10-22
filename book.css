@@ -99,6 +99,12 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-z.bk-zhover, .bk-fig-b .bk-z:hover { border: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 26%, transparent); }
 @keyframes bk-zpulse { from { background: color-mix(in srgb, var(--red) 45%, transparent); } }
 .bk-s.bk-zlink { background-color: color-mix(in srgb, var(--amber) 30%, transparent); }
+.bk-modal-pic .bk-zl { position: absolute; pointer-events: none; }
+.bk-modal-pic:hover .bk-z { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.bk-modal-pic .bk-z:hover { border: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 26%, transparent); }
+/* with Compare: the page of the passage under the pointer in the facing text */
+.bk-sheet.bk-leaflit .bk-fig-b { outline: 3px solid var(--amber); outline-offset: 2px; }
+.bk-sheet.bk-leaflit .bk-pb { color: var(--amber); }
 
 /* the revisions coming and going as the stage moves */
 /* Strike deletions: a deletion made by the stage stays, struck through in red (the hand's colour

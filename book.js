@@ -38,7 +38,9 @@
  * Where the document gives the boxes its revisions are written in (doc.zones, each page break's
  * size, a revision mark's zone), the text and the image are joined: a revision under the pointer
  * lights its box on the page, a box on the page goes to its text, and the slider lights the boxes
- * of the revisions made at its stage.
+ * of the revisions made at its stage; the enlarged image has the same boxes. With Compare, a
+ * passage of a text facing a version's states lights its page there, and the boxes of the revisions
+ * whose words are mostly in it.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
  * for both columns, kept for this browser and in the address as img (off, or a width).
  * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the text beside),
@@ -212,10 +214,9 @@
   // space (the page break's size: [w, h]), and a revision's marks name the box it is written in
   // (zone). A box is placed by its share of that space over the picture as it is drawn (object-fit:
   // contain), so the image's own size need not match. A zone the document does not define is passed over.
-  function zoneLayer(pg, col) {
-    if (pg.layer || !pg.figBtn || !pg.size) return pg.layer || null;
-    var L = SW.el('div', { class: 'bk-zl' }), w = pg.size[0], h = pg.size[1];
-    pg.zdiv = {};
+  // the boxes of a page as a layer: link, whether a box under the pointer lights the text written in it
+  function makeZones(pg, link) {
+    var L = SW.el('div', { class: 'bk-zl' }), w = pg.size[0], h = pg.size[1], zdiv = {};
     Object.keys(pg.zones).forEach(function (id) {
       // the corners in order (a document may give them either way round)
       var b0 = pg.zones[id].box, b = [Math.min(b0[0], b0[2]), Math.min(b0[1], b0[3]), Math.max(b0[0], b0[2]), Math.max(b0[1], b0[3])];
@@ -223,16 +224,25 @@
       d.style.left = (100 * b[0] / w) + '%'; d.style.top = (100 * b[1] / h) + '%';
       d.style.width = (100 * (b[2] - b[0]) / w) + '%'; d.style.height = (100 * (b[3] - b[1]) / h) + '%';
       // the text written in the box lit while the pointer is on it
-      d.addEventListener('pointerenter', function () { pg.zones[id].spans.forEach(function (e) { e.classList.add('bk-zlink'); }); });
-      d.addEventListener('pointerleave', function () { pg.zones[id].spans.forEach(function (e) { e.classList.remove('bk-zlink'); }); });
-      pg.zdiv[id] = d; L.appendChild(d);
+      if (link) {
+        d.addEventListener('pointerenter', function () { pg.zones[id].spans.forEach(function (e) { e.classList.add('bk-zlink'); }); });
+        d.addEventListener('pointerleave', function () { pg.zones[id].spans.forEach(function (e) { e.classList.remove('bk-zlink'); }); });
+      }
+      zdiv[id] = d; L.appendChild(d);
     });
-    pg.figBtn.appendChild(L);
-    pg.layer = L;
-    return L;
+    return { L: L, zdiv: zdiv };
   }
-  function fitZones(pg) {
-    var img = pg.figImg, L = pg.layer;
+  function zoneLayer(pg) {
+    if (pg.layer || !pg.figBtn || !pg.size) return pg.layer || null;
+    var Z = makeZones(pg, true);
+    pg.zdiv = Z.zdiv;
+    pg.figBtn.appendChild(Z.L);
+    pg.layer = Z.L;
+    return Z.L;
+  }
+  function fitZones(pg) { fitLayer(pg.figImg, pg.layer); }
+  // a layer laid over the picture as it is drawn in its image (object-fit: contain)
+  function fitLayer(img, L) {
     if (!img || !L || !img.naturalWidth || !img.clientWidth) return;
     var W = img.clientWidth, H = img.clientHeight, s = Math.min(W / img.naturalWidth, H / img.naturalHeight), cw = img.naturalWidth * s, ch = img.naturalHeight * s;
     L.style.left = (img.offsetLeft + (W - cw) / 2) + 'px'; L.style.top = (img.offsetTop + (H - ch) / 2) + 'px';
@@ -256,16 +266,41 @@
     marks.forEach(function (e) { e.classList.remove('bk-flash'); void e.offsetWidth; e.classList.add('bk-flash'); setTimeout(function () { e.classList.remove('bk-flash'); }, 1600); });
     if (!shown.length) SW.toast('The text written there is not in the text at this stage: its passage is marked.', 4000);
   }
-  // a revision in the text: its box lit on the page beside it while the pointer is on it
+  // a revision in the text: its box lit on the page beside it while the pointer is on it; and, with
+  // Compare, a passage of the text facing a version's states lights its page there
   view.addEventListener('pointerover', function (e) {
-    var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0 || !s0._zones) return;
-    lightZones(s0._pg, s0._zones, 'bk-zhover', true);
+    var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0) return;
+    if (s0._zones) lightZones(s0._pg, s0._zones, 'bk-zhover', true);
+    facing(s0, true);
   });
   view.addEventListener('pointerout', function (e) {
-    var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0 || !s0._zones) return;
-    lightZones(s0._pg, s0._zones, 'bk-zhover', false);
+    var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0) return;
+    if (s0._zones) lightZones(s0._pg, s0._zones, 'bk-zhover', false);
+    facing(s0, false);
   });
-  window.addEventListener('resize', function () { cols.forEach(function (c) { c.pages.forEach(function (pg) { if (pg.layer) fitZones(pg); }); }); });
+  function words(t) { return String(t).toLowerCase().match(/[a-z\u00c0-\u024f']{3,}/g) || []; }
+  function facing(s0, on) {
+    if (cols.length < 2 || !s0._leaf || !s0._leaf.facs) return;
+    var here = cols.filter(function (c) { return c.el.contains(s0); })[0], other = here && cols[1 - cols.indexOf(here)];
+    if (!here || here.states || !other || !other.states) return;
+    if (other.stale || !other.byFacs) measure(other);
+    var pg = other.pages[other.byFacs[s0._leaf.facs]]; if (!pg) return;
+    if (pg.sheet) pg.sheet.classList.toggle('bk-leaflit', on);
+    if (!on) { if (pg.litFrom) lightZones(pg, pg.litFrom, 'bk-zhover', false); pg.litFrom = null; return; }
+    // the revisions on that page whose words are mostly in this passage (the words, not their places,
+    // so a close match only: where none is close, the page alone is lit)
+    var have = {}; words(s0.textContent).forEach(function (w) { have[w] = 1; });
+    pg.litFrom = Object.keys(pg.zones).filter(function (id) {
+      var ws = words(pg.zones[id].spans.map(function (e) { return e.textContent; }).join(' '));
+      var hit = ws.filter(function (w) { return have[w]; }).length;
+      return ws.length && hit && hit / ws.length >= 0.6;
+    });
+    if (pg.litFrom.length) lightZones(pg, pg.litFrom, 'bk-zhover', true);
+  }
+  window.addEventListener('resize', function () {
+    cols.forEach(function (c) { c.pages.forEach(function (pg) { if (pg.layer) fitZones(pg); }); });
+    var m = SW.$('dialog.bk-modal[open] .bk-modal-pic'); if (m) fitLayer(m.querySelector('img'), m.querySelector('.bk-zl'));
+  });
 
   // the page larger, in a box over the view, with what is known of it: ◀ ▶ (or the arrow keys) for
   // the page before or after, ✕, Esc or a click elsewhere to close
@@ -290,7 +325,15 @@
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
-        '<p class="hint">' + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click elsewhere: close.</p></div></div>';
+        '<p class="hint">' + (pg.zoneN ? 'A box on the image: the text written there. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click elsewhere: close.</p></div></div>';
+      // the revisions' boxes over the large image, as beside the text: faint with the pointer on it,
+      // the stage's lit in red, a click on one to the text written there
+      if (pg.zoneN && pg.size) {
+        var pic = d.querySelector('.bk-modal-pic'), big = pic.querySelector('img'), Z = makeZones(pg, false), sNow = st.all ? 0 : st.stage;
+        pic.appendChild(Z.L);
+        if (sNow > 0) Object.keys(pg.zones).forEach(function (id) { if (pg.zones[id].at[sNow]) Z.zdiv[id].classList.add('bk-zstage'); });
+        if (big.complete) fitLayer(big, Z.L); else big.addEventListener('load', function () { fitLayer(big, Z.L); });
+      }
       // the text beside follows, so the page closed on is the one in view
       if (pg.el) col.el.scrollTop = Math.max(0, pg.el.offsetTop - 20);
     }
@@ -298,6 +341,8 @@
     d.addEventListener('click', function (e) {
       var nav = e.target.closest('.bk-nav');
       if (nav) { e.stopPropagation(); if (!nav.disabled) go(+nav.dataset.to); return; }
+      var zb = e.target.closest('.bk-z');
+      if (zb) { e.stopPropagation(); var at = col.pages[i]; d.close(); toText(col, at, zb.dataset.z); return; }
       if (e.target.closest('a, .swref')) return;
       d.close();
     });
@@ -364,6 +409,7 @@
         if (K.join(prev, sp, prevN)) el.appendChild(document.createTextNode(' '));
         var e = spanEl(sp, p, notes);
         el.appendChild(e);
+        e._leaf = cur;
         // the boxes its revisions are written in, on the page it is on
         if (ZONES && cur && cur.size) sp.marks.forEach(function (m) {
           if (!m.zone || !ZONES[m.zone] || (m.k !== 'added' && m.k !== 'erased' && m.k !== 'reinstated')) return;
