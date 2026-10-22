@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.76.0 (2026-10-22)
 
 - Book: **Strike deletions**, beside the stage slider (asked for by David). The deletions made up to the stage stay in the text, struck through in red, or in the hand's colour with hands on, each drawn through as the slider reaches it; a reinstated word is plain again at its stage; the revisions made at the stage itself are marked more strongly; additions as before. Kept for the browser, and in the address as `del=strike`. Four checks in tests/book.test.js.
 
