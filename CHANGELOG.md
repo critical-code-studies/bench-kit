@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.78.0 (2026-10-22)
 
 - Book (asked for by David): **the enlarged page has the revisions' boxes** as beside the text, faint with the pointer on the image, the stage's lit in red, a click on one closing the view at the text written there; laid over the picture as drawn, through ◀ ▶ and resizing. **With Compare**, a passage of a text facing a version's states lights its page in the other column, and the boxes of the revisions whose words are mostly (three fifths or more) in that passage; where none matches so closely, the page alone (on the Melville bench, hovering "Scotch Highland" in the reading text lights leaf img_11 and the box of "Highland").
 
