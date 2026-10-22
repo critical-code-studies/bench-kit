@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.77.0 (2026-10-22)
 
 - Book: **the text and the page's image joined** (asked for by David), where the document gives the boxes its revisions are written in (`doc.zones`, each page break's `size`, a revision mark's `zone`). A revision under the pointer, or tapped, lights its box on the page beside it; the boxes show faintly while the pointer is on the image, and a click on one goes to the text written there (to its passage, with a note, where that text is taken out at the stage); the slider lights the boxes of the revisions made at its stage, so the hand is seen moving across the page. A box's corners may come either way round; a zone the document does not define is passed over. Built with the Melville bench's MEL zones (8,321 boxes).
 
