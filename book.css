@@ -89,6 +89,17 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-all .bk-del { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 1.5px; color: var(--text-dim); }
 .bk-all.bk-hands .bk-del { text-decoration-color: var(--hand, var(--red)); }
 
+/* the revisions' boxes on the page's image: faint while the pointer is on the image, lit for the
+   revision under the pointer in the text, and for the revisions made at the slider's stage */
+.bk-fig-b { position: relative; }
+.bk-zl { position: absolute; pointer-events: none; }
+.bk-z { position: absolute; box-sizing: border-box; border: 1px solid transparent; border-radius: 2px; pointer-events: auto; cursor: pointer; transition: background-color 0.3s ease, border-color 0.3s ease; }
+.bk-fig-b:hover .bk-z { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.bk-z.bk-zstage { border: 2px solid var(--red); background: color-mix(in srgb, var(--red) 16%, transparent); animation: bk-zpulse 1.2s ease; }
+.bk-z.bk-zhover, .bk-fig-b .bk-z:hover { border: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 26%, transparent); }
+@keyframes bk-zpulse { from { background: color-mix(in srgb, var(--red) 45%, transparent); } }
+.bk-s.bk-zlink { background-color: color-mix(in srgb, var(--amber) 30%, transparent); }
+
 /* the revisions coming and going as the stage moves */
 /* Strike deletions: a deletion made by the stage stays, struck through in red (the hand's colour
    with hands on), drawn through as it is reached; this stage's own revisions marked more strongly */
@@ -101,7 +112,7 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-s.bk-off { opacity: 0; font-size: 0; }
 .bk-s.bk-gone { display: none; }
 .bk-s.bk-new { animation: bk-arrive 1.4s ease; }
-.bk-s.bk-flash { animation: bk-arrive 1.6s ease; }
+.bk-s.bk-flash, .bk-page .bk-flash { animation: bk-arrive 1.6s ease; }
 @keyframes bk-arrive { from { background-color: var(--hl); } to { background-color: transparent; } }
 
 /* the group's annotations on their lines */
@@ -123,4 +134,4 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
   .bk-page { font-size: 16px; }
   .bk-page p { text-align: left; }
 }
-@media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash, .bk-s.bk-strike-in { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash, .bk-s.bk-strike-in, .bk-z.bk-zstage { animation: none; } }

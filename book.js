@@ -35,6 +35,10 @@
  * where SW.BENCH.doc.image gives one, else the page's IIIF service); a click opens it
  * larger, with its lines, its reference and SW.BENCH.doc.imageCredit (HTML), ◀ ▶ (or ← →) for the
  * page before or after, ✕ to close.
+ * Where the document gives the boxes its revisions are written in (doc.zones, each page break's
+ * size, a revision mark's zone), the text and the image are joined: a revision under the pointer
+ * lights its box on the page, a box on the page goes to its text, and the slider lights the boxes
+ * of the revisions made at its stage.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
  * for both columns, kept for this browser and in the address as img (off, or a width).
  * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the text beside),
@@ -187,13 +191,82 @@
   }
   function figure(pg, col) {
     var f = SW.el('figure', { class: 'bk-fig' });
-    var btn = SW.el('button', { class: 'bk-fig-b', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ': click to see it larger, with its details' });
-    btn.appendChild(SW.el('img', { src: pg.img ? pg.img.src : iiifURL(pg.iiif, 400), alt: PAGE + ' ' + (pg.facs || ''), loading: 'lazy' }));
-    btn.onclick = function () { pageBox(col, col.pages.indexOf(pg)); };
+    var btn = SW.el('button', { class: 'bk-fig-b', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ': click to see it larger, with its details' + (pg.zoneN ? '; a box on it goes to the text written there' : '') });
+    var img = SW.el('img', { src: pg.img ? pg.img.src : iiifURL(pg.iiif, 400), alt: PAGE + ' ' + (pg.facs || ''), loading: 'lazy' });
+    btn.appendChild(img);
+    pg.figBtn = btn; pg.figImg = img;
+    img.addEventListener('load', function () { if (pg.layer) fitZones(pg); });
+    // the revisions' boxes, drawn when the pointer comes onto the image
+    btn.addEventListener('pointerenter', function () { if (pg.zoneN) { zoneLayer(pg, col); fitZones(pg); } });
+    btn.onclick = function (e) {
+      var z = e.target.closest('.bk-z');
+      if (z) { e.preventDefault(); toText(col, pg, z.dataset.z); return; }
+      pageBox(col, col.pages.indexOf(pg));
+    };
     f.appendChild(btn);
     f.appendChild(SW.el('figcaption', {}, pg.facs || ''));
     return f;
   }
+  // ---------- the text and the page's image joined: each revision's box on the page ----------
+  // The document gives the boxes (doc.zones: { id: [ulx, uly, lrx, lry] }) in the page's own pixel
+  // space (the page break's size: [w, h]), and a revision's marks name the box it is written in
+  // (zone). A box is placed by its share of that space over the picture as it is drawn (object-fit:
+  // contain), so the image's own size need not match. A zone the document does not define is passed over.
+  function zoneLayer(pg, col) {
+    if (pg.layer || !pg.figBtn || !pg.size) return pg.layer || null;
+    var L = SW.el('div', { class: 'bk-zl' }), w = pg.size[0], h = pg.size[1];
+    pg.zdiv = {};
+    Object.keys(pg.zones).forEach(function (id) {
+      // the corners in order (a document may give them either way round)
+      var b0 = pg.zones[id].box, b = [Math.min(b0[0], b0[2]), Math.min(b0[1], b0[3]), Math.max(b0[0], b0[2]), Math.max(b0[1], b0[3])];
+      var d = SW.el('div', { class: 'bk-z', 'data-z': id, title: 'Go to the text written here' });
+      d.style.left = (100 * b[0] / w) + '%'; d.style.top = (100 * b[1] / h) + '%';
+      d.style.width = (100 * (b[2] - b[0]) / w) + '%'; d.style.height = (100 * (b[3] - b[1]) / h) + '%';
+      // the text written in the box lit while the pointer is on it
+      d.addEventListener('pointerenter', function () { pg.zones[id].spans.forEach(function (e) { e.classList.add('bk-zlink'); }); });
+      d.addEventListener('pointerleave', function () { pg.zones[id].spans.forEach(function (e) { e.classList.remove('bk-zlink'); }); });
+      pg.zdiv[id] = d; L.appendChild(d);
+    });
+    pg.figBtn.appendChild(L);
+    pg.layer = L;
+    return L;
+  }
+  function fitZones(pg) {
+    var img = pg.figImg, L = pg.layer;
+    if (!img || !L || !img.naturalWidth || !img.clientWidth) return;
+    var W = img.clientWidth, H = img.clientHeight, s = Math.min(W / img.naturalWidth, H / img.naturalHeight), cw = img.naturalWidth * s, ch = img.naturalHeight * s;
+    L.style.left = (img.offsetLeft + (W - cw) / 2) + 'px'; L.style.top = (img.offsetTop + (H - ch) / 2) + 'px';
+    L.style.width = cw + 'px'; L.style.height = ch + 'px';
+  }
+  function lightZones(pg, ids, cls, on) {
+    if (!pg || !pg.zoneN) return;
+    if (on) { zoneLayer(pg); fitZones(pg); }
+    if (!pg.zdiv) return;
+    ids.forEach(function (id) { if (pg.zdiv[id]) pg.zdiv[id].classList.toggle(cls, on); });
+  }
+  // a box on the page: to the text written in it, which is marked for a moment
+  function toText(col, pg, id) {
+    var z = pg.zones[id]; if (!z) return;
+    // its text as it stands at this stage, or, where that is taken out here, the passage it was in
+    var shown = z.spans.filter(function (e) { return !e.classList.contains('bk-gone') && !e.closest('[hidden]'); });
+    var marks = shown.length ? shown : [z.spans[0] && z.spans[0].closest('p, h3, .bk-lg')].filter(function (e) { return e && !e.hidden; });
+    if (!marks.length) return;
+    col.moved = false;
+    col.el.scrollTop = Math.max(0, marks[0].offsetTop - READ);
+    marks.forEach(function (e) { e.classList.remove('bk-flash'); void e.offsetWidth; e.classList.add('bk-flash'); setTimeout(function () { e.classList.remove('bk-flash'); }, 1600); });
+    if (!shown.length) SW.toast('The text written there is not in the text at this stage: its passage is marked.', 4000);
+  }
+  // a revision in the text: its box lit on the page beside it while the pointer is on it
+  view.addEventListener('pointerover', function (e) {
+    var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0 || !s0._zones) return;
+    lightZones(s0._pg, s0._zones, 'bk-zhover', true);
+  });
+  view.addEventListener('pointerout', function (e) {
+    var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0 || !s0._zones) return;
+    lightZones(s0._pg, s0._zones, 'bk-zhover', false);
+  });
+  window.addEventListener('resize', function () { cols.forEach(function (c) { c.pages.forEach(function (pg) { if (pg.layer) fitZones(pg); }); }); });
+
   // the page larger, in a box over the view, with what is known of it: ◀ ▶ (or the arrow keys) for
   // the page before or after, ✕, Esc or a click elsewhere to close
   function pageBox(col, i) {
@@ -253,7 +326,7 @@
   }
   var MARGIN = /\b(top|bottom|left|right|margin|above|below|foot|head)\b/;
   function setDoc(doc, p, col) {
-    var notes = notesOf(doc), box = SW.el('div', { class: 'bk-page', 'data-p': p }), text = null;
+    var notes = notesOf(doc), box = SW.el('div', { class: 'bk-page', 'data-p': p }), text = null, cur = null, ZONES = doc.zones || null;
     Object.assign(col.notes, notes);
     // the text in sheets, one to a page, each with the page's image beside it
     function sheet(pg) {
@@ -267,7 +340,8 @@
     doc.blocks.forEach(function (bl) {
       if (bl.t === 'note') return;
       if (bl.t === 'pb') {
-        var pg = { facs: bl.facs, iiif: bl.iiif, img: ownImage(bl), p: p, n0: bl.n0 };
+        var pg = { facs: bl.facs, iiif: bl.iiif, img: ownImage(bl), p: p, n0: bl.n0, size: bl.size || null, zones: {}, zoneN: 0 };
+        cur = pg;
         pg.has = !!(pg.img || pg.iiif);
         col.pages.push(pg);
         sheet(pg);
@@ -290,6 +364,16 @@
         if (K.join(prev, sp, prevN)) el.appendChild(document.createTextNode(' '));
         var e = spanEl(sp, p, notes);
         el.appendChild(e);
+        // the boxes its revisions are written in, on the page it is on
+        if (ZONES && cur && cur.size) sp.marks.forEach(function (m) {
+          if (!m.zone || !ZONES[m.zone] || (m.k !== 'added' && m.k !== 'erased' && m.k !== 'reinstated')) return;
+          var z = cur.zones[m.zone];
+          if (!z) { z = cur.zones[m.zone] = { box: ZONES[m.zone], spans: [], at: {} }; cur.zoneN++; }
+          if (z.spans.indexOf(e) < 0) z.spans.push(e);
+          if (m.change && AT[m.change] && (!D.stageHands || !m.hand || D.stageHands.indexOf(m.hand) >= 0)) z.at[AT[m.change]] = true;
+          (e._zones = e._zones || []).indexOf(m.zone) < 0 && e._zones.push(m.zone);
+          e._pg = cur;
+        });
         var x = { el: e, marks: sp.marks, text: /\S/.test(sp.s) };
         col.spans.push(x); mine.push(x);
         if (sp.n != null) { var k = p + ':' + sp.n; (col.byLine[k] = col.byLine[k] || []).push(e); prevN = sp.n; }
@@ -332,6 +416,16 @@
       if (leaving.length) setTimeout(function () { leaving.forEach(function (e) { if (e.classList.contains('bk-off')) e.classList.add('bk-gone'); }); }, 480);
       // a passage with nothing to show at this stage is left out
       col.blocks.forEach(function (bl) { bl.el.hidden = !bl.spans.some(function (x) { return x.on && x.text; }); });
+      // on the pages, the boxes of the revisions made at this stage, so the hand is seen moving across
+      // the page as the slider moves
+      var sNow = st.all ? 0 : st.stage;
+      col.pages.forEach(function (pg) {
+        if (!pg.zoneN) return;
+        var ids = Object.keys(pg.zones), now = ids.filter(function (id) { return sNow > 0 && pg.zones[id].at[sNow]; });
+        if (!now.length && !pg.layer) return;
+        lightZones(pg, ids, 'bk-zstage', false);
+        if (now.length) lightZones(pg, now, 'bk-zstage', true);
+      });
     });
     cols.forEach(function (c) { c.stale = true; });
     var lab = SW.$('#bk-stage-l', view); if (lab) lab.textContent = stageName(st.stage);
