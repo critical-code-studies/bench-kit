@@ -38,7 +38,9 @@
  * Where the document gives the boxes its revisions are written in (doc.zones, each page break's
  * size, a revision mark's zone), the text and the image are joined: a revision under the pointer
  * lights its box on the page, a box on the page goes to its text, and the slider lights the boxes
- * of the revisions made at its stage; the enlarged image has the same boxes. With Compare, a
+ * of the revisions made at its stage; the enlarged image has the same boxes, a box under the
+ * pointer showing its words and revision by it. A click on a box highlights its text in the panel,
+ * until the reader clicks, scrolls, hovers another revision or moves the slider. With Compare, a
  * passage of a text facing a version's states lights its page there, and the boxes of the revisions
  * whose words are mostly in it.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
@@ -193,7 +195,7 @@
   }
   function figure(pg, col) {
     var f = SW.el('figure', { class: 'bk-fig' });
-    var btn = SW.el('button', { class: 'bk-fig-b', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ': click to see it larger, with its details' + (pg.zoneN ? '; a box on it goes to the text written there' : '') });
+    var btn = SW.el('button', { class: 'bk-fig-b', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ': click to see it larger, with its details' + (pg.zoneN ? '; a box on it: highlight this in panel' : '') });
     var img = SW.el('img', { src: pg.img ? pg.img.src : iiifURL(pg.iiif, 400), alt: PAGE + ' ' + (pg.facs || ''), loading: 'lazy' });
     btn.appendChild(img);
     pg.figBtn = btn; pg.figImg = img;
@@ -220,7 +222,7 @@
     Object.keys(pg.zones).forEach(function (id) {
       // the corners in order (a document may give them either way round)
       var b0 = pg.zones[id].box, b = [Math.min(b0[0], b0[2]), Math.min(b0[1], b0[3]), Math.max(b0[0], b0[2]), Math.max(b0[1], b0[3])];
-      var d = SW.el('div', { class: 'bk-z', 'data-z': id, title: 'Go to the text written here' });
+      var d = SW.el('div', { class: 'bk-z', 'data-z': id, title: link ? 'Highlight this in panel' : '' });
       d.style.left = (100 * b[0] / w) + '%'; d.style.top = (100 * b[1] / h) + '%';
       d.style.width = (100 * (b[2] - b[0]) / w) + '%'; d.style.height = (100 * (b[3] - b[1]) / h) + '%';
       // the text written in the box lit while the pointer is on it
@@ -241,6 +243,26 @@
     return Z.L;
   }
   function fitZones(pg) { fitLayer(pg.figImg, pg.layer); }
+  // what a box holds: the words written there, what the revision is (and what it replaced, or what
+  // replaced it), its stage and its hand
+  function zoneTip(pg, id) {
+    var z = pg.zones[id], n = 0;
+    // the words, a deletion struck through
+    var words = z.spans.map(function (e) {
+      var t = e.textContent.replace(/\s+/g, ' '); if (n > 180) return ''; n += t.length;
+      return e.classList.contains('bk-del') ? '<s>' + esc(t) + '</s>' : esc(t);
+    }).join(' ').trim() + (n > 180 ? '…' : '');
+    var what = [], seen = {}, hasAdd = z.marks.some(function (m) { return m.k === 'added'; }), hasDel = z.marks.some(function (m) { return m.k === 'erased'; });
+    z.marks.forEach(function (m) { var t = describe([m]); if (t && !seen[t]) { seen[t] = 1; what.push(t); } });
+    z.subst.forEach(function (sid) {
+      var sb = (pg.subst || {})[sid]; if (!sb) return;
+      var E = sb.erased.join(' ').trim(), A = sb.added.join(' ').trim();
+      if (hasAdd && hasDel && E && A) what.push('“' + E + '” replaced by “' + A + '”');
+      else if (hasAdd && E) what.push('replacing “' + E + '”');
+      else if (hasDel && A) what.push('replaced by “' + A + '”');
+    });
+    return '<div class="bk-ztip-w">“' + words + '”</div>' + what.map(function (t) { return '<div>' + esc(t) + '</div>'; }).join('') + '<div class="bk-ztip-h">Click: highlight this in panel</div>';
+  }
   // a layer laid over the picture as it is drawn in its image (object-fit: contain)
   function fitLayer(img, L) {
     if (!img || !L || !img.naturalWidth || !img.clientWidth) return;
@@ -254,23 +276,30 @@
     if (!pg.zdiv) return;
     ids.forEach(function (id) { if (pg.zdiv[id]) pg.zdiv[id].classList.toggle(cls, on); });
   }
-  // a box on the page: to the text written in it, which is marked for a moment
+  // the text a box was clicked for stays highlighted until the reader does something else: another
+  // click, scrolling the text, a hover on another revision, moving the slider
+  var held = [], heldAt = 0;
+  function clearHeld() { held.forEach(function (e) { e.classList.remove('bk-held'); }); held = []; }
+  view.addEventListener('click', function () { if (held.length && Date.now() - heldAt > 300) clearHeld(); }, true);
+  // a box on the page: to the text written in it, highlighted until the reader does something else
   function toText(col, pg, id) {
     var z = pg.zones[id]; if (!z) return;
     // its text as it stands at this stage, or, where that is taken out here, the passage it was in
     var shown = z.spans.filter(function (e) { return !e.classList.contains('bk-gone') && !e.closest('[hidden]'); });
     var marks = shown.length ? shown : [z.spans[0] && z.spans[0].closest('p, h3, .bk-lg')].filter(function (e) { return e && !e.hidden; });
-    if (!marks.length) return;
+    if (!marks.length) { SW.toast('What is written there is not in the text at this stage' + (col.states && !st.all ? ': ' + (W.all || 'All revisions') + ' shows it.' : '.'), 4000); return; }
     col.moved = false;
     col.el.scrollTop = Math.max(0, marks[0].offsetTop - READ);
-    marks.forEach(function (e) { e.classList.remove('bk-flash'); void e.offsetWidth; e.classList.add('bk-flash'); setTimeout(function () { e.classList.remove('bk-flash'); }, 1600); });
+    clearHeld();
+    marks.forEach(function (e) { e.classList.add('bk-held'); });
+    held = marks; heldAt = Date.now();
     if (!shown.length) SW.toast('The text written there is not in the text at this stage: its passage is marked.', 4000);
   }
   // a revision in the text: its box lit on the page beside it while the pointer is on it; and, with
   // Compare, a passage of the text facing a version's states lights its page there
   view.addEventListener('pointerover', function (e) {
     var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0) return;
-    if (s0._zones) lightZones(s0._pg, s0._zones, 'bk-zhover', true);
+    if (s0._zones) { if (held.length && Date.now() - heldAt > 800 && held.indexOf(s0) < 0) clearHeld(); lightZones(s0._pg, s0._zones, 'bk-zhover', true); }
     facing(s0, true);
   });
   view.addEventListener('pointerout', function (e) {
@@ -325,12 +354,20 @@
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
-        '<p class="hint">' + (pg.zoneN ? 'A box on the image: the text written there. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click elsewhere: close.</p></div></div>';
+        '<p class="hint">' + (pg.zoneN ? 'A box on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click elsewhere: close.</p></div></div>';
       // the revisions' boxes over the large image, as beside the text: faint with the pointer on it,
       // the stage's lit in red, a click on one to the text written there
       if (pg.zoneN && pg.size) {
         var pic = d.querySelector('.bk-modal-pic'), big = pic.querySelector('img'), Z = makeZones(pg, false), sNow = st.all ? 0 : st.stage;
         pic.appendChild(Z.L);
+        // a box under the pointer: its words and what was done there, by the pointer
+        var tip = SW.el('div', { class: 'bk-ztip', hidden: '' }); d.appendChild(tip);
+        Object.keys(Z.zdiv).forEach(function (id) {
+          var zd = Z.zdiv[id];
+          zd.addEventListener('pointerenter', function () { tip.innerHTML = zoneTip(pg, id); tip.hidden = false; });
+          zd.addEventListener('pointermove', function (e) { var r = tip.getBoundingClientRect(); tip.style.left = Math.min(e.clientX + 14, innerWidth - r.width - 8) + 'px'; tip.style.top = Math.min(e.clientY + 16, innerHeight - r.height - 8) + 'px'; });
+          zd.addEventListener('pointerleave', function () { tip.hidden = true; });
+        });
         if (sNow > 0) Object.keys(pg.zones).forEach(function (id) { if (pg.zones[id].at[sNow]) Z.zdiv[id].classList.add('bk-zstage'); });
         if (big.complete) fitLayer(big, Z.L); else big.addEventListener('load', function () { fitLayer(big, Z.L); });
       }
@@ -410,12 +447,24 @@
         var e = spanEl(sp, p, notes);
         el.appendChild(e);
         e._leaf = cur;
+        // a substitution's two sides (a deletion and the addition in its place), by its id
+        if (cur) sp.marks.forEach(function (q) {
+          if (q.k !== 'subst' || !q.id) return;
+          var sb = (cur.subst = cur.subst || {})[q.id] = (cur.subst || {})[q.id] || { added: [], erased: [] };
+          // the span's own revision is its innermost (marks run outermost first)
+          var own = sp.marks.filter(function (r) { return r.k === 'added' || r.k === 'erased'; }).pop();
+          if (own) (own.k === 'added' ? sb.added : sb.erased).push(sp.s);
+        });
         // the boxes its revisions are written in, on the page it is on
         if (ZONES && cur && cur.size) sp.marks.forEach(function (m) {
           if (!m.zone || !ZONES[m.zone] || (m.k !== 'added' && m.k !== 'erased' && m.k !== 'reinstated')) return;
           var z = cur.zones[m.zone];
-          if (!z) { z = cur.zones[m.zone] = { box: ZONES[m.zone], spans: [], at: {} }; cur.zoneN++; }
+          if (!z) { z = cur.zones[m.zone] = { box: ZONES[m.zone], spans: [], at: {}, marks: [], subst: [] }; cur.zoneN++; }
           if (z.spans.indexOf(e) < 0) z.spans.push(e);
+          if (z.marks.indexOf(m) < 0) z.marks.push(m);
+          // a substitution counts for the box its words' own revision is written in, not a larger one round it
+          var own = sp.marks.filter(function (r) { return r.k === 'added' || r.k === 'erased'; }).pop();
+          if (own === m) sp.marks.forEach(function (q) { if (q.k === 'subst' && q.id && z.subst.indexOf(q.id) < 0) z.subst.push(q.id); });
           if (m.change && AT[m.change] && (!D.stageHands || !m.hand || D.stageHands.indexOf(m.hand) >= 0)) z.at[AT[m.change]] = true;
           (e._zones = e._zones || []).indexOf(m.zone) < 0 && e._zones.push(m.zone);
           e._pg = cur;
@@ -433,6 +482,7 @@
 
   // ---------- the text at the slider's stage ----------
   function apply(animate) {
+    clearHeld();
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     cols.forEach(function (col) {
       col.el.classList.toggle('bk-all', st.all && col.states);
@@ -640,7 +690,7 @@
     cols.forEach(function (col, i) {
       measure(col);
       // the reader's own scrolling (wheel, touch, keys, the scroll bar), not the page settling
-      ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) { col.el.addEventListener(ev, function () { col.moved = true; }, { passive: true }); });
+      ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) { col.el.addEventListener(ev, function () { col.moved = true; if (ev !== 'pointerdown') clearHeld(); }, { passive: true }); });
       col.el.onscroll = function () {
         if (col.ignore) { col.ignore = false; return; }   // the other column moved this one
         clearTimeout(placeTimer);

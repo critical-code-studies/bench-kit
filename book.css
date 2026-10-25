@@ -99,6 +99,12 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-z.bk-zhover, .bk-fig-b .bk-z:hover { border: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 26%, transparent); }
 @keyframes bk-zpulse { from { background: color-mix(in srgb, var(--red) 45%, transparent); } }
 .bk-s.bk-zlink { background-color: color-mix(in srgb, var(--amber) 30%, transparent); }
+/* the text a box was clicked for, until the reader does something else */
+.bk-page .bk-held { background-color: color-mix(in srgb, var(--amber) 34%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 55%, transparent); border-radius: 2px; }
+/* a box's words and revision, by the pointer in the enlarged view */
+.bk-ztip { position: fixed; z-index: 3; max-width: 22em; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); font-size: 13px; line-height: 1.4; pointer-events: none; }
+.bk-ztip-w { font: 15px/1.4 var(--serif, Georgia, serif); margin-bottom: 4px; }
+.bk-ztip-h { margin-top: 4px; color: var(--text-faint); font-size: 12px; }
 .bk-modal-pic .bk-zl { position: absolute; pointer-events: none; }
 .bk-modal-pic:hover .bk-z { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
 .bk-modal-pic .bk-z:hover { border: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 26%, transparent); }
