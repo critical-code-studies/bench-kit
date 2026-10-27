@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.80.1 (2026-10-27)
 
 - `tools/views.js` (new): opens every view of a bench in headless Chrome and reports any that throws, draws nothing or shows that it could not load; `--kit <folder>` serves a kit from another folder in place of the bench's own, so a kit change is checked in a bench with nothing in the bench changed. It reads only the kit's own messages, never the text being read ("he could not read" in *Billy Budd*). The kit's workflow now runs it after the tests in each bench, and covers the Melville bench (kit at `kit/`, the bench at the repo root). The check that existing benches still work, at each release towards 1.0 (asked for by David).
 
