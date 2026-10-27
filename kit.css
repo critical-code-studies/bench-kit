@@ -33,6 +33,8 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .bd-file { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
 .bd-file select { margin-left: auto; }
 .bd-file .btn { padding: 1px 8px; }
+.bd-list .smp { display: grid; gap: 2px; text-align: left; justify-items: start; padding: 6px 10px; width: 100%; min-width: 0; white-space: normal; }
+.bd-list .smp b { font-weight: 600; }
 .set-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .set-foot .set-gap { flex: 1; }
 

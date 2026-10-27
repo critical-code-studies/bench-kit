@@ -56,7 +56,7 @@
   function made() { return SW.store.get(KEY, []) || []; }
   Bd.made = made;
   function sortOf(date) {
-    var y = /\b(1[0-9]{3}|20[0-9]{2})\b/.exec(date || ''), mo = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.exec(date || '');
+    var y = /\b(1[0-9]{3}|20[0-9]{2})(?!\d)/.exec(date || ''), mo = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.exec(date || '');
     var m = /\b\d{4}-(\d{2})(?:-(\d{2}))?\b/.exec(date || '');
     if (!y) return V.VERSIONS.reduce(function (a, v) { return Math.max(a, v.sort || 0); }, 0) + 1;
     var month = m ? +m[1] : mo ? 'janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(mo[1].toLowerCase()) / 3 + 1 : 0;

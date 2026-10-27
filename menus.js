@@ -49,7 +49,10 @@
     return [['about', 'This version', 'Its record, sources and annotations'],
             ['compare', 'Collate', collateText()],
             ['genealogy', 'Genealogy', 'How the versions descend']]
-      .concat(SW.builder ? [['builder', 'Add a version from files', 'Files from this computer, read as a new version']] : []);
+      .concat(SW.builder ? [['builder', 'Add a version from files', 'Files from this computer, read as a new version']] : [])
+      .concat(SW.projectFile && SW.projectFile.save ? [['proj-save', 'Save the project to a file', 'Its versions, files, settings, drafts and notes'],
+                                ['proj-open', 'Open a project or .ccs file', 'A project saved here, or a CCS Workbench session']] : [])
+      .concat(SW.projectFile && SW.projectFile.save && B.samples ? [['proj-samples', 'Open a sample', 'A project from CCS Workbench Classic']] : []);
   }
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
@@ -257,6 +260,7 @@
     if (which === 'read' && /^f:/.test(p)) { SW.openAt(SW.state.v, { p: +p.slice(2), n0: 1 }); return; }   // a file of the open version
     if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) SW.select(p.slice(2)); SW.setTab('read'); return; }
     if (which === 'versions' && p === 'builder' && SW.builder) { SW.builder.open(); return; }
+    if (which === 'versions' && /^proj-/.test(p) && SW.projectFile && SW.projectFile.save) { ({ 'proj-save': SW.projectFile.save, 'proj-open': SW.projectFile.choose, 'proj-samples': SW.projectFile.pickSample })[p](); return; }
     if (which === 'versions') SW.setTab(p);
   }
 

@@ -1,5 +1,14 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A project as a file, and CCS Workbench's sessions** (`projectfile.js`, new; Stage 2 of the hand-built project, asked for by David), in a bench that says `editable: true` and loads `kit/builder.js` and `kit/projectfile.js`. Versions ▾ gains:
+  - **Save the project to a file**: one JSON file with the versions made in the page and their files, the bench's settings and their log, the annotations kept as drafts and My notes, never the tokens.
+  - **Open a project or .ccs file**: the same file opened again, here or in another browser, adding to what is here; a version already here is left out and named, the bench's settings come in only where none is set (so a locked GitHub location is not changed by a file), and drafts and notes already here are kept. Saved, cleared and opened again, a project with two samples came back the same, versions, files and 41 drafts; opened a second time it added nothing.
+  - A **CCS Workbench session** (`.ccs`) opens as one version: its files in their folders (a README or markdown as documentation), its line annotations as drafts on their lines, typed with a tag (`ccs:observation`, `ccs:question`, `ccs:metaphor`, `ccs:pattern`, `ccs:context`, `ccs:critique`) and their replies under them, signed as in the session, or CCS where it names no one. Its conversation with an AI is not brought in, and the report says how many messages it had.
+  - **Open a sample**, where the bench sets `samples`: CCS Workbench Classic's sixteen samples, listed from its Samples.md and read from its public repository at the tag `pre-bench-kit`; the kit copies none of them. ELIZA (Annotated) opens with its 30 annotations on their lines of ELIZA-1965b.mad.
+- Tests: `tests/projectfile.test.js`, 3 checks of the samples' list, a session's id and a file's role.
+
 ## 0.82.0 (2026-10-27)
 
 - **Versions made from files** (`builder.js`, new; Stage 1 of the hand-built project, asked for by David): in a bench that says `editable: true` and loads `kit/builder.js`, Versions ▾ ▸ Add a version from files takes an id, label, date, authors, a summary, the version it was made from, and files chosen or dropped, each with its role (program, support, doc, text). The files are kept in the browser's IndexedDB as they are, the record in its storage, and the version is listed and read as the bench's own: Read, Collate, Genealogy, references and links (`?v=`) all reach it, after a reload too. A line of descent whose tip is the version's parent runs on to it, or the version names a line, made where there is none. Made here, in the same box, lists them with Take out. bench-template's two versions, made again by hand from the same files, give the same Read, the same Collate in both modes and the same Genealogy flow (path for path) as the bench's own.
