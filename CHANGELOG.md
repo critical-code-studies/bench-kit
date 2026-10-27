@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.83.0 (2026-10-27)
 
 - **A project as a file, and CCS Workbench's sessions** (`projectfile.js`, new; Stage 2 of the hand-built project, asked for by David), in a bench that says `editable: true` and loads `kit/builder.js` and `kit/projectfile.js`. Versions ▾ gains:
   - **Save the project to a file**: one JSON file with the versions made in the page and their files, the bench's settings and their log, the annotations kept as drafts and My notes, never the tokens.
