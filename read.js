@@ -57,7 +57,8 @@
     var N = SW.notes, B = SW.BENCH, esc = SW.esc;
     var view = SW.$('#view-read');
     var R = SW.views.read = {};
-    var F = H.files || {}, X = H.repairs || {}, T = H.titles || {}, TB0 = H.toolbar, word = F.word || 'File';
+    // the repairs: the bench's own, or those made here to versions made here (kit/mending.js)
+    var F = H.files || {}, X = H.repairs || (SW.mending && SW.mending.kintsugi && SW.mending.kintsugi()) || {}, T = H.titles || {}, TB0 = H.toolbar, word = F.word || 'File';
     var SRCW = ((SW.BENCH || {}).words || {}).source || 'Source';   // the text column's heading
     // the toolbar's own tools: the bench's (H.toolbar), else the layers' ◀ ▶ and breadcrumb (kit/layers.js)
     function TB() { return TB0 || (SW.layers && SW.layers.toolbar) || {}; }
@@ -103,7 +104,8 @@
 
     // annotations in Read (threads, ghosts, the margin, the selection, export): readnotes.js
     var K = SW.readNotes({ view: view, R: R, opts: opts, isMine: isMine, showsTape: showsTape, filtering: filtering,
-      keptLines: keptLines, tapeInfo: info, kinBar: function () { if (X.bar) X.bar(); }, selActs: H.selActs });
+      keptLines: keptLines, tapeInfo: info, kinBar: function () { if (X.bar) X.bar(); },
+      selActs: function () { return (H.selActs ? H.selActs() : []).concat(SW.mending && SW.mending.selActs ? SW.mending.selActs() : []); } });
     var paintNotes = K.paintNotes, layoutMargin = K.layoutMargin, wireMargin = K.wireMargin,
       threadClick = K.threadClick, threadFor = K.threadFor, loadGhosts = K.loadGhosts, MODES = K.MODES, modeOf = K.modeOf,
       setNotes = K.setNotes, modeBtn = K.modeBtn, live = K.live, paintSel = K.paintSel, annotateSel = K.annotateSel,

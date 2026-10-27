@@ -2,8 +2,8 @@
  * projectfile.js - a hand-built project as one file, and the projects CCS-WB made, for a bench that
  * says editable: true and loads kit/builder.js (Stage 2 of the hand-built project). From Versions ▾:
  *   Save the project to a file   one JSON file (<slug>-project-<date>.json, kind bench-kit-project):
- *                                the versions made in the page and their files, the bench's own
- *                                settings and their log (project.js), the annotations kept as
+ *                                the versions made in the page and their files and repairs
+ *                                (mending.js), the bench's own settings and their log (project.js), the annotations kept as
  *                                drafts, and My notes. Tokens are never in it.
  *   Open a project or .ccs file  the same file opened again, here or in another browser; or a
  *                                CCS-WB session (.ccs) read as a version of its own (below)
@@ -55,7 +55,7 @@
         .then(function (data) { var c = JSON.parse(JSON.stringify(r)); c.files.forEach(function (f, i) { f.data = data[i]; }); return c; });
     })).then(function (versions) {
       return { kind: KIND, format: 1, kit: (SW.KIT || {}).version, bench: B.slug || B.name, title: B.title, made: new Date().toISOString(), by: SW.me().initials || '',
-               settings: { bench: SW.store.get('bench.settings', {}), log: SW.store.get('bench.log', []) },
+               settings: { bench: SW.store.get('bench.settings', {}), log: SW.store.get('bench.log', []) }, repairs: SW.store.get('builder.repairs', {}),
                versions: versions, drafts: SW.store.get('drafts', []), myNotes: SW.tray ? SW.tray.data() : null };
     });
   };
@@ -85,7 +85,11 @@
         if (V.byId(r.id)) { out.skipped.push(r.id); return; }
         var rec = JSON.parse(JSON.stringify(r)), files = rec.files.map(function (f) { return { name: f.name, role: f.role, data: unb64(f.data) }; });
         delete rec.files;
-        return Bd.add(rec, files).then(function (v) { out.versions.push(v.id); });
+        return Bd.add(rec, files).then(function (v) {
+          out.versions.push(v.id);
+          // its repairs (kit/mending.js) come with it
+          var R = (o.repairs || {})[v.id]; if (R && R.length) { var A = SW.store.get('builder.repairs', {}) || {}; A[v.id] = R; SW.store.set('builder.repairs', A); out.repairs = (out.repairs || 0) + R.length; }
+        });
       });
     });
     return chain.then(function () {

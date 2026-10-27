@@ -66,7 +66,7 @@
     var any = V.VERSIONS.filter(function (v) { return v.build; })[0];
     return { id: r.id, label: r.label || r.id, date: r.date || '', sort: r.sort != null ? r.sort : sortOf(r.date), authors: r.authors || '',
              fork: r.fork != null ? r.fork : (B.forks && B.forks[0] ? B.forks[0][0] : undefined), status: 'recovered', medium: 'Files added in this browser',
-             summary: r.summary || '', made: r.made || SW.today(), local: true, dialect: any ? any.dialect : 'text', buildNotes: [],
+             summary: r.summary || '', made: r.made || SW.today(), local: true, derived: r.derived || null, dialect: any ? any.dialect : 'text', buildNotes: [],
              build: r.files.map(function (f) { return { src: PRE + r.id + '/' + f.name, role: f.role || 'program' }; }) };
   }
   function put(r) { return V.add(record(r), { parent: r.parent || null, line: r.line || (!V.LINES.length ? 'main' : null), lineLabel: r.lineLabel || 'The main line' }); }
@@ -80,7 +80,7 @@
     var names = {};
     if (files.some(function (f) { var d = names[f.name]; names[f.name] = 1; return d; })) return Promise.reject(new Error('Two files have the same name.'));
     return tx('readwrite', function (st) { files.forEach(function (f) { st.put(f.data, key(PRE + rec.id + '/' + f.name)); }); }).then(function () {
-      var r = { id: rec.id, label: rec.label, date: rec.date, authors: rec.authors, summary: rec.summary, parent: rec.parent || null, fork: rec.fork, line: rec.line || null, lineLabel: rec.lineLabel || null,
+      var r = { id: rec.id, label: rec.label, date: rec.date, authors: rec.authors, summary: rec.summary, parent: rec.parent || null, fork: rec.fork, line: rec.line || null, lineLabel: rec.lineLabel || null, derived: rec.derived || null,
                 made: SW.today(), by: SW.me().initials || '', files: files.map(function (f) { return { name: f.name, role: f.role }; }) };
       var v = put(r), all = made(); all.push(r); SW.store.set(KEY, all);
       if (SW.fillPicker) SW.fillPicker();
@@ -92,6 +92,7 @@
     if (!r) return Promise.resolve(false);
     return tx('readwrite', function (st) { r.files.forEach(function (f) { st.delete(key(PRE + id + '/' + f.name)); }); }).then(function () {
       V.remove(id); SW.store.set(KEY, all.filter(function (x) { return x.id !== id; }));
+      if (SW.mending && SW.mending.forget) SW.mending.forget(id);
       if (SW.fillPicker) SW.fillPicker();
       if (SW.state.v === id) SW.select(B.start);
       return true;
