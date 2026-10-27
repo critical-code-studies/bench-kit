@@ -1,219 +1,521 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-GB">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>bench-kit</title>
-  <meta name="description" content="bench-kit: the shared modules of the research benches for critical code studies, for reading, comparing, tracing and annotating the versions of a program's source code, or of a text, with a group.">
+  <meta name="description" content="bench-kit: the shared modules of the critical code studies research benches, static websites for reading, collating and annotating the versions of a program's source code, or of a text, with a group.">
   <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#f4f0e6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11131a" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="bench-kit">
+  <meta property="og:description" content="The shared modules of the critical code studies research benches.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://critical-code-studies.github.io/bench-kit/">
+  <meta property="og:image" content="https://critical-code-studies.github.io/bench-kit/img/template-read-dark.jpg">
+  <script>(function(){try{var t=localStorage.getItem('ccs-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
   <style>
+    /* The house style of the critical code studies sites (critical-code-studies.github.io):
+       workbench charcoal by default, warm paper when turned over, amber for the critic's pen. */
     :root {
-      --bg: #f6f3ec; --surface: #fffdf8; --text: #1d1f23; --dim: #5d5f63; --line: #ddd6c7;
-      --accent: #8a5a12; --gold: #b8862a; --code-bg: #efe9dc;
-      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --bg: #11131a; --bg-2: #171a23;
+      --panel: rgba(231,228,218,0.035); --panel-2: rgba(231,228,218,0.055);
+      --line: rgba(231,228,218,0.18); --line-soft: rgba(231,228,218,0.10);
+      --ink: #e7e4da; --ink-dim: #989b93; --bright: #faf8f2;
+      --green: #6fdc8c; --red: #ff8a7a;
+      --beam: #f2ab3c; --mark: rgba(242,171,60,0.16);
+      --glow: 0 0 6px rgba(242,171,60,0.45), 0 0 14px rgba(242,171,60,0.2);
+      --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --wrap: 960px;
+      --body-grid: rgba(231,228,218,0.022); --vignette: rgba(0,0,0,0.5);
+      --header-a: rgba(17,19,26,0.94); --header-b: rgba(17,19,26,0.62);
+      --code-bg: rgba(5,6,10,0.7); --code-shadow: inset 0 0 30px rgba(0,0,0,0.55), 0 8px 26px rgba(0,0,0,0.4);
+      --hero-bg: #0a0c11; --menu-bg: rgba(20,23,31,0.99);
+      color-scheme: dark;
     }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg: #121418; --surface: #191c21; --text: #e9e5da; --dim: #a3a49f; --line: #2c3037;
-        --accent: #e0b25a; --gold: #d6a640; --code-bg: #1f2329;
+    :root[data-theme="light"] {
+      --bg: #f4f0e6; --bg-2: #fbf8f0;
+      --panel: rgba(28,24,16,0.035); --panel-2: rgba(28,24,16,0.06);
+      --line: rgba(28,24,16,0.18); --line-soft: rgba(28,24,16,0.10);
+      --ink: #2a2720; --ink-dim: #6a6459; --bright: #15120c;
+      --green: #1f8a4c; --red: #b3261e;
+      --beam: #b06a12; --mark: rgba(176,106,18,0.16); --glow: none;
+      --body-grid: rgba(28,24,16,0.028); --vignette: transparent;
+      --header-a: rgba(244,240,230,0.94); --header-b: rgba(244,240,230,0.64);
+      --code-bg: rgba(28,24,16,0.04); --code-shadow: inset 0 0 0 1px rgba(28,24,16,0.05), 0 6px 20px rgba(28,24,16,0.10);
+      --hero-bg: #efe9db; --menu-bg: #fbf8f0;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --bg: #f4f0e6; --bg-2: #fbf8f0;
+        --panel: rgba(28,24,16,0.035); --panel-2: rgba(28,24,16,0.06);
+        --line: rgba(28,24,16,0.18); --line-soft: rgba(28,24,16,0.10);
+        --ink: #2a2720; --ink-dim: #6a6459; --bright: #15120c;
+        --green: #1f8a4c; --red: #b3261e;
+        --beam: #b06a12; --mark: rgba(176,106,18,0.16); --glow: none;
+        --body-grid: rgba(28,24,16,0.028); --vignette: transparent;
+        --header-a: rgba(244,240,230,0.94); --header-b: rgba(244,240,230,0.64);
+        --code-bg: rgba(28,24,16,0.04); --code-shadow: inset 0 0 0 1px rgba(28,24,16,0.05), 0 6px 20px rgba(28,24,16,0.10);
+        --hero-bg: #efe9db; --menu-bg: #fbf8f0;
+        color-scheme: light;
       }
     }
-    :root[data-theme="dark"] {
-      --bg: #121418; --surface: #191c21; --text: #e9e5da; --dim: #a3a49f; --line: #2c3037;
-      --accent: #e0b25a; --gold: #d6a640; --code-bg: #1f2329;
-    }
+
     * { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.6 var(--serif); }
-    a { color: var(--accent); }
-    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
-    header.top { border-bottom: 1px solid var(--line); }
-    .brand { display: flex; align-items: center; gap: 14px; padding: 18px 0; text-decoration: none; color: var(--text); }
-    .brand img { width: 40px; height: 40px; border-radius: 9px; box-shadow: 0 0 0 1px var(--line); }
-    .brand b { font: 600 22px/1 var(--mono); letter-spacing: -0.01em; }
-    .brand span { font: 13px/1.3 var(--sans); color: var(--dim); }
-    .hero { padding-top: 48px; padding-bottom: 28px; display: grid; grid-template-columns: 1fr; gap: 28px; }
-    .hero h1 { font: 600 clamp(30px, 4.6vw, 46px)/1.12 var(--serif); margin: 0; max-width: 20em; }
-    .hero p { margin: 0; max-width: 40em; }
-    .hero .meta { font: 14px/1.5 var(--sans); color: var(--dim); }
-    .hero .meta a { margin-right: 14px; }
-    figure { margin: 0; }
-    figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #111; }
-    figcaption { font: 13.5px/1.45 var(--sans); color: var(--dim); margin-top: 8px; }
-    section { padding: 36px 0; border-top: 1px solid var(--line); }
-    h2 { font: 600 28px/1.2 var(--serif); margin: 0 0 18px; }
-    h3 { font: 600 21px/1.25 var(--serif); margin: 0 0 4px; }
-    .sub { font: 14px/1.4 var(--sans); color: var(--dim); margin: 0 0 14px; }
-    p { margin: 0 0 14px; }
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px 32px; margin: 0; }
-    .features div { border-left: 3px solid var(--line); padding-left: 14px; }
-    .features dt { font: 600 15px/1.3 var(--sans); margin-bottom: 4px; }
-    .features dd { margin: 0; font-size: 16.5px; line-height: 1.55; }
-    .case { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; padding: 26px 0; }
-    .case + .case { border-top: 1px dashed var(--line); }
-    .case .shots { display: grid; gap: 16px; }
-    .case.text-only { grid-template-columns: minmax(0, 1fr); max-width: 44em; }
-    .lead { font: 14px/1.45 var(--sans); color: var(--dim); margin-top: 14px; }
-    code, pre { font-family: var(--mono); font-size: 14px; }
-    pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 0 0 14px; }
-    ol.steps { padding-left: 1.3em; margin: 0 0 14px; max-width: 44em; }
-    ol.steps li { margin-bottom: 6px; }
-    .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 40px; }
-    footer { border-top: 1px solid var(--line); padding: 22px 0 40px; font: 13.5px/1.5 var(--sans); color: var(--dim); }
-    footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
-    footer img { width: 22px; height: 22px; vertical-align: middle; }
-    @media (max-width: 760px) {
-      body { font-size: 17px; }
-      .case { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-      .hero { padding-top: 32px; padding-bottom: 20px; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; color: var(--ink); font-family: var(--serif); font-size: 18px; line-height: 1.66;
+      background: linear-gradient(var(--body-grid) 1px, transparent 1px) 0 0 / 100% 2.4rem, var(--bg);
+      -webkit-font-smoothing: antialiased; overflow-x: hidden;
     }
+    body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 9000;
+      background: radial-gradient(ellipse 92% 78% at 50% 42%, transparent 58%, var(--vignette) 100%); }
+    .wrap { width: min(var(--wrap), calc(100vw - 32px)); margin: 0 auto; }
+    section[id] { scroll-margin-top: 80px; }
+    a { color: var(--beam); text-decoration: none; }
+    a:hover { color: var(--bright); text-shadow: var(--glow); }
+    .content a { border-bottom: 1px solid var(--line); }
+    .content a:hover { border-bottom-color: var(--beam); }
+
+    /* header */
+    .site-header { position: sticky; top: 0; z-index: 8000; backdrop-filter: blur(3px);
+      background: linear-gradient(to bottom, var(--header-a), var(--header-b)); border-bottom: 1px solid var(--line-soft); }
+    .site-header .wrap { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; gap: 1rem; position: relative; }
+    .brand { display: flex; align-items: center; gap: 0.7rem; }
+    .brand img { width: 32px; height: 32px; }
+    .brand-block { display: flex; flex-direction: column; gap: 0.28rem; line-height: 1.05; white-space: nowrap; }
+    .brand-name { font-family: var(--mono); font-weight: 700; font-size: 0.95rem; letter-spacing: 0.5px; color: var(--bright); }
+    .brand-name .slash { color: var(--beam); }
+    .brand-tagline { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 1px; color: var(--ink-dim); text-transform: uppercase; }
+    .head-tools { display: flex; align-items: center; gap: 0.5rem; }
+    .nav-toggle { display: inline-flex; align-items: center; gap: 0.5rem; background: none; border: 1px solid var(--line); color: var(--beam);
+      font-family: var(--mono); font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 13px; border-radius: 3px; cursor: pointer; }
+    .site-nav { position: absolute; top: calc(100% + 7px); right: 0; display: none; flex-direction: column; min-width: 240px; padding: 0.4rem 0;
+      background: var(--menu-bg); border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+    .site-nav.open { display: flex; }
+    .site-nav a { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-dim); padding: 0.6rem 1.2rem; }
+    .site-nav a:hover { color: var(--beam); background: rgba(242,171,60,0.08); }
+    .site-nav a .n { color: var(--beam); margin-right: 0.4rem; }
+    @media (min-width: 1120px) {
+      .nav-toggle { display: none; }
+      .site-nav { position: static; display: flex; flex-direction: row; min-width: 0; padding: 0; background: none; border: 0; box-shadow: none; gap: 0.1rem; }
+      .site-nav a { padding: 0.45rem 0.6rem; font-size: 0.66rem; white-space: nowrap; }
+      .site-nav a:hover { background: none; }
+    }
+    @media (max-width: 560px) { .brand-tagline { display: none; } .nav-toggle { padding: 7px 10px; } }
+    .theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: 0 0 auto;
+      background: none; border: 1px solid var(--line); border-radius: 4px; color: var(--ink-dim); cursor: pointer; padding: 0; }
+    .theme-toggle:hover { border-color: var(--beam); color: var(--beam); }
+    .theme-toggle svg { width: 17px; height: 17px; }
+    .theme-toggle .icon-sun { display: none; }
+    :root[data-theme="light"] .theme-toggle .icon-sun { display: block; }
+    :root[data-theme="light"] .theme-toggle .icon-moon { display: none; }
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) .theme-toggle .icon-sun { display: block; }
+      :root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: none; }
+    }
+
+    /* hero */
+    .hero { background: var(--hero-bg); border-bottom: 1px solid var(--line-soft); }
+    .hero-inner { padding: clamp(3rem, 9vh, 5.5rem) 0 clamp(2.5rem, 7vh, 4.5rem); }
+    .kicker { display: block; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--beam); margin-bottom: 0.9rem; }
+    .hero h1 { margin: 0; font-family: var(--mono); font-weight: 700; font-size: clamp(2.2rem, 7vw, 4rem); line-height: 1.04; color: var(--bright); }
+    .hero h1 .slash { color: var(--beam); text-shadow: var(--glow); }
+    .hero .tagline { margin: 1.2rem 0 0; max-width: 34em; font-size: clamp(1.05rem, 2.4vw, 1.25rem); line-height: 1.55; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1.8rem; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 0.75rem 1.2rem; border-radius: 4px; border: 1px solid var(--line); color: var(--ink); background: var(--panel); }
+    .btn:hover { border-color: var(--beam); color: var(--bright); background: rgba(242,171,60,0.07); }
+    .btn-primary { border-color: var(--beam); color: var(--bright); }
+
+    /* stat row */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0.9rem 1.2rem; margin-top: 2.4rem; padding-top: 1.2rem; border-top: 1px solid var(--line-soft); }
+    .stats div { display: flex; flex-direction: column; gap: 0.15rem; }
+    .stats b { font-family: var(--mono); font-weight: 600; font-size: 1.35rem; color: var(--bright); }
+    .stats span { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-dim); line-height: 1.4; }
+
+    /* sections */
+    main { padding: clamp(2.5rem, 7vh, 4.5rem) 0; }
+    .section { margin-bottom: clamp(3rem, 8vh, 5rem); }
+    .section .num { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 2px; color: var(--beam); }
+    h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.15; color: var(--bright); margin: 0.3rem 0 1rem; }
+    h3 { font-family: var(--serif); font-size: 1.2rem; color: var(--bright); margin: 1.6rem 0 0.5rem; }
+    .content p, .content li { max-width: 42em; }
+    .content p { margin: 0 0 1rem; }
+    .content ol, .content ul { padding-left: 1.3rem; margin: 0 0 1rem; }
+    .content li { margin: 0.3rem 0; }
+    .muted { color: var(--ink-dim); }
+    code { font-family: var(--mono); font-size: 0.84em; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 3px; padding: 0.05em 0.3em; overflow-wrap: anywhere; }
+
+    /* terminal blocks: what is typed, and what came back */
+    .term { margin: 0.6rem 0 1.2rem; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--code-shadow); overflow: hidden; }
+    .term .label { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-dim);
+      padding: 0.45rem 0.9rem; border-bottom: 1px solid var(--line-soft); }
+    .term pre { margin: 0; padding: 0.8rem 0.9rem; font-family: var(--mono); font-size: 0.8rem; line-height: 1.65; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .term .in::before { content: "$ "; color: var(--beam); }
+    .term .out { color: var(--ink-dim); }
+    .term .ok { color: var(--green); }
+    .term .err { color: var(--red); }
+    .term .c { color: var(--ink-dim); font-style: italic; }
+
+    /* cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.2rem; }
+    .card { position: relative; padding: 1.2rem 1.2rem 1.1rem 1.35rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); overflow: hidden; }
+    .card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--beam); opacity: 0.85; }
+    .card h3 { margin: 0 0 0.35rem; font-family: var(--mono); font-size: 0.95rem; letter-spacing: 0.3px; }
+    .card p { margin: 0; font-size: 0.95rem; color: var(--ink-dim); line-height: 1.55; }
+
+    /* credentials */
+    .cred { margin: 1.4rem 0 2rem; padding: 1.3rem 1.4rem 0.6rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .cred h3 { margin: 0 0 0.8rem; }
+    .cred p { font-size: 0.95rem; }
+    .cred dl { display: grid; grid-template-columns: 9.5em 1fr; gap: 0.5rem 1.2rem; margin: 0 0 1rem; font-size: 0.95rem; }
+    .cred dt { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 1px; text-transform: uppercase; color: var(--beam); padding-top: 0.3rem; }
+    .cred dd { margin: 0; }
+    .errors { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin: 0.4rem 0 1.2rem; }
+    .errors th { text-align: left; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim); font-weight: 400; padding: 0.4rem 0.6rem 0.4rem 0; border-bottom: 1px solid var(--line); }
+    .errors td { vertical-align: top; padding: 0.55rem 0.8rem 0.55rem 0; border-bottom: 1px solid var(--line-soft); }
+    .errors td:first-child { font-family: var(--mono); font-size: 0.78rem; color: var(--red); width: 45%; }
+    @media (max-width: 640px) {
+      .cred dl { grid-template-columns: 1fr; gap: 0.1rem; }
+      .cred dd { margin-bottom: 0.6rem; }
+      .errors td, .errors th { display: block; width: auto !important; border: 0; padding: 0.15rem 0; }
+      .errors tr { display: block; padding: 0.5rem 0; border-bottom: 1px solid var(--line-soft); }
+      .errors thead { display: none; }
+    }
+
+    /* troubleshooting */
+    .trouble { list-style: none; padding: 0; margin: 1rem 0 0; }
+    .trouble li { padding: 1rem 0; border-top: 1px solid var(--line-soft); max-width: none; }
+    .trouble li:first-child { border-top: 0; }
+    .trouble .sym { display: block; font-family: var(--mono); font-size: 0.78rem; color: var(--red); line-height: 1.55; overflow-wrap: anywhere; }
+    .trouble .sym::before { content: "Symptom  "; color: var(--ink-dim); letter-spacing: 1px; font-size: 0.6rem; text-transform: uppercase; }
+    .trouble .fix { display: block; margin-top: 0.45rem; }
+    .trouble .fix::before { content: "Fix  "; font-family: var(--mono); color: var(--beam); letter-spacing: 1px; font-size: 0.6rem; text-transform: uppercase; }
+
+    /* screenshots */
+    .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.4rem; margin-top: 1.2rem; }
+    figure { margin: 0; }
+    figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+    figcaption { margin-top: 0.55rem; font-size: 0.9rem; line-height: 1.5; color: var(--ink-dim); }
+    figcaption b { color: var(--ink); font-weight: 600; }
+    figcaption .prov { display: block; margin-top: 0.2rem; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.6px; text-transform: uppercase; }
+
+    /* links */
+    .links { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; margin-top: 1rem; }
+    .links a { display: block; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
+    .links a b { display: block; font-family: var(--mono); font-size: 0.78rem; color: var(--beam); letter-spacing: 0.4px; }
+    .links a span { font-size: 0.88rem; color: var(--ink-dim); }
+    .links a:hover { border-color: var(--beam); text-shadow: none; }
+
+    .site-footer { border-top: 1px solid var(--line-soft); padding: 2rem 0; }
+    .site-footer p { margin: 0; font-size: 0.82rem; color: var(--ink-dim); }
+
+    .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2,0.7,0.2,1); }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
   </style>
 </head>
 <body>
-  <header class="top">
+
+  <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="logo.svg" alt=""><span><b>bench-kit</b><br>modules for research benches</span></a>
+      <a class="brand" href="./" aria-label="bench-kit home">
+        <img src="logo.svg" alt="">
+        <span class="brand-block">
+          <span class="brand-name">bench<span class="slash">-</span>kit</span>
+          <span class="brand-tagline">Modules for research benches</span>
+        </span>
+      </a>
+      <div class="head-tools">
+        <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">&#9776;&nbsp;Menu</button>
+        <nav class="site-nav" id="site-nav">
+          <a href="#what"><span class="n">01</span>What it is</a>
+          <a href="#start"><span class="n">02</span>Quick start</a>
+          <a href="#usage"><span class="n">03</span>Usage</a>
+          <a href="#screens"><span class="n">04</span>Screenshots</a>
+          <a href="#config"><span class="n">05</span>Configuration</a>
+          <a href="#trouble"><span class="n">06</span>Troubleshooting</a>
+          <a href="#links"><span class="n">07</span>Links</a>
+        </nav>
+        <button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle light and dark theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <div class="wrap hero">
-      <h1>Research benches for the close reading of code and texts in their versions</h1>
-      <p>A research bench is a website for the critical reading of a program's source code, or of a text, across its surviving versions. It sets each version out line by line as it is held, compares any two, draws how they descend from one another, and lets a group annotate them together, with the documents that surround the program kept beside its code. bench-kit holds the modules the benches share. It began on 11 October 2026, when the Spacewar! and SHRDLU benches, which had until then copied code between them, were given one set of modules; the ELIZA bench followed, and the Melville bench, whose texts are prose, is the first to use the kit for something other than a program.</p>
-      <p>The kit is plain JavaScript and CSS, with no build step and nothing to install, served by GitHub Pages and released under the GNU General Public License (version 3). A bench includes it as a git submodule and gives its own names, texts and readers in a configuration file, so that what is particular to a program (its language, its machine, the way its files are assembled or run) stays in the bench and the rest is in common.</p>
-      <p class="meta"><a href="https://github.com/critical-code-studies/bench-kit">Repository</a><a href="https://github.com/critical-code-studies/bench-template">bench-template</a><a href="https://github.com/critical-code-studies/bench-kit/blob/main/CHANGELOG.md">Changes</a>Version <span data-kit-version>0.81.0</span></p>
-      <figure>
-        <a href="img/spacewar-run.jpg" title="Open the picture at full size"><img src="img/spacewar-run.jpg" width="1440" height="813" alt="The Spacewar! bench's Run view: two ships and the central star on the round scope of an emulated PDP-1, beside the Macro source with the line being executed highlighted."></a>
-        <figcaption>Spacewar! 3.1 (24 September 1962) assembled from its source and running on an emulated PDP-1, with the listing following the program as it runs.</figcaption>
-      </figure>
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <span class="kicker">Critical code studies · version <span data-kit-version>0.81.0</span></span>
+      <h1>bench<span class="slash">-</span>kit</h1>
+      <p class="tagline">The shared modules of the research benches: static websites for reading, collating and annotating the versions of a program's source code, or of a text, with a group.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#start">Quick start</a>
+        <a class="btn" href="https://github.com/critical-code-studies/bench-kit">Source on GitHub</a>
+        <a class="btn" href="https://github.com/critical-code-studies/bench-template">bench-template</a>
+      </div>
+      <div class="stats" aria-label="bench-kit in figures">
+        <div><b data-kit-version>0.81.0</b><span>Current release</span></div>
+        <div><b>137</b><span>Releases since 11 October 2026</span></div>
+        <div><b>44</b><span>JavaScript modules</span></div>
+        <div><b>16,704</b><span>Lines of JavaScript</span></div>
+        <div><b>5</b><span>Repositories its CI tests on each push</span></div>
+        <div><b>156</b><span>Kit tests passed in bench-template</span></div>
+      </div>
     </div>
+  </section>
 
-    <section>
-      <div class="wrap">
-        <h2>What a bench does</h2>
-        <dl class="features">
-          <div><dt>Read</dt><dd>Each version's files line by line, as held, with a search, the language highlighted, a citation for any line or range, a reading edition to print or save as Word, and export to Markdown.</dd></div>
-          <div><dt>Collate</dt><dd>Two versions collated as text, routine by routine, or, where both are Lisp, definition by definition, so that BBN-LISP's DEFINEQ and Maclisp's DEFPROP and DEFUN are read alike.</dd></div>
-          <div><dt>Book</dt><dd>For a text whose reader gives its structure (a TEI encoding, say): the text set as a page, a sheet to each page of the source with its image beside it; a version's states of revision as one text, with a slider through the stages; and Compare, a second text facing the first at the same page. A selection is the version's lines, so annotations are shared with Read.</dd></div>
-          <div><dt>Genealogy</dt><dd>A stemma of the versions, drawn as textual scholars draw the family of a text, and flows and trees of what each version keeps from its parent, moves, edits or drops.</dd></div>
-          <div><dt>Annotation</dt><dd>Through a private Hypothesis group, with replies, reactions and rich text. An annotation also shows, as a ghost, on the matching lines of the other versions.</dd></div>
-          <div><dt>Findings and My notes</dt><dd>Findings set out what the bench and the group have established, each with its evidence; My notes is a private tray of excerpts, figures and paragraphs gathered for writing.</dd></div>
-          <div><dt>Paratexts</dt><dd>Scans, documents, recordings and links in a private GitHub repository, catalogued in Dublin Core with Library of Congress, Getty and RDA terms, and arranged in collections, sequences and corpora.</dd></div>
-          <div><dt>Implementations</dt><dd>A public catalogue of a program's copies, ports, translations and reimplementations, with each one's parents, the route by which it came and the evidence for it, drawn as a tree and compared.</dd></div>
-          <div><dt>References</dt><dd>Every version and file has a short reference, and its source a Software Heritage identifier, so that a citation names the text as the bench read it.</dd></div>
+  <main class="content">
+
+    <section class="section wrap reveal" id="what">
+      <span class="num">01</span>
+      <h2>What it is</h2>
+      <p>bench-kit is the plain JavaScript and CSS that the research benches for SHRDLU, Spacewar!, ELIZA and Melville share: each version of a program or text set out line by line, any two collated, their descent drawn as a stemma, and annotations kept in a private Hypothesis group. A bench includes the kit as a git submodule, gives its own names, sources and language in a configuration file, and is served as a static site by GitHub Pages, with no build step and nothing to install.</p>
+      <div class="cards">
+        <div class="card"><h3>Read</h3><p>Each version's files as held, with search, highlighting, a citation for any line or range, a reading edition, and export to Word and Markdown.</p></div>
+        <div class="card"><h3>Collate</h3><p>Two versions as text, routine by routine, or definition by definition where both are Lisp.</p></div>
+        <div class="card"><h3>Genealogy</h3><p>A stemma of the versions, and flows and trees of what each keeps from its parent, moves, edits or drops.</p></div>
+        <div class="card"><h3>Book</h3><p>A text whose reader gives its structure (TEI, say) set as pages beside their images, with a slider through the stages of revision.</p></div>
+        <div class="card"><h3>Annotation</h3><p>Through a private Hypothesis group, with replies and reactions; an annotation shows as a ghost on the matching lines of other versions.</p></div>
+        <div class="card"><h3>Paratexts</h3><p>Scans, documents and recordings in a private GitHub repository, catalogued in Dublin Core and arranged in collections and sequences.</p></div>
+        <div class="card"><h3>Implementations</h3><p>A catalogue of a program's copies, ports and reimplementations, drawn as a tree with the evidence for each line of descent.</p></div>
+        <div class="card"><h3>References</h3><p>A short reference for every version and file, and a Software Heritage identifier for each source.</p></div>
+      </div>
+    </section>
+
+    <section class="section wrap reveal" id="start">
+      <span class="num">02</span>
+      <h2>Quick start</h2>
+      <p>A new bench starts from <a href="https://github.com/critical-code-studies/bench-template">bench-template</a>, which runs on an invented example (two versions of a small Python program and a lost first sketch) with the kit in place.</p>
+      <h3>Prerequisites</h3>
+      <ul>
+        <li><b>To run a bench:</b> git, Python 3 (for a local web server; any static server will do) and a current browser.</li>
+        <li><b>To run the kit's checks</b> (<code>tools/test.js</code>, <code>tools/views.js</code>): Node 22 or later, and Google Chrome or Chromium. No npm packages.</li>
+        <li>The steps below were run on macOS with git 2.54, Python 3.14, Node 22.22 and Chrome. The tools also look for Chrome at <code>/usr/bin/google-chrome</code> and <code>/usr/bin/chromium</code>, and the kit's own CI runs them on Ubuntu.</li>
+      </ul>
+      <h3>Steps</h3>
+      <ol>
+        <li>On GitHub, open <a href="https://github.com/critical-code-studies/bench-template">bench-template</a> and choose <b>Use this template</b> to make a repository of your own.</li>
+        <li>Clone it with the kit, and serve the repository's folder (not <code>research/</code>):</li>
+      </ol>
+      <div class="term"><div class="label"><span>Terminal</span><span>Your repository</span></div>
+<pre><span class="in">git clone --recurse-submodules https://github.com/YOUR-ORG/YOUR-BENCH</span>
+<span class="in">cd YOUR-BENCH</span>
+<span class="in">python3 -m http.server 8000</span></pre></div>
+      <ol start="3">
+        <li>Open <code>http://localhost:8000/research/</code>.</li>
+        <li>Replace the example: the sources under <code>source/</code> (a folder for each version), the versions and their descent in <code>research/js/versions.js</code>, the names, language and references in <code>research/js/config.js</code>. The <a href="https://github.com/critical-code-studies/bench-template#starting-a-bench">template's README</a> takes each file in turn; the <a href="https://github.com/critical-code-studies/bench-kit#readme">kit's README</a> lists every setting.</li>
+        <li>On GitHub, turn on Pages (Settings ▸ Pages, the main branch, root). The bench is then at <code>https://YOUR-ORG.github.io/YOUR-BENCH/research/</code>.</li>
+      </ol>
+      <p class="muted">To look before making a repository, clone the template itself: <code>git clone --recurse-submodules https://github.com/critical-code-studies/bench-template</code>.</p>
+    </section>
+
+    <section class="section wrap reveal" id="usage">
+      <span class="num">03</span>
+      <h2>Usage</h2>
+      <p>Each example was run on a fresh clone of bench-template 0.1.99 (bench-kit 0.81.0) on 27 October 2026; the output is as printed.</p>
+
+      <h3>Serve a bench and open it</h3>
+      <div class="term"><div class="label"><span>Terminal</span><span>bench-template</span></div>
+<pre><span class="in">python3 -m http.server 8000</span>
+<span class="out">::1 - - [27/Oct/2026 14:11:56] "GET /research/ HTTP/1.1" 200 -</span></pre></div>
+      <p>The browser at <code>http://localhost:8000/research/</code> shows Read on the example's version 2 (the first screenshot in 04).</p>
+
+      <h3>Run the kit's tests in a bench</h3>
+      <p>The kit's tests run in the bench's own page, in headless Chrome, so they check the kit with the bench's settings and versions. From the repository's folder:</p>
+      <div class="term"><div class="label"><span>Terminal</span><span>bench-template</span></div>
+<pre><span class="in">node research/kit/tools/test.js</span>
+<span class="out ok">tests/annotations.html: 156 passed</span></pre></div>
+
+      <h3>Open every view, with this bench's kit or another</h3>
+      <p><code>tools/views.js</code> opens each view in turn and fails on one that throws, draws nothing, or shows that it could not load. With <code>--kit</code> it serves a kit from another folder in place of the bench's own, so a kit change can be tried in a bench without changing the bench.</p>
+      <div class="term"><div class="label"><span>Terminal</span><span>bench-template</span></div>
+<pre><span class="in">node research/kit/tools/views.js</span>
+<span class="out">Example Research Bench 0.1.99, kit 0.81.0</span>
+<span class="out ok">  ✓ read
+  ✓ analyse
+  ✓ functional
+  ✓ compare
+  ✓ genealogy
+  ✓ about
+  ✓ findings
+  ✓ notes</span>
+<span class="c"># with a kit checked out beside the bench:</span>
+<span class="in">node research/kit/tools/views.js --kit ../bench-kit</span></pre></div>
+      <p>The kit's own <a href="https://github.com/critical-code-studies/bench-kit/actions">workflow</a> runs both tools in all five repositories (the four benches and the template) on every push.</p>
+    </section>
+
+    <section class="section wrap reveal" id="screens">
+      <span class="num">04</span>
+      <h2>Screenshots</h2>
+      <p>Every bench has the colour themes of ⚙ Settings ▸ Display, four dark and three light; the ◐ button switches between the last of each.</p>
+      <div class="shots">
+        <figure>
+          <a href="img/template-read-dark.jpg"><img src="img/template-read-dark.jpg" width="1440" height="813" alt="bench-template's Read view in the dark Phosphor theme: wordfreq.py of version 2, 29 lines, with line numbers and the Python highlighted."></a>
+          <figcaption><b>bench-template, Read, dark (Phosphor).</b> The example's <code>wordfreq.py</code>, version 2.<span class="prov">bench-template 0.1.99, bench-kit 0.81.0 · 27 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/template-read-light.jpg"><img src="img/template-read-light.jpg" width="1440" height="813" alt="The same Read view in the light Paper theme."></a>
+          <figcaption><b>bench-template, Read, light (Paper).</b> The same file.<span class="prov">bench-template 0.1.99, bench-kit 0.81.0 · 27 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/spacewar-run.jpg"><img src="img/spacewar-run.jpg" width="1440" height="813" loading="lazy" alt="The Spacewar! bench's Run view: two ships and the central star on the round scope of an emulated PDP-1, beside the Macro source with the line being executed highlighted."></a>
+          <figcaption><b>Spacewar!, Run.</b> Spacewar! 3.1 (24 September 1962) assembled from its source and running on an emulated PDP-1, the listing following the program counter.<span class="prov">Spacewar! 1.19.64, bench-kit 0.66.3 · 21 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/spacewar-compare.jpg"><img src="img/spacewar-compare.jpg" width="1440" height="813" loading="lazy" alt="The Spacewar! bench's Collate view: two texts of Spacewar! 3.1 side by side, unchanged runs folded, a changed line marked."></a>
+          <figcaption><b>Spacewar!, Collate.</b> Two witnesses of Spacewar! 3.1; 98 per cent of their lines are shared.<span class="prov">Spacewar! 1.19.64, bench-kit 0.66.3 · 21 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/shrdlu-graphics.jpg"><img src="img/shrdlu-graphics.jpg" width="1440" height="813" loading="lazy" alt="The SHRDLU bench's Graphics tab: the blocks world in three dimensions, green, red and blue blocks, two pyramids and a box holding a pyramid."></a>
+          <figcaption><b>SHRDLU, Graphics.</b> The blocks world drawn from the program's data file: shape and colour from DISPLAY-AS, place and size from ATABLE.<span class="prov">SHRDLU 0.1.191, bench-kit 0.69.0 · 21 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/shrdlu-read.jpg"><img src="img/shrdlu-read.jpg" width="1440" height="813" loading="lazy" alt="The SHRDLU bench's Read view: plnr.182, Micro-Planner source in MacLisp, with line numbers and a repairs stepper in the toolbar."></a>
+          <figcaption><b>SHRDLU, Read.</b> <code>plnr.182</code>, Micro-Planner written in MacLisp, in the MIT files as found on ITS, with the stepper (◆) through the version's repairs in the toolbar.<span class="prov">SHRDLU 0.1.191, bench-kit 0.69.0 · 21 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/eliza-tree.jpg"><img src="img/eliza-tree.jpg" width="1440" height="813" loading="lazy" alt="The ELIZA bench's Implementations tree: families of implementations as lanes, from the MAD-SLIP source through Cosell's DOCTOR to the BASIC versions, with lines of descent."></a>
+          <figcaption><b>ELIZA, Implementations.</b> The descent of ELIZA's implementations by family and date: solid lines established, dashed probable, dotted possible.<span class="prov">ELIZA 0.1.91, bench-kit 0.69.0 · 21 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/eliza-read.jpg"><img src="img/eliza-read.jpg" width="1440" height="813" loading="lazy" alt="The ELIZA bench's Read view: the MAD-SLIP source of ELIZA 1965b with card sequence numbers in the right margin."></a>
+          <figcaption><b>ELIZA, Read.</b> ELIZA 1965b in MAD-SLIP, with the card sequence numbers of the original deck.<span class="prov">ELIZA 0.1.91, bench-kit 0.69.0 · 21 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/melville-book.jpg"><img src="img/melville-book.jpg" width="1440" height="813" loading="lazy" alt="The Melville bench's Book view: a leaf of the Billy Budd manuscript with every revision shown, additions raised and coloured, deletions struck through, the leaf's image on the right."></a>
+          <figcaption><b>Melville, Book.</b> A leaf of the <i>Billy Budd</i> manuscript with every revision shown: additions raised, deletions struck, coloured by hand.<span class="prov">Melville 0.1.17, bench-kit 0.74.3 · 22 October 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/melville-compare.jpg"><img src="img/melville-compare.jpg" width="1440" height="813" loading="lazy" alt="The Melville bench's Book view with Compare: the manuscript at stage Fa facing MEL's reading text at the same leaf."></a>
+          <figcaption><b>Melville, Book with Compare.</b> The manuscript at stage Fa facing MEL's reading text. Text: Melville Electronic Library, <i>Versions of Billy Budd</i>. Leaf images: Houghton Library, Harvard University, MS Am 188 (363).<span class="prov">Melville 0.1.17, bench-kit 0.74.3 · 22 October 2026</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section wrap reveal" id="config">
+      <span class="num">05</span>
+      <h2>Configuration and tokens</h2>
+      <p>A bench has no server, no environment variables and no API keys of its own. Its settings are in <code>research/js/config.js</code>, read by the browser. Two services take a personal token, and both are optional: without them a bench reads, collates and draws as usual, keeps annotations as drafts in the browser, and does not open the paratext archive.</p>
+      <p>Each person pastes their own token into ⚙ Settings. It is kept in that browser's localStorage, under the bench's storage prefix (<code>store</code> in <code>config.js</code>), and is left out of Help ▸ Back up everything. Nothing is sent anywhere but the service it belongs to.</p>
+
+      <div class="cred">
+        <h3>Hypothesis API token, for shared annotations</h3>
+        <dl>
+          <dt>Provider</dt><dd><a href="https://web.hypothes.is/">Hypothesis</a>. An account is free.</dd>
+          <dt>Get it</dt><dd>Signed in, at <a href="https://hypothes.is/account/developer">hypothes.is/account/developer</a>, where Hypothesis makes and shows your token.</dd>
+          <dt>Where it goes</dt><dd>⚙ Settings ▸ Annotations: the group link from your invitation in <b>Group link or ID</b> (it is reduced to the ID), the token in <b>API token</b>. Stored as <code>&lt;store&gt;group</code> and <code>&lt;store&gt;token</code>.</dd>
+          <dt>Bench setting</dt><dd>The private group's ID, as the default for everyone, in <code>config.js</code>; members join through the bench's invitation (Help ▸ Joining the annotation group).</dd>
         </dl>
+        <div class="term"><div class="label"><span>research/js/config.js</span><span>example</span></div>
+<pre>group: 'AbC123xy',      <span class="c">// the private Hypothesis group's ID</span></pre></div>
+        <p><b>To check it:</b> Settings ▸ Annotations ▸ <b>Test connection</b>. A working token and group give <code>Connected as acct:NAME@hypothes.is; group “GROUP” found.</code></p>
+        <table class="errors">
+          <thead><tr><th>Message</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td>The token was not accepted.</td><td>Hypothesis does not know the token (it answers as for a visitor who is not signed in): it was mistyped, revoked or replaced. Generate a new one and paste it again.</td></tr>
+            <tr><td>Connected as acct:NAME@hypothes.is; but that group was not found for this account.</td><td>The token works, but the account is not a member of the group in Settings: accept the invitation, or check the group ID.</td></tr>
+            <tr><td>Hypothesis 4xx: …</td><td>Any other refusal, with the first part of Hypothesis's own reply.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cred">
+        <h3>GitHub fine-grained token, for the paratext archive</h3>
+        <dl>
+          <dt>Provider</dt><dd><a href="https://github.com/">GitHub</a>. Free; the archive is a private repository the bench names, and each member must be given access to it.</dd>
+          <dt>Get it</dt><dd>Settings ▸ Paratexts ▸ <b>Open the token form</b>. The bench opens <a href="https://github.com/settings/personal-access-tokens/new">github.com/settings/personal-access-tokens/new</a> with the name, owner, a year's expiry and Contents (read and write) filled in; choose <b>Only select repositories</b> and the archive by hand.</dd>
+          <dt>Where it goes</dt><dd>⚙ Settings ▸ Paratexts ▸ <b>GitHub token</b>. Stored as <code>&lt;store&gt;gh.token</code>.</dd>
+          <dt>Bench setting</dt><dd>The archive's owner and repository, and the name of the browser cache, in <code>config.js</code>.</dd>
+          <dt>Limits</dt><dd>GitHub allows an authenticated user <a href="https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api">5,000 REST requests an hour</a>; without a token it is 60. The bench caches the catalogue and files it has fetched in the browser.</dd>
+        </dl>
+        <div class="term"><div class="label"><span>research/js/config.js</span><span>example</span></div>
+<pre>paratexts: { org: 'YOUR-ORG', repo: 'your-bench_paratexts', cache: 'your-bench-paratexts' },</pre></div>
+        <p><b>To check it:</b> open the Paratexts tab; with a working token the catalogue loads. The token is read and write, so give the steps (Settings ▸ Paratexts ▸ Copy the steps to send) only to people who are to catalogue.</p>
+        <table class="errors">
+          <thead><tr><th>Message</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td>The GitHub token was refused: check it in ⚙ Settings.</td><td>HTTP 401: the token is wrong, revoked or expired.</td></tr>
+            <tr><td>GitHub refused: the token may lack write access to OWNER/REPO, or the rate limit is reached.</td><td>HTTP 403: the token was made without Contents read and write, or the hourly limit is used up.</td></tr>
+            <tr><td>Not found: the token may not reach OWNER/REPO (ask to be added to the crew).</td><td>HTTP 404: the archive was not chosen under Only select repositories, or the account has no access to it.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Local and deployed</h3>
+      <p>Browsers keep localStorage for each origin, so <code>http://localhost:8000</code> and <code>https://YOUR-ORG.github.io</code> hold separate settings: a token pasted while testing locally has to be pasted again on the published bench. The same token works in both. Safari clears a site's stored data after seven days without a visit; the token then has to be pasted again, or a new one made if it was not kept.</p>
+
+      <h3>Settings ▸ Bench</h3>
+      <p>Since 0.81.0 a bench whose <code>config.js</code> says <code>editable: true</code>, and which loads <code>kit/project.js</code> straight after <code>js/config.js</code>, lets its user set the name, title, citation, references and language in ⚙ Settings ▸ Bench. The GitHub locations there (the repository, the published address, the paratext archive) are locked once set: changing one takes Unlock, with a warning, and the new value typed a second time, and each change is logged with Put back. bench-template loads <code>project.js</code> with <code>editable: false</code>.</p>
+    </section>
+
+    <section class="section wrap reveal" id="trouble">
+      <span class="num">06</span>
+      <h2>Troubleshooting</h2>
+      <ul class="trouble">
+        <li><span class="sym">Access to fetch at 'file:///…/source/v2/wordfreq.py' from origin 'null' has been blocked by CORS policy</span><span class="fix">The bench was opened as a file. It reads its sources over HTTP, so serve the repository's folder (<code>python3 -m http.server 8000</code>) and open <code>http://localhost:8000/research/</code>.</span></li>
+        <li><span class="sym">Could not load · Could not fetch v2/wordfreq.py (404)</span><span class="fix">The server was started in <code>research/</code>, so <code>source/</code> beside it is out of reach. Start it in the repository's folder. The test tools fail the same way when run from <code>research/</code>: run them from the repository's folder, or give <code>--dir</code>.</span></li>
+        <li><span class="sym">Failed to load resource: 404 (File not found) …/research/kit/versionlist.js; TypeError: Cannot read properties of undefined (reading 'BENCH')</span><span class="fix">The repository was cloned without its submodule, so <code>research/kit</code> is empty. Run <code>git submodule update --init</code> in the repository's folder.</span></li>
+        <li><span class="sym">OSError: [Errno 48] Address already in use</span><span class="fix">Something else is serving on that port (Errno 48 on macOS, 98 on Linux). Use another: <code>python3 -m http.server 8001</code>, and open that port.</span></li>
+        <li><span class="sym">Failed to load resource: net::ERR_CONNECTION_RESET …/research/kit/genealogy.js</span><span class="fix">Python's built-in server dropped some of the many files a bench asks for at once. Reload, or serve with a longer queue:<br><code>python3 -c "import http.server as h; h.ThreadingHTTPServer.request_queue_size = 256; h.test(h.SimpleHTTPRequestHandler, h.ThreadingHTTPServer, port=8000)"</code></span></li>
+        <li><span class="sym">After moving to a newer kit, the bench still behaves as it did before the move</span><span class="fix">The browser kept the old modules. Every script and stylesheet in <code>research/index.html</code> carries <code>?v=</code> with the bench's version; raise them all together, which <code>node research/kit/tools/release.js next "…" --kit vX.Y.Z</code> does (it printed <code>research/index.html: 47 × ?v=0.1.99</code> for bench-template). Then reload with the cache bypassed.</span></li>
+        <li><span class="sym">no Chrome or Chromium found; give its path as CHROME=</span><span class="fix">The test tools could not find a browser in the usual places. Give its path: <code>CHROME=/path/to/chrome node research/kit/tools/test.js</code>.</span></li>
+        <li><span class="sym">Annotations show as drafts only, or the paratext archive asks for a token, on the published bench</span><span class="fix">Tokens are kept per origin, so the ones pasted on <code>localhost</code> are not on <code>github.io</code>. Paste them in ⚙ Settings on the published bench (section 05).</span></li>
+      </ul>
+    </section>
+
+    <section class="section wrap reveal" id="links">
+      <span class="num">07</span>
+      <h2>Links</h2>
+      <div class="links">
+        <a href="https://github.com/critical-code-studies/bench-kit"><b>Source</b><span>critical-code-studies/bench-kit on GitHub</span></a>
+        <a href="https://github.com/critical-code-studies/bench-template"><b>bench-template</b><span>The starting point for a new bench</span></a>
+        <a href="https://github.com/critical-code-studies/bench-kit#readme"><b>README</b><span>Every module, setting and hook</span></a>
+        <a href="https://github.com/critical-code-studies/bench-kit/blob/main/CHANGELOG.md"><b>Changelog</b><span>Each release and what it changed</span></a>
+        <a href="https://github.com/critical-code-studies/bench-kit/blob/main/LICENSE"><b>Licence</b><span>GNU General Public License, version 3</span></a>
+        <a href="https://critical-code-studies.github.io/"><b>Critical Code Studies</b><span>The readings and the method</span></a>
       </div>
     </section>
 
-    <section>
-      <div class="wrap">
-        <h2>The benches</h2>
-
-        <article class="case">
-          <div>
-            <h3>SHRDLU</h3>
-            <p class="sub">Terry Winograd, MIT Artificial Intelligence Laboratory, 1968–70 · MacLisp and Micro-Planner</p>
-            <p>SHRDLU took typed English and answered by moving blocks and pyramids on a simulated table with a simulated arm. The bench holds five versions, three of them as source: the MIT files as they were found on ITS, Winograd's Stanford distribution, and Eric Swenson's 2024 restoration for the PDP-10. A MacLisp reader indexes the sources, and an interpreter runs SHRDLU in the browser from each version's own files, recording every repair it needs in order to do so; Read marks those repairs in gold, after kintsugi.</p>
-            <p>The Graphics tab draws the blocks world from the program's own data file, each object's shape and colour from DISPLAY-AS and its place and size from ATABLE. The bench's catalogue of implementations holds 47 entries.</p>
-            <p class="lead">The Critical Code Studies SHRDLU project, led by David M. Berry and Mark C. Marino.</p>
-          </div>
-          <div class="shots">
-            <figure>
-              <a href="img/shrdlu-graphics.jpg" title="Open the picture at full size"><img src="img/shrdlu-graphics.jpg" width="1440" height="813" loading="lazy" alt="The SHRDLU bench's Graphics tab: the blocks world drawn in three dimensions, green, red and blue blocks, two pyramids and a box holding a pyramid."></a>
-              <figcaption>The blocks world as SHRDLU's data file sets it out.</figcaption>
-            </figure>
-          </div>
-        </article>
-
-        <article class="case">
-          <div>
-            <h3>Spacewar!</h3>
-            <p class="sub">MIT, 1961–62 · Macro assembly for the DEC PDP-1</p>
-            <p>The bench assembles each surviving version of the Macro source and runs it on an emulated PDP-1, the listing beside the scope following the program counter, with a trace, a profile, a record of the writes to memory, and breakpoints. The SHRDLU bench was first built from this one, and much of the kit, its frame among them, was written here before it was shared.</p>
-            <p>Collate sets two versions side by side, folding the lines they share. The catalogue of implementations holds 56 entries, the program's copies, ports and re-creations.</p>
-          </div>
-          <div class="shots">
-            <figure>
-              <a href="img/spacewar-compare.jpg" title="Open the picture at full size"><img src="img/spacewar-compare.jpg" width="1440" height="813" loading="lazy" alt="The Spacewar! bench's Compare view: two texts of Spacewar! 3.1 side by side, unchanged runs folded, a changed repeat line marked."></a>
-              <figcaption>Two witnesses of Spacewar! 3.1 compared: 98 per cent of their lines are shared.</figcaption>
-            </figure>
-          </div>
-        </article>
-
-        <article class="case">
-          <div>
-            <h3>ELIZA</h3>
-            <p class="sub">Joseph Weizenbaum, MIT Project MAC, 1964–66 · MAD-SLIP on the IBM 7094 under CTSS</p>
-            <p>The bench is built around the MAD-SLIP source recovered from Weizenbaum's papers in the MIT archives in 2021. It reads the program in layers: the DOCTOR script, ELIZA itself, and the SLIP routines ELIZA calls, each in its versions.</p>
-            <p>The Implementations tab, which the kit took from this bench, catalogues 138 implementations in their families, from Bernie Cosell's BBN-LISP DOCTOR of 1966 to the BASIC ELIZAs of the microcomputer magazines, and compares any two. Lisp texts are compared by definition, each read in its own dialect: BBN-LISP, PDP-6 Lisp, Interlisp, Maclisp or Common Lisp. The bench is the companion to <i>Inventing ELIZA: How the First Chatbot Shaped the Future of AI</i> (MIT Press, 2026).</p>
-          </div>
-          <div class="shots">
-            <figure>
-              <a href="img/eliza-tree.jpg" title="Open the picture at full size"><img src="img/eliza-tree.jpg" width="1440" height="813" loading="lazy" alt="The ELIZA bench's Implementations tree: families of implementations as lanes, from the original MAD-SLIP source through Cosell's DOCTOR to the Creative Computing BASIC versions, with lines of descent between them."></a>
-              <figcaption>The descent of ELIZA's implementations, by family and date. Solid lines are established, dashed probable, dotted possible.</figcaption>
-            </figure>
-            <figure>
-              <a href="img/eliza-read.jpg" title="Open the picture at full size"><img src="img/eliza-read.jpg" width="1440" height="813" loading="lazy" alt="The ELIZA bench's Read view: the MAD-SLIP source of ELIZA 1965b, labels and SLIP calls coloured, card sequence numbers in the right margin."></a>
-              <figcaption>ELIZA 1965b in Read, with the card sequence numbers of the original deck.</figcaption>
-            </figure>
-          </div>
-        </article>
-
-        <article class="case">
-          <div>
-            <h3>Melville</h3>
-            <p class="sub">Herman Melville, <i>Billy Budd</i> and the short tales · prose, from TEI</p>
-            <p>The first bench whose texts are prose. It reads the Melville Electronic Library's TEI of <i>Billy Budd</i> in the browser, from MEL's own repository at a fixed commit, and copies none of it into its own. From the one encoding it makes four versions: the manuscript before revision, the manuscript's last readings, a diplomatic text with every addition and deletion, and MEL's reading text. Each is divided leaf by leaf, so that Collate can set the manuscript beside the reading text one leaf at a time. The manuscript is in the Houghton Library, Harvard University (MS Am 188 (363)).</p>
-            <p>The bench led to the kit's options for texts that are not code (no comment mark, the Collate modes a bench offers, its own words for its text) and to Book, which sets the TEI's structure as a page, a sheet to each leaf with the leaf's image beside it. The manuscript's three states are one text there, and its revisions come and go as a slider moves through the stages of composition Hayford and Sealts distinguished; Compare sets the reading text facing the manuscript, the two held at the same leaf.</p>
-            <p class="lead">A research project of David M. Berry and Michael Jonik (University of Sussex).</p>
-          </div>
-          <div class="shots">
-            <figure>
-              <a href="img/melville-book.jpg" title="Open the picture at full size"><img src="img/melville-book.jpg" width="1440" height="813" loading="lazy" alt="The Melville bench's Book view: a leaf of the Billy Budd manuscript with every revision shown, additions raised and coloured, deletions struck through, and the leaf's image on the right."></a>
-              <figcaption>A leaf of the <i>Billy Budd</i> manuscript in Book, every revision shown: additions raised, deletions struck, coloured by hand.</figcaption>
-            </figure>
-            <figure>
-              <a href="img/melville-compare.jpg" title="Open the picture at full size"><img src="img/melville-compare.jpg" width="1440" height="813" loading="lazy" alt="The Melville bench's Book view with Compare: the manuscript at stage Fa on the left facing MEL's reading text on the right, both at the same leaf, each with small images of the leaves."></a>
-              <figcaption>The manuscript as it stood at stage Fa, facing MEL's reading text at the same leaf. Text: the Melville Electronic Library, <i>Versions of Billy Budd</i> (John Bryant and MEL's editors). Leaf images: Houghton Library, Harvard University, MS Am 188 (363).</figcaption>
-            </figure>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section>
-      <div class="wrap cols">
-        <div>
-          <h2>Starting a bench</h2>
-          <p>A new bench starts from <a href="https://github.com/critical-code-studies/bench-template">bench-template</a>, which runs on an invented example with the kit already in place.</p>
-          <ol class="steps">
-            <li>Make a repository from the template and clone it with its submodule.</li>
-            <li>Put the sources under <code>source/</code>, a folder for each version.</li>
-            <li>Describe the versions and how they descend in <code>versions.js</code>.</li>
-            <li>Give the bench its names, its language and its references in <code>config.js</code>.</li>
-            <li>Turn on GitHub Pages.</li>
-          </ol>
-          <pre>git clone --recurse-submodules https://github.com/YOUR-ORG/YOUR-BENCH</pre>
-          <p>The template's README takes each step in turn, and the kit's README lists every setting and hook a bench can give.</p>
-        </div>
-        <div>
-          <h2>How the kit changes</h2>
-          <p>A change is made in the kit first and released with a version number and a tag; each bench then moves its submodule to that release when it is ready, and records the move in its own changelog. The kit's tests run in every bench on each push, so that a change which would break one of them shows before that bench takes it.</p>
-          <p>A feature written for one bench that would serve the others is moved into the kit. The Implementations tab came from ELIZA in this way, the Functional overview from the template, and the options for prose from Melville.</p>
-        </div>
-      </div>
-    </section>
   </main>
 
-  <footer>
-    <div class="wrap">
-      <span><img src="logo.svg" alt=""> bench-kit <span data-kit-version>0.81.0</span></span>
-      <span>David M. Berry</span>
-      <span>GNU General Public License v3.0</span>
-      <a href="https://github.com/critical-code-studies/bench-kit">github.com/critical-code-studies/bench-kit</a>
-    </div>
+  <footer class="site-footer">
+    <div class="wrap"><p>bench-kit <span data-kit-version>0.81.0</span> · GPL-3.0 · part of <a href="https://critical-code-studies.github.io/">Critical Code Studies</a></p></div>
   </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      function current() {
+        var a = root.getAttribute('data-theme');
+        if (a) return a;
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      document.querySelectorAll('.theme-toggle').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var next = current() === 'dark' ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          try { localStorage.setItem('ccs-theme', next); } catch (e) {}
+        });
+      });
+      var toggle = document.querySelector('.nav-toggle'), nav = document.getElementById('site-nav');
+      function close() { nav.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
+      toggle.addEventListener('click', function (e) { e.stopPropagation(); var o = nav.classList.toggle('open'); toggle.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+      nav.addEventListener('click', function (e) { if (e.target.closest('a')) close(); });
+      document.addEventListener('click', function (e) { if (!nav.contains(e.target)) close(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window)) { els.forEach(function (el) { el.classList.add('in'); }); return; }
+      var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
 </body>
 </html>
