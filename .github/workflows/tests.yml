@@ -1,5 +1,5 @@
-# The kit's tests, run in each bench with the kit as pushed in place of the bench's own copy,
-# so a change that would break a bench shows here before the bench moves to it.
+# The kit's tests, and every view of each bench, run with the kit as pushed in place of the
+# bench's own copy, so a change that would break a bench shows here before the bench moves to it.
 name: Tests
 on:
   push:
@@ -15,7 +15,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bench: [critical-code-studies/bench-template, critical-code-studies/SHRDLU, spacewar1962/spacewar, critical-code-studies/ELIZA]
+        include:
+          - { bench: critical-code-studies/bench-template, kit: research/kit, dir: research }
+          - { bench: critical-code-studies/SHRDLU, kit: research/kit, dir: research }
+          - { bench: spacewar1962/spacewar, kit: research/kit, dir: research }
+          - { bench: critical-code-studies/ELIZA, kit: research/kit, dir: research }
+          - { bench: vector-humanities/melville, kit: kit, dir: . }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,10 +28,15 @@ jobs:
           path: bench
       - uses: actions/checkout@v4
         with:
-          path: bench/research/kit
+          path: bench/${{ matrix.kit }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Tests
         working-directory: bench
-        run: node research/kit/tools/test.js
+        run: node ${{ matrix.kit }}/tools/test.js --dir ${{ matrix.dir }}
+      # every view the bench has, opened with the kit as pushed: a change that breaks a bench's views
+      # shows here before the bench moves to it
+      - name: Views
+        working-directory: bench
+        run: node ${{ matrix.kit }}/tools/views.js --dir ${{ matrix.dir }}

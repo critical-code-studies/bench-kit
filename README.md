@@ -426,10 +426,16 @@ node research/kit/tools/sitemap.js
 node research/kit/tools/styles.js --themes all
 ```
 
-`tools/test.js` runs the bench's test pages (every `tests/*.html`) in headless Chrome and prints each page's count and every failure, with what it got and wanted; it exits 1 when a test fails. GitHub Actions runs it on every push to a bench (`.github/workflows/tests.yml` in the bench: check out with the kit, Node 22, `node research/kit/tools/test.js`), and the kit's own workflow runs it in each bench with the kit as pushed, so a kit change that would break a bench shows before the bench moves to it. A new bench copies the template's workflow; the kit's list of benches (the template, SHRDLU, Spacewar, ELIZA) is in its own `.github/workflows/tests.yml`.
+`tools/test.js` runs the bench's test pages (every `tests/*.html`) in headless Chrome and prints each page's count and every failure, with what it got and wanted; it exits 1 when a test fails. GitHub Actions runs it on every push to a bench (`.github/workflows/tests.yml` in the bench: check out with the kit, Node 22, `node research/kit/tools/test.js`), and the kit's own workflow runs it in each bench with the kit as pushed, so a kit change that would break a bench shows before the bench moves to it. A new bench copies the template's workflow; the kit's list of benches (the template, SHRDLU, Spacewar, ELIZA, Melville) is in its own `.github/workflows/tests.yml`, which also opens every view of each with `tools/views.js`.
 
 ```bash
 node research/kit/tools/test.js
+```
+
+`tools/views.js` opens each of a bench's views in headless Chrome and reports, for each, whether it drew something and whether it failed: an uncaught error, a view left empty, or the kit's message that something could not load. With `--kit <folder>` it serves the kit from that folder in place of the bench's own, changing nothing in the bench, so a kit change can be checked in every bench before it is released. The kit's own workflow runs it in each bench after the tests. It is the check that the benches still work at each release towards 1.0.
+
+```bash
+node research/kit/tools/views.js --kit ../bench-kit
 ```
 
 `tools/chrome.js` is what these tools share: the repository served as GitHub Pages serves it, and the bench in headless Chrome (Node 22 and Chrome or Chromium, `CHROME=` to name it; no packages).
