@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.82.0 (2026-10-27)
 
 - **Versions made from files** (`builder.js`, new; Stage 1 of the hand-built project, asked for by David): in a bench that says `editable: true` and loads `kit/builder.js`, Versions ▾ ▸ Add a version from files takes an id, label, date, authors, a summary, the version it was made from, and files chosen or dropped, each with its role (program, support, doc, text). The files are kept in the browser's IndexedDB as they are, the record in its storage, and the version is listed and read as the bench's own: Read, Collate, Genealogy, references and links (`?v=`) all reach it, after a reload too. A line of descent whose tip is the version's parent runs on to it, or the version names a line, made where there is none. Made here, in the same box, lists them with Take out. bench-template's two versions, made again by hand from the same files, give the same Read, the same Collate in both modes and the same Genealogy flow (path for path) as the bench's own.
 - `versionlist.js`: `api.add(v, { parent, witness, also, influence, line, lineLabel })` and `api.remove(id)`, the lines of descent following.
