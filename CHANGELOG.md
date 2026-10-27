@@ -1,5 +1,13 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Versions made from files** (`builder.js`, new; Stage 1 of the hand-built project, asked for by David): in a bench that says `editable: true` and loads `kit/builder.js`, Versions ▾ ▸ Add a version from files takes an id, label, date, authors, a summary, the version it was made from, and files chosen or dropped, each with its role (program, support, doc, text). The files are kept in the browser's IndexedDB as they are, the record in its storage, and the version is listed and read as the bench's own: Read, Collate, Genealogy, references and links (`?v=`) all reach it, after a reload too. A line of descent whose tip is the version's parent runs on to it, or the version names a line, made where there is none. Made here, in the same box, lists them with Take out. bench-template's two versions, made again by hand from the same files, give the same Read, the same Collate in both modes and the same Genealogy flow (path for path) as the bench's own.
+- `versionlist.js`: `api.add(v, { parent, witness, also, influence, line, lineLabel })` and `api.remove(id)`, the lines of descent following.
+- `builds.js`: a file the page holds itself is read from `SW.fileSource` (`{ has, text, bytes }`) instead of fetched.
+- `shell.js`: `SW.fillPicker()`, to fill the version picker again. `menus.js`: Versions ▾ has Add a version from files where `builder.js` is loaded.
+- Tests: `tests/versions.test.js`, 6 checks of adding and taking out versions and their lines.
+
 ## 0.81.0 (2026-10-27)
 
 - **Settings ▸ Bench** (`project.js`, new; Stage 0 of the hand-built project, asked for by David): for a project its user configures (`editable: true` in `config.js`), the name, title, the About box's project and citation, the references' prefix and short names, and the language's comment marks, routine pattern and case are set in the page. They are laid over `config.js` as the page loads, so the rest of the kit reads them as it reads `config.js`, kept in the browser (`bench.settings`, in Back up everything), and applied by a reload when saved; a value set back to the default is dropped. **The GitHub locations are locked** once set (the repository, the published address, the paratext archive's owner and repository): changing one takes Unlock, with a warning that references, permalinks and annotations may stop resolving and nothing on GitHub moves, and then the new value typed again before Save, which also asks for initials. Each change is logged with the date, initials and old value, and Put back offers the old value again through the same two steps. The storage prefix and the stem of file names are not offered. A bench without `editable` is unchanged: no Bench tab, nothing laid over its settings, for its readers or anyone.

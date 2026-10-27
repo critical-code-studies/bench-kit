@@ -48,7 +48,8 @@
   function VERSIONS() {
     return [['about', 'This version', 'Its record, sources and annotations'],
             ['compare', 'Collate', collateText()],
-            ['genealogy', 'Genealogy', 'How the versions descend']];
+            ['genealogy', 'Genealogy', 'How the versions descend']]
+      .concat(SW.builder ? [['builder', 'Add a version from files', 'Files from this computer, read as a new version']] : []);
   }
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
@@ -255,6 +256,7 @@
     if (which === 'help') { SW.help(p); return; }
     if (which === 'read' && /^f:/.test(p)) { SW.openAt(SW.state.v, { p: +p.slice(2), n0: 1 }); return; }   // a file of the open version
     if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) SW.select(p.slice(2)); SW.setTab('read'); return; }
+    if (which === 'versions' && p === 'builder' && SW.builder) { SW.builder.open(); return; }
     if (which === 'versions') SW.setTab(p);
   }
 

@@ -41,6 +41,7 @@
     }).join('');
     sel.onchange = function () { select(sel.value); };
   }
+  SW.fillPicker = fillPicker;   // again, when a version is added or taken out (kit/builder.js)
 
   // A menu in the tab row is lit when the view open is one of its items (data-tabs; for the
   // analyse view, the lenses SW.BENCH.lenses.menus puts in that menu).

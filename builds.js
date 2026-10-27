@@ -13,7 +13,8 @@
  *     meta(b)            [[label, value]]: the bench's rows in an export's details, before
  *                        Generated (how the text was read)
  * It gives SW.build(id, extra), SW.current(), SW.fetchText(path), SW.fetchBytes(path),
- * SW.openAt(vid, a), SW.docMeta(b) and SW.oct(n, width).
+ * SW.openAt(vid, a), SW.docMeta(b) and SW.oct(n, width). A file the page holds itself (a version made
+ * from files, kit/builder.js) is read from SW.fileSource ({ has(path), text(path), bytes(path) }) instead.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
@@ -30,6 +31,11 @@
   var textCache = {};
   SW.fetchText = function (path) {
     if (textCache[path]) return textCache[path];
+    if (SW.fileSource && SW.fileSource.has(path)) {
+      textCache[path] = SW.fileSource.text(path);
+      textCache[path].catch(function () { delete textCache[path]; });
+      return textCache[path];
+    }
     // revalidated, so a corrected transcription is not served from an old cache
     textCache[path] = fetch(urlOf(path), { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw new Error('Could not fetch ' + path + ' (' + r.status + ')');
@@ -39,6 +45,7 @@
     return textCache[path];
   };
   SW.fetchBytes = function (path) {
+    if (SW.fileSource && SW.fileSource.has(path)) return SW.fileSource.bytes(path);
     return fetch(urlOf(path)).then(function (r) {
       if (!r.ok) throw new Error('Could not fetch ' + path);
       return r.arrayBuffer();

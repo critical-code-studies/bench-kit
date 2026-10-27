@@ -25,6 +25,10 @@
  *                  the genealogy start there, so a transcriber's note at a file's head is left out
  *     extra        anything else the bench's views read from SWVersions
  *   The bench then sets SWVersions to api (module.exports in Node).
+ *   api.add(v, { parent, witness, also, influence, line })   a version made in the page (kit/builder.js)
+ *                put in the list as the bench's own are; a line of descent whose tip is its parent
+ *                (or the line named, made where there is none) then runs to it
+ *   api.remove(id)   one taken out again, its lines running to its parent
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
@@ -41,13 +45,14 @@
 
   function make(o) {
     var VERSIONS = o.versions, P = o.parent || {}, W = o.witness || {}, A = o.also || {}, I = o.influence || {};
-    VERSIONS.forEach(function (v) {
+    function dress(v, parent, witness, also, influence) {
       v.url = function () { return '#v=' + encodeURIComponent(v.id); };
-      v.parent = P[v.id] || null;
-      v.witnessOf = W[v.id] || null;
-      v.also = A[v.id] || [];
-      v.influence = I[v.id] || [];
-    });
+      v.parent = parent || null;
+      v.witnessOf = witness || null;
+      v.also = also || [];
+      v.influence = influence || [];
+    }
+    VERSIONS.forEach(function (v) { dress(v, P[v.id], W[v.id], A[v.id], I[v.id]); });
     function byId(id) {
       for (var i = 0; i < VERSIONS.length; i++) if (VERSIONS[i].id === id) return VERSIONS[i];
       return null;
@@ -81,8 +86,30 @@
       });
     }
 
+    function relines() { LINES.forEach(function (l) { if (l.tip) l.ids = ancestry(l.tip); }); }
+    function add(v, d) {
+      d = d || {};
+      if (byId(v.id)) throw new Error('There is already a version ' + v.id + '.');
+      dress(v, d.parent, d.witness, d.also, d.influence);
+      VERSIONS.push(v);
+      var line = d.line ? LINES.filter(function (l) { return l.id === d.line; })[0] : null;
+      if (d.line && !line) LINES.push(line = { id: d.line, label: d.lineLabel || d.line, tip: v.id });
+      if (line && line.tip) line.tip = v.id;
+      else if (!line && v.parent) LINES.forEach(function (l) { if (l.tip === v.parent) l.tip = v.id; });
+      relines();
+      return v;
+    }
+    function remove(id) {
+      var v = byId(id); if (!v) return false;
+      VERSIONS.splice(VERSIONS.indexOf(v), 1);
+      for (var i = LINES.length - 1; i >= 0; i--) if (LINES[i].tip === id) { if (v.parent) LINES[i].tip = v.parent; else LINES.splice(i, 1); }
+      relines();
+      return true;
+    }
+
     var api = { VERSIONS: VERSIONS, TRANSFORMS: o.transforms || {}, DIALECTS: o.dialects || {}, SRC: o.src, LINES: LINES,
-                byId: byId, ancestry: ancestry, load: o.load || load, findTitle: o.findTitle || function () { return 1; } };
+                byId: byId, ancestry: ancestry, load: o.load || load, findTitle: o.findTitle || function () { return 1; },
+                add: add, remove: remove };
     var X = o.extra || {};
     for (var k in X) api[k] = X[k];
     return api;
