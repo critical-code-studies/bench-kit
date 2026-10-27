@@ -15,8 +15,8 @@
  * changed by a file; drafts and notes already here are kept.
  * A .ccs session becomes one version: its files in their folders (roles from the language and the
  * name, a README or markdown read as documentation), its line annotations drafts on their lines,
- * typed with a tag (ccs:observation, ccs:question, ccs:metaphor, ccs:pattern, ccs:context,
- * ccs:critique) and their replies under them, signed as in the session (CCS where it names no one). Its conversation with an AI is not brought in.
+ * typed as there (the tag type:observation, type:question, type:metaphor, type:pattern, type:context,
+ * type:critique; SW.BENCH.annotationTypes: true shows them by name) and their replies under them, signed as in the session (CCS where it names no one). Its conversation with an AI is not brought in.
  * SW.projectFile: save(), open(file), data(), load(obj), fromCCS(obj, opts), samples(); and, in any
  * bench, the pure parts slug, roleOf, idOf, parseSamples.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -123,7 +123,7 @@
       (s.lineAnnotations || []).forEach(function (a, k) {
         var p = at[a.codeFileId]; if (p == null) return;
         var n0 = a.lineNumber, n1 = a.endLineNumber || a.lineNumber, did = 'draft-ccs-' + stamp + '-' + k;
-        var anchor = { p: p, n0: n0, n1: n1, src: v.build[p].src }, tags = ['ccs:' + a.type];
+        var anchor = { p: p, n0: n0, n1: n1, src: v.build[p].src }, tags = ['type:' + a.type];
         // signed as in the session; one that names no one is marked as CCS Workbench's, not the reader's
         var by = a.addedBy || 'CCS';
         var hTags = [TAG + 'v:' + v.id, TAG + 'kind:line', TAG + 'by:' + by, TAG + 'lines:' + p + ':' + n0 + (n1 !== n0 ? '-' + n1 : ''), TAG + 'src:' + anchor.src].concat(tags);

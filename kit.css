@@ -35,6 +35,14 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .bd-file .btn { padding: 1px 8px; }
 .bd-list .smp { display: grid; gap: 2px; text-align: left; justify-items: start; padding: 6px 10px; width: 100%; min-width: 0; white-space: normal; }
 .bd-list .smp b { font-weight: 600; }
+/* an annotation's type (SW.BENCH.annotationTypes), above its text */
+.ntype { display: inline-block; font: 600 10.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; color: var(--text-dim); margin-bottom: 4px; }
+.ntype[data-type="observation"] { color: var(--beam); }
+.ntype[data-type="question"] { color: var(--amber); }
+.ntype[data-type="metaphor"] { color: var(--violet); }
+.ntype[data-type="pattern"] { color: var(--green); }
+.ntype[data-type="context"] { color: var(--text-dim); }
+.ntype[data-type="critique"] { color: var(--red); }
 .set-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .set-foot .set-gap { flex: 1; }
 

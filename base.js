@@ -38,6 +38,7 @@
         '<p class="keep-hint" hidden>Unsaved annotation. Save it, or Cancel to discard it.</p>' +
         '<p class="hint" id="note-anchor"></p>' +
         '<textarea id="note-text" rows="7" placeholder="Your annotation. Markdown is fine."></textarea>' +
+        '<label id="note-type-row" hidden>Type <select id="note-type"></select></label>' +
         '<label>Tags <input id="note-tags" placeholder="e.g. provenance, revision" autocomplete="off"></label>' +
         '<label class="check-row dev-check" id="note-dev" hidden><span><input type="checkbox"> Developer only</span></label>' +
         '<p class="hint" id="note-who"></p>' +

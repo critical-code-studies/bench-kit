@@ -65,7 +65,7 @@
       .then(function () { loading = ''; if (window.SW && SW.BENCH && SW.BENCH.title) document.title = 'Tests · ' + SW.BENCH.title; });
   });
   need.forEach(function (n) { chain = chain.then(function () { if (!n[1]()) return load(kit + n[0]); }); });
-  ['annotations.test.js', 'kit.test.js', 'lispdefs.test.js', 'book.test.js', 'project.test.js', 'versions.test.js', 'projectfile.test.js'].forEach(function (f) { chain = chain.then(function () { return load(here + f); }); });
+  ['annotations.test.js', 'kit.test.js', 'lispdefs.test.js', 'book.test.js', 'project.test.js', 'versions.test.js', 'projectfile.test.js', 'types.test.js'].forEach(function (f) { chain = chain.then(function () { return load(here + f); }); });
   chain.then(function () { return Promise.all(pending); }).then(function () {
     loadErrors.forEach(function (m) { results.push({ name: 'loading the bench: ' + m.split(':')[0], ok: false, got: m, want: 'no error' }); });
     report();

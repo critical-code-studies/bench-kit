@@ -113,15 +113,23 @@
     var ROLE = { program: 'program', support: 'support', doc: 'documentation' };
     function info(b) {
       if (F.info) return F.info(b);
+      // the folder of each file below the folder the version's files share (a project of many folders)
+      var dirs = b.parts.map(function (part) { return part.src.split('/').slice(0, -1); }), common = dirs.length ? dirs[0].length : 0;
+      dirs.forEach(function (d) { var i = 0; while (i < common && i < d.length && d[i] === dirs[0][i]) i++; common = i; });
       return b.parts.map(function (part, pi) {
         var name = part.src.split('/').pop();
-        return { pi: pi, supplied: !SW.mainPart(part), star: false, title: '', label: name + (!SW.mainPart(part) ? ' (' + (ROLE[part.role] || part.role) + ')' : '') };
+        return { pi: pi, supplied: !SW.mainPart(part), star: false, title: '', folder: dirs[pi].slice(common).join('/'),
+                 label: name + (!SW.mainPart(part) ? ' (' + (ROLE[part.role] || part.role) + ')' : '') };
       });
     }
     function showsTape(pi) { return opts.tapes === 'all' || +opts.tapes === pi; }
     function fileOptions(inf) {
-      var o = [['all', 'All ' + inf.length + ' ' + word.toLowerCase() + 's']].concat(inf.map(function (t) { return [String(t.pi), (t.pi + 1) + '. ' + t.label]; }));
-      return o.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === String(opts.tapes) ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('');
+      var opt = function (x) { return '<option value="' + x[0] + '"' + (x[0] === String(opts.tapes) ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; };
+      var all = opt(['all', 'All ' + inf.length + ' ' + word.toLowerCase() + 's']), one = function (t) { return opt([String(t.pi), (t.pi + 1) + '. ' + t.label]); };
+      // in groups by folder where the files are in more than one
+      var folders = []; inf.forEach(function (t) { if (folders.indexOf(t.folder || '') < 0) folders.push(t.folder || ''); });
+      if (folders.length < 2) return all + inf.map(one).join('');
+      return all + folders.map(function (f) { return '<optgroup label="' + esc(f || '(top)') + '">' + inf.filter(function (t) { return (t.folder || '') === f; }).map(one).join('') + '</optgroup>'; }).join('');
     }
 
     // ---------- highlighting: the bench's, or numbers and the comment ----------

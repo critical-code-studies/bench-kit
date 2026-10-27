@@ -34,10 +34,20 @@
     });
   }
   function short(l) { var n = (B.name || '') + ' '; return l.indexOf(n) === 0 ? l.slice(n.length) : l; }
+  // The types an annotation may be given (SW.BENCH.annotationTypes): [[id, label, what it is for]], or
+  // true for CCS Workbench's six; none by default. A type is kept as the tag type:<id>.
+  var CCS_TYPES = [['observation', 'Observation', 'What the code does or shows'], ['question', 'Question', 'Something to find out'],
+                   ['metaphor', 'Metaphor', 'A figure in the code, its names or its comments'], ['pattern', 'Pattern', 'A form that recurs'],
+                   ['context', 'Context', 'History, people, machines, sources'], ['critique', 'Critique', 'An argument about the code']];
+  function types() { var t = B.annotationTypes; return t === true ? CCS_TYPES : Array.isArray(t) ? t : []; }
+  // type:<id>, or ccs:<id> as 0.83.0 tagged the annotations of a CCS Workbench session
+  function typeOf(n) { var g = (n && n.tags || []).filter(function (x) { return /^(type|ccs):/.test(x); })[0]; return g ? g.replace(/^(type|ccs):/, '') : null; }
+  function typeName(id) { var t = types().filter(function (x) { return x[0] === id; })[0]; return t ? t[1] : id; }
   // A tag as a reader should see it: the bench's own marks (level:, note:, chapter:, cat:) in words
   if (!root.SW.tagLabel) root.SW.tagLabel = function (g) {
     g = String(g || '');
     var m;
+    if ((m = /^type:(.+)$/.exec(g))) return typeName(m[1]);
     if ((m = /^level:(key|notable|minor)$/.exec(g))) return { key: '★★★ key', notable: '★★ notable', minor: '★ minor' }[m[1]];
     if ((m = /^note:(.+)$/.exec(g))) return 'from note ' + m[1];
     if ((m = /^chapter:(.+)$/.exec(g))) return 'Chapter: ' + m[1];
@@ -47,6 +57,7 @@
   var SW = root.SW;
   var API = 'https://api.hypothes.is/api';
   var N = SW.notes = {};
+  N.types = types; N.typeOf = typeOf; N.typeName = typeName;
   var cache = {};
   // Notes just saved to the group, shown until the group's search returns them
   // (Hypothesis takes a moment to index a new annotation).
@@ -799,9 +810,10 @@
         ? '<button type="button" class="hist" data-act="history" title="See the earlier wordings">edited ' + SW.esc(SW.fmtDate(n.updated || n.date)) + ' · ' + SW.noteHistory.list(n.text).length + ' earlier</button>'
         : '<i title="' + SW.esc(new Date(n.updated).toLocaleString('en-GB')) + '">edited ' + SW.esc(SW.fmtDate(n.updated)) + '</i>') : '') + '</div>' +
       '<div class="nbody">' +   // what the annotation holds, set on its own ground
+      (N.typeOf(n) ? '<div class="ntype" data-type="' + SW.esc(N.typeOf(n)) + '">' + SW.esc(typeName(N.typeOf(n))) + '</div>' : '') +
       (n.anchor && n.anchor.c0 != null && n.quote && !n.parent ? codeQuote(n) : '') +
       (n.source === 'buildlog' ? '<div class="body">' + SW.esc(n.text) + '</div>' : '<div class="body note-md">' + SW.md(SW.figpack.split(n.text).text) + '</div>') +
-      (n.tags && n.tags.length ? '<div class="tagl">' + n.tags.map(function (g) { return SW.esc(SW.tagLabel(g)); }).join(' · ') + '</div>' : '') +
+      (n.tags && n.tags.filter(function (g) { return !/^(type|ccs):/.test(g); }).length ? '<div class="tagl">' + n.tags.filter(function (g) { return !/^(type|ccs):/.test(g); }).map(function (g) { return SW.esc(SW.tagLabel(g)); }).join(' · ') + '</div>' : '') +
       (N.backlinks(n.id).length ? '<div class="backl"><span class="faint">Linked from</span> ' + N.backlinks(n.id).map(function (b) {
         return '<a href="' + SW.esc(N.linkOf(b)) + '" class="swlink" title="' + SW.esc('Go to ' + N.labelOf(b)) + '">' + SW.esc(N.labelOf(b)) + '</a>';
       }).join(' · ') + '</div>' : '') +
@@ -1444,7 +1456,12 @@
     SW.$('#note-text').value = '';
     SW.mdTools(SW.$('#note-text'));
     SW.$('#note-text')._mdReset();
-    SW.$('#note-tags').value = (opts.tags || []).join(', ');
+    SW.$('#note-tags').value = (opts.tags || []).filter(function (g) { return !/^type:/.test(g); }).join(', ');
+    // the annotation's type, where the bench gives types (not for a reply)
+    var typeRow = SW.$('#note-type-row'), typeSel = SW.$('#note-type'), TY = N.types();
+    typeRow.hidden = !TY.length || !!opts.parent;
+    typeSel.innerHTML = '<option value="">None</option>' + TY.map(function (t) { return '<option value="' + SW.esc(t[0]) + '" title="' + SW.esc(t[2] || '') + '">' + SW.esc(t[1]) + '</option>'; }).join('');
+    typeSel.value = N.typeOf({ tags: opts.tags || [] }) || '';
     var devBox = SW.$('#note-dev');
     devBox.hidden = !SW.dev() || !!opts.parent;
     SW.$('input', devBox).checked = false;   // shared unless ticked, each time
@@ -1478,7 +1495,8 @@
       if (dlg.returnValue !== 'save') return;   // closed another way, its text kept to come back
       var text = ta.value.trim();
       if (!text) { forget(); return; }
-      var tags = tgs.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+      var tags = tgs.value.split(',').map(function (s) { return s.trim(); }).filter(function (g) { return g && !/^type:/.test(g); });
+      if (!typeRow.hidden && typeSel.value) tags.unshift('type:' + typeSel.value);
       var dev = !devBox.hidden && SW.$('input', devBox).checked;
       N.create({ vid: opts.vid, kind: opts.kind || (opts.anchor ? 'line' : 'version'), anchor: opts.anchor,
                  quote: opts.quote, text: text, tags: tags, parent: opts.parent, dev: dev })
