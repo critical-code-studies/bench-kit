@@ -43,10 +43,16 @@
  * until the reader clicks, scrolls, hovers another revision or moves the slider. With Compare, a
  * passage of a text facing a version's states lights its page there, and the boxes of the revisions
  * whose words are mostly in it.
+ * The enlarged page zooms and pans (wheel, pinch, + −, drag; 0 for the whole page), its boxes with it.
+ * 🔗 Share (in the toolbar, and in the enlarged page's details) copies a link that opens Book as it
+ * is set: the version, stage and settings, the place (l), the box clicked (hz), and, from the
+ * enlarged page, that page open at its zoom (pz, zm). A page whose text, or part of it, the document
+ * transcribes under another (pb.elsewhere: [{ to, note }]) has a link to that page by its rule, and
+ * the part of its image below its lowest box leads there.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
  * for both columns, kept for this browser and in the address as img (off, or a width).
  * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the text beside),
- * img and l (the place). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
+ * img, l (the place), hz, pz and zm (a shared link's box, page and zoom). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
  * them), so an annotation made here is the same as one made in Read; the group's annotations are
  * marked on their lines. A state of the text is annotated on the source version's lines.
  * kit/edition.js typesets a version from its document, raising the additions and striking the
@@ -140,7 +146,7 @@
     view.style.setProperty('--bk-imgw', st.imgW + 'px');
     (cols || []).forEach(function (c) { c.stale = true; });
   }
-  var cols = [], place = null, pending = null;
+  var cols = [], place = null, pending = null, shared = (Q0.pz || Q0.hz) ? { pz: Q0.pz, zm: Q0.zm, hz: Q0.hz } : null;
   showImages();   // place: in the first column's lines; pending: a link's, until it is set
 
   function inStates(vid) { return !!STATES && [STATES.source, STATES.first, STATES.last].indexOf(vid) >= 0; }
@@ -205,6 +211,8 @@
     btn.onclick = function (e) {
       var z = e.target.closest('.bk-z');
       if (z) { e.preventDefault(); toText(col, pg, z.dataset.z); return; }
+      var ew = e.target.closest('.bk-else');
+      if (ew) { e.preventDefault(); goElsewhere(col, ew.dataset.to); return; }
       pageBox(col, col.pages.indexOf(pg));
     };
     f.appendChild(btn);
@@ -232,6 +240,12 @@
       }
       zdiv[id] = d; L.appendChild(d);
     });
+    var lowest = Math.max.apply(null, Object.keys(pg.zones).map(function (id) { var b = pg.zones[id].box; return Math.max(b[1], b[3]); }));
+    if (pg.elsewhere && pg.elsewhere.length && 1 - lowest / h > 0.1) {
+      var ew = pg.elsewhere[0], r = SW.el('div', { class: 'bk-else', 'data-to': ew.to, title: (ew.note ? ew.note + ' ' : '') + '(' + ew.to + ')' });
+      r.style.top = (100 * lowest / h + 1) + '%'; r.style.height = (99 - 100 * lowest / h) + '%';
+      L.appendChild(r);
+    }
     return { L: L, zdiv: zdiv };
   }
   function zoneLayer(pg) {
@@ -278,9 +292,16 @@
   }
   // the text a box was clicked for stays highlighted until the reader does something else: another
   // click, scrolling the text, a hover on another revision, moving the slider
-  var held = [], heldAt = 0;
-  function clearHeld() { held.forEach(function (e) { e.classList.remove('bk-held'); }); held = []; }
-  view.addEventListener('click', function () { if (held.length && Date.now() - heldAt > 300) clearHeld(); }, true);
+  var held = [], heldAt = 0, heldZone = null;   // heldZone: the box clicked, for a link to this place
+  function clearHeld() { held.forEach(function (e) { e.classList.remove('bk-held'); }); held = []; heldZone = null; }
+  function hold(col, marks) {
+    col.moved = false;
+    col.el.scrollTop = Math.max(0, marks[0].offsetTop - READ);
+    clearHeld();
+    marks.forEach(function (e) { e.classList.add('bk-held'); });
+    held = marks; heldAt = Date.now();
+  }
+  view.addEventListener('click', function (e) { if (held.length && Date.now() - heldAt > 300 && !(e.target.closest && e.target.closest('#bk-share'))) clearHeld(); }, true);   // Share keeps it, to link to it
   // a box on the page: to the text written in it, highlighted until the reader does something else
   function toText(col, pg, id) {
     var z = pg.zones[id]; if (!z) return;
@@ -288,12 +309,18 @@
     var shown = z.spans.filter(function (e) { return !e.classList.contains('bk-gone') && !e.closest('[hidden]'); });
     var marks = shown.length ? shown : [z.spans[0] && z.spans[0].closest('p, h3, .bk-lg')].filter(function (e) { return e && !e.hidden; });
     if (!marks.length) { SW.toast('What is written there is not in the text at this stage' + (col.states && !st.all ? ': ' + (W.all || 'All revisions') + ' shows it.' : '.'), 4000); return; }
-    col.moved = false;
-    col.el.scrollTop = Math.max(0, marks[0].offsetTop - READ);
-    clearHeld();
-    marks.forEach(function (e) { e.classList.add('bk-held'); });
-    held = marks; heldAt = Date.now();
+    hold(col, marks);
+    heldZone = id;
     if (!shown.length) SW.toast('The text written there is not in the text at this stage: its passage is marked.', 4000);
+  }
+  // a page (or part of one) whose text the document transcribes under another page (pb.elsewhere:
+  // [{ to, note }]): that page's text, highlighted as a box's is
+  function goElsewhere(col, to) {
+    if (col.stale || !col.byFacs) measure(col);
+    var pg = col.pages[col.byFacs[to]];
+    if (!pg || !pg.sheet) { SW.toast('The ' + PAGE + ' ' + to + ' is not in this text.', 4000); return; }
+    var els = [].slice.call(pg.sheet.querySelectorAll('.bk-text > p, .bk-text > h3, .bk-text > .bk-lg')).filter(function (e) { return !e.hidden; });
+    hold(col, els.length ? els : [pg.el]);
   }
   // a revision in the text: its box lit on the page beside it while the pointer is on it; and, with
   // Compare, a passage of the text facing a version's states lights its page there
@@ -333,7 +360,7 @@
 
   // the page larger, in a box over the view, with what is known of it: ◀ ▶ (or the arrow keys) for
   // the page before or after, ✕, Esc or a click elsewhere to close
-  function pageBox(col, i) {
+  function pageBox(col, i, zq) {
     var old = SW.$('dialog.bk-modal'); if (old) old.remove();
     var d = SW.el('dialog', { class: 'bk-modal' });
     document.body.appendChild(d);
@@ -350,16 +377,20 @@
       rows.push(['Source', pg.iiif ? '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>' :
         '<a href="' + esc(pg.img.large || pg.img.src) + '" target="_blank" rel="noopener">the image ↗</a>']);
       var prev = step(k, -1), nxt = step(k, 1), many = prev >= 0 || nxt >= 0;
-      d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><img src="' + esc(pg.img && pg.img.large ? pg.img.large : pg.iiif ? iiifURL(pg.iiif, 1600, 1600) : pg.img.src) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '">' +
+      rows.push(['Share', '<button class="btn" data-share title="A link that opens Book at this ' + esc(PAGE) + ', as it is set here: the stage, the zoom and the place">🔗 Copy link</button>']);
+      d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><div class="bk-zoom"><img src="' + esc(pg.img && pg.img.large ? pg.img.large : pg.iiif ? iiifURL(pg.iiif, 1600, 1600) : pg.img.src) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '"></div>' +
+        '<div class="bk-zctl"><button data-zm="-" title="Smaller (−)">−</button><button data-zm="+" title="Larger (+)">+</button><button data-zm="0" title="The whole ' + esc(PAGE) + ' (0)">⟲</button></div>' +
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
-        '<p class="hint">' + (pg.zoneN ? 'A box on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click elsewhere: close.</p></div></div>';
+        '<p class="hint">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN ? 'A box on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click beside the image: close.</p></div></div>';
+      zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
       // the revisions' boxes over the large image, as beside the text: faint with the pointer on it,
       // the stage's lit in red, a click on one to the text written there
       if (pg.zoneN && pg.size) {
         var pic = d.querySelector('.bk-modal-pic'), big = pic.querySelector('img'), Z = makeZones(pg, false), sNow = st.all ? 0 : st.stage;
-        pic.appendChild(Z.L);
+        zoomEl.appendChild(Z.L);
+        var er = Z.L.querySelector('.bk-else');
         // a box under the pointer: its words and what was done there, by the pointer
         var tip = SW.el('div', { class: 'bk-ztip', hidden: '' }); d.appendChild(tip);
         Object.keys(Z.zdiv).forEach(function (id) {
@@ -368,6 +399,11 @@
           zd.addEventListener('pointermove', function (e) { var r = tip.getBoundingClientRect(); tip.style.left = Math.min(e.clientX + 14, innerWidth - r.width - 8) + 'px'; tip.style.top = Math.min(e.clientY + 16, innerHeight - r.height - 8) + 'px'; });
           zd.addEventListener('pointerleave', function () { tip.hidden = true; });
         });
+        if (er) {
+          er.addEventListener('pointerenter', function () { tip.innerHTML = '<div>' + esc(pg.elsewhere[0].note || '') + '</div><div class="bk-ztip-h">Click: the text, under ' + esc(pg.elsewhere[0].to) + '</div>'; tip.hidden = false; });
+          er.addEventListener('pointermove', function (e) { var r = tip.getBoundingClientRect(); tip.style.left = Math.min(e.clientX + 14, innerWidth - r.width - 8) + 'px'; tip.style.top = Math.min(e.clientY + 16, innerHeight - r.height - 8) + 'px'; });
+          er.addEventListener('pointerleave', function () { tip.hidden = true; });
+        }
         if (sNow > 0) Object.keys(pg.zones).forEach(function (id) { if (pg.zones[id].at[sNow]) Z.zdiv[id].classList.add('bk-zstage'); });
         if (big.complete) fitLayer(big, Z.L); else big.addEventListener('load', function () { fitLayer(big, Z.L); });
       }
@@ -375,21 +411,81 @@
       if (pg.el) col.el.scrollTop = Math.max(0, pg.el.offsetTop - 20);
     }
     function go(k) { if (k >= 0 && col.pages[k]) fill(k); }
+    // zoom and pan: a scale and an offset on the image and its boxes together, so the boxes stay on
+    // the words at every size; the place in a link is the view's centre as a share of the image
+    var zoomEl = null, zm = { z: 1, x: 0, y: 0 }, drag = null, dragged = false, touches = {};
+    function size() { return { W: zoomEl.clientWidth, H: zoomEl.clientHeight }; }
+    function paint() {
+      if (!zoomEl) return;
+      var S = size();
+      zm.z = Math.max(1, Math.min(8, zm.z));
+      zm.x = Math.min(0, Math.max(S.W - S.W * zm.z, zm.x)); zm.y = Math.min(0, Math.max(S.H - S.H * zm.z, zm.y));
+      zoomEl.style.transform = 'translate(' + zm.x + 'px,' + zm.y + 'px) scale(' + zm.z + ')';
+      d.classList.toggle('bk-zoomed', zm.z > 1.001);
+    }
+    function zoomAt(px, py, f) { var z1 = Math.max(1, Math.min(8, zm.z * f)); zm.x = px - (px - zm.x) * z1 / zm.z; zm.y = py - (py - zm.y) * z1 / zm.z; zm.z = z1; paint(); }
+    function picXY(e) { var r = zoomEl.parentNode.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    function zoomQ() { if (zm.z <= 1.001) return null; var S = size(); return zm.z.toFixed(2) + ',' + ((S.W / 2 - zm.x) / zm.z / S.W).toFixed(4) + ',' + ((S.H / 2 - zm.y) / zm.z / S.H).toFixed(4); }
+    function zoomTo(q) {
+      var m = /^([\d.]+),([\d.]+),([\d.]+)$/.exec(q || ''); if (!m || !zoomEl) return;
+      var S = size(); zm.z = +m[1]; zm.x = S.W / 2 - (+m[2]) * S.W * zm.z; zm.y = S.H / 2 - (+m[3]) * S.H * zm.z; paint();
+    }
+    d.addEventListener('wheel', function (e) {
+      if (!e.target.closest('.bk-modal-pic')) return;
+      e.preventDefault(); var p = picXY(e); zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0015));
+    }, { passive: false });
+    d.addEventListener('pointerdown', function (e) {
+      if (!e.target.closest('.bk-modal-pic') || e.target.closest('.bk-nav, .bk-zctl')) return;
+      touches[e.pointerId] = picXY(e); dragged = false;
+      var ids = Object.keys(touches);
+      drag = ids.length === 1 ? { x0: e.clientX, y0: e.clientY, x: zm.x, y: zm.y } : { pinch: Math.hypot(touches[ids[0]].x - touches[ids[1]].x, touches[ids[0]].y - touches[ids[1]].y) };
+    });
+    d.addEventListener('pointermove', function (e) {
+      if (!drag || !touches[e.pointerId]) return;
+      touches[e.pointerId] = picXY(e);
+      var ids = Object.keys(touches);
+      if (drag.pinch && ids.length === 2) {
+        var a = touches[ids[0]], b = touches[ids[1]], dist = Math.hypot(a.x - b.x, a.y - b.y);
+        if (drag.pinch > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, dist / drag.pinch);
+        drag.pinch = dist; dragged = true; return;
+      }
+      var dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+      if (Math.abs(dx) + Math.abs(dy) > 4) dragged = true;
+      if (dragged && zm.z > 1.001) { zm.x = drag.x + dx; zm.y = drag.y + dy; paint(); }
+    });
+    function up(e) { delete touches[e.pointerId]; if (!Object.keys(touches).length) drag = null; }
+    d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
     d.addEventListener('click', function (e) {
+      // a drag or a pinch is not a click
+      if (dragged) { dragged = false; e.stopPropagation(); return; }
+      var zc = e.target.closest('[data-zm]');
+      if (zc) { e.stopPropagation(); var S = size(); if (zc.dataset.zm === '0') { zm = { z: 1, x: 0, y: 0 }; paint(); } else zoomAt(S.W / 2, S.H / 2, zc.dataset.zm === '+' ? 1.5 : 1 / 1.5); return; }
+      var sh = e.target.closest('[data-share]');
+      if (sh) { e.stopPropagation(); SW.copyText(shareLink({ pz: col.pages[i].facs, zm: zoomQ() }), 'the link'); return; }
+      var ew = e.target.closest('.bk-else');
+      if (ew) { e.stopPropagation(); d.close(); goElsewhere(col, ew.dataset.to); return; }
       var nav = e.target.closest('.bk-nav');
       if (nav) { e.stopPropagation(); if (!nav.disabled) go(+nav.dataset.to); return; }
       var zb = e.target.closest('.bk-z');
       if (zb) { e.stopPropagation(); var at = col.pages[i]; d.close(); toText(col, at, zb.dataset.z); return; }
       if (e.target.closest('a, .swref')) return;
+      // the image itself, zoomed, is for moving about in: only a click beside it closes the view
+      if (zm.z > 1.001 && e.target.closest('.bk-modal-pic')) return;
       d.close();
     });
     d.addEventListener('keydown', function (e) {
       var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (dir) { e.preventDefault(); go(step(i, dir)); }
+      if (dir) { e.preventDefault(); go(step(i, dir)); return; }
+      if (zoomEl && (e.key === '+' || e.key === '=' || e.key === '-' || e.key === '0')) {
+        e.preventDefault(); var S = size();
+        if (e.key === '0') { zm = { z: 1, x: 0, y: 0 }; paint(); } else zoomAt(S.W / 2, S.H / 2, e.key === '-' ? 1 / 1.5 : 1.5);
+      }
     });
     d.addEventListener('close', function () { d.remove(); });
     fill(i);
     d.showModal();
+    // a link's zoom, once the image is laid out
+    if (zq) { var big0 = d.querySelector('.bk-zoom img'), z0 = function () { requestAnimationFrame(function () { zoomTo(zq); }); }; if (big0.complete) z0(); else big0.addEventListener('load', z0); }
   }
   function spanEl(sp, p, notes) {
     var e = document.createElement('span'), cls = ['bk-s'], title = describe(sp.marks);
@@ -422,12 +518,18 @@
     doc.blocks.forEach(function (bl) {
       if (bl.t === 'note') return;
       if (bl.t === 'pb') {
-        var pg = { facs: bl.facs, iiif: bl.iiif, img: ownImage(bl), p: p, n0: bl.n0, size: bl.size || null, zones: {}, zoneN: 0 };
+        var pg = { facs: bl.facs, iiif: bl.iiif, img: ownImage(bl), p: p, n0: bl.n0, size: bl.size || null, zones: {}, zoneN: 0, elsewhere: bl.elsewhere || null };
         cur = pg;
         pg.has = !!(pg.img || pg.iiif);
         col.pages.push(pg);
         sheet(pg);
         text.appendChild(pg.el = pageBreak(bl, p));
+        // the text of (part of) this page transcribed under another: a link to it, with the document's note
+        (pg.elsewhere || []).forEach(function (ew) {
+          var a = SW.el('button', { class: 'bk-else-link', title: ew.note || ('Transcribed under ' + ew.to) }, '→ ' + ew.to);
+          a.onclick = function () { goElsewhere(col, ew.to); };
+          pg.el.appendChild(a);
+        });
         if (pg.has) {   // with the images folded away, the page's image is one click away here
           var mk = SW.el('button', { class: 'bk-pb-img', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ', larger, with its details' }, '▣');
           mk.onclick = function () { pageBox(col, col.pages.indexOf(pg)); };
@@ -549,6 +651,15 @@
     // the version named is the one whose lines the place numbers: for a version's states, their source
     SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, del: st.strike && cols.some(function (c) { return c.states; }) ? 'strike' : null, bb: st.right, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place) });
   }
+  // a link to Book as it is set: the version, the stage, the settings, the place, and what is held
+  // (the box clicked), with the enlarged page and its zoom where the link is made there (pz, zm)
+  function shareLink(extra) {
+    var hasStates = cols.some(function (c) { return c.states; });
+    var q = { v: cols[0] ? cols[0].vid : SW.state.v, tab: 'book', stage: stageQ(), all: st.all && hasStates ? 1 : null, del: st.strike && hasStates ? 'strike' : null,
+      bb: st.right, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place), hz: heldZone };
+    for (var k in extra || {}) q[k] = extra[k];
+    return SW.permalink(q);
+  }
   function linkTo(vid, a) { return SW.permalink({ v: vid, tab: 'book', l: lineQ(a), stage: inStates(vid) ? stageQ() : null, all: inStates(vid) && st.all ? 1 : null }); }
 
   // ---------- the toolbar ----------
@@ -562,6 +673,7 @@
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
         '<button class="btn' + (st.imgOn ? '' : ' on') + '" id="bk-imgoff" aria-pressed="' + !st.imgOn + '" title="' + (st.imgOn ? 'Fold the images away' : 'Show the images again') + '">Off</button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="Read at the place shown here, line by line">≡ Read here</button>' +
+      '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share</button>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
         '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision">' +
         '<button class="btn ghost" id="bk-next" title="The stage after">▶</button><button class="btn ghost" id="bk-play" title="Run through the stages, one by one">' + (st.play ? '❚❚' : '▶▶') + '</button>' +
@@ -583,6 +695,7 @@
       if (e.target.id === 'bk-prev') { stop(); st.stage = Math.max(0, st.stage - 1); apply(true); }
       if (e.target.id === 'bk-next') { stop(); st.stage = Math.min(STAGES.length, st.stage + 1); apply(true); }
       if (e.target.id === 'bk-play') { if (st.play) stop(); else play(); }
+      if (e.target.id === 'bk-share') { SW.copyText(shareLink(), 'the link'); return; }
       if (e.target.id === 'bk-read') { var c = cols[0]; if (c) { var a = place || firstLine(c); if (a) SW.openAt(c.vid, a); else SW.setTab('read'); } }
     });
     tb.addEventListener('input', function (e) {
@@ -639,6 +752,13 @@
       var where = SW.state.sel ? { vid: SW.state.v, a: SW.state.sel, flash: true } : pending || (place && { vid: cols[0].vid, a: place });
       pending = null;
       if (where && cols[0].b && textOf(where.vid) === cols[0].vid) placeIn(cols[0], where).then(function (a) { if (a) { goTo(cols[0], a, !!where.flash); place = a; writeQ(); } });
+      // a shared link: the box it held, held again, and the page it had open, at its zoom
+      var sh = shared; shared = null;
+      if (sh && cols[0].b) {
+        var c0 = cols[0];
+        if (sh.hz) c0.pages.some(function (pg) { if (pg.zones[sh.hz]) { toText(c0, pg, sh.hz); return true; } return false; });
+        if (sh.pz) { if (c0.stale || !c0.byFacs) measure(c0); var k = c0.byFacs[sh.pz]; if (k != null && c0.pages[k].has) pageBox(c0, k, sh.zm); }
+      }
     });
   }
 

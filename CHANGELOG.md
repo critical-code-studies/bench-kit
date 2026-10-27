@@ -1,5 +1,12 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Book (asked for by David):
+  - **Zoom** in the enlarged page: the wheel and a pinch, + and −, a drag to move about, 0 or ⟲ for the whole page; the revisions' boxes zoom with the image. A click on the zoomed image no longer closes the view; a click beside it does.
+  - **🔗 Share**, in the toolbar and in the enlarged page's details: a link that opens Book exactly there, with the same version, stage, Strike deletions, Compare and image settings, the place, the box clicked (held again for whoever opens it), and, from the enlarged page, that page open at the same zoom and centre (`pz`, `zm`, `hz`).
+  - **A page transcribed elsewhere** (`pb.elsewhere: [{ to, note }]`, from the document): a link by the page's rule to the page its text is transcribed under, with the note, and, where the page has boxes, the part of its image below its lowest box leading there; its text is highlighted as a box's is. On the Melville bench, the slip pasted on img_7 leads to its text under img_9.
+
 ## 0.79.0 (2026-10-25)
 
 - Book, the revisions' boxes (asked for by David): a click on a box, beside the text or in the enlarged view, highlights the text written there and keeps it highlighted until the reader clicks again, scrolls the text, hovers another revision or moves the slider (it flashed once); where that text is not in the text at the stage, a note says so. The boxes' title is "Highlight this in panel". In the enlarged view a box under the pointer shows, by it, the words written there (a deletion struck), what the revision is, with what it replaced or what replaced it, and its stage and hand; a click closes the view with its text highlighted.
