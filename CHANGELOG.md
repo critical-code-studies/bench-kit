@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.84.0 (2026-10-27)
 
 - **Annotation types** (Stage 3 of the hand-built project, its first part; asked for by David): where a bench gives `annotationTypes` (`true` for CCS Workbench's six, Observation, Question, Metaphor, Pattern, Context and Critique, or its own list `[[id, label, what for]]`), the annotation box has a Type menu, and the annotation is kept with the tag `type:<id>` and shown with its type above its text, coloured by type. A CCS Workbench session's annotations now come in as `type:<id>` (0.83.0 tagged them `ccs:<id>`, which is still read as their type). A bench that gives no types is unchanged.
 - **Read's file menu in folders**: where a version's files are in more than one folder (a CCS Workbench project, a version made from many files), the menu groups them by folder. The Spacewar! sample's 26 files fall into four.
