@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.80.0 (2026-10-27)
 
 - Book (asked for by David):
   - **Zoom** in the enlarged page: the wheel and a pinch, + and −, a drag to move about, 0 or ⟲ for the whole page; the revisions' boxes zoom with the image. A click on the zoomed image no longer closes the view; a click beside it does.
