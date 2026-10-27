@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Settings ▸ Bench** (`project.js`, new; Stage 0 of the hand-built project, asked for by David): for a project its user configures (`editable: true` in `config.js`), the name, title, the About box's project and citation, the references' prefix and short names, and the language's comment marks, routine pattern and case are set in the page. They are laid over `config.js` as the page loads, so the rest of the kit reads them as it reads `config.js`, kept in the browser (`bench.settings`, in Back up everything), and applied by a reload when saved; a value set back to the default is dropped. **The GitHub locations are locked** once set (the repository, the published address, the paratext archive's owner and repository): changing one takes Unlock, with a warning that references, permalinks and annotations may stop resolving and nothing on GitHub moves, and then the new value typed again before Save, which also asks for initials. Each change is logged with the date, initials and old value, and Put back offers the old value again through the same two steps. The storage prefix and the stem of file names are not offered. A bench without `editable` is unchanged: no Bench tab, nothing laid over its settings, for its readers or anyone.
+- Settings: a module can add a tab (`SW.settings.addTab`) and a check that stops Save (`check()` on a row); a remembered tab that is no longer there opens You.
+- Tests: `tests/project.test.js`, 14 checks of paths, the settings laid over `config.js`, fields shown and read back, and the lock.
+
 ## 0.80.1 (2026-10-27)
 
 - `tools/views.js` (new): opens every view of a bench in headless Chrome and reports any that throws, draws nothing or shows that it could not load; `--kit <folder>` serves a kit from another folder in place of the bench's own, so a kit change is checked in a bench with nothing in the bench changed. It reads only the kit's own messages, never the text being read ("he could not read" in *Billy Budd*). The kit's workflow now runs it after the tests in each bench, and covers the Melville bench (kit at `kit/`, the bench at the repo root). The check that existing benches still work, at each release towards 1.0 (asked for by David).

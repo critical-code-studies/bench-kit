@@ -37,7 +37,8 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `edition.js` | A reading edition of a version, to read, print or save as Word. |
 | `tours.js` | The guided tour; its stops are the bench's (`SW.BENCH.tours`). |
 | `initials.js` | The box that asks for initials (two to four letters) when something is to be signed: `SW.askInitials(why)`, `SW.withInitials(why)`. |
-| `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, save })`. The bench gives its theme function as `SW.setTheme`. |
+| `settings.js` | ⚙ Settings, in tabs (You, Annotations, Paratexts, Display, Developer): `SW.settings.open(tab)`; a bench adds rows with `SW.settings.add({ tab, html, load, check, save })` (`check()` returns what stops Save, or `''`) and a tab with `SW.settings.addTab(id, label, at)`. The bench gives its theme function as `SW.setTheme`. |
+| `project.js` | ⚙ Settings ▸ Bench, for a project its user configures (`editable: true`): the name, title, About and citation, references and language set in the page, laid over `config.js` as the page loads and kept in the browser (`bench.settings`). The GitHub locations (`repo`, `base`, `paratexts.org`, `paratexts.repo`, and `refs.repo` where given) are locked once set: Unlock, with a warning, then the new value typed again before Save; each change is logged with the date, initials and old value (`bench.log`), with Put back. `store` and `slug` are not offered. A bench without `editable` is left as `config.js` gives it. Load it straight after `js/config.js`. `SW.project`. |
 | `bench.css` | The styles every bench shares: the frame (top bar, tabs, views, dialogs, menus, the side panel) and the kit's views. Loaded before `themes.css` and the bench's own `css/research.css`, which sets the bench's default colours (the custom properties on `:root`) and its own parts, and can override any rule here. |
 | `themes.css` | The colour themes offered in Settings (listing paper, white, sepia, green and amber terminal, high contrast) as sets of custom properties, with the type, the menus' panel, the gold of repairs (`--kin`, `--kin-bg`), the annotation marks and the genealogy figures' colour schemes. A bench changes a token of a theme by repeating its selector in `css/research.css` (Spacewar sets its own accent: `--amber`, `--hl`, `--noted-bg`). |
 | `kit.css` | Styles for the kit's own parts: the initials box, Settings, the About box, tracings, the Functional overview. |
@@ -80,6 +81,7 @@ git submodule add https://github.com/critical-code-studies/bench-kit research/ki
 <script src="js/versions.js?v=…"></script>
 <script src="kit/base.js?v=…"></script>
 <script src="js/config.js?v=…"></script>
+<script src="kit/project.js?v=…"></script>   <!-- only for a project its user configures (editable: true) -->
 <script src="kit/md.js?v=…"></script>
 <script src="kit/themes.js?v=…"></script>
 <script src="kit/refs.js?v=…"></script>
@@ -122,6 +124,7 @@ SW.BENCH = {
   title: 'SHRDLU Research Bench',    // the page and the About box
   slug: 'shrdlu',                    // file names of exports and backups
   store: 'shbench.',                 // the prefix of the bench's keys in localStorage (SW.store)
+  editable: false,                   // true: its user sets these in Settings ▸ Bench (kit/project.js)
   group: '',                         // the Hypothesis group's ID, as it appears after /groups/ in its link
   relation: 'SHRDLU, ',              // put before a version's label in Dublin Core relation
   topShare: false,                   // the bench has a share button in its top bar

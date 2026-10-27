@@ -3,7 +3,8 @@
  * token), Paratexts (the GitHub token), Display (colour theme, code font and size, tinting, the
  * background of exported figures) and Developer. The box is made the first time it opens, from the
  * bench's settings (SW.BENCH.settings: tour, group and theme hints); a bench adds rows of its own
- * with SW.settings.add({ tab, html, load(), save() }) before then. The colour theme and the code
+ * with SW.settings.add({ tab, html, load(), check(), save() }) before then, check() returning what stops
+ * the box being saved ('' when nothing does), and a tab of its own with SW.settings.addTab(id, label, at). The colour theme and the code
  * font and size are previewed as they change and put back on Cancel. The tab last used opens again.
  * The bench gives the kit its theme function as SW.setTheme (it redraws the bench's figures).
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -11,8 +12,9 @@
 (function (root) {
   'use strict';
   var SW = root.SW, S = SW.settings = {}, extra = [];
-  var TABS = [['you', 'You'], ['anno', 'Annotations'], ['px', 'Paratexts'], ['display', 'Display'], ['dev', 'Developer']];
+  var TABS = [['you', 'You'], ['anno', 'Annotations'], ['px', 'Paratexts'], ['display', 'Display'], ['dev', 'Developer']], OWN = TABS.map(function (t) { return t[0]; });
   S.add = function (row) { extra.push(row); };
+  S.addTab = function (id, label, at) { if (!TABS.some(function (t) { return t[0] === id; })) TABS.splice(at == null ? TABS.length : at, 0, [id, label]); };
 
   function rows(tab) { return extra.filter(function (r) { return (r.tab || 'display') === tab; }).map(function (r) { return r.html; }).join(''); }
   function build() {
@@ -62,10 +64,13 @@
       '<section class="set-pane" data-sp="dev"><p class="dev-warn">Only use if you are developing this software.</p>' +
       '<label class="check-row"><span><input type="checkbox" id="set-dev"> Developer mode</span><span class="hint">Shows annotations marked Developer only, and features still being built. This allows you to see Beta software and may affect your ability to use the software.</span></label>' + rows('dev') + '</section>' +
 
+      TABS.filter(function (t) { return OWN.indexOf(t[0]) < 0; }).map(function (t) { return '<section class="set-pane" data-sp="' + t[0] + '">' + rows(t[0]) + '</section>'; }).join('') +
+
       '<div class="row set-foot"><button type="button" class="btn ghost" id="set-tour" title="' + esc(ST.tour || 'A guided tour of the bench') + '">Take the welcome tour</button><span class="set-gap"></span><button value="cancel" class="btn ghost">Cancel</button><button value="save" id="set-save" class="btn">Save</button></div></form>';
     document.body.appendChild(d);
     // tabs
     function show(t) {
+      if (!TABS.some(function (x) { return x[0] === t; })) t = 'you';
       SW.$$('.set-tabs [data-st]', d).forEach(function (b) { var on = b.dataset.st === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
       SW.$$('.set-pane', d).forEach(function (p) { p.hidden = p.dataset.sp !== t; });
       SW.store.set('set.tab', t);
@@ -79,7 +84,8 @@
     SW.$('form', d).addEventListener('submit', function (e) {
       if (!e.submitter || e.submitter.value !== 'save') return;
       var v = ini.value.trim();
-      if (v && !/^[A-Z]{2,4}$/.test(v)) { e.preventDefault(); show('you'); SW.$('#set-inimsg', d).textContent = 'Initials: two to four letters, please.'; ini.focus(); }
+      if (v && !/^[A-Z]{2,4}$/.test(v)) { e.preventDefault(); show('you'); SW.$('#set-inimsg', d).textContent = 'Initials: two to four letters, please.'; ini.focus(); return; }
+      extra.some(function (r) { var m = r.check && r.check(); if (m) { e.preventDefault(); show(r.tab || 'display'); SW.toast(m, 6000); } return !!m; });
     });
     return d;
   }

@@ -53,7 +53,7 @@
   // the kit modules the tests read, where the page has not loaded them
   var need = [['figures.js', function () { return window.SW.beam; }], ['menus.js', function () { return window.SW.helpList; }],
               ['read.js', function () { return window.SW.symbolRefs; }], ['lispdefs.js', function () { return window.SWLispDefs; }],
-              ['book.js', function () { return window.SW.book; }]];
+              ['book.js', function () { return window.SW.book; }], ['project.js', function () { return window.SW.project; }]];
   // the bench's scripts, as its index.html loads them (unless the page has loaded them itself)
   var loadErrors = [], loading = '';
   window.addEventListener('error', function (e) { if (loading) loadErrors.push(loading + ': ' + e.message); });
@@ -65,7 +65,7 @@
       .then(function () { loading = ''; if (window.SW && SW.BENCH && SW.BENCH.title) document.title = 'Tests · ' + SW.BENCH.title; });
   });
   need.forEach(function (n) { chain = chain.then(function () { if (!n[1]()) return load(kit + n[0]); }); });
-  ['annotations.test.js', 'kit.test.js', 'lispdefs.test.js', 'book.test.js'].forEach(function (f) { chain = chain.then(function () { return load(here + f); }); });
+  ['annotations.test.js', 'kit.test.js', 'lispdefs.test.js', 'book.test.js', 'project.test.js'].forEach(function (f) { chain = chain.then(function () { return load(here + f); }); });
   chain.then(function () { return Promise.all(pending); }).then(function () {
     loadErrors.forEach(function (m) { results.push({ name: 'loading the bench: ' + m.split(':')[0], ok: false, got: m, want: 'no error' }); });
     report();
