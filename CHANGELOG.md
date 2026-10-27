@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.81.0 (2026-10-27)
 
 - **Settings ▸ Bench** (`project.js`, new; Stage 0 of the hand-built project, asked for by David): for a project its user configures (`editable: true` in `config.js`), the name, title, the About box's project and citation, the references' prefix and short names, and the language's comment marks, routine pattern and case are set in the page. They are laid over `config.js` as the page loads, so the rest of the kit reads them as it reads `config.js`, kept in the browser (`bench.settings`, in Back up everything), and applied by a reload when saved; a value set back to the default is dropped. **The GitHub locations are locked** once set (the repository, the published address, the paratext archive's owner and repository): changing one takes Unlock, with a warning that references, permalinks and annotations may stop resolving and nothing on GitHub moves, and then the new value typed again before Save, which also asks for initials. Each change is logged with the date, initials and old value, and Put back offers the old value again through the same two steps. The storage prefix and the stem of file names are not offered. A bench without `editable` is unchanged: no Bench tab, nothing laid over its settings, for its readers or anyone.
 - Settings: a module can add a tab (`SW.settings.addTab`) and a check that stops Save (`check()` on a row); a remembered tab that is no longer there opens You.
