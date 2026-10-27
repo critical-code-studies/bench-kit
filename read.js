@@ -64,7 +64,7 @@
     var build = null, notes = [], counts = {}, noted = {}, anchorSel = null;
     // tapes: which of the version's files to show: 'all', or a single file's index
     var opts = { repairs: SW.store.get('read.repairs', true), kinBar: SW.store.get('read.kinBar', false), words: H.words ? SW.store.get('read.words', true) : false, norm: false,
-                 tapes: F.remember ? SW.store.get('read.file', '0') : 'all', heat: false, onlyNoted: false, onlyRepaired: false, by: '',
+                 tapes: F.remember ? SW.store.get('read.file', '0') : 'all', beside: '', heat: false, onlyNoted: false, onlyRepaired: false, by: '',
                  notes: SW.store.get('read.notes', 'inline'), show: SW.store.get('read.show', 'all'), ghosts: SW.store.get('read.ghosts', true) };
     // ---------- the card lens: a fixed-column file read as cards (SW.BENCH.columns) ----------
     // SW.BENCH.columns: { layout, files: [[pattern on a file's src, layout]], expand, note }
@@ -325,6 +325,9 @@
         var ti = info(b);
         tb.appendChild(SW.el('label', { class: 'check tape-pick', title: F.help ? F.help(ti) : 'The files this version is read from, in order. Choose one to read, or All to read them in order.' },
           word + ' <select id="rd-tape">' + fileOptions(ti) + '</select>' + (F.help ? ' <span class="help-dot">?</span>' : '')));
+        // another file of the version read beside the one chosen (a program and its data); SW.BENCH.beside: false leaves it out
+        if (B.beside !== false) tb.appendChild(SW.el('label', { class: 'check beside-pick', title: 'Another ' + word.toLowerCase() + ' of this version, read beside the one chosen, with a scroll of its own. Choose one ' + word.toLowerCase() + ' first.' },
+          'Beside <select id="rd-beside"></select>'));
       }
       var ne = errCount(b);
       if (ne && SW.asmErrors) {
@@ -380,6 +383,14 @@
         if (e.target.closest('[data-asmerrs]') && SW.asmErrors) { e.stopPropagation(); SW.asmErrors(b); return; }
         if (X.click && X.click(e, b)) e.stopPropagation();
       });
+      // the file read beside: only with one file chosen, and another than it
+      var bi = opts.tapes !== 'all' && opts.beside !== '' && +opts.beside !== +opts.tapes && b.parts[+opts.beside] ? +opts.beside : -1;
+      var bs = SW.$('#rd-beside', view);
+      if (bs) {
+        bs.disabled = opts.tapes === 'all';
+        bs.innerHTML = '<option value="">' + (opts.tapes === 'all' ? 'choose one ' + word.toLowerCase() + ' first' : 'nothing') + '</option>' +
+          inf.filter(function (t) { return String(t.pi) !== String(opts.tapes); }).map(function (t) { return '<option value="' + t.pi + '"' + (t.pi === bi ? ' selected' : '') + '>' + (t.pi + 1) + '. ' + esc(t.label) + '</option>'; }).join('');
+      }
       b.parts.forEach(function (part, pi) {
         if (!showsTape(pi)) return;
         var t = inf[pi], sec = SW.el('div', { class: 'part' });
@@ -400,7 +411,22 @@
         sec.insertAdjacentHTML('beforeend', b.lines[pi].filter(function (L) { return !L.away; }).map(function (L) { return rowHTML(b, L); }).join(''));
         box.appendChild(sec);
       });
-      wrap.appendChild(box);
+      if (bi >= 0) {
+        var pair = SW.el('div', { class: 'rd-pair' }), side = SW.el('div', { class: 'rd-beside', 'aria-label': 'Read beside' });
+        side.innerHTML = '<div class="part-head bs-head"><div class="ph-main"><span class="ph-num">Beside</span><span class="ph-title">' + esc(inf[bi].label) + '</span> ' + SW.refTag(b.v.id, bi, null, null, b.parts.length) + '</div>' +
+          '<div class="ph-sub"><button type="button" class="btn ghost" data-bs="swap" title="Read this one, with the other beside it">⇄ Swap</button> <button type="button" class="btn ghost" data-bs="close" title="Read one ' + word.toLowerCase() + ' alone">✕ Close</button></div></div>' +
+          '<div class="bs-lines">' + b.lines[bi].filter(function (L) { return !L.away; }).map(function (L) {
+            return '<div class="bs-ln" data-p="' + bi + '" data-n="' + L.n + '"><span class="n">' + L.n + '</span><span class="t">' + (L.raw ? hl(L.raw, b) : ' ') + '</span></div>';
+          }).join('') + '</div>';
+        side.addEventListener('click', function (e) {
+          var a = e.target.closest('[data-bs]'); if (!a) return;
+          if (a.dataset.bs === 'swap') { var was = opts.tapes; opts.tapes = String(bi); opts.beside = was; var ts = SW.$('#rd-tape', view); if (ts) ts.value = opts.tapes; }
+          else opts.beside = '';
+          renderListing();
+        });
+        pair.appendChild(box); pair.appendChild(side);
+        wrap.appendChild(pair);
+      } else wrap.appendChild(box);
       wrap.appendChild(margin);
       view.insertBefore(wrap, bar);
       if (X.paint) X.paint(box, b);
@@ -529,7 +555,9 @@
         render();
       };
       var tapeSel = SW.$('#rd-tape', tb);
-      if (tapeSel) tapeSel.onchange = function () { opts.tapes = tapeSel.value; if (F.remember) SW.store.set('read.file', tapeSel.value); renderListing(); view.scrollTop = 0; };
+      if (tapeSel) tapeSel.onchange = function () { opts.tapes = tapeSel.value; if (opts.beside === opts.tapes) opts.beside = ''; if (F.remember) SW.store.set('read.file', tapeSel.value); renderListing(); view.scrollTop = 0; };
+      var besideSel = SW.$('#rd-beside', tb);
+      if (besideSel) besideSel.onchange = function () { opts.beside = besideSel.value; renderListing(); };
       SW.$('#rd-noted', tb).onchange = function (e) { opts.onlyNoted = e.target.checked; applyFilter(); view.scrollTop = 0; };
       SW.$('#rd-by', tb).onchange = function (e) { opts.by = e.target.value; applyFilter(); view.scrollTop = 0; };
       fillBy();

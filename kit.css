@@ -43,6 +43,14 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .ntype[data-type="pattern"] { color: var(--green); }
 .ntype[data-type="context"] { color: var(--text-dim); }
 .ntype[data-type="critique"] { color: var(--red); }
+/* Read: another file of the version beside the one chosen (Beside, in Read's toolbar) */
+.rd-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; align-items: start; }
+.rd-beside { position: sticky; top: 0; max-height: calc(100vh - var(--bar-h, 90px) - 60px); overflow: auto; border-left: 1px solid var(--line); background: var(--bg); }
+.rd-beside .bs-head { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+.rd-beside .bs-head .btn { padding: 1px 8px; font-size: 12px; }
+.rd-beside .bs-ln { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); font-family: var(--code-font); font-size: var(--code-size); line-height: 1.55; white-space: pre-wrap; }
+.rd-beside .bs-ln .n { color: var(--text-faint); text-align: right; padding-right: 12px; user-select: none; }
+@media (max-width: 760px) { .rd-pair { grid-template-columns: minmax(0, 1fr); } .rd-beside { position: static; max-height: 60vh; border-left: 0; border-top: 1px solid var(--line); } }
 .set-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .set-foot .set-gap { flex: 1; }
 
