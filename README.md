@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23715201.svg)](https://doi.org/10.5281/zenodo.23715201)
 
 **Author:** David M. Berry  
-**Version:** 0.84.0  
+**Version:** 0.84.1  
 **Site:** <https://critical-code-studies.github.io/bench-kit/>, what the kit is, with the benches built on it (from `docs/`)  
 **DOI:** [10.5281/zenodo.23715201](https://doi.org/10.5281/zenodo.23715201), every release (archived on Zenodo from each GitHub Release); 0.84.0 is [10.5281/zenodo.23715202](https://doi.org/10.5281/zenodo.23715202)
 

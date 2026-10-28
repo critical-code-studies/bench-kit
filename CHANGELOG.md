@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.84.1 (2026-10-28)
 
 - **A bench's DOI in the About box** (asked for by David, through the Melville bench): `about.doi`, the DOI of every version (Zenodo's concept DOI), gives a DOI row after Code, linked to doi.org, and the citation ends "Zenodo. Available at: https://doi.org/<doi>" in place of the bench's address; `about.doiVersion`, this release's own DOI, is shown in the row beside it. A bench without them is unchanged.
 - Tests: `tests/about.test.js`, 2 checks of the citation with and without a DOI.
