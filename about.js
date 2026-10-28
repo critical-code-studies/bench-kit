@@ -7,7 +7,9 @@
  *     cite: { authors (the leads as cited: 'Berry, D. M. and Jonik, M.'), title },
  *     author and citeAuthor (the citation's author where cite.authors is not given),
  *     purpose, techMore, inside, sources, code,
- *     catalogue: { skip: [version ids not counted], held: 'held as source' } }
+ *     catalogue: { skip: [version ids not counted], held: 'held as source' },
+ *     doi (the DOI of every version, Zenodo's concept DOI: a DOI row, and the citation ends with it
+ *     in place of the bench's address), doiVersion (this release's own, shown in the row) }
  * SW.about.open() shows it.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -32,8 +34,9 @@
   function citation(B, A) {
     var date = dateOf(), url = SW.BASE_URI || location.href.split('?')[0], C = A.cite || {};
     return (C.authors || A.citeAuthor || A.author || '') + ' (' + (date ? date.slice(0, 4) : new Date().getFullYear()) + ') ' + (C.title || B.title || 'Research Bench') +
-      ' (version ' + SW.VERSION + '). Available at: ' + url + ' (Accessed: ' + SW.fmtDate(SW.today()) + ').';
+      ' (version ' + SW.VERSION + ').' + (A.doi ? ' Zenodo. Available at: https://doi.org/' + A.doi : ' Available at: ' + url) + ' (Accessed: ' + SW.fmtDate(SW.today()) + ').';
   }
+  function doiLink(d) { return '<a href="https://doi.org/' + SW.esc(d) + '" target="_blank" rel="noopener">' + SW.esc(d) + ' ↗</a>'; }
   function row(label, html, attrs) { return html ? '<tr' + (attrs || '') + '><td>' + SW.esc(label) + '</td><td>' + html + '</td></tr>' : ''; }
 
   function open() {
@@ -54,6 +57,7 @@
         row('Sources', A.sources || '') +
         row('Catalogue', SW.esc(catalogue(A))) +
         row('Code', code) +
+        row('DOI', A.doi ? doiLink(A.doi) + ' <span class="faint">every version</span>' + (A.doiVersion ? ' · ' + doiLink(A.doiVersion) + ' <span class="faint">this version</span>' : '') : '') +
         '<tr><td>Cite as</td><td class="about-cite">' + SW.esc(cite) + '</td></tr>' +
       '</table>' +
       '<div class="row">' + (SW.tours ? '<button type="button" class="btn ghost" data-about="tour">Take the welcome tour</button>' : '') +

@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A bench's DOI in the About box** (asked for by David, through the Melville bench): `about.doi`, the DOI of every version (Zenodo's concept DOI), gives a DOI row after Code, linked to doi.org, and the citation ends "Zenodo. Available at: https://doi.org/<doi>" in place of the bench's address; `about.doiVersion`, this release's own DOI, is shown in the row beside it. A bench without them is unchanged.
+- Tests: `tests/about.test.js`, 2 checks of the citation with and without a DOI.
+
 ## 0.84.0 (2026-10-27)
 
 - **Annotation types** (Stage 3 of the hand-built project, its first part; asked for by David): where a bench gives `annotationTypes` (`true` for CCS Workbench's six, Observation, Question, Metaphor, Pattern, Context and Critique, or its own list `[[id, label, what for]]`), the annotation box has a Type menu, and the annotation is kept with the tag `type:<id>` and shown with its type above its text, coloured by type. A CCS Workbench session's annotations now come in as `type:<id>` (0.83.0 tagged them `ccs:<id>`, which is still read as their type). A bench that gives no types is unchanged.
