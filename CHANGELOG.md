@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.85.0 (2026-10-29)
 
 - **File ▾**, before Read in the tab row (asked for by David): what acts on the project as a whole, apart from reading it. Add a version from files, Open a project or .ccs file, Save the project to a file and Open a sample where `builder.js` and `projectfile.js` are loaded (moved from Versions ▾); the bench's own items (`menus.file`: `[[pick, label, text]]`, handled by `menus.pick('file', p)`), such as exports of every version; Back up everything and Restore from a backup (also in Help). `fileMenu: false` leaves it out, and the builder's items go back to Versions ▾. The list of a version's files stays in Read ▾, grouped by folder.
 - Samples opened from CCS Workbench are listed in a group of their own in the version picker and Read ▾, "Samples (CCS Workbench)", apart from the bench's own versions (`SW.versionGroups`, `SW.inGroup`).
