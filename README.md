@@ -454,6 +454,19 @@ node research/kit/tools/views.js --kit ../bench-kit
 
 `tools/chrome.js` is what these tools share: the repository served as GitHub Pages serves it, and the bench in headless Chrome (Node 22 and Chrome or Chromium, `CHROME=` to name it; no packages).
 
+## A bench's DOI
+
+Zenodo archives a GitHub repository, and gives it a DOI, each time a GitHub Release is published; a tag alone is not enough.
+
+1. Turn the repository on in Zenodo (zenodo.org ▸ Account ▸ GitHub, the switch beside the repository). This is the account holder's step; it adds Zenodo's webhook to the repository.
+2. Optionally, before the first Release, add `.zenodo.json` (or `CITATION.cff`) to set the archive's title and creators; otherwise Zenodo takes them from the repository.
+3. Publish a Release of the version: `gh release create v<version> --title "<bench> <version>" --notes "<what changed>"` (with `--target main` where the tag does not exist yet).
+4. Within a minute or so Zenodo mints two DOIs: one for this release, and a concept DOI for every version, which always resolves to the latest. Find them on the repository's line under zenodo.org ▸ Account ▸ GitHub, or with `curl -s -G https://zenodo.org/api/records --data-urlencode 'q="<owner>/<repo>"' --data-urlencode sort=mostrecent --data-urlencode size=1` (`doi`, `conceptdoi`).
+5. The badge: `gh api repos/<owner>/<repo> -q .id` gives the repository's id, and `[![DOI](https://zenodo.org/badge/<id>.svg)](https://doi.org/<concept DOI>)` goes at the foot of the README. The badge always shows the latest release's DOI.
+6. The About box, with bench-kit 0.84.2 or later: `about.doi: '<concept DOI>'` and `about.doiBadge: 'https://zenodo.org/badge/<id>.svg'` in `js/config.js` (and, if wanted, `about.doiVersion`, which changes with every Release). The DOI row shows the badge and the DOI, and Cite as ends with the DOI. A bench's site with an About page of its own carries the badge and DOI there too.
+
+Every later Release is archived under the same concept DOI, so the badge and `about.doi` need no change.
+
 ## Licence
 
 GNU General Public License v3.0: see [`LICENSE`](LICENSE).
