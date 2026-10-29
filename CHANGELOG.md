@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- File ▾ and Help: **Back up my data** in place of Back up everything (it saves only what is the reader's own: My notes, drafts, settings and a copy of the group's annotations, nothing on GitHub), and **Restore my data…** in place of Restore from a backup…, its line saying it is non-destructive (it adds notes and drafts beside those here, and settings only where none is set; it replaces nothing). The About box, Settings ▸ Bench and the kit's site name them so (asked for by David).
+
 ## 0.85.1 (2026-10-29)
 
 - **Add a version from files fills itself in** (asked for by David, through CCSbench): the id, label and date are made from the files given, into the boxes left empty (or filled this way before); a value typed stays. One file gives its name without the extension; a folder dropped gives the folder's name, its files kept in their folders below it; several files give what their names share, or the first program's name. A year in the name goes to the date and out of the id: ELIZA-1965b.mad gives id eliza, label ELIZA-1965b, date 1965. An id already taken gets -2, -3. `SW.builderSuggest(names, folder)`.

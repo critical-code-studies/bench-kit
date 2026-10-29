@@ -21,7 +21,7 @@
   'use strict';
   var SW = root.SW;
 
-  var TECH = 'HTML, CSS and JavaScript, with no build step, served by GitHub Pages. Annotations through Hypothesis; your settings, drafts and My notes are kept in this browser (Help ▸ Back up everything saves them).';
+  var TECH = 'HTML, CSS and JavaScript, with no build step, served by GitHub Pages. Annotations through Hypothesis; your settings, drafts and My notes are kept in this browser (Back up my data saves them).';
   var KIT = 'the modules shared by the critical code studies research benches.';
 
   function cfg() { var B = SW.BENCH || {}; return { B: B, A: B.about || {} }; }

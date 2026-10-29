@@ -57,7 +57,7 @@
   }
   function FILE() {
     var groups = [projectItems(), H().file || [],
-                  [['backup', 'Back up everything', 'Notes, drafts, settings and findings in one file'], ['restore', 'Restore from a backup…', 'Brings back notes and drafts beside those here']]];
+                  [['backup', 'Back up my data', 'My notes, drafts, settings and a copy of the group’s annotations, in one file; nothing on GitHub'], ['restore', 'Restore my data…', 'Non-destructive: adds notes and drafts from a backup beside those here, and settings only where none is set; replaces nothing, and touches nothing on GitHub']]];
     return groups.filter(function (g) { return g.length; });
   }
 
@@ -92,8 +92,8 @@
                                         ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']]
                                        .concat(B.implementations ? [['implementations', 'Implementations', 'Ports, translations and reimplementations: their descent, features and comparison']] : [])],
             ['Your bench', [['settings', 'Settings', 'Initials, group, theme, fonts'],
-                            ['backup', 'Back up everything', 'Notes, drafts, settings and findings in one file'],
-                            ['restore', 'Restore from a backup…', 'Brings back notes and drafts beside those here']]],
+                            ['backup', 'Back up my data', 'My notes, drafts, settings and a copy of the group’s annotations, in one file; nothing on GitHub'],
+                            ['restore', 'Restore my data…', 'Non-destructive: adds notes and drafts from a backup beside those here, and settings only where none is set; replaces nothing, and touches nothing on GitHub']]],
             ['The project', [['code', 'Source code on GitHub ↗', repo],
                              ['issue', 'Report a problem ↗', 'GitHub issues'],
                              ['about', 'About the bench', 'Version, sources, citation']]]];

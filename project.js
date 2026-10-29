@@ -1,7 +1,7 @@
 /*
  * project.js - the bench's own settings in ⚙ Settings ▸ Bench, for a project its user configures
  * (SW.BENCH.editable: true). config.js gives the defaults; what the user changes is kept in this
- * browser (bench.settings, and so in Help ▸ Back up everything) and laid over SW.BENCH here, as the
+ * browser (bench.settings, and so in Back up my data) and laid over SW.BENCH here, as the
  * page loads, so the rest of the kit reads the project's values as if config.js had given them.
  * A bench that does not say editable is left as it is: its readers see config.js. Load it straight
  * after the bench's config.js, before the rest of the kit.
@@ -112,7 +112,7 @@
     return '<label>' + esc(f.label) + box + (f.hint ? '<span class="hint">' + esc(f.hint) + '</span>' : '') + '</label>';
   }
   function html() {
-    var out = '<p class="hint">This project’s own settings. config.js gives the defaults; what you change here is kept in this browser (Help ▸ Back up everything includes it) and is used when the page reloads, which Save does.</p>', g = '';
+    var out = '<p class="hint">This project’s own settings. config.js gives the defaults; what you change here is kept in this browser (Back up my data includes it) and is used when the page reloads, which Save does.</p>', g = '';
     fields().forEach(function (f) {
       if (f.group !== g) {
         g = f.group; out += '<h2>' + esc(g) + '</h2>';
