@@ -1,7 +1,5 @@
 # bench-kit
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23715201.svg)](https://doi.org/10.5281/zenodo.23715201)
-
 **Author:** David M. Berry  
 **Version:** 0.84.1  
 **Site:** <https://critical-code-studies.github.io/bench-kit/>, what the kit is, with the benches built on it (from `docs/`)  
@@ -463,3 +461,5 @@ GNU General Public License v3.0: see [`LICENSE`](LICENSE).
 ## Changes
 
 The kit's own changes are in `CHANGELOG.md`. A change is made here first; each bench then takes it by moving its submodule.
+
+[![DOI](https://zenodo.org/badge/1414628950.svg)](https://doi.org/10.5281/zenodo.23715201)
