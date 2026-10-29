@@ -27,11 +27,19 @@
   // the versions are then chosen from Read ▾
   if (B.picker === false) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); var hb = SW.$('header.bar'); if (hb) hb.classList.add('no-pick'); }   // .no-pick: the name stays, bench.css
 
+  // the picker's groups (SW.BENCH.forks), and the samples opened from CCS Workbench (kit/projectfile.js,
+  // fork 'samples') in one of their own, kept out of the bench's own versions
+  SW.versionGroups = function (dflt) {
+    var groups = (B.forks && B.forks.length ? B.forks : [[null, dflt == null ? 'Versions' : dflt]]).slice();
+    if (V.VERSIONS.some(function (v) { return v.fork === 'samples'; }) && !groups.some(function (g) { return g[0] === 'samples'; })) groups.push(['samples', 'Samples (CCS Workbench)']);
+    return groups;
+  };
+  SW.inGroup = function (v, g) { return g[0] == null ? v.fork !== 'samples' : v.fork === g[0]; };
   function fillPicker() {
     var sel = SW.$('#pick-a'); if (!sel) return;
-    var groups = B.forks || [[null, 'Versions']];
+    var groups = SW.versionGroups();
     sel.innerHTML = groups.map(function (g) {
-      var vs = V.VERSIONS.filter(function (v) { return g[0] == null || v.fork === g[0]; })
+      var vs = V.VERSIONS.filter(function (v) { return SW.inGroup(v, g); })
         .sort(function (a, b) { return a.sort - b.sort; });
       if (!vs.length) return '';
       return '<optgroup label="' + SW.esc(g[1]) + '">' + vs.map(function (v) {

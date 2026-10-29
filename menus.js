@@ -15,6 +15,8 @@
  *                       drop  [pick]: items left out
  *                     Site map is in the list when SW.BENCH.sitemap is set (a sitemap.html).
  *                     About the bench is always first in Help ▾, at the top level, not in a group.
+ *   file              File ▾'s own items for the whole project, [[pick, label, text]] (exports of
+ *                     every version, say), handled by pick('file', p)
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
  * Read ▾ (a tab button with data-menu="read" data-tabs="read") lists the versions in the version
  * picker's groups, unless the bench draws its own (kit/layers.js does, by layer). A bench that sets
@@ -28,12 +30,36 @@
  * opens a list of its own beside it (on a pointer's rest, a click or a tap, or →; ← or Esc
  * closes it), placed against the window so the menu's own scrolling cannot clip it, and opened in
  * place on a narrow screen. Submenus nest.
+ * File ▾, before Read, the kit puts in the tab row unless SW.BENCH.fileMenu is false: what acts on the
+ * project as a whole. A version from files, a project or .ccs file opened and saved, a sample (where
+ * kit/builder.js and kit/projectfile.js are loaded); the bench's own items (menus.file); back up and
+ * restore.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
   'use strict';
   var SW = root.SW, B = SW.BENCH;
   function H() { return B.menus || {}; }
+  var FILE_ON = B.fileMenu !== false;
+  // File ▾ in the tab row, before Read (or first)
+  (function () {
+    var tabs = SW.$('#tabs'); if (!FILE_ON || !tabs || SW.$('[data-menu="file"]', tabs)) return;
+    var btn = SW.el('button', { 'data-menu': 'file', 'aria-expanded': 'false', title: 'The project as a whole: open, save, back up, export' });
+    btn.innerHTML = 'File <span class="caret" aria-hidden="true">▾</span>';
+    var rd = SW.$('[data-menu="read"], [data-tab="read"]', tabs);
+    tabs.insertBefore(btn, rd || tabs.firstChild);
+  })();
+  function projectItems() {
+    return (SW.builder ? [['builder', 'Add a version from files', 'Files from this computer, read as a new version']] : [])
+      .concat(SW.projectFile && SW.projectFile.save ? [['proj-open', 'Open a project or .ccs file', 'A project saved here, or a CCS Workbench session'],
+                                                       ['proj-save', 'Save the project to a file', 'Its versions, files, repairs, settings, drafts and notes']] : [])
+      .concat(SW.projectFile && SW.projectFile.save && B.samples ? [['proj-samples', 'Open a sample', 'A project from CCS Workbench Classic']] : []);
+  }
+  function FILE() {
+    var groups = [projectItems(), H().file || [],
+                  [['backup', 'Back up everything', 'Notes, drafts, settings and findings in one file'], ['restore', 'Restore from a backup…', 'Brings back notes and drafts beside those here']]];
+    return groups.filter(function (g) { return g.length; });
+  }
 
   // Collate's line in Versions ▾: the bench's own (SW.BENCH.words.collate), or the modes it offers
   // (compare.modes, the second mode by compareDefs.by, By function where the texts are Lisp)
@@ -49,10 +75,7 @@
     return [['about', 'This version', 'Its record, sources and annotations'],
             ['compare', 'Collate', collateText()],
             ['genealogy', 'Genealogy', 'How the versions descend']]
-      .concat(SW.builder ? [['builder', 'Add a version from files', 'Files from this computer, read as a new version']] : [])
-      .concat(SW.projectFile && SW.projectFile.save ? [['proj-save', 'Save the project to a file', 'Its versions, files, settings, drafts and notes'],
-                                ['proj-open', 'Open a project or .ccs file', 'A project saved here, or a CCS Workbench session']] : [])
-      .concat(SW.projectFile && SW.projectFile.save && B.samples ? [['proj-samples', 'Open a sample', 'A project from CCS Workbench Classic']] : []);
+      .concat(FILE_ON ? [] : projectItems());   // in File ▾, where the bench has it
   }
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
@@ -195,6 +218,7 @@
         .filter(function (g) { return g[1].length; });
       return item(ab || ['about', 'About the bench', 'Version, sources, citation']) + G.map(function (g) { return SW.menuSub(SW.esc(g[0]), SW.esc(firstOf(g[1])), g[1].map(function (h) { return item(h); }).join('')); }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }
+    if (which === 'file') return FILE().map(function (g, i) { return (i ? '<hr class="menu-rule">' : '') + g.map(function (h) { return item(h); }).join(''); }).join('');
     if (which === 'versions') return (H().versions || VERSIONS()).map(function (h) {
       var on = H().on && H().on(which, h[0]); if (on == null && SW.lenses) on = SW.lenses.on(which, h[0]); if (on == null) on = SW.state.tab === h[0];
       return item(h, on);
@@ -210,7 +234,7 @@
   // submenu for each group, naming its versions; a short one is one list under the group headings.
   function readHTML() {
     var V = root.SWVersions, cur = SW.state.v, all = V.VERSIONS.slice().sort(function (a, b) { return a.sort - b.sort; });
-    var groups = (B.forks && B.forks.length ? B.forks : [[null, '']]).map(function (g) { return [g[1], all.filter(function (v) { return g[0] == null || v.fork === g[0]; })]; })
+    var groups = (SW.versionGroups ? SW.versionGroups('') : B.forks && B.forks.length ? B.forks : [[null, '']]).map(function (g) { return [g[1], all.filter(function (v) { return SW.inGroup ? SW.inGroup(v, g) : g[0] == null || v.fork === g[0]; })]; })
       .filter(function (g) { return g[1].length; });
     function one(v) {
       return '<button data-pick="v:' + SW.esc(v.id) + '"' + (v.id === cur ? ' class="on"' : '') + '><b>' + SW.esc(v.label) + '</b><span>' +
@@ -259,8 +283,10 @@
     if (which === 'help') { SW.help(p); return; }
     if (which === 'read' && /^f:/.test(p)) { SW.openAt(SW.state.v, { p: +p.slice(2), n0: 1 }); return; }   // a file of the open version
     if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) SW.select(p.slice(2)); SW.setTab('read'); return; }
-    if (which === 'versions' && p === 'builder' && SW.builder) { SW.builder.open(); return; }
-    if (which === 'versions' && /^proj-/.test(p) && SW.projectFile && SW.projectFile.save) { ({ 'proj-save': SW.projectFile.save, 'proj-open': SW.projectFile.choose, 'proj-samples': SW.projectFile.pickSample })[p](); return; }
+    if (which === 'file' && p === 'backup') { SW.backup.save(); return; }
+    if (which === 'file' && p === 'restore') { SW.backup.restore(); return; }
+    if ((which === 'versions' || which === 'file') && p === 'builder' && SW.builder) { SW.builder.open(); return; }
+    if ((which === 'versions' || which === 'file') && /^proj-/.test(p) && SW.projectFile && SW.projectFile.save) { ({ 'proj-save': SW.projectFile.save, 'proj-open': SW.projectFile.choose, 'proj-samples': SW.projectFile.pickSample })[p](); return; }
     if (which === 'versions') SW.setTab(p);
   }
 

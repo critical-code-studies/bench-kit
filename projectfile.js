@@ -120,7 +120,7 @@
       return { ref: f, name: k, role: roleOf(f), data: utf8(C[f.id]) };
     });
     var rec = { id: id, label: opts.label || s.name || s.projectName || s.id || 'CCS-WB session', date: opts.date || s.era || '', authors: opts.authors || '',
-                summary: s.description || '', parent: opts.parent || null };
+                summary: s.description || '', parent: opts.parent || null, fork: opts.fork };
     return Bd.add(rec, files.map(function (f) { return { name: f.name, role: f.role, data: f.data }; })).then(function (v) {
       var at = {}, stamp = Date.now(), ds = [];
       files.forEach(function (f, i) { at[f.ref.id] = i; });
@@ -175,7 +175,7 @@
   P.openSample = function (s) {
     SW.toast('Fetching ' + s.name + '…');
     return fetch(SAMPLES + s.path.split('/').map(encodeURIComponent).join('/')).then(function (r) { if (!r.ok) throw new Error('Could not fetch ' + s.path + ' (' + r.status + ')'); return r.json(); })
-      .then(function (o) { return P.fromCCS(o, { id: slug(s.path.split('/')[0]), label: s.name, date: (/\b(1\d{3}|20\d{2})\b/.exec(s.name) || [])[1] || s.era }); })
+      .then(function (o) { return P.fromCCS(o, { id: slug(s.path.split('/')[0]), fork: 'samples', label: s.name, date: (/\b(1\d{3}|20\d{2})\b/.exec(s.name) || [])[1] || s.era }); })
       .then(function (r) { SW.select(r.version.id); SW.setTab('read'); SW.toast(r.version.label + ': ' + r.files + ' files, ' + r.annotations + ' annotations as drafts', 6000); return r; });
   };
   P.pickSample = function () {

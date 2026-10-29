@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **File ▾**, before Read in the tab row (asked for by David): what acts on the project as a whole, apart from reading it. Add a version from files, Open a project or .ccs file, Save the project to a file and Open a sample where `builder.js` and `projectfile.js` are loaded (moved from Versions ▾); the bench's own items (`menus.file`: `[[pick, label, text]]`, handled by `menus.pick('file', p)`), such as exports of every version; Back up everything and Restore from a backup (also in Help). `fileMenu: false` leaves it out, and the builder's items go back to Versions ▾. The list of a version's files stays in Read ▾, grouped by folder.
+- Samples opened from CCS Workbench are listed in a group of their own in the version picker and Read ▾, "Samples (CCS Workbench)", apart from the bench's own versions (`SW.versionGroups`, `SW.inGroup`).
+
 ## 0.84.4 (2026-10-29)
 
 - The About box: on a dark theme the Zenodo badge is shown at half strength and less saturated, so its colours do not outshine the box; it comes up to full on hover (asked for by David).

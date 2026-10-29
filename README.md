@@ -134,6 +134,7 @@ SW.BENCH = {
   store: 'shbench.',                 // the prefix of the bench's keys in localStorage (SW.store)
   editable: false,                   // true: its user sets these in Settings ▸ Bench (kit/project.js)
   beside: false,                     // Read without Beside (another file of the version read beside the one chosen)
+  fileMenu: false,                   // no File ▾ (by default it is before Read: the project's own items, menus.file, and Back up and Restore)
   annotationTypes: true,             // types an annotation may be given: true for CCS Workbench's six, or [[id, label, what for]]; none by default
   samples: true,                     // Versions ▸ Open a sample (kit/projectfile.js): true, or the tag of CCS-WB Classic to read them at
   group: '',                         // the Hypothesis group's ID, as it appears after /groups/ in its link
