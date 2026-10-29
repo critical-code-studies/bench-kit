@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.84.4 (2026-10-29)
 
 - The About box: on a dark theme the Zenodo badge is shown at half strength and less saturated, so its colours do not outshine the box; it comes up to full on hover (asked for by David).
 
