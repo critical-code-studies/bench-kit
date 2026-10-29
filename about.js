@@ -45,7 +45,9 @@
   SW.doiBadge = function (A) { return A.doiBadge || (A.doi ? 'https://zenodo.org/badge/DOI/' + A.doi + '.svg' : ''); };
   function doiRow(A) {
     if (!A.doi) return '<span class="faint">None yet. Zenodo gives a bench its DOI when a GitHub Release of the bench\'s repository is archived.</span> <a href="' + ZENODO_GITHUB + '" target="_blank" rel="noopener">Set it up on Zenodo ↗</a>';
-    return '<a class="about-badge" href="https://doi.org/' + SW.esc(A.doi) + '" target="_blank" rel="noopener"><img src="' + SW.esc(SW.doiBadge(A)) + '" alt="DOI ' + SW.esc(A.doi) + '" height="20"></a><br>' +
+    // the badge's bright colours are let down on a dark theme, so they do not outshine the box; full on hover
+    var dim = SW.themeInfo && SW.themeInfo().dark ? ' dim' : '';
+    return '<a class="about-badge' + dim + '" href="https://doi.org/' + SW.esc(A.doi) + '" target="_blank" rel="noopener"><img src="' + SW.esc(SW.doiBadge(A)) + '" alt="DOI ' + SW.esc(A.doi) + '" height="20"></a><br>' +
       doiLink(A.doi) + ' <span class="faint">every version</span>' + (A.doiVersion ? ' · ' + doiLink(A.doiVersion) + ' <span class="faint">this version</span>' : '');
   }
   function doiLink(d) { return '<a href="https://doi.org/' + SW.esc(d) + '" target="_blank" rel="noopener">' + SW.esc(d) + ' ↗</a>'; }

@@ -57,6 +57,8 @@ dialog.set-dlg { width: min(94vw, 600px); }
 #dlg-mend textarea.mono { font-family: var(--code-font, var(--mono)); font-size: 13px; }
 /* the About box: a bench's Zenodo badge in its DOI row (about.doiBadge) */
 .about-badge img { display: inline-block; vertical-align: middle; margin-bottom: 3px; }
+.about-badge.dim img { opacity: .5; filter: saturate(.6); transition: opacity .15s, filter .15s; }
+.about-badge.dim:hover img, .about-badge.dim:focus-visible img { opacity: 1; filter: none; }
 .set-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .set-foot .set-gap { flex: 1; }
 

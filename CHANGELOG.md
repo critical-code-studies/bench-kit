@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- The About box: on a dark theme the Zenodo badge is shown at half strength and less saturated, so its colours do not outshine the box; it comes up to full on hover (asked for by David).
+
 ## 0.84.3 (2026-10-29)
 
 - **The kit places a bench's DOI badge** (asked for by David), from `about.doi` alone: in the About box's DOI row (Zenodo's badge for the DOI, unless `about.doiBadge` gives the repository's), and, at each `tools/release.js`, as one line at the foot of the README, any other Zenodo badge in it taken out. **Without a DOI**, the About box's DOI row says so, with a link to set one up on Zenodo (zenodo.org ▸ Account ▸ GitHub), and `tools/release.js` says the same.
