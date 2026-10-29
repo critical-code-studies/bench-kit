@@ -3,7 +3,8 @@
  * text back to Markdown, plain text for print, earlier wordings, bench links, ghosts, open and
  * resolved, mentions), run by tests/run.js in a bench's tests/annotations.html, after the
  * bench's own values (its tests/annotations.test.js):
- *   window.BENCH_TESTS = { link: { v, l, name }, text, lineKey: [line, key] }
+ *   window.BENCH_TESTS = { link: { v, l, name }, text, lineKey: [line, key] }   (link: by default made from
+ *   the bench's first version held)
  *     link     a version and lines for a bench link, and a RegExp for its name in print
  *     text     a phrase with non-ASCII characters, from the bench's sources
  *     lineKey  a line in the bench's language and its key (comments and spacing set aside)
@@ -69,7 +70,13 @@
   eq('non-ASCII survives', H.list(H.compose('b', T.text, 'x'))[0].text, T.text);
 
   window.T.group('Bench links');
-  var LK = T.link, u = SW.BASE_URI + '?v=' + LK.v + '&l=' + LK.l + '&a=AbC-12_x';
+  // the bench's link to test: its own (BENCH_TESTS.link), or one made from its first version held,
+  // lines 1 to 3 of its first file, so a new bench need not write one
+  var LK = T.link || (function () {
+    var v = window.SWVersions.VERSIONS.filter(function (x) { return x.build && x.build.length; })[0];
+    return { v: v.id, l: '0:1-3', name: new RegExp('^see annotation, ' + SW.refOf(v.id, 0, 1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) };
+  })();
+  var u = SW.BASE_URI + '?v=' + LK.v + '&l=' + LK.l + '&a=AbC-12_x';
   eq('a bench link is read', N.parseLink(u), { v: LK.v, l: LK.l, a: 'AbC-12_x' });
   eq('another site is not', N.parseLink('https://example.com/?v=' + LK.v), null);
   eq('an escaped underscore is read through', N.parseLink(SW.BASE_URI + '?v=' + LK.v + '&a=ab\\_-cd').a, 'ab_-cd');

@@ -14,6 +14,25 @@
 (function (root) {
   'use strict';
   var SW = root.SW, B = SW.BENCH || {}, V = root.SWVersions;
+
+  // what to fill in from the files given, where nothing is typed yet (tests/builder.test.js): the folder
+  // dropped, else one file's name, else what the files' names share, else the first program's; a year
+  // in it (ELIZA-1965b, spacewar-1962) goes to the date, the rest to the id
+  SW.builderSuggest = function (names, folder) {
+    var stem = function (n) { return String(n).split('/').pop().replace(/\.[^.]*$/, ''); };
+    var ss = names.map(stem), base = folder || '';
+    if (!base && ss.length === 1) base = ss[0];
+    if (!base && ss.length) {
+      var p = ss.reduce(function (a, b) { var i = 0; while (i < a.length && i < b.length && a[i].toLowerCase() === b[i].toLowerCase()) i++; return a.slice(0, i); });
+      p = p.replace(/[-_. ]+$/, '');
+      base = p.length >= 3 ? p : (ss.filter(function (x) { return !/^(readme|notes?)$/i.test(x); })[0] || ss[0]);
+    }
+    if (!base) return { id: '', label: '', date: '' };
+    var m = /(^|[-_ .])((?:1[5-9]|20)\d\d)[a-z]?(?=$|[-_ .])/i.exec(base), date = '', rest = base;
+    if (m) { date = m[2]; rest = base.slice(0, m.index) + base.slice(m.index + m[0].length); }
+    var slug = function (x) { return String(x).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); };
+    return { id: slug(rest) || slug(base), label: base, date: date };
+  };
   if (!B.editable || !V || !V.add) return;
   var KEY = 'builder.versions', PRE = 'local/', ROLES = ['program', 'support', 'doc', 'text'];
   var Bd = SW.builder = {};
@@ -100,7 +119,7 @@
   };
 
   // ---------- Versions ▾ ▸ Add a version from files ----------
-  var esc = SW.esc, chosen = [];
+  var esc = SW.esc, chosen = [], dropped = '';
   function build() {
     var d = SW.el('dialog', { id: 'dlg-builder', class: 'set-dlg' });
     var forks = B.forks && B.forks.length > 1 ? '<label>Listed under <select id="bd-fork">' + B.forks.map(function (f) { return '<option value="' + esc(f[0]) + '">' + esc(f[1]) + '</option>'; }).join('') + '</select></label>' : '';
@@ -120,18 +139,52 @@
       '<div id="bd-made"></div>' +
       '<div class="row"><button value="cancel" class="btn ghost">Cancel</button><button value="add" id="bd-add" class="btn">Add the version</button></div></form>';
     document.body.appendChild(d);
-    function take(list) {
-      [].slice.call(list || []).forEach(function (f) {
-        chosen = chosen.filter(function (c) { return c.file.name !== f.name; });
-        chosen.push({ file: f, role: /^(readme|notes?)\b|\.(md|txt)$/i.test(f.name) ? 'doc' : 'program' });
+    // files given: [{ file, name (its path within a folder dropped) }], and the folder's name if one was
+    function take(list, folder) {
+      list.forEach(function (x) {
+        chosen = chosen.filter(function (c) { return c.name !== x.name; });
+        chosen.push({ file: x.file, name: x.name, role: /^(readme|notes?)\b|\.(md|txt)$/i.test(x.name.split('/').pop()) ? 'doc' : 'program' });
       });
-      drawList();
+      if (folder) dropped = folder;
+      drawList(); autofill();
     }
-    SW.$('#bd-files', d).onchange = function (e) { take(e.target.files); e.target.value = ''; };
+    // id, label and date from the files, into the boxes left empty or filled this way before; a value
+    // typed stays
+    function autofill() {
+      var g = SW.builderSuggest(chosen.map(function (c) { return c.name; }), dropped);
+      if (g.id) { var id = g.id, k = 2; while (V.byId(id)) id = g.id + '-' + k++; g.id = id; }
+      ['id', 'label', 'date'].forEach(function (k) {
+        var el = SW.$('#bd-' + k); if (!el || !g[k]) return;
+        if (!el.value || el.dataset.auto) { el.value = g[k]; el.dataset.auto = '1'; }
+      });
+    }
+    ['id', 'label', 'date'].forEach(function (k) { SW.$('#bd-' + k, d).addEventListener('input', function (e) { delete e.target.dataset.auto; }); });
+    // a folder dropped: its files, read through the entries the browser gives, their paths kept
+    function walk(entry, path, out) {
+      if (entry.isFile) return new Promise(function (res) { entry.file(function (f) { out.push({ file: f, name: path + f.name }); res(); }, function () { res(); }); });
+      if (!entry.isDirectory) return Promise.resolve();
+      var rd = entry.createReader(), all = [];
+      return new Promise(function (res) {
+        (function more() { rd.readEntries(function (es) { if (!es.length) res(all); else { all = all.concat(es); more(); } }, function () { res(all); }); })();
+      }).then(function (es) { return Promise.all(es.filter(function (e) { return !/^\./.test(e.name); }).map(function (e) { return walk(e, path + entry.name + '/', out); })); });
+    }
+    SW.$('#bd-files', d).onchange = function (e) { take([].slice.call(e.target.files).map(function (f) { return { file: f, name: f.name }; })); e.target.value = ''; };
     var drop = SW.$('#bd-drop', d);
     drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('on'); });
     drop.addEventListener('dragleave', function () { drop.classList.remove('on'); });
-    drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('on'); take(e.dataTransfer.files); });
+    drop.addEventListener('drop', function (e) {
+      e.preventDefault(); drop.classList.remove('on');
+      var items = [].slice.call(e.dataTransfer.items || []), ents = items.map(function (it) { return it.webkitGetAsEntry ? it.webkitGetAsEntry() : null; });
+      if (!ents.length || ents.some(function (x) { return !x; })) { take([].slice.call(e.dataTransfer.files).map(function (f) { return { file: f, name: f.name }; })); return; }
+      var out = [], dirs = ents.filter(function (x) { return x.isDirectory; });
+      // one folder dropped: its files named within it, the folder named for the version
+      Promise.all(ents.map(function (x) { return dirs.length === 1 && ents.length === 1 ? walkIn(x, out) : walk(x, '', out); })).then(function () {
+        take(out, dirs.length === 1 && ents.length === 1 ? dirs[0].name : '');
+      });
+    });
+    function walkIn(dir, out) {   // the folder's own files, without its name before them
+      return walk(dir, '', out).then(function () { out.forEach(function (x) { x.name = x.name.replace(new RegExp('^' + dir.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/'), ''); }); });
+    }
     SW.$('#bd-list', d).addEventListener('change', function (e) { var s = e.target.closest('[data-bd-role]'); if (s) chosen[+s.dataset.bdRole].role = s.value; });
     SW.$('#bd-list', d).addEventListener('click', function (e) { var x = e.target.closest('[data-bd-out]'); if (x) { chosen.splice(+x.dataset.bdOut, 1); drawList(); } });
     SW.$('#bd-made', d).addEventListener('click', function (e) {
@@ -145,7 +198,7 @@
       e.preventDefault();
       var rec = { id: SW.$('#bd-id').value.trim(), label: SW.$('#bd-label').value.trim(), date: SW.$('#bd-date').value.trim(), authors: SW.$('#bd-authors').value.trim(),
                   summary: SW.$('#bd-summary').value.trim(), parent: SW.$('#bd-parent').value || null, fork: SW.$('#bd-fork') ? SW.$('#bd-fork').value : undefined };
-      Promise.all(chosen.map(function (c) { return c.file.arrayBuffer().then(function (data) { return { name: c.file.name, role: c.role, data: data }; }); }))
+      Promise.all(chosen.map(function (c) { return c.file.arrayBuffer().then(function (data) { return { name: c.name, role: c.role, data: data }; }); }))
         .then(function (files) { return Bd.add(rec, files); })
         .then(function (v) { d.close(); SW.select(v.id); SW.setTab('read'); SW.toast(v.label + ' added: ' + v.build.length + ' file' + (v.build.length === 1 ? '' : 's'), 4000); },
               function (err) { SW.$('#bd-msg').textContent = err.message; });
@@ -154,7 +207,7 @@
   }
   function drawList() {
     SW.$('#bd-list').innerHTML = chosen.map(function (c, i) {
-      return '<div class="bd-file"><span class="mono">' + esc(c.file.name) + '</span> <span class="hint">' + Math.max(1, Math.round(c.file.size / 1024)) + ' KB</span>' +
+      return '<div class="bd-file"><span class="mono">' + esc(c.name) + '</span> <span class="hint">' + Math.max(1, Math.round(c.file.size / 1024)) + ' KB</span>' +
         '<select data-bd-role="' + i + '">' + ROLES.map(function (r) { return '<option' + (r === c.role ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
         '<button type="button" class="btn ghost" data-bd-out="' + i + '" title="Leave this file out">×</button></div>';
     }).join('');
@@ -173,7 +226,8 @@
   }
   Bd.open = function () {
     var d = SW.$('#dlg-builder') || build();
-    chosen = []; drawList(); fillParents(); drawMade();
+    chosen = []; dropped = ''; drawList(); fillParents(); drawMade();
+    ['id', 'label', 'date'].forEach(function (k) { delete SW.$('#bd-' + k).dataset.auto; });
     ['id', 'label', 'date', 'authors', 'summary'].forEach(function (k) { SW.$('#bd-' + k).value = ''; });
     SW.$('#bd-msg').textContent = '';
     var cur = V.byId(SW.state.v); if (cur) SW.$('#bd-parent').value = cur.id;

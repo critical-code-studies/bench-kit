@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Add a version from files fills itself in** (asked for by David, through CCSbench): the id, label and date are made from the files given, into the boxes left empty (or filled this way before); a value typed stays. One file gives its name without the extension; a folder dropped gives the folder's name, its files kept in their folders below it; several files give what their names share, or the first program's name. A year in the name goes to the date and out of the id: ELIZA-1965b.mad gives id eliza, label ELIZA-1965b, date 1965. An id already taken gets -2, -3. `SW.builderSuggest(names, folder)`.
+- Tests: the kit's annotation tests make their bench link from the bench's first version held where the bench gives none (`BENCH_TESTS.link`), so a new bench made from the template need not rewrite its test file; `tests/builder.test.js`, 6 checks of what is filled in.
+
 ## 0.85.0 (2026-10-29)
 
 - **File ▾**, before Read in the tab row (asked for by David): what acts on the project as a whole, apart from reading it. Add a version from files, Open a project or .ccs file, Save the project to a file and Open a sample where `builder.js` and `projectfile.js` are loaded (moved from Versions ▾); the bench's own items (`menus.file`: `[[pick, label, text]]`, handled by `menus.pick('file', p)`), such as exports of every version; Back up everything and Restore from a backup (also in Help). `fileMenu: false` leaves it out, and the builder's items go back to Versions ▾. The list of a version's files stays in Read ▾, grouped by folder.
