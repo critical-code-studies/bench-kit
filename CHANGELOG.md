@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.85.2 (2026-10-29)
 
 - File ▾ and Help: **Back up my data** in place of Back up everything (it saves only what is the reader's own: My notes, drafts, settings and a copy of the group's annotations, nothing on GitHub), and **Restore my data…** in place of Restore from a backup…, its line saying it is non-destructive (it adds notes and drafts beside those here, and settings only where none is set; it replaces nothing). The About box, Settings ▸ Bench and the kit's site name them so (asked for by David).
 
