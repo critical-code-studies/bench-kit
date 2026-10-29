@@ -2,8 +2,8 @@
 /*
  * tools/release.js - a bench's release: its version raised on every script and stylesheet
  * (the ?v= in its pages) and its date (the bench-date meta) set to the day, a line in its
- * changelog, the version in its README, and the kit moved to a release if asked; then a check
- * for conflict markers. It changes files only: committing and pushing stay with you. Run from
+ * changelog, the version in its README, the DOI badge at the README's foot (from about.doi), and the
+ * kit moved to a release if asked; then a check for conflict markers. It changes files only: committing and pushing stay with you. Run from
  * the bench's repository:
  *
  *   node research/kit/tools/release.js next "What changed."           raise the last number
@@ -133,6 +133,31 @@ if (!NOLOG) {
   const t = s.replace(/(\*\*Version:\*\* )[^ ]+( \(bench-kit )[^)]+\)/, (m, a, b) => a + next + b + kv + ')');
   if (t !== s) { write(p, t); changes.push(p + ': Version ' + next + ' (bench-kit ' + kv + ')'); }
 });
+
+// the DOI badge, placed by the kit: one line at the foot of the README, from the bench's config.js
+// (about.doi, about.doiBadge); any Zenodo badge elsewhere in the README is taken out. Without a DOI,
+// where to get one.
+{
+  let A = {};
+  try {
+    const vm = require('vm'), sb = { SW: {} }; sb.window = sb; sb.globalThis = sb;
+    vm.runInNewContext(fs.readFileSync(path.join(dir, 'js', 'config.js'), 'utf8'), sb);
+    A = (sb.SW.BENCH || {}).about || {};
+  } catch (e) { /* no config.js, or one that needs the page */ }
+  const readme = fs.existsSync('README.md') ? 'README.md' : path.join(dir, 'README.md');
+  if (A.doi && fs.existsSync(readme)) {
+    const badge = '[![DOI](' + (A.doiBadge || 'https://zenodo.org/badge/DOI/' + A.doi + '.svg') + ')](https://doi.org/' + A.doi + ')';
+    const s = fs.readFileSync(readme, 'utf8');
+    // a badge line taken out takes a blank line beside it, so no gap is left
+    const L = s.split('\n'), keep = [];
+    L.forEach((l, i) => {
+      if (/\[!\[DOI\]\(https:\/\/zenodo\.org\/badge\//.test(l)) { if (keep.length && keep[keep.length - 1] === '' && L[i + 1] === '') keep.pop(); return; }
+      keep.push(l);
+    });
+    const t = keep.join('\n').replace(/\s+$/, '') + '\n\n' + badge + '\n';
+    if (t !== s) { write(readme, t); changes.push(readme + ': the DOI badge at the foot'); }
+  } else if (!A.doi) console.log('No DOI: set about.doi in js/config.js once Zenodo has archived a GitHub Release (https://zenodo.org/account/settings/github/; the kit\'s README, "A bench\'s DOI").');
+}
 
 console.log((DRY ? 'would release ' : 'released ') + cur + ' → ' + next + ', bench-kit ' + kv + ':\n' + changes.map((c) => '  ' + c).join('\n'));
 if (!DRY) console.log('\nNext: look over git diff, then commit and push:\n  git add ' + touched.filter((p, i, a) => a.indexOf(p) === i).join(' '));

@@ -10,8 +10,10 @@
  *     catalogue: { skip: [version ids not counted], held: 'held as source' },
  *     doi (the DOI of every version, Zenodo's concept DOI: a DOI row, and the citation ends with it
  *     in place of the bench's address), doiVersion (this release's own, shown in the row), doiBadge
- *     (Zenodo's badge for the repository, https://zenodo.org/badge/<GitHub repository id>.svg, shown
- *     in the row and linked to the DOI) }
+ *     (the badge's image: by default Zenodo's for the DOI; https://zenodo.org/badge/<GitHub repository
+ *     id>.svg shows the latest release's) }
+ * The kit places the badge: in the About box's DOI row, and (tools/release.js) at the foot of the
+ * README. Without a DOI the row says so, with the link to set one up on Zenodo.
  * SW.about.open() shows it.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -38,6 +40,14 @@
     return (C.authors || A.citeAuthor || A.author || '') + ' (' + (date ? date.slice(0, 4) : new Date().getFullYear()) + ') ' + (C.title || B.title || 'Research Bench') +
       ' (version ' + SW.VERSION + ').' + (A.doi ? ' Zenodo. Available at: https://doi.org/' + A.doi : ' Available at: ' + url) + ' (Accessed: ' + SW.fmtDate(SW.today()) + ').';
   }
+  // the DOI row: the badge (Zenodo's for the DOI, or the bench's own) and the DOIs; without a DOI, where to get one
+  var ZENODO_GITHUB = 'https://zenodo.org/account/settings/github/';
+  SW.doiBadge = function (A) { return A.doiBadge || (A.doi ? 'https://zenodo.org/badge/DOI/' + A.doi + '.svg' : ''); };
+  function doiRow(A) {
+    if (!A.doi) return '<span class="faint">None yet. Zenodo gives a bench its DOI when a GitHub Release of the bench\'s repository is archived.</span> <a href="' + ZENODO_GITHUB + '" target="_blank" rel="noopener">Set it up on Zenodo ↗</a>';
+    return '<a class="about-badge" href="https://doi.org/' + SW.esc(A.doi) + '" target="_blank" rel="noopener"><img src="' + SW.esc(SW.doiBadge(A)) + '" alt="DOI ' + SW.esc(A.doi) + '" height="20"></a><br>' +
+      doiLink(A.doi) + ' <span class="faint">every version</span>' + (A.doiVersion ? ' · ' + doiLink(A.doiVersion) + ' <span class="faint">this version</span>' : '');
+  }
   function doiLink(d) { return '<a href="https://doi.org/' + SW.esc(d) + '" target="_blank" rel="noopener">' + SW.esc(d) + ' ↗</a>'; }
   function row(label, html, attrs) { return html ? '<tr' + (attrs || '') + '><td>' + SW.esc(label) + '</td><td>' + html + '</td></tr>' : ''; }
 
@@ -59,7 +69,7 @@
         row('Sources', A.sources || '') +
         row('Catalogue', SW.esc(catalogue(A))) +
         row('Code', code) +
-        row('DOI', A.doi ? (A.doiBadge ? '<a class="about-badge" href="https://doi.org/' + SW.esc(A.doi) + '" target="_blank" rel="noopener"><img src="' + SW.esc(A.doiBadge) + '" alt="DOI ' + SW.esc(A.doi) + '" height="20"></a><br>' : '') + doiLink(A.doi) + ' <span class="faint">every version</span>' + (A.doiVersion ? ' · ' + doiLink(A.doiVersion) + ' <span class="faint">this version</span>' : '') : '') +
+        row('DOI', doiRow(A)) +
         '<tr><td>Cite as</td><td class="about-cite">' + SW.esc(cite) + '</td></tr>' +
       '</table>' +
       '<div class="row">' + (SW.tours ? '<button type="button" class="btn ghost" data-about="tour">Take the welcome tour</button>' : '') +
