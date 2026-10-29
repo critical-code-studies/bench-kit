@@ -2,9 +2,9 @@ cff-version: 1.2.0
 message: "If you use bench-kit in your work, please cite it as below."
 title: "bench-kit: shared modules for the critical code studies research benches"
 abstract: >-
-  Shared modules for the critical code studies research benches: the SHRDLU and
-  Spacewar! benches, and those to come. Plain browser JavaScript and CSS, with no build
-  step.
+  Shared modules for the critical code studies research benches: the SHRDLU,
+  Spacewar!, ELIZA and Melville benches, and those to come. Plain browser JavaScript
+  and CSS, with no build step.
 type: software
 authors:
   - family-names: Berry
