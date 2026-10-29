@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.85.1 (2026-10-29)
 
 - **Add a version from files fills itself in** (asked for by David, through CCSbench): the id, label and date are made from the files given, into the boxes left empty (or filled this way before); a value typed stays. One file gives its name without the extension; a folder dropped gives the folder's name, its files kept in their folders below it; several files give what their names share, or the first program's name. A year in the name goes to the date and out of the id: ELIZA-1965b.mad gives id eliza, label ELIZA-1965b, date 1965. An id already taken gets -2, -3. `SW.builderSuggest(names, folder)`.
 - Tests: the kit's annotation tests make their bench link from the bench's first version held where the bench gives none (`BENCH_TESTS.link`), so a new bench made from the template need not rewrite its test file; `tests/builder.test.js`, 6 checks of what is filled in.
