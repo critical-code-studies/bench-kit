@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use bench-kit in your work, please cite it as below."
+title: "bench-kit: shared modules for the critical code studies research benches"
+abstract: >-
+  Shared modules for the critical code studies research benches: the SHRDLU and
+  Spacewar! benches, and those to come. Plain browser JavaScript and CSS, with no build
+  step.
+type: software
+authors:
+  - family-names: Berry
+    given-names: David M.
+    affiliation: University of Sussex
+    orcid: "https://orcid.org/0000-0002-7737-5586"
+repository-code: "https://github.com/critical-code-studies/bench-kit"
+url: "https://critical-code-studies.github.io/bench-kit/"
+license: GPL-3.0
+version: "0.85.2"
+date-released: 2026-10-29
+keywords:
+  - critical code studies
+  - research bench
+  - close reading
+  - software studies
