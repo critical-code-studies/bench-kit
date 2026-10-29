@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- The About box: `about.doiBadge`, Zenodo's badge for the bench's repository (`https://zenodo.org/badge/<GitHub repository id>.svg`, which always shows the latest release's DOI), shown in the DOI row and linked to the DOI (asked for by David).
+- README: the kit's Zenodo badge at the foot.
+
 ## 0.84.1 (2026-10-28)
 
 - **A bench's DOI in the About box** (asked for by David, through the Melville bench): `about.doi`, the DOI of every version (Zenodo's concept DOI), gives a DOI row after Code, linked to doi.org, and the citation ends "Zenodo. Available at: https://doi.org/<doi>" in place of the bench's address; `about.doiVersion`, this release's own DOI, is shown in the row beside it. A bench without them is unchanged.

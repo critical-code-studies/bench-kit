@@ -9,7 +9,9 @@
  *     purpose, techMore, inside, sources, code,
  *     catalogue: { skip: [version ids not counted], held: 'held as source' },
  *     doi (the DOI of every version, Zenodo's concept DOI: a DOI row, and the citation ends with it
- *     in place of the bench's address), doiVersion (this release's own, shown in the row) }
+ *     in place of the bench's address), doiVersion (this release's own, shown in the row), doiBadge
+ *     (Zenodo's badge for the repository, https://zenodo.org/badge/<GitHub repository id>.svg, shown
+ *     in the row and linked to the DOI) }
  * SW.about.open() shows it.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -57,7 +59,7 @@
         row('Sources', A.sources || '') +
         row('Catalogue', SW.esc(catalogue(A))) +
         row('Code', code) +
-        row('DOI', A.doi ? doiLink(A.doi) + ' <span class="faint">every version</span>' + (A.doiVersion ? ' · ' + doiLink(A.doiVersion) + ' <span class="faint">this version</span>' : '') : '') +
+        row('DOI', A.doi ? (A.doiBadge ? '<a class="about-badge" href="https://doi.org/' + SW.esc(A.doi) + '" target="_blank" rel="noopener"><img src="' + SW.esc(A.doiBadge) + '" alt="DOI ' + SW.esc(A.doi) + '" height="20"></a><br>' : '') + doiLink(A.doi) + ' <span class="faint">every version</span>' + (A.doiVersion ? ' · ' + doiLink(A.doiVersion) + ' <span class="faint">this version</span>' : '') : '') +
         '<tr><td>Cite as</td><td class="about-cite">' + SW.esc(cite) + '</td></tr>' +
       '</table>' +
       '<div class="row">' + (SW.tours ? '<button type="button" class="btn ghost" data-about="tour">Take the welcome tour</button>' : '') +

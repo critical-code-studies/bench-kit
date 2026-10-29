@@ -55,6 +55,8 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .ln.mend .n { color: var(--kin); cursor: help; }
 #dlg-mend .mend-held { margin: 0; padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; max-height: 12em; overflow: auto; white-space: pre-wrap; color: var(--text-dim); }
 #dlg-mend textarea.mono { font-family: var(--code-font, var(--mono)); font-size: 13px; }
+/* the About box: a bench's Zenodo badge in its DOI row (about.doiBadge) */
+.about-badge img { display: inline-block; vertical-align: middle; margin-bottom: 3px; }
 .set-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .set-foot .set-gap { flex: 1; }
 
