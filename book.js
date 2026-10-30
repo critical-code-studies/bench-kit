@@ -430,6 +430,10 @@
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
         '<p class="hint">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click beside the image: close.</p></div></div>';
       zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
+      // the dialog takes the page's shape, from its size or, where none is given, from the image when it comes
+      var shape = function (w, h) { if (w && h) d.style.setProperty('--bk-ar', (w / h).toFixed(4)); };
+      if (pg.size) shape(pg.size[0], pg.size[1]);
+      else { var im0 = zoomEl.querySelector('img'); if (im0.complete) shape(im0.naturalWidth, im0.naturalHeight); else im0.addEventListener('load', function () { shape(im0.naturalWidth, im0.naturalHeight); paint(); }, { once: true }); }
       // a sharper image where the bench gives one (doc.image(pb).sharp), fetched as the page opens and
       // put in when it arrives, if the page is still open; the same page, so the boxes and the zoom hold.
       // The pages either side are fetched too, so ◀ ▶ arrive sharp; a failure leaves the image shown

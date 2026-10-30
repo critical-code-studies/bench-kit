@@ -50,10 +50,11 @@
 .bk-pb::after { content: ""; flex: 1; border-top: 1px solid var(--line-soft); }
 
 /* a page larger, over the view, with its details; a click closes it */
-dialog.bk-modal { width: min(1240px, 96vw); max-width: 96vw; max-height: 94vh; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); cursor: zoom-out; }
+/* as wide as the page fitted to the window's height, with the details beside it (--bk-ar, the page's width over its height) */
+dialog.bk-modal { width: min(96vw, calc(min(90vh, 1600px) * var(--bk-ar, 0.8) + 340px)); max-width: 96vw; max-height: 94vh; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); cursor: zoom-out; }
 dialog.bk-modal button, dialog.bk-modal a { cursor: pointer; }
 dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
-.bk-modal-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); max-height: 94vh; }
+.bk-modal-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 340px); max-height: 94vh; }
 .bk-modal-in img { display: block; width: 100%; height: min(90vh, 1600px); object-fit: contain; background: var(--surface-2); }
 .bk-modal-pic { position: relative; overflow: hidden; touch-action: none; }
 /* the image and its boxes, zoomed and moved together */
@@ -74,9 +75,10 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-x { float: right; width: 36px; height: 36px; margin: -6px -6px 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--text); font-size: 16px; cursor: pointer; }
 .bk-x:hover { border-color: var(--amber); }
 .bk-modal-meta { padding: 16px 18px; overflow: auto; font-size: 13px; }
-.bk-modal-meta table { border-collapse: collapse; }
-.bk-modal-meta td { padding: 4px 8px 4px 0; vertical-align: top; border-top: 1px solid var(--line-soft); }
-.bk-modal-meta td:first-child { color: var(--text-dim); white-space: nowrap; }
+.bk-modal-meta table { border-collapse: collapse; width: 100%; }
+.bk-modal-meta td { padding: 4px 8px 4px 0; vertical-align: top; border-top: 1px solid var(--line-soft); overflow-wrap: anywhere; }
+.bk-modal-meta td:first-child { color: var(--text-dim); width: 7.5em; overflow-wrap: normal; hyphens: manual; }
+.bk-modal-meta .swref { white-space: normal; }
 
 /* the marks */
 .bk-italic { font-style: italic; }
@@ -160,6 +162,7 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 @media (max-width: 760px) {
   .bk-sheet, .bk-two .bk-sheet { grid-template-columns: minmax(0, 1fr) min(96px, var(--bk-imgw, 320px)); gap: 0 12px; padding-left: 4px; }
   #view-book.bk-noimg .bk-sheet { grid-template-columns: minmax(0, 1fr); }
+  dialog.bk-modal { width: 96vw; }
   .bk-modal-in { grid-template-columns: minmax(0, 1fr); }
   .bk-modal-in img { max-height: 70vh; }
   #view-book .bk-cols.bk-two { grid-template-columns: minmax(0, 1fr); }
