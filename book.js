@@ -62,7 +62,8 @@
  * are shown beside the page's name in those details (SW.BENCH.doc.folioWord names the folio).
  * The pages' edges can be trimmed (a scan's colour card and ruler): the reader's in Settings ▸ Book,
  * dragged on a page there, or the bench's (SW.BENCH.doc.trim: { l, t, r, b }, each a share of the
- * page's width or height); beside the text and in the enlarged page, the boxes and bands with them.
+ * page's width or height, or a function (pb) giving each page its own, or null); beside the text and in
+ * the enlarged page, the boxes and bands with them.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
  * for both columns, kept for this browser and in the address as img (off, or a width).
  * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the text beside),
@@ -219,7 +220,7 @@
     var img = SW.el('img', { src: pg.img ? pg.img.src : iiifURL(pg.iiif, 400), alt: PAGE + ' ' + (pg.facs || ''), loading: 'lazy' });
     btn.appendChild(img);
     pg.figBtn = btn; pg.figImg = img;
-    var T0 = trim(); if (T0) withShape(pg, img, function (ar) { cropIn(img, T0, ar); });
+    var T0 = trim(pg); if (T0) withShape(pg, img, function (ar) { cropIn(img, T0, ar); });
     img.addEventListener('load', function () { if (pg.layer) fitZones(pg); });
     // the revisions' boxes, drawn when the pointer comes onto the image
     btn.addEventListener('pointerenter', function () { if (pg.zoneN || pg.lines) { zoneLayer(pg, col); fitZones(pg); } });
@@ -323,14 +324,16 @@
     });
     return '<div class="bk-ztip-w">“' + words + '”</div>' + what.map(function (t) { return '<div>' + esc(t) + '</div>'; }).join('') + '<div class="bk-ztip-h">Click: highlight this in panel</div>';
   }
-  // the pages' edges trimmed: the reader's (Settings ▸ Book) or the bench's (doc.trim), each side a share
-  // of the page, at most 40%; null where nothing is trimmed
-  function trim() {
-    var t = SW.store.get('book.trim', null) || D.trim || null;
+  // the pages' edges trimmed, each side a share of the page, at most 40%: the reader's own (Settings ▸
+  // Book), the same for every page, or the bench's (doc.trim: one for every page, or a function of the
+  // page break giving each its own); null where nothing is trimmed
+  function sides(t) {
     if (!t) return null;
     var c = function (x) { return Math.max(0, Math.min(0.4, +x || 0)); }, o = { l: c(t.l), t: c(t.t), r: c(t.r), b: c(t.b) };
     return o.l || o.t || o.r || o.b ? o : null;
   }
+  function benchTrim(pg) { return sides(typeof D.trim === 'function' ? (pg ? D.trim(pg.pb || pg) : null) : D.trim); }
+  function trim(pg) { var own = SW.store.get('book.trim', null); return own ? sides(own) : benchTrim(pg); }
   K.trim = trim;
   // the page's width over its height, from its size or from the image when it has come
   function withShape(pg, img, fn) {
@@ -356,10 +359,10 @@
   }
   // the pictures beside the text trimmed as now set; a layer of boxes is made again when next wanted
   function trimFigs() {
-    var T = trim();
     cols.forEach(function (c) {
       (c.pages || []).forEach(function (pg) {
         if (!pg.figImg) return;
+        var T = trim(pg);
         if (pg.layer) { pg.layer.remove(); pg.layer = null; pg.zdiv = null; }
         if (T) withShape(pg, pg.figImg, function (ar) { cropIn(pg.figImg, T, ar); }); else cropOut(pg.figImg);
       });
@@ -486,7 +489,7 @@
       zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
       // the dialog takes the page's shape (as trimmed), from its size or, where none is given, from the image
       // when it comes; a trimmed page is a box of the kept part's shape, fitted in the picture's place
-      var T = trim(), im0 = zoomEl.querySelector('img');
+      var T = trim(pg), im0 = zoomEl.querySelector('img');
       withShape(pg, im0, function (ar) {
         d.style.setProperty('--bk-ar', (T ? ar * (1 - T.l - T.r) / (1 - T.t - T.b) : ar).toFixed(4));
         if (T) { d.classList.add('bk-trim'); cropIn(im0, T, ar); placeCrop(); }
@@ -672,7 +675,7 @@
     doc.blocks.forEach(function (bl) {
       if (bl.t === 'note') return;
       if (bl.t === 'pb') {
-        var pg = { facs: bl.facs, iiif: bl.iiif, img: ownImage(bl), p: p, n0: bl.n0, size: bl.size || null, zones: {}, zoneN: 0, elsewhere: bl.elsewhere || null,
+        var pg = { pb: bl, facs: bl.facs, iiif: bl.iiif, img: ownImage(bl), p: p, n0: bl.n0, size: bl.size || null, zones: {}, zoneN: 0, elsewhere: bl.elsewhere || null,
                    lines: bl.lines && bl.lines.length && bl.size ? bl.lines : null, folio: bl.folio, seq: bl.seq, col: col };
         cur = pg;
         pg.has = !!(pg.img || pg.iiif);
@@ -1120,14 +1123,19 @@
   if (SW.settings && SW.settings.add) {
     SW.settings.addTab('book', 'Book', 3);
     var SIDES = [['l', 'Left'], ['t', 'Top'], ['r', 'Right'], ['b', 'Bottom']], tv = null;
-    var dflt = function () { var t = D.trim || {}; return { l: +t.l || 0, t: +t.t || 0, r: +t.r || 0, b: +t.b || 0 }; };
+    var spg = null, dflt = function () { var t = benchTrim(spg) || {}; return { l: t.l || 0, t: t.t || 0, r: t.r || 0, b: t.b || 0 }; };
     var same = function (a, b) { return SIDES.every(function (sd) { return Math.abs(a[sd[0]] - b[sd[0]]) < 0.0005; }); };
-    var samplePage = function () { var pgs = cols[0] && cols[0].pages || []; for (var i = 0; i < pgs.length; i++) if (pgs[i].has && (pgs[i].figImg || pgs[i].img)) return pgs[i]; return null; };
+    // the page in view in Book's first column, or its first page with an image
+    var samplePage = function () {
+      var c = cols[0], pgs = (c && c.pages || []).filter(function (pg) { return pg.has; }), at = c && c.el ? c.el.scrollTop + c.el.clientHeight / 3 : 0, best = pgs[0] || null;
+      pgs.forEach(function (pg) { if (pg.el && pg.el.offsetTop <= at) best = pg; });
+      return best;
+    };
     var drawTrim = function () {
       var box = SW.$('#set-trim-pic'); if (!box) return;
       var F = box.querySelector('.bk-tframe'); if (F) { F.style.left = 100 * tv.l + '%'; F.style.top = 100 * tv.t + '%'; F.style.right = 100 * tv.r + '%'; F.style.bottom = 100 * tv.b + '%'; }
       SIDES.forEach(function (sd) { var i = SW.$('#set-trim-' + sd[0]); if (i && document.activeElement !== i) i.value = Math.round(1000 * tv[sd[0]]) / 10; });
-      var msg = SW.$('#set-trim-msg'); if (msg) msg.textContent = same(tv, dflt()) ? (D.trim ? 'The bench’s trim.' : 'Not trimmed.') : 'Your own trim.';
+      var msg = SW.$('#set-trim-msg'); if (msg) msg.textContent = same(tv, dflt()) ? (D.trim ? 'The bench’s trim' + (typeof D.trim === 'function' ? ' for this page; it trims each page as that page needs.' : '.') : 'Not trimmed.') : 'Your own trim, the same for every page.';
     };
     SW.settings.add({
       tab: 'book',
@@ -1137,8 +1145,8 @@
         '<p class="row-l"><button type="button" class="btn ghost" id="set-trim-bench">' + (D.trim ? 'The bench’s trim' : 'Not trimmed') + '</button>' + (D.trim ? ' <button type="button" class="btn ghost" id="set-trim-none">None</button>' : '') + '</p>' +
         '<p class="hint" id="set-trim-msg"></p></div></div>',
       load: function () {
-        var t = trim(); tv = t ? { l: t.l, t: t.t, r: t.r, b: t.b } : { l: 0, t: 0, r: 0, b: 0 };
-        var box = SW.$('#set-trim-pic'), pg = samplePage();
+        var box = SW.$('#set-trim-pic'), pg = spg = samplePage(), t = trim(pg);
+        tv = t ? { l: t.l, t: t.t, r: t.r, b: t.b } : { l: 0, t: 0, r: 0, b: 0 };
         box.innerHTML = pg ? '<div class="bk-tpage"><img alt="" src="' + esc(pg.img ? (pg.img.large || pg.img.src) : iiifURL(pg.iiif, 600)) + '"><div class="bk-tframe">' +
           SIDES.map(function (sd) { return '<span class="bk-tedge bk-tedge-' + sd[0] + '" data-side="' + sd[0] + '" title="Drag: the ' + sd[1].toLowerCase() + ' edge"></span>'; }).join('') + '</div></div>' :
           '<p class="hint">Open a text in Book to see one of its pages here.</p>';

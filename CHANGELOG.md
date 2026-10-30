@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Settings ▸ Book: the pages' edges** (asked for by David, through the Melville bench): what is not the page, such as a scan's colour card and ruler, trimmed from every page's image, beside the text and in the enlarged page, the boxes and line bands keeping their places on the writing. Dragged on one of the text's pages in Settings, or typed as a percentage of each side; **The bench's trim** goes back to the bench's (`doc.trim: { l, t, r, b }`, each a share of the page), and **None** shows the whole scan. Kept in the browser; a reader who has not set one follows the bench's.
+- **Settings ▸ Book: the pages' edges** (asked for by David, through the Melville bench): what is not the page, such as a scan's colour card and ruler, trimmed from every page's image, beside the text and in the enlarged page, the boxes and line bands keeping their places on the writing. Dragged on one of the text's pages in Settings, or typed as a percentage of each side; **The bench's trim** goes back to the bench's (`doc.trim: { l, t, r, b }`, each a share of the page, or a function `(pb)` giving each page its own: Melville's card is on the right of most leaves and on the left of 18), and **None** shows the whole scan. The reader's own trim is the same for every page. Kept in the browser; a reader who has not set one follows the bench's.
 - **Book's enlarged page takes the page's shape**: the dialog is as wide as the page fitted to the window's height, with its details beside it, so the image no longer sits between grey bands (asked for by David).
 - **Book's enlarged page: the details wrap within their column**, where a long reference or label ran past its edge and was cut off (reported by the Melville bench). The column is up to 340 pixels wide.
 
