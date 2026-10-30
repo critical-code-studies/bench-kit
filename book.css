@@ -63,6 +63,8 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-zctl { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
 .bk-zctl button { width: 40px; height: 36px; border: 0; border-radius: 6px; font-size: 18px; color: #fff; background: rgba(0, 0, 0, 0.42); cursor: pointer; }
 .bk-zctl button:hover { background: rgba(0, 0, 0, 0.66); }
+.bk-zctl .bk-zw { width: auto; padding: 0 10px; font-size: 13px; }
+.bk-zctl .bk-zpc { min-width: 52px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font: 12px var(--mono, monospace); color: #fff; background: rgba(0, 0, 0, 0.42); }
 /* the page before and after: large enough to tap, either side of the image */
 .bk-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 72px; border: 0; border-radius: 6px; font-size: 22px; color: #fff; background: rgba(0, 0, 0, 0.42); cursor: pointer; }
 .bk-nav:hover:not(:disabled) { background: rgba(0, 0, 0, 0.66); }
@@ -106,6 +108,7 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-fig-b:hover .bk-band.bk-band-est, .bk-modal-pic:hover .bk-band.bk-band-est { border-bottom-style: dashed; }
 .bk-fig-b .bk-band:hover, .bk-modal-pic .bk-band:hover { background: color-mix(in srgb, var(--amber) 14%, transparent); border-bottom-color: var(--amber); }
 .bk-z { z-index: 2; }
+.bk-z.bk-zbig { z-index: 0; }
 .bk-z { position: absolute; box-sizing: border-box; border: 1px solid transparent; border-radius: 2px; pointer-events: auto; cursor: pointer; transition: background-color 0.3s ease, border-color 0.3s ease; }
 .bk-fig-b:hover .bk-z { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
 .bk-z.bk-zstage { border: 2px solid var(--red); background: color-mix(in srgb, var(--red) 16%, transparent); animation: bk-zpulse 1.2s ease; }

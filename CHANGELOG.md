@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book's enlarged page zooms as Paratexts' pictures do** (asked for by David, through the Melville bench): a trackpad's pinch (the wheel with ctrl) zooms at Paratexts' rate, where it barely moved before; a double-click zooms in at the pointer; the bar has − , the size shown (of the image file), ＋, Fit and 1:1; from half to forty times the fitted size; the page moves freely at any size, drawn at most once a frame. The revisions' boxes and the line bands move with it and stay clickable (a drag or a pinch is not a click), ◀ ▶ and a click beside the image are as before, and share links (`zm`) keep their form, so old links open at their place.
+- **A sharper image in the enlarged page**: where `doc.image(pb)` gives `sharp` as well as `src` and `large`, it is fetched as the page opens and put in when it arrives, if the page is still open (the pages either side are fetched too); a failure leaves the image shown. Melville gives Harvard's IIIF image at full size.
+- **Book: a revision's box larger than a line lies beneath the line bands** (asked for by David, through the Melville bench): one taller than twice the bands' usual height, or 7% of the page (a passage added whole, a paste-on), is reached where no band covers it and from the text, and a line-sized box stays above the bands.
+
 ## 0.86.0 (2026-10-30)
 
 - **Book: every line of a page can be selected** (asked for by David, through the Melville bench): where a page break gives the page's lines (`pb.lines: [{ n, box, measured }]`, in the page's own pixels, `n` the line number its spans carry), each line has a band on the image, under the revisions' boxes, beside the text and in the enlarged page. Under the pointer a band lights its line in the text (in the enlarged page, its words and number by the pointer); a click highlights it in the panel, as a box does, or says where the line is not in the text at the stage. A band whose place is estimated (`measured: false`) has a dashed edge, and the enlarged page's details say the places are estimated. On the Melville bench, 5,506 bands on its 396 leaves.

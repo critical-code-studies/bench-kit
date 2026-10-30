@@ -47,9 +47,14 @@
  * 🔗 Share (in the toolbar, and in the enlarged page's details) copies a link that opens Book as it
  * is set: the version, stage and settings, the place (l), the box clicked (hz), and, from the
  * enlarged page, that page open at its zoom (pz, zm). A page whose text, or part of it, the document
+ * The enlarged page zooms as Paratexts' pictures do (a trackpad's pinch, the wheel, a double-click, −
+ * and + with the size shown, Fit and 1:1; from half to forty times the fitted size, moved freely), and
+ * where doc.image(pb) gives a sharp image as well as src and large, that is fetched as the page opens
+ * and put in when it arrives.
  * Where a page break gives the page's lines (pb.lines: [{ n, box: [x0, y0, x1, y1], measured }], in
- * the page's own pixels, n the line number its spans carry), each line has a band on the image under
- * the revisions' boxes: under the pointer it lights its line in the text, and a click highlights it
+ * the page's own pixels, n the line number its spans carry), each line has a band on the image, under
+ * the revisions' line-sized boxes and over larger ones (a passage added whole), which are reached where
+ * no band covers them and from the text: under the pointer it lights its line in the text, and a click highlights it
  * there, as a box does; a band whose place is estimated (measured false) is drawn with a dashed edge,
  * and the enlarged page's details say so. pb.folio and pb.seq (an archive's folio, a sequence number)
  * are shown beside the page's name in those details (SW.BENCH.doc.folioWord names the folio).
@@ -247,10 +252,15 @@
       }
       ldiv[ln.n] = d; L.appendChild(d);
     });
+    // a revision's box larger than a line (taller than twice the bands' usual height, or 7% of the
+    // page: a passage added whole, a paste-on) lies beneath the bands, reached where no band covers it
+    // and from the text; a line-sized box stays above them
+    var hs = (pg.lines || []).map(function (ln) { return Math.abs(ln.box[3] - ln.box[1]); }).sort(function (a, b) { return a - b; });
+    var bigH = hs.length ? Math.min(2 * hs[Math.floor(hs.length / 2)], 0.07 * h) : Infinity;
     Object.keys(pg.zones).forEach(function (id) {
       // the corners in order (a document may give them either way round)
       var b0 = pg.zones[id].box, b = [Math.min(b0[0], b0[2]), Math.min(b0[1], b0[3]), Math.max(b0[0], b0[2]), Math.max(b0[1], b0[3])];
-      var d = SW.el('div', { class: 'bk-z', 'data-z': id, title: link ? 'Highlight this in panel' : '' });
+      var d = SW.el('div', { class: 'bk-z' + (b[3] - b[1] > bigH ? ' bk-zbig' : ''), 'data-z': id, title: link ? 'Highlight this in panel' : '' });
       d.style.left = (100 * b[0] / w) + '%'; d.style.top = (100 * b[1] / h) + '%';
       d.style.width = (100 * (b[2] - b[0]) / w) + '%'; d.style.height = (100 * (b[3] - b[1]) / h) + '%';
       // the text written in the box lit while the pointer is on it
@@ -414,12 +424,28 @@
       var prev = step(k, -1), nxt = step(k, 1), many = prev >= 0 || nxt >= 0;
       rows.push(['Share', '<button class="btn" data-share title="A link that opens Book at this ' + esc(PAGE) + ', as it is set here: the stage, the zoom and the place">🔗 Copy link</button>']);
       d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><div class="bk-zoom"><img src="' + esc(pg.img && pg.img.large ? pg.img.large : pg.iiif ? iiifURL(pg.iiif, 1600, 1600) : pg.img.src) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '"></div>' +
-        '<div class="bk-zctl"><button data-zm="-" title="Smaller (−)">−</button><button data-zm="+" title="Larger (+)">+</button><button data-zm="0" title="The whole ' + esc(PAGE) + ' (0)">⟲</button></div>' +
+        '<div class="bk-zctl"><button data-zm="-" title="Smaller (−)">−</button><span class="bk-zpc" title="The size it is shown at, of the image file">100%</span><button data-zm="+" title="Larger (+)">+</button><button data-zm="0" class="bk-zw" title="The whole ' + esc(PAGE) + ' (0)">Fit</button><button data-zm="1" class="bk-zw" title="Actual size: a pixel of the image file to a pixel of the screen">1:1</button></div>' +
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
         '<p class="hint">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click beside the image: close.</p></div></div>';
       zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
+      // a sharper image where the bench gives one (doc.image(pb).sharp), fetched as the page opens and
+      // put in when it arrives, if the page is still open; the same page, so the boxes and the zoom hold.
+      // The pages either side are fetched too, so ◀ ▶ arrive sharp; a failure leaves the image shown
+      var sharp = pg.img && pg.img.sharp;
+      if (sharp) {
+        var sim = new Image();
+        sim.onload = function () {
+          if (i !== k || !d.open) return;
+          var bigNow = d.querySelector('.bk-zoom img'); if (!bigNow) return;
+          bigNow.src = sharp;
+          var Lz = d.querySelector('.bk-zoom .bk-zl'); if (Lz) { if (bigNow.complete) fitLayer(bigNow, Lz); else bigNow.addEventListener('load', function () { fitLayer(bigNow, Lz); }, { once: true }); }
+          paint();
+        };
+        sim.src = sharp;
+      }
+      [step(k, -1), step(k, 1)].forEach(function (j) { var q = j >= 0 && col.pages[j].img && col.pages[j].img.sharp; if (q) (new Image()).src = q; });
       // the revisions' boxes over the large image, as beside the text: faint with the pointer on it,
       // the stage's lit in red, a click on one to the text written there
       if ((pg.zoneN || pg.lines) && pg.size) {
@@ -456,15 +482,20 @@
     // the words at every size; the place in a link is the view's centre as a share of the image
     var zoomEl = null, zm = { z: 1, x: 0, y: 0 }, drag = null, dragged = false, touches = {};
     function size() { return { W: zoomEl.clientWidth, H: zoomEl.clientHeight }; }
-    function paint() {
+    // as Paratexts' pictures (kit/paratexts.js, zoomBox): from half to forty times the size it fits at,
+    // moved freely at any size, drawn at most once a frame; the share link's zm keeps its form
+    var raf = 0;
+    function paintNow() {
       if (!zoomEl) return;
-      var S = size();
-      zm.z = Math.max(1, Math.min(8, zm.z));
-      zm.x = Math.min(0, Math.max(S.W - S.W * zm.z, zm.x)); zm.y = Math.min(0, Math.max(S.H - S.H * zm.z, zm.y));
+      zm.z = Math.max(0.5, Math.min(40, zm.z));
       zoomEl.style.transform = 'translate(' + zm.x + 'px,' + zm.y + 'px) scale(' + zm.z + ')';
-      d.classList.toggle('bk-zoomed', zm.z > 1.001);
+      d.classList.toggle('bk-zoomed', Math.abs(zm.z - 1) > 0.001 || zm.x !== 0 || zm.y !== 0);
+      var pc = d.querySelector('.bk-zpc'), f = fitScale(); if (pc && f) pc.textContent = Math.round(100 * f * zm.z) + '%';
     }
-    function zoomAt(px, py, f) { var z1 = Math.max(1, Math.min(8, zm.z * f)); zm.x = px - (px - zm.x) * z1 / zm.z; zm.y = py - (py - zm.y) * z1 / zm.z; zm.z = z1; paint(); }
+    function paint() { if (!raf) raf = requestAnimationFrame(function () { raf = 0; paintNow(); }); }
+    // the image's scale at fit: its file's pixels to the screen's
+    function fitScale() { var im = zoomEl && zoomEl.querySelector('img'); if (!im || !im.naturalWidth || !im.clientWidth) return 0; return Math.min(im.clientWidth / im.naturalWidth, im.clientHeight / im.naturalHeight); }
+    function zoomAt(px, py, f) { var z1 = Math.max(0.5, Math.min(40, zm.z * f)); zm.x = px - (px - zm.x) * z1 / zm.z; zm.y = py - (py - zm.y) * z1 / zm.z; zm.z = z1; paint(); }
     function picXY(e) { var r = zoomEl.parentNode.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     function zoomQ() { if (zm.z <= 1.001) return null; var S = size(); return zm.z.toFixed(2) + ',' + ((S.W / 2 - zm.x) / zm.z / S.W).toFixed(4) + ',' + ((S.H / 2 - zm.y) / zm.z / S.H).toFixed(4); }
     function zoomTo(q) {
@@ -473,8 +504,13 @@
     }
     d.addEventListener('wheel', function (e) {
       if (!e.target.closest('.bk-modal-pic')) return;
-      e.preventDefault(); var p = picXY(e); zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0015));
+      // a trackpad's pinch comes as the wheel with ctrl held, and zooms faster than a wheel
+      e.preventDefault(); var p = picXY(e); zoomAt(p.x, p.y, Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0025)));
     }, { passive: false });
+    d.addEventListener('dblclick', function (e) {
+      if (!e.target.closest('.bk-modal-pic') || e.target.closest('.bk-nav, .bk-zctl')) return;
+      e.preventDefault(); var p = picXY(e); zoomAt(p.x, p.y, 2);
+    });
     d.addEventListener('pointerdown', function (e) {
       if (!e.target.closest('.bk-modal-pic') || e.target.closest('.bk-nav, .bk-zctl')) return;
       touches[e.pointerId] = picXY(e); dragged = false;
@@ -492,7 +528,7 @@
       }
       var dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
       if (Math.abs(dx) + Math.abs(dy) > 4) dragged = true;
-      if (dragged && zm.z > 1.001) { zm.x = drag.x + dx; zm.y = drag.y + dy; paint(); }
+      if (dragged) { zm.x = drag.x + dx; zm.y = drag.y + dy; paint(); }
     });
     function up(e) { delete touches[e.pointerId]; if (!Object.keys(touches).length) drag = null; }
     d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
@@ -500,7 +536,13 @@
       // a drag or a pinch is not a click
       if (dragged) { dragged = false; e.stopPropagation(); return; }
       var zc = e.target.closest('[data-zm]');
-      if (zc) { e.stopPropagation(); var S = size(); if (zc.dataset.zm === '0') { zm = { z: 1, x: 0, y: 0 }; paint(); } else zoomAt(S.W / 2, S.H / 2, zc.dataset.zm === '+' ? 1.5 : 1 / 1.5); return; }
+      if (zc) {
+        e.stopPropagation(); var S = size(), k = zc.dataset.zm;
+        if (k === '0') { zm = { z: 1, x: 0, y: 0 }; paint(); }
+        else if (k === '1') { var f1 = fitScale(); if (f1) zoomAt(S.W / 2, S.H / 2, 1 / (f1 * zm.z)); }
+        else zoomAt(S.W / 2, S.H / 2, k === '+' ? 1.5 : 1 / 1.5);
+        return;
+      }
       var sh = e.target.closest('[data-share]');
       if (sh) { e.stopPropagation(); SW.copyText(shareLink({ pz: col.pages[i].facs, zm: zoomQ() }), 'the link'); return; }
       var ew = e.target.closest('.bk-else');
