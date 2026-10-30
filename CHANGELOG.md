@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.86.0 (2026-10-30)
 
 - **Book: every line of a page can be selected** (asked for by David, through the Melville bench): where a page break gives the page's lines (`pb.lines: [{ n, box, measured }]`, in the page's own pixels, `n` the line number its spans carry), each line has a band on the image, under the revisions' boxes, beside the text and in the enlarged page. Under the pointer a band lights its line in the text (in the enlarged page, its words and number by the pointer); a click highlights it in the panel, as a box does, or says where the line is not in the text at the stage. A band whose place is estimated (`measured: false`) has a dashed edge, and the enlarged page's details say the places are estimated. On the Melville bench, 5,506 bands on its 396 leaves.
 - **Book: an archive's folio and sequence** (`pb.folio`, `pb.seq`) beside the page's name in the enlarged page's details, as "img_7 (folio 2, seq. 7)"; `SW.BENCH.doc.folioWord` names the folio ("Houghton folio").
