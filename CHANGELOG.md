@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Settings ▸ Book: the pages' edges** (asked for by David, through the Melville bench): what is not the page, such as a scan's colour card and ruler, trimmed from every page's image, beside the text and in the enlarged page, the boxes and line bands keeping their places on the writing. Dragged on one of the text's pages in Settings, or typed as a percentage of each side; **The bench's trim** goes back to the bench's (`doc.trim: { l, t, r, b }`, each a share of the page), and **None** shows the whole scan. Kept in the browser; a reader who has not set one follows the bench's.
+- **Book's enlarged page takes the page's shape**: the dialog is as wide as the page fitted to the window's height, with its details beside it, so the image no longer sits between grey bands (asked for by David).
+- **Book's enlarged page: the details wrap within their column**, where a long reference or label ran past its edge and was cut off (reported by the Melville bench). The column is up to 340 pixels wide.
+
 ## 0.87.0 (2026-10-30)
 
 - **Book's enlarged page zooms as Paratexts' pictures do** (asked for by David, through the Melville bench): a trackpad's pinch (the wheel with ctrl) zooms at Paratexts' rate, where it barely moved before; a double-click zooms in at the pointer; the bar has − , the size shown (of the image file), ＋, Fit and 1:1; from half to forty times the fitted size; the page moves freely at any size, drawn at most once a frame. The revisions' boxes and the line bands move with it and stay clickable (a drag or a pinch is not a click), ◀ ▶ and a click beside the image are as before, and share links (`zm`) keep their form, so old links open at their place.
