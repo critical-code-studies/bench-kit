@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.87.0 (2026-10-30)
 
 - **Book's enlarged page zooms as Paratexts' pictures do** (asked for by David, through the Melville bench): a trackpad's pinch (the wheel with ctrl) zooms at Paratexts' rate, where it barely moved before; a double-click zooms in at the pointer; the bar has − , the size shown (of the image file), ＋, Fit and 1:1; from half to forty times the fitted size; the page moves freely at any size, drawn at most once a frame. The revisions' boxes and the line bands move with it and stay clickable (a drag or a pinch is not a click), ◀ ▶ and a click beside the image are as before, and share links (`zm`) keep their form, so old links open at their place.
 - **A sharper image in the enlarged page**: where `doc.image(pb)` gives `sharp` as well as `src` and `large`, it is fetched as the page opens and put in when it arrives, if the page is still open (the pages either side are fetched too); a failure leaves the image shown. Melville gives Harvard's IIIF image at full size.
