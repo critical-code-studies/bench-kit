@@ -57,6 +57,11 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-modal-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 340px); max-height: 94vh; }
 .bk-modal-in img { display: block; width: 100%; height: min(90vh, 1600px); object-fit: contain; background: var(--surface-2); }
 .bk-modal-pic { position: relative; overflow: hidden; touch-action: none; }
+/* a page with its edges trimmed (Settings ▸ Book): the image larger than its box, the kept part in it */
+.bk-crop { position: relative; overflow: hidden; width: 100%; }
+.bk-crop > img.bk-cropped { position: absolute; max-width: none; max-height: none; aspect-ratio: auto; object-fit: fill; }
+.bk-trim .bk-zoom { height: min(90vh, 1600px); display: flex; align-items: center; justify-content: center; }
+.bk-trim .bk-zoom > .bk-crop { flex: none; }
 /* the image and its boxes, zoomed and moved together */
 .bk-zoom { position: relative; transform-origin: 0 0; will-change: transform; }
 .bk-zoomed .bk-modal-pic { cursor: grab; }
@@ -165,6 +170,7 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
   dialog.bk-modal { width: 96vw; }
   .bk-modal-in { grid-template-columns: minmax(0, 1fr); }
   .bk-modal-in img { max-height: 70vh; }
+  .bk-trim .bk-zoom { height: 70vh; }
   #view-book .bk-cols.bk-two { grid-template-columns: minmax(0, 1fr); }
   #view-book .bk-two .bk-col { height: auto; max-height: 70vh; }
   #view-book .bk-two .bk-col + .bk-col { border-left: 0; border-top: 1px solid var(--line); }
@@ -172,3 +178,19 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
   .bk-page p { text-align: left; }
 }
 @media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash, .bk-s.bk-strike-in, .bk-z.bk-zstage { animation: none; } }
+
+/* Settings ▸ Book: the pages' edges, dragged on a page */
+.bk-tset { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.bk-tpic { flex: none; }
+.bk-tpage { position: relative; display: inline-block; overflow: hidden; touch-action: none; }
+.bk-tpage img { display: block; height: 300px; width: auto; max-width: 100%; }
+.bk-tframe { position: absolute; outline: 2px solid #fff; outline-offset: -1px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); pointer-events: none; }
+.bk-tedge { position: absolute; pointer-events: auto; }
+.bk-tedge-l, .bk-tedge-r { top: 0; bottom: 0; width: 14px; cursor: ew-resize; }
+.bk-tedge-t, .bk-tedge-b { left: 0; right: 0; height: 14px; cursor: ns-resize; }
+.bk-tedge-l { left: -7px; } .bk-tedge-r { right: -7px; }
+.bk-tedge-t { top: -7px; } .bk-tedge-b { bottom: -7px; }
+.bk-tnums { display: grid; gap: 6px; }
+.bk-tnums label { display: flex; align-items: center; gap: 6px; }
+.bk-tnums label > span { min-width: 4em; }
+.bk-tnums input { width: 5em; }
