@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.90.2 (2026-10-31)
 
 - Book's enlarged page closes only with ✕, a click outside it, or Esc (asked for by David): a click in its details (the image credit's chevron, the text) or on the image no longer closes it.
 
