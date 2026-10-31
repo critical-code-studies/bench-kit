@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.90.1 (2026-10-31)
 
 - `doc.imageCreditShort` (plain text): the line the folded image credit shows in Book's enlarged page, in full, in place of the credit's first words (asked for by David, through the Melville bench, whose permission asks for the call number with each image: "Houghton Library, Harvard University, MS Am 188 (363)").
 
