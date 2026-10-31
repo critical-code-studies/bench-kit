@@ -79,7 +79,7 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-nav-next { right: 10px; }
 .bk-x { float: right; width: 36px; height: 36px; margin: -6px -6px 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--text); font-size: 16px; cursor: pointer; }
 .bk-x:hover { border-color: var(--amber); }
-.bk-modal-meta { padding: 16px 18px; overflow: auto; font-size: 13px; }
+.bk-modal-meta { padding: 16px 18px; overflow: auto; font-size: 13px; max-height: calc(94vh - 2px); box-sizing: border-box; }
 .bk-modal-meta table { border-collapse: collapse; width: 100%; }
 .bk-modal-meta td { padding: 4px 8px 4px 0; vertical-align: top; border-top: 1px solid var(--line-soft); overflow-wrap: anywhere; }
 .bk-modal-meta td:first-child { color: var(--text-dim); width: 7.5em; overflow-wrap: normal; hyphens: manual; }
@@ -194,3 +194,21 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
 .bk-tnums label { display: flex; align-items: center; gap: 6px; }
 .bk-tnums label > span { min-width: 4em; }
 .bk-tnums input { width: 5em; }
+
+/* a bookmark: red, at the top right of a page beside the text and of the enlarged page; faint on the
+   page under the pointer until it is set */
+.bk-mkbox { position: absolute; pointer-events: none; z-index: 3; }
+.bk-mk { position: absolute; top: -2px; right: 8%; width: 14px; height: 24px; pointer-events: auto; cursor: pointer; background: #c62828; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 74%, 0 100%); opacity: 0; transition: opacity .12s; }
+.bk-fig-b:hover .bk-mk, .bk-modal-pic:hover .bk-mk { opacity: .35; }
+.bk-mk:hover { opacity: .75 !important; }
+.bk-mk.on { opacity: 1 !important; }
+.bk-modal-pic .bk-mk { width: 22px; height: 38px; transform-origin: 100% 0; }
+.bk-bar .bk-marks { max-width: 13em; }
+/* the enlarged page's details: the image's credit folded, the rating, bookmark and link on one line,
+   the keys in small type */
+.bk-credit summary { cursor: pointer; }
+.bk-credit[open] summary { margin-bottom: 4px; }
+.bk-acts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 0 4px; border-top: 1px solid var(--line-soft); }
+.bk-acts .fd-rate { margin-right: 0; }
+.bk-markbtn.on { border-color: #c62828; background: color-mix(in srgb, #c62828 14%, transparent); }
+.bk-modal-meta .bk-keys { font-size: 10.5px; line-height: 1.45; margin-top: 10px; }

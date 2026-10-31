@@ -221,10 +221,13 @@
     btn.appendChild(img);
     pg.figBtn = btn; pg.figImg = img;
     var T0 = trim(pg); if (T0) withShape(pg, img, function (ar) { cropIn(img, T0, ar); });
-    img.addEventListener('load', function () { if (pg.layer) fitZones(pg); });
+    if (pg.facs) { pg.markBox = SW.el('div', { class: 'bk-mkbox' }); pg.markBox.innerHTML = markHTML(pg.facs); btn.appendChild(pg.markBox); fitMark(img, pg.markBox); }
+    img.addEventListener('load', function () { if (pg.layer) fitZones(pg); fitMark(img, pg.markBox); });
     // the revisions' boxes, drawn when the pointer comes onto the image
     btn.addEventListener('pointerenter', function () { if (pg.zoneN || pg.lines) { zoneLayer(pg, col); fitZones(pg); } });
     btn.onclick = function (e) {
+      var mk = e.target.closest('.bk-mk');
+      if (mk) { e.preventDefault(); setMark(pg.facs, !marked(pg.facs)); return; }
       var z = e.target.closest('.bk-z');
       if (z) { e.preventDefault(); toText(col, pg, z.dataset.z); return; }
       var lb = e.target.closest('.bk-band');
@@ -324,6 +327,30 @@
     });
     return '<div class="bk-ztip-w">“' + words + '”</div>' + what.map(function (t) { return '<div>' + esc(t) + '</div>'; }).join('') + '<div class="bk-ztip-h">Click: highlight this in panel</div>';
   }
+  // ---------- bookmarks: a page marked by the reader, a red bookmark at its top right ----------
+  // Kept in this browser (book.marks: { facs: when }, which Back up my data saves), the same page in
+  // every text; set on the page beside the text, in the enlarged page, or with b there
+  function marks() { return SW.store.get('book.marks', {}) || {}; }
+  function marked(facs) { return !!(facs && marks()[facs]); }
+  function setMark(facs, on) {
+    var m = marks(); if (on) m[facs] = new Date().toISOString(); else delete m[facs];
+    SW.store.set('book.marks', m); SW.emit('book-marks', facs);
+  }
+  function markTitle(facs) { return marked(facs) ? 'Bookmarked: click to take the bookmark off (b)' : 'Bookmark this ' + PAGE + ', kept in this browser; Bookmarks in the toolbar goes to it (b)'; }
+  function markHTML(facs) { return '<span class="bk-mk' + (marked(facs) ? ' on' : '') + '" data-mark="' + esc(facs) + '" title="' + (marked(facs) ? 'Bookmarked: click to take the bookmark off' : 'Bookmark this ' + esc(PAGE)) + '"></span>'; }
+  // the bookmark's box: over the picture as drawn, or the whole of a trimmed one
+  function fitMark(img, M) {
+    if (!img || !M) return;
+    if (img.classList.contains('bk-cropped')) {
+      if (M.parentNode !== img.parentNode) img.parentNode.appendChild(M);
+      M.style.left = M.style.top = '0'; M.style.width = M.style.height = '100%';
+    } else fitLayer(img, M);
+  }
+  // every bookmark shown, and the enlarged page's, as the marks now are
+  SW.on('book-marks', function () {
+    SW.$$('.bk-mk[data-mark]').forEach(function (e) { var on = marked(e.dataset.mark); e.classList.toggle('on', on); e.title = on ? 'Bookmarked: click to take the bookmark off' : 'Bookmark this ' + PAGE; });
+    SW.$$('[data-markbtn]').forEach(function (b) { var on = marked(b.dataset.markbtn); b.title = markTitle(b.dataset.markbtn); b.setAttribute('aria-pressed', String(on)); b.classList.toggle('on', on); });
+  });
   // a page's rating, one to three stars, as Paratexts' and the findings': a reaction ★1..★3 that answers
   // no annotation, tagged with the page (page:<facs>), signed and shared with the group's annotations
   // (or a draft in this browser), one to each reader; the same star again takes it back
@@ -394,6 +421,7 @@
         var T = trim(pg);
         if (pg.layer) { pg.layer.remove(); pg.layer = null; pg.zdiv = null; }
         if (T) withShape(pg, pg.figImg, function (ar) { cropIn(pg.figImg, T, ar); }); else cropOut(pg.figImg);
+        if (pg.markBox) { if (!pg.markBox.isConnected) pg.figBtn.appendChild(pg.markBox); fitMark(pg.figImg, pg.markBox); }
       });
     });
   }
@@ -481,9 +509,9 @@
     if (pg.litFrom.length) lightZones(pg, pg.litFrom, 'bk-zhover', true);
   }
   window.addEventListener('resize', function () {
-    cols.forEach(function (c) { c.pages.forEach(function (pg) { if (pg.layer) fitZones(pg); }); });
+    cols.forEach(function (c) { c.pages.forEach(function (pg) { if (pg.layer) fitZones(pg); if (pg.markBox) fitMark(pg.figImg, pg.markBox); }); });
     if (K.placeCrop) K.placeCrop();
-    var m = SW.$('dialog.bk-modal[open] .bk-modal-pic'); if (m) fitLayer(m.querySelector('img'), m.querySelector('.bk-zl'));
+    var m = SW.$('dialog.bk-modal[open] .bk-modal-pic'); if (m) { fitLayer(m.querySelector('img'), m.querySelector('.bk-zl')); fitMark(m.querySelector('img'), m.querySelector('.bk-mkbox')); }
   });
 
   // the page larger, in a box over the view, with what is known of it: ◀ ▶ (or the arrow keys) for
@@ -503,21 +531,33 @@
       var rows = [[P, esc(pg.facs || '') + (arch ? ' (' + esc(arch) + ')' : '')], ['Text', esc(textLabel(col.vid))]];
       if (b.parts.length > 1) rows.push(['Part', esc(b.parts[pg.p].src.split('/').pop())]);
       if (pg.n0 != null) rows.push(['Lines', (n1 > pg.n0 ? 'll. ' + pg.n0 + '–' + n1 : 'l. ' + pg.n0) + ' ' + SW.refTag(b.v.id, pg.p, pg.n0, Math.max(pg.n0, n1), b.parts.length)]);
-      if (pg.lines && pg.lines.some(function (ln) { return !ln.measured; })) rows.push(['Lines on the image', 'Their places are estimated from the revision boxes (dashed where no box lies on the line), so a band may sit a little off the written line.']);
-      if (D.imageCredit) rows.push(['Image', D.imageCredit]);
+      if (pg.lines && pg.lines.some(function (ln) { return !ln.measured; })) rows.push(['Lines on the image', 'Lines are estimated.']);
+      // the image's credit folded behind its first words (as "Houghton Library"), opened with the chevron
+      if (D.imageCredit) {
+        var cred0 = String(D.imageCredit).replace(/<[^>]*>/g, '').split(/[,.;]/)[0].trim();
+        rows.push(['Image', '<details class="bk-credit"><summary>' + esc(cred0.length > 40 ? cred0.slice(0, 40) + '…' : cred0) + '</summary>' + D.imageCredit + '</details>']);
+      }
       rows.push(['Source', pg.iiif ? '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>' :
         '<a href="' + esc(pg.img.large || pg.img.src) + '" target="_blank" rel="noopener">the image ↗</a>']);
       var prev = step(k, -1), nxt = step(k, 1), many = prev >= 0 || nxt >= 0;
-      if (N && N.listAll && pg.facs) rows.push(['Rating', '<span class="bk-prate">' + rateHTML({ n: 0, mine: 0 }) + '</span>']);
-      rows.push(['Share', '<button class="btn" data-share title="A link that opens Book at this ' + esc(PAGE) + ', as it is set here: the stage, the zoom and the place">🔗 Copy link</button>']);
+      // the rating, the bookmark and the link on one line, under the details
+      var acts = '<div class="bk-acts">' + (N && N.listAll && pg.facs ? '<span class="bk-prate">' + rateHTML({ n: 0, mine: 0 }) + '</span>' : '') +
+        (pg.facs ? '<button class="btn bk-markbtn' + (marked(pg.facs) ? ' on' : '') + '" data-markbtn="' + esc(pg.facs) + '" title="' + esc(markTitle(pg.facs)) + '" aria-pressed="' + marked(pg.facs) + '">🔖</button>' : '') +
+        '<button class="btn" data-share title="A link that opens Book at this ' + esc(PAGE) + ', as it is set here: the stage, the zoom and the place">🔗 Copy link</button></div>';
       d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><div class="bk-zoom"><img src="' + esc(pg.img && pg.img.large ? pg.img.large : pg.iiif ? iiifURL(pg.iiif, 1600, 1600) : pg.img.src) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '"></div>' +
         '<div class="bk-zctl"><button data-zm="-" title="Smaller (−)">−</button><span class="bk-zpc" title="The size it is shown at, of the image file">100%</span><button data-zm="+" title="Larger (+)">+</button><button data-zm="0" class="bk-zw" title="The whole ' + esc(PAGE) + ' (0)">Fit</button><button data-zm="1" class="bk-zw" title="Actual size: a pixel of the image file to a pixel of the screen">1:1</button></div>' +
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
-        '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
-        '<p class="hint">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click beside the image: close.</p></div></div>';
+        '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' + acts +
+        '<p class="hint bk-keys">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click beside the image: close.</p></div></div>';
       zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
       showRating(pg.facs);
+      // the bookmark at the page's top right, moving with the page and kept its own size
+      if (pg.facs) {
+        var mkb = SW.el('div', { class: 'bk-mkbox' }), bigM = zoomEl.querySelector('img'); mkb.innerHTML = markHTML(pg.facs); zoomEl.appendChild(mkb);
+        var fitM = function () { fitMark(bigM, mkb); };
+        if (bigM.complete) fitM(); bigM.addEventListener('load', fitM);
+      }
       // the dialog takes the page's shape (as trimmed), from its size or, where none is given, from the image
       // when it comes; a trimmed page is a box of the kept part's shape, fitted in the picture's place
       var T = trim(pg), im0 = zoomEl.querySelector('img');
@@ -587,6 +627,7 @@
       var cr = zoomEl && zoomEl.querySelector('.bk-crop'); if (!cr) return;
       var S = size(), a = parseFloat(cr.style.aspectRatio) || 1, w = Math.min(S.W, S.H * a);
       cr.style.width = w + 'px'; cr.style.height = (w / a) + 'px';
+      fitMark(cr.querySelector('img'), zoomEl.querySelector('.bk-mkbox'));
     }
     K.placeCrop = placeCrop;
     // as Paratexts' pictures (kit/paratexts.js, zoomBox): from half to forty times the size it fits at,
@@ -596,6 +637,7 @@
       if (!zoomEl) return;
       zm.z = Math.max(0.5, Math.min(40, zm.z));
       zoomEl.style.transform = 'translate(' + zm.x + 'px,' + zm.y + 'px) scale(' + zm.z + ')';
+      var mk0 = zoomEl.querySelector('.bk-mk'); if (mk0) mk0.style.transform = 'scale(' + (1 / zm.z) + ')';
       d.classList.toggle('bk-zoomed', Math.abs(zm.z - 1) > 0.001 || zm.x !== 0 || zm.y !== 0);
       var pc = d.querySelector('.bk-zpc'), f = fitScale(); if (pc && f) pc.textContent = Math.round(100 * f * zm.z) + '%';
     }
@@ -650,6 +692,8 @@
         else zoomAt(S.W / 2, S.H / 2, k === '+' ? 1.5 : 1 / 1.5);
         return;
       }
+      var mkc = e.target.closest('.bk-mk, [data-markbtn]');
+      if (mkc) { e.stopPropagation(); var fm = col.pages[i].facs; setMark(fm, !marked(fm)); return; }
       var rb = e.target.closest('[data-prate]');
       if (rb) {
         e.stopPropagation();
@@ -678,6 +722,7 @@
     d.addEventListener('keydown', function (e) {
       var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
       if (dir) { e.preventDefault(); go(step(i, dir)); return; }
+      if ((e.key === 'b' || e.key === 'B') && !e.target.closest('input, textarea') && col.pages[i].facs) { e.preventDefault(); setMark(col.pages[i].facs, !marked(col.pages[i].facs)); return; }
       if (zoomEl && (e.key === '+' || e.key === '=' || e.key === '-' || e.key === '0')) {
         e.preventDefault(); var S = size();
         if (e.key === '0') { zm = { z: 1, x: 0, y: 0 }; paint(); } else zoomAt(S.W / 2, S.H / 2, e.key === '-' ? 1 / 1.5 : 1.5);
@@ -877,6 +922,7 @@
         '<button class="btn' + (st.imgOn ? '' : ' on') + '" id="bk-imgoff" aria-pressed="' + !st.imgOn + '" title="' + (st.imgOn ? 'Fold the images away' : 'Show the images again') + '">Off</button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="Read at the place shown here, line by line">≡ Read here</button>' +
       '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share</button>' +
+      '<select id="bk-marks" class="bk-marks" title="The ' + esc(PAGE) + 's you have bookmarked in this text: choose one to go to it"><option value="">🔖 Bookmarks</option></select>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
         '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision">' +
         '<button class="btn ghost" id="bk-next" title="The stage after">▶</button><button class="btn ghost" id="bk-play" title="Run through the stages, one by one">' + (st.play ? '❚❚' : '▶▶') + '</button>' +
@@ -905,7 +951,16 @@
       if (e.target.id === 'bk-stage') { stop(); st.stage = +e.target.value; apply(true); }
       if (e.target.id === 'bk-imgw') { st.imgW = imgw(e.target.value) || IMGW0; SW.store.set('book.imgw', st.imgW); showImages(); writeQ(); }
     });
+    // the bookmarks, listed afresh as the list is opened, in the text's order
+    var mkSel = SW.$('#bk-marks', tb);
+    function listMarks() {
+      var c = cols[0], m = marks(), pgs = c ? c.pages.filter(function (pg) { return pg.facs && m[pg.facs]; }) : [];
+      mkSel.innerHTML = '<option value="">🔖 Bookmarks' + (pgs.length ? ' (' + pgs.length + ')' : '') + '</option>' +
+        (pgs.length ? pgs.map(function (pg) { return '<option value="' + esc(pg.facs) + '">' + esc(pg.facs) + (pg.folio != null ? ' (' + esc((D.folioWord || 'folio') + ' ' + pg.folio) + ')' : '') + '</option>'; }).join('') : '<option value="" disabled>None yet: the bookmark at a ' + esc(PAGE) + '’s top right</option>');
+    }
+    mkSel.addEventListener('pointerdown', listMarks); mkSel.addEventListener('focus', listMarks);
     tb.addEventListener('change', function (e) {
+      if (e.target.id === 'bk-marks') { var to = e.target.value; e.target.value = ''; if (to && cols[0]) { goElsewhere(cols[0], to); writeQ(); } return; }
       if (e.target.id === 'bk-all') { st.all = e.target.checked; stop(); var sk = SW.$('#bk-strike', tb); if (sk) sk.disabled = st.all; apply(false); }
       if (e.target.id === 'bk-strike') { st.strike = e.target.checked; SW.store.set('book.del', st.strike ? 'strike' : ''); apply(true); }
       if (e.target.id === 'bk-hands') { st.hands = e.target.checked; apply(false); }

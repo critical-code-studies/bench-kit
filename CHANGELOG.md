@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book: bookmarks** (asked for by David): a red bookmark at a page's top right, beside the text and in the enlarged page (where it keeps its size as the page zooms). Faint on the page under the pointer until set; a click on it, the 🔖 button in the enlarged page's details, or b there sets or takes it off. **🔖 Bookmarks** in Book's toolbar lists the text's bookmarked pages, in order, and goes to one. Kept in this browser (`book.marks`), the same page in every text, saved by Back up my data.
+- Book's enlarged page, its details (asked for by David): the rating, the bookmark and Copy link on one line; the image's credit folded behind its first words (▶ Houghton Library); "Lines are estimated." for the estimate note; the keys in small type; the details scroll within the dialog rather than pushing the page out of view.
+
 ## 0.89.0 (2026-10-31)
 
 - **Book: a page rated out of three stars** in the enlarged page's details (asked for by David), as Paratexts' items and the findings are: one rating to each reader, signed with their initials, the same star again to take it back, the group's average and who gave what beside it. A rating is a reaction (★1 to ★3) answering no annotation and tagged `page:<facs>`, so it is shared with the group's annotations, or kept as a draft in this browser without a group, and counted in no annotation list; What's new says "rated img_13 ★2".
