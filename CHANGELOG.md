@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.89.0 (2026-10-31)
 
 - **Book: a page rated out of three stars** in the enlarged page's details (asked for by David), as Paratexts' items and the findings are: one rating to each reader, signed with their initials, the same star again to take it back, the group's average and who gave what beside it. A rating is a reaction (★1 to ★3) answering no annotation and tagged `page:<facs>`, so it is shared with the group's annotations, or kept as a draft in this browser without a group, and counted in no annotation list; What's new says "rated img_13 ★2".
 
