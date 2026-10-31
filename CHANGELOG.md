@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `doc.imageCreditShort` (plain text): the line the folded image credit shows in Book's enlarged page, in full, in place of the credit's first words (asked for by David, through the Melville bench, whose permission asks for the call number with each image: "Houghton Library, Harvard University, MS Am 188 (363)").
+
 ## 0.90.0 (2026-10-31)
 
 - **Book: bookmarks** (asked for by David): a red bookmark at a page's top right, beside the text and in the enlarged page (where it keeps its size as the page zooms). Faint on the page under the pointer until set; a click on it, the 🔖 button in the enlarged page's details, or b there sets or takes it off. **🔖 Bookmarks** in Book's toolbar lists the text's bookmarked pages, in order, and goes to one. Kept in this browser (`book.marks`), the same page in every text, saved by Back up my data.

@@ -532,10 +532,12 @@
       if (b.parts.length > 1) rows.push(['Part', esc(b.parts[pg.p].src.split('/').pop())]);
       if (pg.n0 != null) rows.push(['Lines', (n1 > pg.n0 ? 'll. ' + pg.n0 + '–' + n1 : 'l. ' + pg.n0) + ' ' + SW.refTag(b.v.id, pg.p, pg.n0, Math.max(pg.n0, n1), b.parts.length)]);
       if (pg.lines && pg.lines.some(function (ln) { return !ln.measured; })) rows.push(['Lines on the image', 'Lines are estimated.']);
-      // the image's credit folded behind its first words (as "Houghton Library"), opened with the chevron
+      // the image's credit folded behind the bench's short form (doc.imageCreditShort, plain text), or
+      // its first words (as "Houghton Library"), opened with the chevron
       if (D.imageCredit) {
         var cred0 = String(D.imageCredit).replace(/<[^>]*>/g, '').split(/[,.;]/)[0].trim();
-        rows.push(['Image', '<details class="bk-credit"><summary>' + esc(cred0.length > 40 ? cred0.slice(0, 40) + '…' : cred0) + '</summary>' + D.imageCredit + '</details>']);
+        cred0 = D.imageCreditShort ? String(D.imageCreditShort) : cred0.length > 40 ? cred0.slice(0, 40) + '…' : cred0;
+        rows.push(['Image', '<details class="bk-credit"><summary>' + esc(cred0) + '</summary>' + D.imageCredit + '</details>']);
       }
       rows.push(['Source', pg.iiif ? '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>' :
         '<a href="' + esc(pg.img.large || pg.img.src) + '" target="_blank" rel="noopener">the image ↗</a>']);
