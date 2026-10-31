@@ -324,6 +324,35 @@
     });
     return '<div class="bk-ztip-w">“' + words + '”</div>' + what.map(function (t) { return '<div>' + esc(t) + '</div>'; }).join('') + '<div class="bk-ztip-h">Click: highlight this in panel</div>';
   }
+  // a page's rating, one to three stars, as Paratexts' and the findings': a reaction ★1..★3 that answers
+  // no annotation, tagged with the page (page:<facs>), signed and shared with the group's annotations
+  // (or a draft in this browser), one to each reader; the same star again takes it back
+  var RATE = /^★([123])(\s|$)/, rated = null;
+  function pageRates(again) {
+    if (!N || !N.listAll) return Promise.resolve([]);
+    if (!rated || again) rated = N.listAll({ reactions: true }).then(function (all) {
+      return all.filter(function (n) { return N.isReaction(n) && !n.parent && RATE.test(n.text) && (n.tags || []).some(function (g) { return /^page:/.test(g); }); });
+    }, function () { return []; });
+    return rated;
+  }
+  function ratingOf(rs, facs) {
+    rs = rs.filter(function (r) { return (r.tags || []).indexOf('page:' + facs) >= 0; });
+    var mine = rs.filter(function (r) { return N.myReaction(r); });
+    return { n: rs.length, avg: rs.length ? rs.reduce(function (a, r) { return a + +RATE.exec(r.text)[1]; }, 0) / rs.length : 0,
+             mine: mine.length ? +RATE.exec(mine[0].text)[1] : 0, mineR: mine, who: rs.map(function (r) { return r.by + ' ' + RATE.exec(r.text)[0].trim(); }) };
+  }
+  function rateHTML(R) {
+    return '<span class="fd-rate" title="Your rating of this ' + esc(PAGE) + ', one to three stars (again to take it back); the group’s average beside it">' +
+      [1, 2, 3].map(function (k) { return '<button type="button" data-prate="' + k + '" class="' + (R.mine >= k ? 'on' : '') + '">★</button>'; }).join('') +
+      (R.n ? ' <span class="hint" title="' + esc(R.who.join('; ')) + '">' + (Math.round(R.avg * 10) / 10) + ' from ' + R.n + '</span>' : '') + '</span>';
+  }
+  function ratePage(facs, vid, k) {
+    return pageRates().then(function (rs) {
+      var R = ratingOf(rs, facs);
+      return R.mineR.reduce(function (p, r) { return p.then(function () { return N.remove(r, true); }); }, Promise.resolve())
+        .then(function () { return R.mine === k ? null : N.create({ vid: vid, kind: 'reaction', text: '★' + k, tags: ['page:' + facs], quiet: true }); });
+    }).then(function () { return pageRates(true); });
+  }
   // the pages' edges trimmed, each side a share of the page, at most 40%: the reader's own (Settings ▸
   // Book), the same for every page, or the bench's (doc.trim: one for every page, or a function of the
   // page break giving each its own); null where nothing is trimmed
@@ -479,6 +508,7 @@
       rows.push(['Source', pg.iiif ? '<a href="' + esc(iiifURL(pg.iiif)) + '" target="_blank" rel="noopener">the full image ↗</a> · <a href="' + esc(pg.iiif.id + '/info.json') + '" target="_blank" rel="noopener">its IIIF service ↗</a>' :
         '<a href="' + esc(pg.img.large || pg.img.src) + '" target="_blank" rel="noopener">the image ↗</a>']);
       var prev = step(k, -1), nxt = step(k, 1), many = prev >= 0 || nxt >= 0;
+      if (N && N.listAll && pg.facs) rows.push(['Rating', '<span class="bk-prate">' + rateHTML({ n: 0, mine: 0 }) + '</span>']);
       rows.push(['Share', '<button class="btn" data-share title="A link that opens Book at this ' + esc(PAGE) + ', as it is set here: the stage, the zoom and the place">🔗 Copy link</button>']);
       d.innerHTML = '<div class="bk-modal-in"><div class="bk-modal-pic"><div class="bk-zoom"><img src="' + esc(pg.img && pg.img.large ? pg.img.large : pg.iiif ? iiifURL(pg.iiif, 1600, 1600) : pg.img.src) + '" alt="' + esc(PAGE + ' ' + (pg.facs || '')) + '"></div>' +
         '<div class="bk-zctl"><button data-zm="-" title="Smaller (−)">−</button><span class="bk-zpc" title="The size it is shown at, of the image file">100%</span><button data-zm="+" title="Larger (+)">+</button><button data-zm="0" class="bk-zw" title="The whole ' + esc(PAGE) + ' (0)">Fit</button><button data-zm="1" class="bk-zw" title="Actual size: a pixel of the image file to a pixel of the screen">1:1</button></div>' +
@@ -487,6 +517,7 @@
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
         '<p class="hint">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click beside the image: close.</p></div></div>';
       zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
+      showRating(pg.facs);
       // the dialog takes the page's shape (as trimmed), from its size or, where none is given, from the image
       // when it comes; a trimmed page is a box of the kept part's shape, fitted in the picture's place
       var T = trim(pg), im0 = zoomEl.querySelector('img');
@@ -547,6 +578,10 @@
     // the words at every size; the place in a link is the view's centre as a share of the image
     var zoomEl = null, zm = { z: 1, x: 0, y: 0 }, drag = null, dragged = false, touches = {};
     function size() { return { W: zoomEl.clientWidth, H: zoomEl.clientHeight }; }
+    // the page's rating in its details, as the group's annotations have it
+    function showRating(facs) {
+      pageRates().then(function (rs) { var box = d.querySelector('.bk-prate'); if (box && col.pages[i] && col.pages[i].facs === facs) box.innerHTML = rateHTML(ratingOf(rs, facs)); });
+    }
     // a trimmed page's box, as large as fits the picture's place, in the middle of it
     function placeCrop() {
       var cr = zoomEl && zoomEl.querySelector('.bk-crop'); if (!cr) return;
@@ -613,6 +648,16 @@
         if (k === '0') { zm = { z: 1, x: 0, y: 0 }; paint(); }
         else if (k === '1') { var f1 = fitScale(); if (f1) zoomAt(S.W / 2, S.H / 2, 1 / (f1 * zm.z)); }
         else zoomAt(S.W / 2, S.H / 2, k === '+' ? 1.5 : 1 / 1.5);
+        return;
+      }
+      var rb = e.target.closest('[data-prate]');
+      if (rb) {
+        e.stopPropagation();
+        // the stars move at once, as Paratexts' do; the group's average when the rating is saved
+        var k = +rb.dataset.prate, row = rb.parentNode, on = SW.$$('[data-prate].on', row).length, off = rb.classList.contains('on') && on === k;
+        SW.$$('[data-prate]', row).forEach(function (b) { b.classList.toggle('on', !off && +b.dataset.prate <= k); });
+        var fx = col.pages[i].facs;
+        ratePage(fx, col.vid, k).then(function () { showRating(fx); }, function (err) { showRating(fx); if (err && err.message !== 'no initials') SW.toast(err.message, 5000); });
         return;
       }
       var sh = e.target.closest('[data-share]');

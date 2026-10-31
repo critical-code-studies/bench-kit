@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book: a page rated out of three stars** in the enlarged page's details (asked for by David), as Paratexts' items and the findings are: one rating to each reader, signed with their initials, the same star again to take it back, the group's average and who gave what beside it. A rating is a reaction (★1 to ★3) answering no annotation and tagged `page:<facs>`, so it is shared with the group's annotations, or kept as a draft in this browser without a group, and counted in no annotation list; What's new says "rated img_13 ★2".
+
 ## 0.88.0 (2026-10-30)
 
 - **Settings ▸ Book: the pages' edges** (asked for by David, through the Melville bench): what is not the page, such as a scan's colour card and ruler, trimmed from every page's image, beside the text and in the enlarged page, the boxes and line bands keeping their places on the writing. Dragged on one of the text's pages in Settings, or typed as a percentage of each side; **The bench's trim** goes back to the bench's (`doc.trim: { l, t, r, b }`, each a share of the page, or a function `(pb)` giving each page its own: Melville's card is on the right of most leaves and on the left of 18), and **None** shows the whole scan. The reader's own trim is the same for every page. Kept in the browser; a reader who has not set one follows the bench's.
