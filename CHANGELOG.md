@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.90.0 (2026-10-31)
 
 - **Book: bookmarks** (asked for by David): a red bookmark at a page's top right, beside the text and in the enlarged page (where it keeps its size as the page zooms). Faint on the page under the pointer until set; a click on it, the 🔖 button in the enlarged page's details, or b there sets or takes it off. **🔖 Bookmarks** in Book's toolbar lists the text's bookmarked pages, in order, and goes to one. Kept in this browser (`book.marks`), the same page in every text, saved by Back up my data.
 - Book's enlarged page, its details (asked for by David): the rating, the bookmark and Copy link on one line; the image's credit folded behind its first words (▶ Houghton Library); "Lines are estimated." for the estimate note; the keys in small type; the details scroll within the dialog rather than pushing the page out of view.
