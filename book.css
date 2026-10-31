@@ -51,9 +51,9 @@
 
 /* a page larger, over the view, with its details; a click closes it */
 /* as wide as the page fitted to the window's height, with the details beside it (--bk-ar, the page's width over its height) */
-dialog.bk-modal { width: min(96vw, calc(min(90vh, 1600px) * var(--bk-ar, 0.8) + 340px)); max-width: 96vw; max-height: 94vh; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); cursor: zoom-out; }
+dialog.bk-modal { width: min(96vw, calc(min(90vh, 1600px) * var(--bk-ar, 0.8) + 340px)); max-width: 96vw; max-height: 94vh; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); }
 dialog.bk-modal button, dialog.bk-modal a { cursor: pointer; }
-dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); }
+dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-modal-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 340px); max-height: 94vh; }
 .bk-modal-in img { display: block; width: 100%; height: min(90vh, 1600px); object-fit: contain; background: var(--surface-2); }
 .bk-modal-pic { position: relative; overflow: hidden; touch-action: none; }

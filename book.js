@@ -551,7 +551,7 @@
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' + acts +
-        '<p class="hint bk-keys">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click beside the image: close.</p></div></div>';
+        '<p class="hint bk-keys">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click outside: close.</p></div></div>';
       zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
       showRating(pg.facs);
       // the bookmark at the page's top right, moving with the page and kept its own size
@@ -716,10 +716,8 @@
       if (zb) { e.stopPropagation(); var at = col.pages[i]; d.close(); toText(col, at, zb.dataset.z); return; }
       var lbm = e.target.closest('.bk-band');
       if (lbm) { e.stopPropagation(); var at2 = col.pages[i]; d.close(); toLine(col, at2, +lbm.dataset.ln); return; }
-      if (e.target.closest('a, .swref')) return;
-      // the image itself, zoomed, is for moving about in: only a click beside it closes the view
-      if (zm.z > 1.001 && e.target.closest('.bk-modal-pic')) return;
-      d.close();
+      // only ✕ or a click outside the box (on the backdrop, which is the dialog itself) closes it, and Esc
+      if (e.target === d || e.target.closest('[data-x]')) d.close();
     });
     d.addEventListener('keydown', function (e) {
       var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
