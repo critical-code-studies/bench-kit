@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.96.1 (2026-11-02)
 
 - **`SW.book.openAt(vid, { p, n0, n1 }, stage)`** (asked for by David, through the Melville bench: a stage's document in Topics opens in Book at that stage): Book on a version at those lines, selected and flashed, and at a stage of the revision where the version is one of the text's states (0 before revision, n after the nth stage); a step on the way back. Where the bench has no Book, Read at the lines. `tests/book.test.js`: 1 more check.
 
