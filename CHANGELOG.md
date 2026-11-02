@@ -1,5 +1,16 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Word clouds** (`wordcloud.js`, `SW.wordcloud`, asked for by David so that every bench has one, and for the Melville bench's Word cloud lens, whose own `js/cloud.js` it replaces). The layout is ported from Andreas Mueller's word_cloud 1.9.6 (MIT; notice in `docs/wordcloud-LICENSE.txt`):
+  - Words are placed largest first, each at a place chosen at random among every place where its box touches no ink already drawn, found through an integral image of the ink. In a page the ink is the letters' own shapes, so small words sit in the gaps of large ones; `layout: 'spiral'` places each word as near the middle as it fits instead.
+  - A word that does not fit at its size is set at the largest smaller size that fits, in either orientation; one that fits at no size is listed in `dropped`.
+  - Sizes by the square root of the count (default), its log, the count, or word_cloud's relative scaling (`contrast: 'relative'`, `relativeScaling`). `scale` pins the count given the largest size, so sizes compare across steps.
+  - `upright` (the share of words set upright), `shape` (`rect`, `oval`, `round`), `mask`, `margin`, `caps`, `weight`, `font` and the `FONTS` a lens may offer; each item's `fill` (a theme token or a colour), `alpha` and `title`.
+  - The cloud is SVG coloured by the theme's tokens, with each word a `<text data-w>` for a lens to make clickable, ready for `SW.exportSVG`. Its styles are in `kit.css` (`.wc-cloud`), which keeps the figure's own font where `bench.css` sets SVG text in mono.
+  - A layout can be kept: `places` from an earlier cloud draws each word at its place, no larger than it was, and leaves out words without one (`faint` draws a placed word with no count faintly). This is Melville's way of stepping through chapters and stages with the words held still, and its `cloud(items, o)` calls work unchanged.
+  - `tests/wordcloud.test.js`: 32 checks (words apart and inside the frame, the same cloud for a seed, words that do not fit, upright words, the oval, a mask, a kept layout, the SVG).
+
 ## 0.91.0 (2026-11-02)
 
 - **Dictionaries** (`dictionary.js`, asked for by David, for the Melville bench's rare words and any bench's): a bench names its dictionaries (`dictionaries`) and a list of word frequencies (`wordFreq`).

@@ -123,3 +123,9 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .dict-sense { margin: 2px 0; }   /* the source's own numbers, (1., (a)), kept in the text */
 .dict-etym { color: var(--text-dim); font-size: 12px; }
 .dict-credit { color: var(--text-faint); font-size: 11px; margin-top: 4px; }
+
+/* word clouds (wordcloud.js): the figure's own font (bench.css sets svg text in mono) */
+.wc-cloud { display: block; max-width: 100%; height: auto; }
+.wc-cloud text { font-family: inherit; }
+.wc-cloud text[data-w] { cursor: pointer; }
+.wc-cloud text[data-w]:hover { fill-opacity: 0.7; }

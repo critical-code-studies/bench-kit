@@ -31,6 +31,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `implementations.css` | Its styles, scoped to the view, on the bench's colour tokens. |
 | `book.js` | Book: a version's text set as a page from the document its reader gives (`b.doc`), and the way from one version to another: the texts in a row, a version's states as one text with a slider through its stages, a second text facing the first at the same page, the page's image beside its text; a selection is the version's lines, so annotations are shared with Read (`SW.book` holds the pure parts). |
 | `book.css` | Its styles, on the bench's colour tokens. |
+| `wordcloud.js` | Word clouds for a bench's lenses (`SW.wordcloud`), on the layout of Andreas Mueller's word_cloud (MIT): words largest first, each at a place drawn at random among those where it touches no ink, so small words settle into the gaps of large ones; or outwards from the middle. SVG on the theme's tokens, each word a `<text data-w>` for a click; sizes by count (square root, log, linear, or word_cloud's relative scaling), upright words, a rectangle, oval, circle or mask, and a layout kept from step to step. Its styles are in `kit.css` (`.wc-cloud`). |
 | `export.js` | Word (.docx), Markdown and file downloads (`root.SWExport`). |
 | `tray.js` | My notes: notes, figures and excerpts gathered for writing, shared to Findings, exported; backup and restore of the bench. |
 | `figures.js` | Figures of code and of the screen, as SVG and PNG; `SW.beam(s)`, a display intensity as an opacity (a bench may set its own). |
@@ -473,7 +474,7 @@ Every later Release is archived under the same concept DOI, so the badge and `ab
 
 ## Licence
 
-GNU General Public License v3.0: see [`LICENSE`](LICENSE).
+GNU General Public License v3.0: see [`LICENSE`](LICENSE). `wordcloud.js` ports the layout of [word_cloud](https://github.com/amueller/word_cloud) (© 2012 Andreas Christian Mueller, MIT License; the notice is in [`docs/wordcloud-LICENSE.txt`](docs/wordcloud-LICENSE.txt)).
 
 ## Changes
 
