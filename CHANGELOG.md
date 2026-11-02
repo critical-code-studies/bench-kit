@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.95.0 (2026-11-02)
 
 - **The topics engine** (`topics.js`, on mallette 0.2.1, which the kit now carries as `mallette.js` and `mallette-worker.js`; 0.2.1 has Java's logarithm, so a model made in a reader's browser and by the tool in node are the same): a bench's documents (`topics.documents(o)`) prepared (stopwords, words shorter than three letters and words seen fewer than the minimum taken out), trained, and written as a model file (`bench-kit-topics`): its settings in full, its documents and their proportions, each topic's words with MALLET's diagnostics (coherence, exclusivity…), the model's data for inference, an id made from the settings and the documents' ids (`M-771c6b`), the source (`topics.source()`: the bench's version and its sources' commits) and the documents' fingerprint. The engine runs in node as in the page.
 - **tools/topics.js** (asked for by David: only the chosen model published): the bench's documents from the bench itself in headless Chrome; every setting and seed asked for trained with mallette in node; how far each setting's topics recur across its seeds; the chosen model alone written, with its `check`; `--compare` with another model (each topic's partner, and the topics without one, with the documents that carry them), `--note`. On the Melville bench's reading text, 80 documents: twenty models in 26 seconds; eight topics on words seen twice or more recur most (79%).
