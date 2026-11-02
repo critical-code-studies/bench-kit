@@ -143,3 +143,8 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .wc-cloud text { font-family: inherit; }
 .wc-cloud text[data-w] { cursor: pointer; }
 .wc-cloud text[data-w]:hover { fill-opacity: 0.7; }
+
+/* the Topics tab (topics.js): a model's settings */
+.tp-sum { border-collapse: collapse; font-size: 13px; }
+.tp-sum th { text-align: left; font-weight: 400; color: var(--text-dim); padding: 2px 14px 2px 0; vertical-align: top; white-space: nowrap; }
+.tp-sum td { padding: 2px 0; color: var(--text); }

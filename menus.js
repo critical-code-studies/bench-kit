@@ -34,13 +34,22 @@
  * project as a whole. A version from files, a project or .ccs file opened and saved, a sample (where
  * kit/builder.js and kit/projectfile.js are loaded); the bench's own items (menus.file); back up and
  * restore.
+ * SW.BENCH.menusOff leaves out what a bench does not want in its tab row: a name alone is a menu or a
+ * tab ('file', 'topics', 'paratexts'), 'menu:pick' one item of a menu ('help:sitemap', 'file:backup',
+ * 'text:6' for lens 6 in Text ▾). A submenu or group left empty goes with its items. A view left out
+ * of the tab row can still be opened by a link to it. SW.menuOff(which, pick) says whether one is off.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
   'use strict';
   var SW = root.SW, B = SW.BENCH;
   function H() { return B.menus || {}; }
-  var FILE_ON = B.fileMenu !== false;
+  function OFF() { return (B.menusOff || []).map(String); }
+  SW.menuOff = function (which, pick) { return OFF().indexOf(pick == null ? String(which) : which + ':' + pick) >= 0; };
+  function kept(which) { return function (h) { return !SW.menuOff(which, h[0]); }; }
+  // the menus and tabs left out of the tab row
+  SW.$$('#tabs [data-menu], #tabs [data-tab]').forEach(function (b) { if (SW.menuOff(b.dataset.menu || b.dataset.tab)) b.remove(); });
+  var FILE_ON = B.fileMenu !== false && !SW.menuOff('file');
   // File ▾ in the tab row, before Read (or first)
   (function () {
     var tabs = SW.$('#tabs'); if (!FILE_ON || !tabs || SW.$('[data-menu="file"]', tabs)) return;
@@ -58,7 +67,7 @@
   function FILE() {
     var groups = [projectItems(), H().file || [],
                   [['backup', 'Back up my data', ''], ['restore', 'Restore my data (non-destructive)', '']]];
-    return groups.filter(function (g) { return g.length; });
+    return groups.map(function (g) { return g.filter(kept('file')); }).filter(function (g) { return g.length; });
   }
 
   // Collate's line in Versions ▾: the bench's own (SW.BENCH.words.collate), or the modes it offers
@@ -77,6 +86,17 @@
             ['genealogy', 'Genealogy', 'How the versions descend']]
       .concat(FILE_ON ? [] : projectItems());   // in File ▾, where the bench has it
   }
+  // the items of a menu drawn as HTML that the bench has turned off, and what they leave empty: a
+  // submenu or a lens group with no items, a group's heading with none under it, a rule with nothing
+  // on one side of it
+  function prune(el, which) {
+    if (!OFF().some(function (o) { return o.indexOf(which + ':') === 0; })) return;
+    SW.$$('[data-pick], [data-l]', el).forEach(function (b) { if (SW.menuOff(which, b.dataset.pick || b.dataset.l)) b.remove(); });
+    SW.$$('.menu-sub, .lens-g', el).reverse().forEach(function (g) { if (!g.querySelector('[data-pick], [data-l]')) g.remove(); });
+    SW.$$('.menu-group', el).forEach(function (h) { var n = h.nextElementSibling; if (!n || n.matches('hr, .menu-group')) h.remove(); });
+    SW.$$('hr.menu-rule', el).forEach(function (r) { var n = r.nextElementSibling, p = r.previousElementSibling; if (!n || !p || n.matches('hr')) r.remove(); });
+  }
+  SW.menuPrune = prune;
   function HELP() {
     var repo = (B.repo || (B.about || {}).code || '').replace(/^https?:\/\//, '');
     var ex = (B.refHelp || {}).example;
@@ -101,6 +121,9 @@
 
   // Help ▾ as the bench has it: the kit's list with the bench's changes, or the bench's own list
   function helpList() {
+    return helpAll().map(function (g) { return [g[0], g[1].filter(kept('help'))]; }).filter(function (g) { return g[1].length; });
+  }
+  function helpAll() {
     var h = H().help;
     if (Array.isArray(h)) return h;
     var G = HELP().map(function (g) { return [g[0], g[1].slice()]; });
@@ -219,7 +242,7 @@
       return item(ab || ['about', 'About the bench', 'Version, sources, citation']) + G.map(function (g) { return SW.menuSub(SW.esc(g[0]), SW.esc(firstOf(g[1])), g[1].map(function (h) { return item(h); }).join('')); }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }
     if (which === 'file') return FILE().map(function (g, i) { return (i ? '<hr class="menu-rule">' : '') + g.map(function (h) { return item(h); }).join(''); }).join('');
-    if (which === 'versions') return (H().versions || VERSIONS()).map(function (h) {
+    if (which === 'versions') return (H().versions || VERSIONS()).filter(kept('versions')).map(function (h) {
       var on = H().on && H().on(which, h[0]); if (on == null && SW.lenses) on = SW.lenses.on(which, h[0]); if (on == null) on = SW.state.tab === h[0];
       return item(h, on);
     }).join('');
@@ -297,6 +320,7 @@
       if (tabMenu && tabMenu.btn === btn) { closeTabMenu(); return; }
       closeTabMenu();
       var r = btn.getBoundingClientRect(), el = SW.el('div', { class: 'tab-menu lens-list', role: 'menu', 'data-w': which }, menuHTML(which));
+      prune(el, which);
       document.body.appendChild(el);
       el.style.top = r.bottom + 'px';
       el.style.left = Math.max(6, Math.min(r.left, window.innerWidth - el.offsetWidth - 6)) + 'px';

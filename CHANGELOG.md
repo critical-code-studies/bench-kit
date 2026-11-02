@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Menus and tabs a bench turns off** (`menusOff`, asked for by David): a name alone leaves that menu or tab out of the tab row (`'file'`, `'paratexts'`, `'topics'`), and `'menu:pick'` leaves out one item (`'help:sitemap'`, `'file:backup'`, `'text:6'` for lens 6 in Text ▾). A submenu, lens group or heading left empty goes too. It covers File ▾, Read ▾, Versions ▾, Help ▾, the lens menus, Graphics ▾ and a bench's own menus. A view left out of the tab row still opens from a link to it. `fileMenu: false` still works. `SW.menuOff(which, pick)` says whether one is off.
+- **The Topics tab** (`topics.js`, `SW.topics`; asked for by David as a tab of its own, the first step of topic modelling in the kit on mallette): a bench that sets `topics` has the tab, which the kit adds to the tab row and the page where the bench has not. Its first part, Models, lists the models the bench publishes (`topics.models`), each read from its model file with its id, engine, settings and documents. The topics and their views, and models run in the page, come with the kit's topics engine.
+- `tests/topics.test.js`: 17 checks of the menu switches (Help ▾ and a pruned menu) and of a model file's settings.
+
 ## 0.92.1 (2026-11-02)
 
 - `tests/wordcloud.test.js`: the layout checks give each letter a fixed width, so they no longer depend on the fonts of the machine they run on. On GitHub's Linux runner, without Georgia, one check failed in 0.92.0 (a word that fitted there at its full size).
