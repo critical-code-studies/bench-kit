@@ -1,5 +1,13 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The Topics tab's parts** (the plan's views): 2 Topics (each topic's words, share, coherence and exclusivity), 3 Documents and topics (the mean share by part, a heatmap), 4 A topic through the text (its share of each document in reading order, and the documents that carry most of it, each linked to the text), 5 A word's topics, 6 A document's topics, 7 A selection's topics (a passage inferred on the model in use; **🧩 Topics** on Read's selection bar and in Book's pop-up), 8 Across the stages (each choice of a set inferred on the model, the mean shares, and one topic part by part and stage by stage, a share resting on less than one document's worth of the model's words marked ◌), 9 Steadiness across seeds (the model's check). Each part exports. A bench may give `topics.open(doc)` (its text for a document) and `topics.tokens(text)` (a passage's words as its documents have them).
+- **Topics compared by cosine** (asked for by David, through the Melville bench): the seed check and `--compare` take two topics to be the same by the cosine of their word probabilities over both models' words, at a threshold calibrated from the seed check (the lower quartile of the cosines of topics that are each other's best match across seeds), recorded with how it was found; the comparison lists every topic of each model with its best partner, cosine and the top-20 Jaccard beside it; the vocabularies compared are recorded. Jaccard stays in the check beside the cosine, for models made before. `SW.topics.phi`, `cosines`.
+- **Help ▸ Topic models**: what a topic model is, the models, reading the topics, across the stages, how far to trust a topic; a ? in the tab opens it. (Asked for by David.)
+- `docs/topics-guide.md`: the cosine measure and its calibration, and reading a comparison.
+- `tests/topics.test.js`: 5 more checks.
+
 ## 0.95.0 (2026-11-02)
 
 - **The topics engine** (`topics.js`, on mallette 0.2.1, which the kit now carries as `mallette.js` and `mallette-worker.js`; 0.2.1 has Java's logarithm, so a model made in a reader's browser and by the tool in node are the same): a bench's documents (`topics.documents(o)`) prepared (stopwords, words shorter than three letters and words seen fewer than the minimum taken out), trained, and written as a model file (`bench-kit-topics`): its settings in full, its documents and their proportions, each topic's words with MALLET's diagnostics (coherence, exclusivity…), the model's data for inference, an id made from the settings and the documents' ids (`M-771c6b`), the source (`topics.source()`: the bench's version and its sources' commits) and the documents' fingerprint. The engine runs in node as in the page.

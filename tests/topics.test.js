@@ -65,8 +65,15 @@
   var ck = TP.check(runs);
   eq('check: two clear topics recur in every seed', [ck.settings[0].recurrence, ck.chosen.recurs], [1, [2, 2]]);
   var other = TP.file(TP.train(toy.filter(function (d, i) { return i % 2; }), Object.assign({}, st, { k: 2 })), toy.filter(function (d, i) { return i % 2; }), st);
-  var cmp = TP.compare(file, other);
+  var cmp = TP.compare(file, other, { threshold: 0.5 });
   yes('compare: the sea topic has its partner, the law topic none', cmp.unmatched.length === 1 && cmp.unmatched[0].words.indexOf('court') >= 0 && cmp.unmatched[0].documents.length === 5);
+  eq('compare: by cosine, every topic listed, best first, Jaccard beside', [cmp.measure, cmp.topics.length, cmp.topics[0].cosine >= cmp.topics[1].cosine, typeof cmp.topics[0].jaccard], ['cosine', 2, true, 'number']);
+  eq('compare: the vocabularies recorded', [cmp.vocabulary.model > 0, cmp.vocabulary.union >= cmp.vocabulary.model], [true, true]);
+  var same = TP.cosines(TP.phi(run1.model), TP.phi(run1.model));
+  eq('a topic\'s cosine with itself', same.map(function (r, i) { return Math.round(r[i] * 1e9) / 1e9; }), [1, 1]);
+  var runsM = [1, 2, 3].map(function (sd) { var r = TP.train(toy, Object.assign({}, st, { seed: sd })); return { setting: { k: 2, minCount: 2 }, seed: sd, topics: r.result.topics.map(function (t) { return t.words.map(function (w) { return w[0]; }); }), model: r.model }; });
+  var ckc = TP.check(runsM);
+  eq('check by cosine: a calibrated threshold, and every topic recurring', [ckc.measure, typeof ckc.cosine.threshold, ckc.settings[0].recurrenceCos], ['cosine', 'number', 1]);
   if (TP.drift) {
     eq('drift: none where the source is the same', TP.drift({ source: TP.source() }), []);
     eq('drift: a source no longer there, or at another commit', TP.drift({ source: { sources: [{ name: 'X', commit: 'abc' }] } }).map(function (d) { return d.kind; }), ['source']);

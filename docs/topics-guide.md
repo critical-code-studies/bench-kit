@@ -67,11 +67,13 @@ From the bench's repository (with Google Chrome and Node 22):
 node research/kit/tools/topics.js --set reading --k 8,12 --min-count 2,3 --seeds 1,2,3,4,5
 ```
 
-(`kit/tools/topics.js` and `--dir .` for a bench whose page is at its root.) The tool opens the bench in headless Chrome, takes its documents, trains a model for every setting and seed, and prints a table: for each setting, the share of its topics that recur in its other seeds (a topic recurs when the top 20 words of a topic in another seed overlap with its own by a Jaccard index of 0.3 or more). Then, for the steadiest setting and seed, each topic and the number of other seeds it recurs in. Nothing is written yet.
+(`kit/tools/topics.js` and `--dir .` for a bench whose page is at its root.) The tool opens the bench in headless Chrome, takes its documents, trains a model for every setting and seed, and prints a table: for each setting, the share of its topics that recur in its other seeds. Then, for the steadiest setting and seed, each topic and the number of other seeds it recurs in. Nothing is written yet.
+
+Two topics are taken to be the same by the **cosine** of their word probabilities (each topic's (count + beta) / (tokens + V·beta) over its model's words, compared over the union of the two models' words, 0 where a word is not one model's). The threshold is calibrated, not fixed: the lower quartile of the cosines of topics that are each other's best match across two seeds of one setting, over every setting tried. The table gives it, and how it was found. The overlap of the top 20 words (Jaccard 0.3 or more), the earlier measure, is given beside it. On the Melville bench's reading text the threshold came to 0.695 (357 pairs, median 0.788).
 
 Reading the table:
 - **Topics that recur across seeds** are the ones the documents support; a topic found by one seed only is the sampler's, not the text's. Publish a model whose topics mostly recur, and say which do not.
-- **The number of topics (K).** Fewer documents support fewer topics. On the Melville bench, 80 documents of the reading text: 8 topics recurred 79% of the time, 12 topics about half.
+- **The number of topics (K).** Fewer documents support fewer topics. On the Melville bench, 80 documents of the reading text: 8 topics recurred 85% of the time by cosine (79% by Jaccard), 12 topics under 60%.
 - **The minimum count.** A word seen once cannot link two documents. 2 keeps more of a short text than 3.
 - **Seeds:** five is enough to see which topics recur. More iterations (`--iterations`, 1000) do not make an unsteady setting steady.
 
@@ -103,9 +105,9 @@ When a source moves to a new commit, or the bench changes how it cuts or tokenis
 node research/kit/tools/topics.js --set stage --choice 0 --k 8 --min-count 2 --seeds 1,2,3,4,5 --write auto --compare topics/M-771c6b.json
 ```
 
-This matches the new model's topics with another's both ways and keeps the result in the new file: each topic's best partner and its overlap, the topics with no partner at the threshold, and for each of the new model's unmatched topics the documents that carry most of it.
+This matches the new model's topics with another's both ways, by cosine, at the threshold the new model's own seed check calibrated (`--threshold` gives one instead), and keeps the result in the new file: every topic of each model with its best partner, its cosine and, beside it, the Jaccard of their top 20 words, best first; the vocabularies compared; and for each of the new model's topics below the threshold, the documents that carry most of it.
 
-An unmatched topic is a candidate, not a finding. Two models of different texts have different vocabularies. At a Jaccard of 0.3 on the top 20 words, a theme kept in other words can fail to match, and a topic sharing only common words can match. The file records each unmatched topic's best overlap. Before reading anything into the comparison, see what overlap topics reach when they recur across seeds of the same text, and read a near miss (0.25) differently from a topic with no partner at all.
+A topic below the threshold is a candidate, not a finding. Two texts score lower against each other than one text across seeds, so a theme kept in other words can fall just below; read a near miss (0.698 against 0.703) differently from a topic with no partner at all (0.342). Look too at whether the topic recurred across its own seeds: one that did not is the sampler's, and its lack of a partner means nothing. On the Melville bench, a stage-0 topic of *back took i'll aloft pipe* had no partner (0.342) and recurred in none of its other seeds.
 
 ## 9. Readers' own models
 
@@ -118,5 +120,5 @@ Readers run models in the tab: any set the bench gives, any number of topics, se
 - [ ] `kit/mallette.js` and `kit/topics.js` loaded; `menusOff: ['topics']` until a model is ready
 - [ ] the tool run with several settings and five seeds; the table read
 - [ ] the chosen model written with `--name` and `--note`, listed in `topics.models`, committed
-- [ ] the tab tried: the model's card shows no warning; its first topics are what the table showed
+- [ ] the tab tried: the model's card shows no warning; its first topics are what the table showed; Help ▸ Topic models opens
 - [ ] the bench's WORKING.md records the command, the choice and why

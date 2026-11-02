@@ -105,7 +105,7 @@
     // annotations in Read (threads, ghosts, the margin, the selection, export): readnotes.js
     var K = SW.readNotes({ view: view, R: R, opts: opts, isMine: isMine, showsTape: showsTape, filtering: filtering,
       keptLines: keptLines, tapeInfo: info, kinBar: function () { if (X.bar) X.bar(); },
-      selActs: function () { return (H.selActs ? H.selActs() : []).concat(SW.mending && SW.mending.selActs ? SW.mending.selActs() : [], SW.dict && SW.dict.selActs ? SW.dict.selActs() : []); } });
+      selActs: function () { return (H.selActs ? H.selActs() : []).concat(SW.mending && SW.mending.selActs ? SW.mending.selActs() : [], SW.dict && SW.dict.selActs ? SW.dict.selActs() : [], SW.topics && SW.topics.selActs ? SW.topics.selActs() : []); } });
     var paintNotes = K.paintNotes, layoutMargin = K.layoutMargin, wireMargin = K.wireMargin,
       threadClick = K.threadClick, threadFor = K.threadFor, loadGhosts = K.loadGhosts, MODES = K.MODES, modeOf = K.modeOf,
       setNotes = K.setNotes, modeBtn = K.modeBtn, live = K.live, paintSel = K.paintSel, annotateSel = K.annotateSel,
