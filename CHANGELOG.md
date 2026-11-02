@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- Dictionaries: a word in -men is looked for in -man (landsmen → landsman, Englishmen → Englishman), as the Melville bench found it was not.
+
 ## 0.91.0 (2026-11-02)
 
 - **Dictionaries** (`dictionary.js`, asked for by David, for the Melville bench's rare words and any bench's): a bench names its dictionaries (`dictionaries`) and a list of word frequencies (`wordFreq`).

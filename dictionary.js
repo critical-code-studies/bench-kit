@@ -30,7 +30,7 @@
 
   // ---------- pure parts ----------
   // The forms of a word to try, in order: as written (in lower case), then simple English lemmas,
-  // modern and archaic: 's; -ies, -ied to -y; -es, -s; -ed, -d; -ing; -ly, -ily; -ness; -er, -est,
+  // modern and archaic: 's; -men to -man (seamen, Englishmen); -ies, -ied to -y; -es, -s; -ed, -d; -ing; -ly, -ily; -ness; -er, -est,
   // -ier, -iest; -eth, -est (thou walkest, he walketh); each with a final e put back, and a doubled
   // consonant undone (stopped, stop). No lemma shorter than three letters.
   D.forms = function (word) {
@@ -46,6 +46,7 @@
       if (/([bcdfgklmnprstvz])\1$/.test(t)) add(t.slice(0, -1), from);
     }
     var m;
+    if ((m = /^(.+)men$/.exec(s))) add(m[1] + 'man', from);
     if ((m = /^(.+)ies$/.exec(s)) || (m = /^(.+)ied$/.exec(s)) || (m = /^(.+)ier$/.exec(s)) || (m = /^(.+)iest$/.exec(s)) || (m = /^(.+)ily$/.exec(s))) add(m[1] + 'y', from);
     if ((m = /^(.+)es$/.exec(s))) add(m[1], from);
     if ((m = /^(.+[^s])s$/.exec(s))) add(m[1], from);

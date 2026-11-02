@@ -12,6 +12,7 @@
   eq('as written first, in lower case', D.forms('Sallies')[0], { w: 'sallies', how: 'as written' });
   eq('-ies to -y', has('sally', 'sallies'), true);
   eq('-ied to -y', has('carry', 'carried'), true);
+  eq('-men to -man', [has('landsman', 'landsmen'), has('englishman', 'Englishmen')], [true, true]);
   eq('-ed, a doubled consonant undone', has('stop', 'stopped'), true);
   eq('-d after e', has('glance', 'glanced'), true);
   eq('-ing, with e put back', has('make', 'making'), true);
