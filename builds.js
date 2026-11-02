@@ -72,7 +72,9 @@
   SW.current = function () { return SW.state.v ? SW.build(SW.state.v) : Promise.reject(new Error('no version')); };
 
   // Open a version at a line range (or its record when there is none).
+  // From another view (a lens's or a finding's link to lines), a step on the trail back (SW.trail).
   SW.openAt = function (vid, a) {
+    if (SW.trail && SW.state.tab !== 'read') SW.trail.from();
     var same = !vid || vid === SW.state.v;
     if (!same) SW.select(vid);
     if (!a) { SW.setTab('about'); return; }

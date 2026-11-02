@@ -7,6 +7,9 @@
 - **Zoom and export for the cloud** (asked for by David): `SW.wordcloud.frame()` shows a cloud with − Fit + (50% to 400%, scrolled when larger than its frame) and the kit's ▣ SVG, ▣ PNG and ＋ My notes buttons.
 - `tests/run.js` asks for a test script a second time before reporting that it could not be loaded: the headless test server dropped a connection now and then, failing a run with every check passing.
 - `tests/wordcloud.test.js`: 30 more checks of the looks, formats, `brief`, colours, the control, a view kept, shared and put back, and the frame's zoom.
+- **The way back** (asked for by David: after clicking a word in the word cloud, a way back to the cloud). A jump the reader did not choose from the tab row or a menu (a lens opening another, a word's link to the Words lens, a lens's or a finding's link to lines in Read) is a step in the browser's history. **← Back** in the tab row, named for the place left ("← Word cloud"), and the browser's Back, return to it as it was: the view, the version, the lines, the lens. A trail of jumps (the cloud, a word, a line) goes back one step at a time. `SW.trail` (`from`, `step`, `quietly`, `back`); `SW.setTab` takes a step when the view changes, the tab row and the menus quietly. Addresses rewritten as the reader moves keep their entry's place.
+- **A lens's own state** for the way back: `SW.lenses.state(n, get, set)`, given as the lens is drawn; `get()` says what it shows when the reader jumps away, and `set(s)` shows it again on the way back (the Melville bench's request).
+- `tests/trail.test.js`: 5 checks.
 
 ## 0.93.0 (2026-11-02)
 

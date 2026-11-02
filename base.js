@@ -192,7 +192,51 @@
     for (var k in extra || {}) q[k] = extra[k];
     var parts = [];
     for (var k2 in q) if (q[k2] != null && q[k2] !== '') parts.push(k2 + '=' + encodeURIComponent(q[k2]));
-    try { history.replaceState(null, '', '?' + parts.join('&')); } catch (e) { /* file: urls */ }
+    try { history.replaceState(history.state, '', '?' + parts.join('&')); } catch (e) { /* file: urls */ }   // the entry's own state (SW.trail) kept
+  };
+
+  // ---------- the way back ----------
+  // A jump from one place in the bench to another that the reader did not choose from the tab row
+  // (a lens opening another, a lens's link to a line in Read) leaves an entry in the browser's
+  // history, so that the browser's Back, or ← Back in the tab row, returns to the place left, as it
+  // was: the view, the version, the lines, the lens and what the lens was showing (a lens keeps
+  // its own state through SW.lenses.state). Jumps make a trail, undone one step at a time.
+  //   SW.trail.from(label)   before a jump: the place being left (named by label, or by the lens or
+  //                          tab open), kept in this entry, and a new entry for the jump
+  //   SW.trail.step()        the same, from SW.setTab when the view changes, unless the change is
+  //                          the reader's own choice (the tab row, a menu: SW.trail.quietly(fn))
+  //   SW.trail.back()        back one step (as the browser's Back)
+  var quiet = 0, fresh = false;
+  SW.trail = {
+    quietly: function (fn) { quiet++; try { return fn(); } finally { quiet--; } },
+    step: function () { if (!quiet && !fresh) SW.trail.from(); },
+    from: function (label) {
+      if (!root.history || !history.pushState) return;
+      var here = { label: label || SW.trail.here(), lens: SW.state.tab === 'analyse' && SW.lenses && SW.lenses.capture ? SW.lenses.capture() : null };
+      var st = history.state || {};
+      try {
+        history.replaceState(Object.assign({}, st, { place: here }), '', location.href);
+        history.pushState({ back: here.label, depth: (st.depth || 0) + 1 }, '', location.href);
+      } catch (e) { return; }
+      fresh = true; setTimeout(function () { fresh = false; }, 0);   // one jump, one step, however many calls make it
+      SW.trail.chip();
+    },
+    back: function () { history.back(); },
+    // the place open, named: the lens's name in the analyse view, else the tab's
+    here: function () {
+      if (SW.state.tab === 'analyse' && SW.lenses && SW.lenses.name) return SW.lenses.name();
+      var b = document.querySelector('#tabs [data-tab="' + SW.state.tab + '"]') || document.querySelector('#tabs [data-tabs~="' + SW.state.tab + '"]');
+      return b ? b.textContent.replace(/[▾\s]+$/, '').trim() : SW.state.tab;
+    },
+    // ← Back in the tab row, while the entry open was reached by a jump
+    chip: function () {
+      var tabs = document.getElementById('tabs'); if (!tabs) return;
+      var st = history.state || {}, el = document.getElementById('trail-back');
+      if (!st.back) { if (el) el.remove(); return; }
+      if (!el) { el = SW.el('button', { id: 'trail-back', class: 'trail-back', type: 'button' }); el.onclick = SW.trail.back; tabs.insertBefore(el, tabs.firstChild); }
+      el.textContent = '← ' + st.back;
+      el.title = 'Back to ' + st.back + ', as you left it (or the browser’s Back)';
+    }
   };
 
   // ---------- drawer and popover ----------
