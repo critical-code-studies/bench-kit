@@ -15,8 +15,8 @@
  *                         'relative' (word_cloud's own: each word's size from the one before it, by
  *                         relativeScaling, 0.5); scale: the count given the largest size (the items'
  *                         largest by default; pin it to keep sizes comparable across steps)
- *                       shape: 'rect', 'oval' or 'round'; mask: a function (x, y) true where no word
- *                         may go; margin (or pad): the space round each word (2)
+ *                       shape: one of SHAPES ('rect' by default); mask: a function (x, y) true where
+ *                         no word may go; margin (or pad): the space round each word (2)
  *                       layout: 'random' (word_cloud's) or 'spiral' (outwards from the middle)
  *                       fontStep (1): how far a word shrinks at a time when it does not fit
  *                       ink: 'glyphs' (the letters' own shapes, in a page) or 'box' (their boxes)
@@ -31,6 +31,10 @@
  *                     where there is one and estimated where there is not (node)
  *   measure(w, size, font, weight)   its width
  *   FONTS             the fonts a lens may offer, { id: [name, CSS font-family] }
+ *   SHAPES            the shapes a cloud may take, { id: [name, inside(x, y, W, H)] }, in the order a
+ *                     lens lists them: rect, square, oval, round (a circle), diamond, hexagon, triangle,
+ *                     heart; inside says whether a point of the W × H frame is in the shape. 'circle'
+ *                     is taken for 'round'
  *
  * Differences from word_cloud: a word that does not fit shrinks to the largest size at which a place
  * is free (found by halving rather than one step at a time), trying both orientations at each size;
@@ -50,6 +54,22 @@
     sans: ['Sans serif', '"Helvetica Neue", Helvetica, Arial, sans-serif'],
     mono: ['Typewriter', '"American Typewriter", "Courier New", Courier, monospace']
   };
+  // each shape centred in the frame; (u, v) a point's place from the middle, -1 to 1 across the frame
+  function uv(x, y, W, H) { return [(x + 0.5 - W / 2) / (W / 2), (y + 0.5 - H / 2) / (H / 2)]; }
+  function sq(x, y, W, H) { var s = Math.min(W, H); return [(x + 0.5 - W / 2) / (s / 2), (y + 0.5 - H / 2) / (s / 2)]; }   // in the square of the shorter side
+  C.SHAPES = {
+    rect: ['Rectangle', function () { return true; }],
+    square: ['Square', function (x, y, W, H) { var p = sq(x, y, W, H); return Math.abs(p[0]) <= 1 && Math.abs(p[1]) <= 1; }],
+    oval: ['Oval', function (x, y, W, H) { var p = uv(x, y, W, H); return p[0] * p[0] + p[1] * p[1] <= 1; }],
+    round: ['Circle', function (x, y, W, H) { var p = sq(x, y, W, H); return p[0] * p[0] + p[1] * p[1] <= 1; }],
+    diamond: ['Diamond', function (x, y, W, H) { var p = uv(x, y, W, H); return Math.abs(p[0]) + Math.abs(p[1]) <= 1; }],
+    hexagon: ['Hexagon', function (x, y, W, H) { var p = uv(x, y, W, H); return Math.abs(p[1]) <= 1 && Math.abs(p[0]) <= 1 - Math.abs(p[1]) / 2; }],
+    triangle: ['Triangle', function (x, y, W, H) { var p = uv(x, y, W, H); return Math.abs(p[0]) <= (p[1] + 1) / 2; }],
+    // the heart curve (x² + y² − 1)³ ≤ x²y³, drawn in the square of the shorter side, point down
+    heart: ['Heart', function (x, y, W, H) { var p = sq(x, y, W, H), a = p[0] * 1.18, b = -p[1] * 1.16 + 0.12, t = a * a + b * b - 1; return t * t * t <= a * a * b * b * b; }]
+  };
+  C.SHAPES.circle = C.SHAPES.round;
+  Object.defineProperty(C.SHAPES, 'circle', { enumerable: false });
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function rng(seed) {
     var a = seed >>> 0;
@@ -154,13 +174,15 @@
   C.cloud = function (items, o) {
     o = o || {};
     var W = Math.round(o.width || 760), H = Math.round(o.height || 420), lo = o.min || 11, hi = o.max || 60;
-    var font = o.font || FONT, weight = o.weight || 'normal', shape = o.shape || 'rect', contrast = o.contrast || 'sqrt';
+    var font = o.font || FONT, weight = o.weight || 'normal', contrast = o.contrast || 'sqrt';
+    var shape = C.SHAPES[o.shape] ? o.shape : 'rect', within = C.SHAPES[shape][1];
     var margin = o.margin != null ? o.margin : o.pad != null ? o.pad : 2, step = o.fontStep || 1;
     var rs = o.relativeScaling != null ? o.relativeScaling : 0.5, box = o.ink === 'box';
     var metrics = o.measure ? function (w, s) { return { w: Math.ceil(o.measure(w, s, font, weight)), h: Math.ceil(s * 0.95), left: 0, ascent: s * 0.75 }; }
       : function (w, s) { return C.metrics(w, s, font, weight); };
-    // a smaller shape, smaller words: sizes scaled by the square root of its share of the rectangle
-    var fit = shape === 'round' ? Math.sqrt(Math.PI * H / (4 * W)) : shape === 'oval' ? Math.sqrt(Math.PI / 4) : 1;
+    // a smaller shape, smaller words: sizes scaled by the square root of its share of the frame (counted on a grid)
+    var fit = 1;
+    if (shape !== 'rect') { for (var gi = 0, gn = 0, gx = 0; gx < 60; gx++) for (var gy = 0; gy < 60; gy++, gn++) if (within(gx * W / 60, gy * H / 60, W, H)) gi++; fit = Math.sqrt(gi / gn); }
     lo *= Math.max(fit, 0.8); hi *= fit;
     var maxN = o.scale || items.reduce(function (m, x) { return Math.max(m, x.n); }, 1);
     function size(n) {
@@ -171,8 +193,7 @@
     function label(w) { return o.caps ? w.toUpperCase() : w; }
     function outside(x, y) {
       if (shape === 'rect') return false;
-      var rx = shape === 'round' ? H / 2 : W / 2, ry = H / 2, dx = (x + 0.5 - W / 2) / rx, dy = (y + 0.5 - H / 2) / ry;
-      return dx * dx + dy * dy > 1;
+      return !within(x, y, W, H);
     }
     var places = o.places || {}, dropped = [], drawn = [];
 
