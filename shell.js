@@ -49,7 +49,7 @@
           (v.status === 'lost' ? ' (lost)' : v.status === 'reconstructed' ? ' (reconstruction)' : '') + '</option>';
       }).join('') + '</optgroup>';
     }).join('');
-    sel.onchange = function () { select(sel.value); };
+    sel.onchange = function () { if (SW.trail && sel.value !== SW.state.v) SW.trail.from(); select(sel.value); };   // another version: a step on the way back
   }
   SW.fillPicker = fillPicker;   // again, when a version is added or taken out (kit/builder.js)
 
@@ -96,9 +96,10 @@
     });
   }
 
-  function select(id) {
+  // keep: the selection and Read's place given with it (a link, the way back) stay
+  function select(id, keep) {
     if (!V.byId(id)) id = B.start || V.VERSIONS.filter(function (v) { return v.build; })[0].id;
-    if (SW.state.v && SW.state.v !== id) SW.state.sel = null;
+    if (SW.state.v && SW.state.v !== id && !keep) { SW.state.sel = null; SW.state.at = null; }
     SW.state.v = id;
     var pa = SW.$('#pick-a'); if (pa) pa.value = id;
     var v = V.byId(id), vl = SW.$('#vlang');
@@ -221,7 +222,9 @@
     document.body.dataset.tab = SW.state.tab;
     SW.markTabs();
     SW.$$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + SW.state.tab); });
-    select(q.v || B.start);
+    if (q.at && !q.l) { var ma = /^(\d+):(\d+)$/.exec(q.at); if (ma) SW.state.at = { p: +ma[1], n: +ma[2] }; }   // the line at the top of Read
+    // the version in the link; else the one last read in this browser; else the bench's first
+    select(q.v || (V.byId(SW.store.get('read.last', '')) ? SW.store.get('read.last', '') : B.start), true);
     // a link to an annotation: to it, once the version is up
     if (q.a && q.v) setTimeout(function () { SW.notes.follow(q); }, 900);
     // a link to a code (?code=A-XXXXX): to what it names
@@ -289,15 +292,18 @@
     if (place.lens && SW.lenses && SW.lenses.restore) SW.lenses.restore(place.lens);
     if (q.l) { var m = /^(\d+):(\d+)(?:-(\d+))?$/.exec(q.l); if (m) SW.state.sel = { p: +m[1], n0: +m[2], n1: +(m[3] || m[2]) }; }
     if (q.b) SW.state.b = q.b;
+    SW.state.at = null;
+    if (q.at && !q.l) { var ma = /^(\d+):(\d+)$/.exec(q.at); if (ma) SW.state.at = { p: +ma[1], n: +ma[2] }; }
     if (q.tab) q.tab = (H().alias || {})[q.tab] || q.tab;
     if (q.lens && SW.setLens) { SW.setLens(q.lens); if (!q.tab) q.tab = 'analyse'; }
     if (q.g && SW.setGraphic) { SW.setGraphic(q.g); if (!q.tab) q.tab = 'graphics'; }
     if (H().query) H().query(q);
     var tab = ORDER().indexOf(q.tab) >= 0 ? q.tab : 'read';
     SW.forget(tab);
-    if (q.v && q.v !== SW.state.v) { SW.state.tab = tab; document.body.dataset.tab = tab; SW.markTabs(); SW.$$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + tab); }); select(q.v); }
+    if (q.v && q.v !== SW.state.v) { SW.state.tab = tab; document.body.dataset.tab = tab; SW.markTabs(); SW.$$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + tab); }); select(q.v, true); }
     else SW.setTab(tab);
     if (tab === 'read' && SW.state.sel) SW.emit('goto', { p: SW.state.sel.p, n: SW.state.sel.n0, tab: 'read' });
+    else if (tab === 'read' && SW.state.at && SW.views.read && SW.views.read.top) SW.views.read.top(SW.state.at.p, SW.state.at.n);
     SW.trail.chip();
   }
   SW.newerRelease = newer;

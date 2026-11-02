@@ -637,7 +637,50 @@
       };
     }
 
-    R.goto = function (p, n, flash) {
+    // ---------- the place kept: the line at the top of the view, for each version ----------
+    // In this browser (read.places, the last few versions; read.last, the version last read) and in
+    // the address (&at=p:n), so a version opened again, a reload, or a visit with no version named
+    // comes back where the reader was.
+    function places() { return SW.store.get('read.places', {}) || {}; }
+    SW.readPlace = {
+      get: function (vid) { return places()[vid] || null; },
+      set: function (vid, p, n) {
+        var all = places(); delete all[vid]; all[vid] = { p: p, n: n };
+        var ks = Object.keys(all); while (ks.length > 30) delete all[ks.shift()];
+        SW.store.set('read.places', all);
+      }
+    };
+    // the top of the reading area: under whatever of Read sticks to the top (its toolbar, a file's heading)
+    function edgeY() {
+      var top = view.getBoundingClientRect().top, y = top;
+      SW.$$('.toolbar, .part-head', view).forEach(function (t) { if (getComputedStyle(t).position !== 'sticky') return; var r = t.getBoundingClientRect(); if (r.top <= y + 1 && r.bottom > y) y = r.bottom; });
+      return y;
+    }
+    // the line nearest the top of the view
+    function topLine() {
+      var rows = view.querySelectorAll('.ln[id]'); if (!rows.length) return null;
+      var edge = edgeY() + 2, lo = 0, hi = rows.length - 1;
+      while (lo < hi) { var mid = (lo + hi) >> 1; if (rows[mid].getBoundingClientRect().bottom <= edge) lo = mid + 1; else hi = mid; }
+      var r = rows[lo]; return r && r.offsetParent ? { p: +r.dataset.p, n: +r.dataset.n } : null;
+    }
+    var keepT = null;
+    if (view) view.addEventListener('scroll', function () {
+      clearTimeout(keepT);
+      keepT = setTimeout(function () {
+        if (!build || SW.state.tab !== 'read') return;
+        var t = topLine(); if (!t) return;
+        SW.state.at = t; SW.readPlace.set(build.v.id, t.p, t.n);
+        if (!SW.state.sel) SW.writeQuery();
+      }, 250);
+    }, { passive: true });
+    // a line put at the top of the view, under Read's sticky bars
+    R.top = function (p, n) {
+      R.goto(p, n, false, 'start');
+      var el = SW.$('#L' + p + '-' + n, view); if (!el) return;
+      for (var i = 0; i < 3; i++) { var d = el.getBoundingClientRect().top - edgeY(); if (Math.abs(d) < 1) break; view.scrollTop += d; }   // the bars that stick depend on where it lands
+    };
+
+    R.goto = function (p, n, flash, block) {
       // a line in a file not shown (a search hit, a note, a link): show that file, or all of them
       if (build.parts[p] && !showsTape(p)) {
         opts.tapes = F.jump === 'all' ? 'all' : String(p);
@@ -648,7 +691,7 @@
       var el = SW.$('#L' + p + '-' + n, view);
       if (el && el.classList.contains('card-folded')) el = SW.$('#L' + p + '-' + el.dataset.head, view) || el;   // a joined card: its statement
       if (!el) return;
-      el.scrollIntoView({ block: 'center' });
+      el.scrollIntoView({ block: block || 'center' });
       if (flash) {
         SW.$$('.ln.cur', view).forEach(function (e) { e.classList.remove('cur'); });
         el.classList.add('cur');
@@ -738,8 +781,12 @@
       // the listing is drawn by now: go to the selection before the browser paints, so a version
       // newly opened is never seen at the place the last one was scrolled to; again once the
       // margin's cards have settled. A version opened with no line selected starts at its head.
-      var s = SW.state.sel;
+      // A version opened again with nothing selected comes back where it was read last (the link's &at=,
+      // else the place kept in this browser).
+      var s = SW.state.sel, at = SW.state.at || SW.readPlace.get(b.v.id);
+      SW.store.set('read.last', b.v.id);
       if (s) { R.goto(s.p, s.n0, false); setTimeout(function () { if (build === b) R.goto(s.p, s.n0, false); }, 0); }
+      else if (fresh && at && b.parts[at.p]) { SW.state.at = at; R.top(at.p, at.n); setTimeout(function () { if (build === b) { R.top(at.p, at.n); if (!SW.state.sel && SW.state.tab === 'read') SW.writeQuery(); } }, 0); }
       else if (fresh) view.scrollTop = 0;
     };
     // a note added, edited or binned: look again (ghosts too), now if Read is open, else when it is next opened

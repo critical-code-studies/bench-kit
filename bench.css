@@ -1206,3 +1206,5 @@ ul.reading a { overflow-wrap: anywhere; }
   background: var(--menu-bg, var(--surface)); border: 1px solid var(--menu-line, var(--line)); border-radius: 6px; box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5); }
 .menu-subbody.inline { position: static; width: auto; max-height: none; box-shadow: none; border: 0; border-left: 2px solid var(--line); border-radius: 0; margin: 2px 0 4px 10px; padding: 0 0 0 4px; }
 .menu-subbody[hidden] { display: none; }
+/* Read ▾: the ▾ opens the menu from another view, the name goes back to Read (kit/menus.js) */
+#tabs [data-menu="read"] .caret { padding: 4px 2px 4px 6px; margin: -4px -2px -4px 0; }

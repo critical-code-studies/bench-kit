@@ -18,4 +18,22 @@
     eq('a lens left: its state taken', SW.lenses.capture(), { n: n, s: 'src:chapters,step:20' });
     SW.lenses.state(n, null, null);
   }
+
+  T.group('Read keeps its place');
+  if (SW.readPlace) {
+    var keepPlaces = SW.store.get('read.places', null);
+    SW.readPlace.set('test-a', 2, 40); SW.readPlace.set('test-b', 0, 7);
+    eq('a version\'s place kept and read back', [SW.readPlace.get('test-a'), SW.readPlace.get('test-b')], [{ p: 2, n: 40 }, { p: 0, n: 7 }]);
+    SW.readPlace.set('test-a', 3, 1);
+    eq('kept again, the newer place', SW.readPlace.get('test-a'), { p: 3, n: 1 });
+    eq('a version never read has none', SW.readPlace.get('test-none'), null);
+    for (var i = 0; i < 40; i++) SW.readPlace.set('test-' + i, 0, i);
+    eq('at most thirty versions kept, the oldest dropped first', [Object.keys(SW.store.get('read.places', {})).length, SW.readPlace.get('test-a'), SW.readPlace.get('test-39')], [30, null, { p: 0, n: 39 }]);
+    SW.store.set('read.places', keepPlaces);
+  }
+  var was = SW.state.at, wasTab = SW.state.tab, wasSel = SW.state.sel;
+  SW.state.at = { p: 1, n: 12 }; SW.state.sel = null; SW.state.tab = 'read';
+  var q = (function () { var h = location.href; SW.writeQuery(); var out = location.search; history.replaceState(history.state, '', h); return out; })();
+  eq('the address carries the line at the top of Read', /[?&]at=1%3A12(&|$)/.test(q), true);
+  SW.state.at = was; SW.state.tab = wasTab; SW.state.sel = wasSel;
 })();

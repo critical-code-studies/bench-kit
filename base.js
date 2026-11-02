@@ -189,6 +189,7 @@
     if (s.tab === 'analyse' && SW.gzQuery) { var gq = SW.gzQuery(); for (var gk in gq) q[gk] = gq[gk]; }
     if (s.tab === 'graphics' && SW.gfxItem) q.g = SW.gfxItem();
     if (s.sel && s.tab === 'read') q.l = s.sel.p + ':' + s.sel.n0 + (s.sel.n1 !== s.sel.n0 ? '-' + s.sel.n1 : '');
+    else if (s.at && s.tab === 'read') q.at = s.at.p + ':' + s.at.n;   // the line at the top of Read, so a reload lands there
     for (var k in extra || {}) q[k] = extra[k];
     var parts = [];
     for (var k2 in q) if (q[k2] != null && q[k2] !== '') parts.push(k2 + '=' + encodeURIComponent(q[k2]));
@@ -225,6 +226,12 @@
     // the place open, named: the lens's name in the analyse view, else the tab's
     here: function () {
       if (SW.state.tab === 'analyse' && SW.lenses && SW.lenses.name) return SW.lenses.name();
+      // in Read: the version, and the file and line selected or at the top
+      var R = SW.views && SW.views.read, V = root.SWVersions;
+      if (SW.state.tab === 'read' && R && R.build && V) {
+        var v = V.byId(SW.state.v), at = SW.state.sel ? { p: SW.state.sel.p, n: SW.state.sel.n0 } : SW.state.at, part = at && R.build.parts[at.p];
+        return (v ? v.label : SW.state.v) + (part ? ' · ' + String(part.src).split('/').pop() + ':' + at.n : '');
+      }
       var b = document.querySelector('#tabs [data-tab="' + SW.state.tab + '"]') || document.querySelector('#tabs [data-tabs~="' + SW.state.tab + '"]');
       return b ? b.textContent.replace(/[▾\s]+$/, '').trim() : SW.state.tab;
     },

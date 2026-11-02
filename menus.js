@@ -18,7 +18,8 @@
  *   file              File ▾'s own items for the whole project, [[pick, label, text]] (exports of
  *                     every version, say), handled by pick('file', p)
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
- * Read ▾ (a tab button with data-menu="read" data-tabs="read") lists the versions in the version
+ * Read ▾ (a tab button with data-menu="read" data-tabs="read"): from another view a click goes back to
+ * Read where it was left, and its ▾ (or a click in Read) opens the menu. It lists the versions in the version
  * picker's groups, unless the bench draws its own (kit/layers.js does, by layer). A bench that sets
  * readFiles { groups: [{ label, note, test (on a file's name, without its version), rest (takes
  * the files no group names) }], about(src, role) } has the versions in a submenu, then the open
@@ -306,7 +307,7 @@
     if (SW.graphics && SW.graphics.pick(which, p)) return;
     if (which === 'help') { SW.help(p); return; }
     if (which === 'read' && /^f:/.test(p)) { SW.openAt(SW.state.v, { p: +p.slice(2), n0: 1 }); return; }   // a file of the open version
-    if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) SW.select(p.slice(2)); SW.setTab('read'); return; }
+    if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) { if (SW.trail) SW.trail.from(); SW.select(p.slice(2)); } SW.setTab('read'); return; }   // another version: a step on the way back
     if (which === 'file' && p === 'backup') { SW.backup.save(); return; }
     if (which === 'file' && p === 'restore') { SW.backup.restore(); return; }
     if ((which === 'versions' || which === 'file') && p === 'builder' && SW.builder) { SW.builder.open(); return; }
@@ -318,6 +319,11 @@
     btn.addEventListener('click', function (e) {
       e.stopPropagation();   // the menu, not the tab: choosing an item goes there
       var which = btn.dataset.menu;
+      // Read from another view: back to Read where it was left (its place is kept); the ▾, or a click
+      // while in Read, opens the menu
+      if (btn.dataset.tabs === 'read' && SW.state.tab !== 'read' && !e.target.closest('.caret')) {
+        closeTabMenu(); SW.trail.quietly(function () { SW.setTab('read'); }); return;
+      }
       if (tabMenu && tabMenu.btn === btn) { closeTabMenu(); return; }
       closeTabMenu();
       var r = btn.getBoundingClientRect(), el = SW.el('div', { class: 'tab-menu lens-list', role: 'menu', 'data-w': which }, menuHTML(which));

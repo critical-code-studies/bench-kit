@@ -2,11 +2,13 @@
 
 ## Unreleased
 
+- **Read from another view goes back to Read** (asked for by David, through the Spacewar bench; Read had opened only its menu since 0.47.0): a click on Read goes to Read where it was left; its ▾, or a click while in Read, opens Read ▾.
+- **Read keeps its place** (asked for by David, through the Spacewar bench): for each version, the line at the top of the view is kept in this browser (the last thirty versions read) and in the address (`&at=p:n`); a version opened again, a reload, and a visit with no version named (which opens the version last read) come back to it. A version chosen in the picker or in Read ▾ is a step on the way back, and ← Back names the place left: the version and the file and line (“← MEL reading text · chapter-1.xml:129”). `SW.readPlace`, `SW.views.read.top(p, n)`; `SW.select(id, keep)` keeps a selection and place given with it.
 - **The Topics tab's parts** (the plan's views): 2 Topics (each topic's words, share, coherence and exclusivity), 3 Documents and topics (the mean share by part, a heatmap), 4 A topic through the text (its share of each document in reading order, and the documents that carry most of it, each linked to the text), 5 A word's topics, 6 A document's topics, 7 A selection's topics (a passage inferred on the model in use; **🧩 Topics** on Read's selection bar and in Book's pop-up), 8 Across the stages (each choice of a set inferred on the model, the mean shares, and one topic part by part and stage by stage, a share resting on less than one document's worth of the model's words marked ◌), 9 Steadiness across seeds (the model's check). Each part exports. A bench may give `topics.open(doc)` (its text for a document) and `topics.tokens(text)` (a passage's words as its documents have them).
 - **Topics compared by cosine** (asked for by David, through the Melville bench): the seed check and `--compare` take two topics to be the same by the cosine of their word probabilities over both models' words, at a threshold calibrated from the seed check (the lower quartile of the cosines of topics that are each other's best match across seeds), recorded with how it was found; the comparison lists every topic of each model with its best partner, cosine and the top-20 Jaccard beside it; the vocabularies compared are recorded. Jaccard stays in the check beside the cosine, for models made before. `SW.topics.phi`, `cosines`.
 - **Help ▸ Topic models**: what a topic model is, the models, reading the topics, across the stages, how far to trust a topic; a ? in the tab opens it. (Asked for by David.)
 - `docs/topics-guide.md`: the cosine measure and its calibration, and reading a comparison.
-- `tests/topics.test.js`: 5 more checks.
+- `tests/topics.test.js`: 5 more checks; `tests/trail.test.js`: 5 more (Read's place).
 
 ## 0.95.0 (2026-11-02)
 
