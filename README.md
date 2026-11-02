@@ -466,6 +466,8 @@ node research/kit/tools/views.js --kit ../bench-kit
 
 ## Topic models
 
+A bench makes and keeps its own models: [`docs/topics-guide.md`](docs/topics-guide.md) is the guide, from its documents to publishing a model and rebuilding it when the text changes.
+
 `node research/kit/tools/topics.js --set reading --k 8,12 --min-count 2,3 --seeds 1,2,3,4,5` opens the bench in headless Chrome, takes its documents (`topics.documents`), trains a model with mallette in node for every setting and seed, and prints how far each setting's topics recur across its seeds (the overlap of their top 20 words). `--write auto` (or `--write k=8,min=2,seed=5`) writes the chosen model, only that one, to `topics/<id>.json`, with the check, the source and the documents' fingerprint in it; the bench lists it in `topics.models`. `--compare topics/<other>.json` matches its topics with another model's both ways and keeps the result in the file; `--note` keeps a note. The same documents, settings and seed give the same model in node and in any browser.
 
 ## A bench's DOI
