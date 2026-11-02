@@ -14,8 +14,8 @@ authors:
 repository-code: "https://github.com/critical-code-studies/bench-kit"
 url: "https://critical-code-studies.github.io/bench-kit/"
 license: GPL-3.0
-version: "0.90.2"
-date-released: 2026-10-31
+version: "0.90.3"
+date-released: 2026-11-02
 keywords:
   - critical code studies
   - research bench
