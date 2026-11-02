@@ -123,3 +123,17 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .dict-sense { margin: 2px 0; }   /* the source's own numbers, (1., (a)), kept in the text */
 .dict-etym { color: var(--text-dim); font-size: 12px; }
 .dict-credit { color: var(--text-faint); font-size: 11px; margin-top: 4px; }
+
+/* textstats.js: its figures (charts, the shaded table and the stepper), coloured by the theme's tokens only */
+.ts-chart { display: block; width: 100%; height: auto; max-width: 100%; }
+.ts-chart text { font-family: inherit; }   /* the figure's own font (bench.css sets svg text in mono) */
+.ts-chart circle { cursor: default; }
+.ts-heat { border-collapse: collapse; font: 11px var(--mono); }
+.ts-heat th { font-weight: 400; color: var(--text-dim); padding: 1px 6px; text-align: left; white-space: nowrap; }
+.ts-heat thead th { text-align: center; padding: 2px 4px; }
+.ts-heat td { width: 26px; min-width: 26px; height: 16px; border: 1px solid var(--surface); cursor: pointer; text-align: center; color: var(--text); }
+.ts-heat td:hover { outline: 1px solid var(--text); }
+.ts-step { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.ts-step input[type="range"] { flex: 1 1 260px; min-width: 160px; accent-color: var(--amber); }
+.ts-step .btn { min-width: 2.2em; }
+.ts-step-l { font: 13px var(--serif); color: var(--text); min-width: 14em; }
