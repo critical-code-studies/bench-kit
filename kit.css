@@ -137,3 +137,9 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .ts-step input[type="range"] { flex: 1 1 260px; min-width: 160px; accent-color: var(--amber); }
 .ts-step .btn { min-width: 2.2em; }
 .ts-step-l { font: 13px var(--serif); color: var(--text); min-width: 14em; }
+
+/* word clouds (wordcloud.js): the figure's own font (bench.css sets svg text in mono) */
+.wc-cloud { display: block; max-width: 100%; height: auto; }
+.wc-cloud text { font-family: inherit; }
+.wc-cloud text[data-w] { cursor: pointer; }
+.wc-cloud text[data-w]:hover { fill-opacity: 0.7; }
