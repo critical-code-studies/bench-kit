@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.97.0 (2026-11-02)
 
 - **Getting set up** (asked for by David, through the Spacewar bench: newcomers found joining “very very confusing”). Help ▸ Joining the annotation group, now titled Getting set up, takes each service in two steps, joining first and the token second, the second opening once the reader says the first is done:
   - Hypothesis: 1 Join the group (one button to the bench's group, where sign-up and log-in happen too; where the bench sets no group, the invitation link pasted here), 2 Your token (the developer page, initials and token, Save and test). The guide no longer asks for the group where the bench has one.
