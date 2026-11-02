@@ -170,3 +170,5 @@ dialog.set-dlg { width: min(94vw, 600px); }
 
 /* ← Back in the tab row, after a jump from one place to another (SW.trail, base.js) */
 .trail-back { color: var(--amber) !important; font-weight: 600; }
+/* the Topics tab: a model whose text has changed since it was made */
+.tp-warn-src { color: var(--red); font-size: 13px; margin: 6px 0; }

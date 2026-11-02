@@ -384,7 +384,8 @@
   //   frame       the cloud's figure (frame()), set back to Fit by Default View
   // The element has value() (the format), refresh() (after the bench changes its own part: keeps the
   // view, and shows Default View only when the view is not the default) and share() (the view as one
-  // string, for a link: decode() reads it).
+  // string, for a link: decode() reads it) and set(F) (a format put in place, with no change() and
+  // nothing kept: for a lens's state given back on the way back).
   C.control = function (o) {
     o = o || {};
     var kept = o.value ? null : C.load(o.key);
@@ -443,6 +444,8 @@
     });
     document.addEventListener('mousedown', function (e) { var d = det(); if (d && d.open && !wrap.contains(e.target)) d.open = false; });
     wrap.value = function () { return F; };
+    // a format put in place without a change() or keeping it (a lens's state given back on the way back)
+    wrap.set = function (f) { F = C.format(f); redraw(); };
     wrap.refresh = function () { keep(); var b = wrap.querySelector('.wc-reset'); if (b) b.hidden = isDefault(); };
     wrap.share = function () { return C.encode(F, safeView()); };
     wrap.kept = kept;   // what was kept under key (its view for the bench to put back), or null

@@ -21,7 +21,9 @@
   'use strict';
   var SW = root.SW, V = root.SWVersions, B = SW.BENCH;
   function H() { return B.shell || {}; }
-  function ORDER() { return H().views || ['read']; }
+  // the bench's views, and those a kit module adds to the tab row itself (SW.kitViews: topics.js's),
+  // however the bench sets its own list
+  function ORDER() { var v = H().views || ['read']; (SW.kitViews || []).forEach(function (x) { if (v.indexOf(x) < 0) v = v.concat(x); }); return v; }
   if (B.tagsHint) SW.$('#note-tags').placeholder = B.tagsHint;
   // picker: false leaves the version picker (with its reference and language) out of the top bar;
   // the versions are then chosen from Read ▾

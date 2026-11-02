@@ -38,11 +38,37 @@
     documents: [{ id: 'd1' }, { id: 'd2' }] };
   var rows = SW.topics.summary(m), get = function (k) { var r = rows.filter(function (x) { return x[0] === k; })[0]; return r && r[1]; };
   eq('its id and engine', [get('Id'), get('Engine')], ['M-3f9a2c', 'mallette 0.2.0']);
-  eq('its topics and documents', [get('Topics'), get('Documents')], ['8', '2']);
+  eq('its topics and documents', [get('Topics'), get('Documents modelled'), get('Documents')], ['8', '2', '400-word chunks within chapters']);
   eq('its optimisation', get('Optimised every'), '20 iterations, after 200');
   eq('the words left out', get('Words left out'), 'stopwords: the bench\'s; shorter than 3 letters; fewer than 2 occurrences');
   eq('settings it does not give are not shown', SW.topics.summary({ kind: 'bench-kit-topics', id: 'x' }).map(function (r) { return r[0]; }), ['Id']);
   T.later('Topics: a model the bench does not publish', function () {
     return SW.topics.model('no-such-model').then(function () { throw new Error('a model was given'); }, function (e) { if (!/No model/.test(e.message)) throw e; });
   });
+
+  T.group('Topics: the engine');
+  var TP = SW.topics, toy = [];
+  for (var i = 0; i < 24; i++) toy.push({ id: 'd' + i, label: 'D' + i, meta: { seq: i }, tokens: (i % 2 ? 'whale sea ship harpoon captain whale sea boat ocean wave' : 'court law trial judge verdict court law crime prison guilt').split(' ').concat(['the', 'of', 'ab', 'Whale']) });
+  var prep = TP.prepare(toy, { minLength: 3, minCount: 2 });
+  eq('prepare: stopwords, short words gone, lower-cased', prep[1].tokens.indexOf('the') + prep[1].tokens.indexOf('ab') + prep[1].tokens.filter(function (t) { return t === 'whale'; }).length, -2 + 3);
+  eq('prepare: a word seen fewer times than the minimum gone', TP.prepare([{ id: 'a', tokens: ['whale', 'whale', 'kraken'] }], { minCount: 2 })[0].tokens, ['whale', 'whale']);
+  var st = { k: 2, seed: 1, iterations: 150, minCount: 2 };
+  var run1 = TP.train(toy, st), run2 = TP.train(toy, st);
+  eq('train: the same seed, the same model', JSON.stringify(run1.model), JSON.stringify(run2.model));
+  yes('train: two vocabularies, two topics', run1.result.topics.every(function (t) { var w = t.words.slice(0, 4).map(function (x) { return x[0]; }); return w.indexOf('whale') >= 0 !== (w.indexOf('court') >= 0); }));
+  var file = TP.file(run1, toy, st, { fingerprint: TP.fingerprint(toy) });
+  eq('the file: its kind, id and engine', [file.kind, file.id === TP.idOf(st, toy), /^mallette \d/.test(file.engine)], ['bench-kit-topics', true, true]);
+  eq('the file: each document, each row of proportions', [file.documents.length, file.theta.length, file.documents[3].meta.seq], [24, 24, 3]);
+  yes('another seed, another id', TP.idOf(Object.assign({}, st, { seed: 2 }), toy) !== file.id);
+  yes('another document, another fingerprint', TP.fingerprint(toy.slice(1)) !== file.fingerprint);
+  var runs = [1, 2, 3].map(function (sd) { var r = TP.train(toy, Object.assign({}, st, { seed: sd })); return { setting: { k: 2, minCount: 2 }, seed: sd, topics: r.result.topics.map(function (t) { return t.words.map(function (w) { return w[0]; }); }) }; });
+  var ck = TP.check(runs);
+  eq('check: two clear topics recur in every seed', [ck.settings[0].recurrence, ck.chosen.recurs], [1, [2, 2]]);
+  var other = TP.file(TP.train(toy.filter(function (d, i) { return i % 2; }), Object.assign({}, st, { k: 2 })), toy.filter(function (d, i) { return i % 2; }), st);
+  var cmp = TP.compare(file, other);
+  yes('compare: the sea topic has its partner, the law topic none', cmp.unmatched.length === 1 && cmp.unmatched[0].words.indexOf('court') >= 0 && cmp.unmatched[0].documents.length === 5);
+  if (TP.drift) {
+    eq('drift: none where the source is the same', TP.drift({ source: TP.source() }), []);
+    eq('drift: a source no longer there, or at another commit', TP.drift({ source: { sources: [{ name: 'X', commit: 'abc' }] } }).map(function (d) { return d.kind; }), ['source']);
+  }
 })();

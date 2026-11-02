@@ -141,6 +141,9 @@
   eq('Default View: the bench\'s defaults and the default look', [vw.src, vw.n, c2.value().look, changes], ['chapters', 80, C.DEFAULT, 1]);
   c2.refresh();
   yes('then hidden', c2.querySelector('.wc-reset').hidden);
+  var calls = changes; c2.set({ look: 'poster', pad: 8 });
+  eq('set: the format in place, no change() called', [c2.value().look, c2.value().pad, changes - calls], ['poster', 8, 0]);
+  c2.set({ look: C.DEFAULT });
   eq('the control\'s share string', c2.share(), 'look:' + C.DEFAULT + ',src:chapters,n:80');
   var fr = C.frame({ name: 'cloud' }); document.body.appendChild(fr);
   fr.show(C.cloud([{ w: 'sea', n: 3 }], { width: 400, height: 200, ink: 'box' }).svg);
