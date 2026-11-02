@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.91.0 (2026-11-02)
 
 - **Dictionaries** (`dictionary.js`, asked for by David, for the Melville bench's rare words and any bench's): a bench names its dictionaries (`dictionaries`) and a list of word frequencies (`wordFreq`).
   - **📕 Look up** on words selected in Read's selection bar and Book's selection pop-up shows each word's entries in every dictionary, each with its source's credit: head, part of speech, field labels (Naut., Law…), senses and a short etymology. The word's Zipf frequency is shown beside it.
