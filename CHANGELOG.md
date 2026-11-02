@@ -1,5 +1,13 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Text statistics** (`textstats.js`, `SW.textstats`), lifted from the Melville bench, where it was written for its distant-reading lenses after Underwood (David's request):
+  - **The engine**, which needs no page: tokens and counts; Dunning's G² and keyness between two texts; Mann–Whitney ρ over chunks, as in Underwood's note on Dunning's; Burrows's Delta and the nearest text; PCA; L2-regularised logistic regression with cross-validated probabilities; MATTR, Heaps, Zipf, Yule's K, hapaxes and sentence lengths; collocates by G² and PMI; a seeded generator. English stopwords with archaic forms, which a bench can replace (`textstats.stopwords`).
+  - **The figures**, in SVG on the theme's tokens: lines, scatter, dispersion, a shaded table, a stepper through states, and an export block. Their styles are in kit.css.
+  - Topic modelling and the word cloud are not in it; they come as kit modules of their own (MALLET's LDA, and a cloud on amueller/word_cloud).
+  - `tests/textstats.test.js`: 27 checks worked by hand.
+
 ## 0.91.0 (2026-11-02)
 
 - **Dictionaries** (`dictionary.js`, asked for by David, for the Melville bench's rare words and any bench's): a bench names its dictionaries (`dictionaries`) and a list of word frequencies (`wordFreq`).
