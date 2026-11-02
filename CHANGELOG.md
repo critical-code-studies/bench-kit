@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Word cloud looks** (asked for by David: good first views without setting anything, and no rows of options taking up the lens). `SW.wordcloud.LOOKS` are formats that go together: Classic (the default: many colours, Georgia, a few words upright, a rectangle), Oval, Ink on paper, Poster, Typewriter and Heart. `SW.wordcloud.control(o)` puts a Look menu and ⚙ in one line of a lens's toolbar; ⚙ opens a pop-over with the details (colour, hue, font, shape, upright, spacing, sizes, bold, capitals), the bench's own options at its foot (`o.more`), and Back to Classic. Changing a detail makes the format the reader's own. `format(F)`, `options(F)` and `colour(items, F, o)` turn a format into the cloud's options and its words' colours; a bench's own colouring (`o.colours`, `o.colour`) comes first. Normal spacing is 4 px round each word.
+- `tests/wordcloud.test.js`: 14 more checks of the looks, formats, colours and the control.
+
 ## 0.93.0 (2026-11-02)
 
 - **Menus and tabs a bench turns off** (`menusOff`, asked for by David): a name alone leaves that menu or tab out of the tab row (`'file'`, `'paratexts'`, `'topics'`), and `'menu:pick'` leaves out one item (`'help:sitemap'`, `'file:backup'`, `'text:6'` for lens 6 in Text ▾). A submenu, lens group or heading left empty goes too. It covers File ▾, Read ▾, Versions ▾, Help ▾, the lens menus, Graphics ▾ and a bench's own menus. A view left out of the tab row still opens from a link to it. `fileMenu: false` still works. `SW.menuOff(which, pick)` says whether one is off.

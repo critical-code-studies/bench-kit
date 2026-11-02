@@ -148,3 +148,14 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .tp-sum { border-collapse: collapse; font-size: 13px; }
 .tp-sum th { text-align: left; font-weight: 400; color: var(--text-dim); padding: 2px 14px 2px 0; vertical-align: top; white-space: nowrap; }
 .tp-sum td { padding: 2px 0; color: var(--text); }
+
+/* the word cloud's format control (wordcloud.js): a Look menu and ⚙ with the details in a pop-over */
+.wc-ctl { display: inline-flex; align-items: center; gap: 6px; }
+.wc-ctl .wc-grid { grid-template-columns: auto 1fr; align-items: center; column-gap: 10px; row-gap: 6px; min-width: 270px; }
+.wc-ctl .wc-grid > label { font-size: 12.5px; color: var(--text-dim); }
+.wc-ctl .wc-grid select { width: 100%; }
+.wc-ctl .wc-checks label { font-size: 12.5px; color: var(--text); margin-right: 10px; }
+.wc-ctl .wc-own { display: none; }
+.wc-ctl .wc-grid > :not(label):not(select):not(span):not(button) { grid-column: 1 / -1; }
+.wc-ctl .wc-reset { grid-column: 1 / -1; justify-self: start; }
+.wc-ctl [hidden] { display: none !important; }

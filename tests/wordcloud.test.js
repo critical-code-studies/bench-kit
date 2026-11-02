@@ -92,4 +92,26 @@
   yes('the figure\'s class, for the kit\'s styles', /^<svg [^>]*class="wc-cloud"/.test(r.svg));
   var m = C.metrics('whale', 40);
   yes('a word measured on the page', m.w > 40 && m.h > 10 && m.ascent > 0);
+
+  T.group('Word cloud: looks and the format control');
+  eq('the looks', Object.keys(C.LOOKS), ['classic', 'oval', 'ink', 'poster', 'typewriter', 'heart']);
+  eq('no format: the default look', C.format().look, C.DEFAULT);
+  eq('a look gives the whole format', C.format({ look: 'poster' }).caps, true);
+  eq('a look ignores details left from another', C.format({ look: 'ink', shape: 'heart' }).shape, 'rect');
+  eq('the reader\'s own keeps its details', C.format({ look: 'own', shape: 'heart', pad: 8 }).shape + C.format({ look: 'own', shape: 'heart', pad: 8 }).pad, 'heart8');
+  eq('a format saved before looks: the default look', C.format({ colour: 'change', shape: 'oval' }).look, 'classic');
+  var op = C.options({ look: 'poster' });
+  eq('the cloud\'s options from a look', [op.weight, op.caps, op.upright, op.shape, op.contrast], ['bold', true, 0.5, 'rect', 'linear']);
+  var col = C.colour([{ w: 'sea', n: 10 }, { w: 'ship', n: 5 }], { look: 'ink' });
+  eq('ink: every word in the text colour', col.map(function (x) { return x.fill; }), ['var(--text)', 'var(--text)']);
+  var sh = C.colour([{ w: 'sea', n: 10 }, { w: 'ship', n: 1 }], { look: 'own', colour: 'shade', hue: 'var(--green)' });
+  yes('shade: the hue, fainter for fewer', sh[0].fill === 'var(--green)' && sh[1].alpha < sh[0].alpha);
+  eq('a bench\'s own colouring wins where it gives one', C.colour([{ w: 'sea', n: 1 }, { w: 'ship', n: 1 }], {}, { colour: function (x) { return x.w === 'sea' ? 'var(--red)' : null; } }).map(function (x) { return x.fill.slice(0, 6); }), ['var(--', 'var(--']);
+  var got = null, ctl = C.control({ value: { look: 'classic' }, colours: [['change', 'by change']], change: function (f) { got = f; } });
+  eq('the control: a Look menu and ⚙', [!!ctl.querySelector('[data-f="look"]'), !!ctl.querySelector('.wc-more summary')], [true, true]);
+  yes('the bench\'s colourings first', ctl.querySelector('[data-f="colour"] option').value === 'change');
+  var shp = ctl.querySelector('[data-f="shape"]'); shp.value = 'heart'; shp.dispatchEvent(new Event('change', { bubbles: true }));
+  eq('a detail changed: the reader\'s own, the rest kept', got && [got.look, got.shape, got.font], ['own', 'heart', 'serif']);
+  var lk = ctl.querySelector('[data-f="look"]'); lk.value = 'typewriter'; lk.dispatchEvent(new Event('change', { bubbles: true }));
+  eq('a look chosen: its format', got && [got.look, got.font, got.shape], ['typewriter', 'mono', 'square']);
 })();

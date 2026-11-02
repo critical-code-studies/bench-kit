@@ -31,6 +31,14 @@
  *                     where there is one and estimated where there is not (node)
  *   measure(w, size, font, weight)   its width
  *   FONTS             the fonts a lens may offer, { id: [name, CSS font-family] }
+ *   LOOKS, DEFAULT    formats that go together, { id: [name, format] }, and the one a cloud starts with
+ *                     ('classic': many colours, Georgia, a few words upright, a rectangle)
+ *   format(F)         a whole format from a look, or the reader's own ({ look: 'own', … })
+ *   options(F)        the cloud's options for a format (font, weight, caps, upright, shape, pad, contrast)
+ *   colour(items, F, o)  the items coloured by the format; o.colour(item, rank) for a bench's own colouring
+ *   control(o)        a Look menu and ⚙ (the details in a pop-over) for one line of a lens's toolbar;
+ *                     o.value, o.change(F), o.colours (the bench's own colourings), o.more (an element
+ *                     of the bench's own options, in the pop-over)
  *   SHAPES            the shapes a cloud may take, { id: [name, inside(x, y, W, H)] }, in the order a
  *                     lens lists them: rect, square, oval, round (a circle), diamond, hexagon, triangle,
  *                     heart; inside says whether a point of the W × H frame is in the shape. 'circle'
@@ -264,6 +272,98 @@
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" class="wc-cloud" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" font-family="' + esc(font) + '"' +
       (weight !== 'normal' ? ' font-weight="' + weight + '"' : '') + '>' + out.join('') + '</svg>';
     return { svg: svg, places: places, dropped: dropped, drawn: drawn };
+  };
+
+  // ---------- looks: formats that go together, and the control that chooses them ----------
+  // A format F is { look, colour, hue, font, bold, caps, upright, shape, pad, contrast }. A look
+  // sets all of them but look and hue; changing one of them makes the format the reader's own.
+  C.PALETTE = ['var(--amber)', 'var(--beam)', 'var(--red)', 'var(--green)', 'var(--violet)'];
+  C.COLOURS = [['many', 'many colours'], ['ink', 'ink'], ['one', 'one colour'], ['shade', 'one colour, shaded by count'], ['size', 'by size']];
+  C.HUES = [['var(--amber)', 'Accent'], ['var(--beam)', 'Beam'], ['var(--violet)', 'Violet'], ['var(--green)', 'Green'], ['var(--red)', 'Red'], ['var(--text)', 'Ink']];
+  C.LOOKS = {
+    classic: ['Classic', { colour: 'many', font: 'serif', bold: false, caps: false, upright: 0.1, shape: 'rect', pad: 4, contrast: 'sqrt' }],
+    oval: ['Oval', { colour: 'many', font: 'serif', bold: false, caps: false, upright: 0.1, shape: 'oval', pad: 4, contrast: 'sqrt' }],
+    ink: ['Ink on paper', { colour: 'ink', font: 'old', bold: false, caps: false, upright: 0, shape: 'rect', pad: 4, contrast: 'sqrt' }],
+    poster: ['Poster', { colour: 'size', font: 'sans', bold: true, caps: true, upright: 0.5, shape: 'rect', pad: 2, contrast: 'linear' }],
+    typewriter: ['Typewriter', { colour: 'shade', font: 'mono', bold: false, caps: false, upright: 0, shape: 'square', pad: 4, contrast: 'sqrt' }],
+    heart: ['Heart', { colour: 'one', font: 'serif', bold: false, caps: false, upright: 0.1, shape: 'heart', pad: 2, contrast: 'sqrt' }]
+  };
+  C.DEFAULT = 'classic';
+  // a format from a look (the default look's where none is given), with anything the reader set kept
+  C.format = function (F) {
+    F = F || {};
+    var look = C.LOOKS[F.look] ? F.look : F.look === 'own' ? 'own' : C.DEFAULT, base = C.LOOKS[look === 'own' ? C.DEFAULT : look][1], out = { look: look, hue: F.hue || 'var(--amber)' };
+    for (var k in base) out[k] = look === 'own' && F[k] != null ? F[k] : base[k];
+    return out;
+  };
+  function hash(w) { for (var h = 0, i = 0; i < w.length; i++) h = (h * 31 + w.charCodeAt(i)) | 0; return Math.abs(h); }
+  // the cloud's options from a format
+  C.options = function (F) {
+    F = C.format(F);
+    return { font: (C.FONTS[F.font] || C.FONTS.serif)[1], weight: F.bold ? 'bold' : 'normal', caps: !!F.caps, upright: +F.upright, shape: F.shape, pad: +F.pad, contrast: F.contrast };
+  };
+  // items coloured by a format: each word's fill (and alpha for shade); a colour the bench names
+  // itself (o.colour(item, rank)) wins where it gives one
+  C.colour = function (items, F, o) {
+    F = C.format(F); o = o || {};
+    var n = items.length, max = items.reduce(function (m, x) { return Math.max(m, x.n); }, 1);
+    var ranked = items.slice().sort(function (a, b) { return b.n - a.n; }), rank = Object.create(null);
+    ranked.forEach(function (x, i) { rank[x.w] = i; });
+    return items.map(function (x) {
+      var y = {}; for (var k in x) y[k] = x[k];
+      var own = o.colour ? o.colour(x, rank[x.w]) : null;
+      if (own) { y.fill = own; return y; }
+      var r = rank[x.w];
+      y.fill = F.colour === 'ink' ? 'var(--text)' : F.colour === 'one' || F.colour === 'shade' ? F.hue :
+        F.colour === 'size' ? (r < n * 0.1 ? 'var(--amber)' : r < n * 0.35 ? 'var(--beam)' : 'var(--text-dim)') : C.PALETTE[hash(x.w) % C.PALETTE.length];
+      if (F.colour === 'shade') y.alpha = 0.3 + 0.7 * Math.sqrt(x.n / max);
+      return y;
+    });
+  };
+  // The control: a Look menu and ⚙, a pop-over with the format's details, in one line of a
+  // toolbar. o: value (a format), change(F) on every change, colours (the bench's own colourings,
+  // [[id, label]], put first), more (an element of the bench's own options, put at the pop-over's
+  // foot). Returns the element; el.value() gives the format.
+  C.control = function (o) {
+    o = o || {};
+    var F = C.format(o.value), wrap = document.createElement('span');
+    wrap.className = 'wc-ctl';
+    function opt(v, label, on) { return '<option value="' + esc(v) + '"' + (on ? ' selected' : '') + '>' + esc(label) + '</option>'; }
+    function sel(k, list) { return '<select data-f="' + k + '">' + list.map(function (x) { return opt(x[0], x[1], String(F[k]) === String(x[0])); }).join('') + '</select>'; }
+    function list(obj) { return Object.keys(obj).map(function (k) { return [k, obj[k][0]]; }); }
+    function draw() {
+      wrap.innerHTML = '<label class="wc-look">' + sel('look', list(C.LOOKS).concat(F.look === 'own' ? [['own', 'Your own']] : [])) + '</label>' +
+        '<details class="menu wc-more"><summary class="btn" title="Colour, font, shape, spacing and sizes">⚙</summary><div class="menu-body wc-grid">' +
+        '<label>Colour</label>' + sel('colour', (o.colours || []).concat(C.COLOURS)) +
+        '<label data-for="hue">Hue</label>' + sel('hue', C.HUES) +
+        '<label>Font</label>' + sel('font', list(C.FONTS)) +
+        '<label>Shape</label>' + sel('shape', list(C.SHAPES)) +
+        '<label>Upright</label>' + sel('upright', [[0, 'none'], [0.1, 'a few'], [0.5, 'half'], [1, 'all']]) +
+        '<label>Spacing</label>' + sel('pad', [[2, 'tight'], [4, 'normal'], [8, 'loose']]) +
+        '<label>Sizes</label>' + sel('contrast', [['log', 'closer together'], ['sqrt', 'normal'], ['linear', 'further apart']]) +
+        '<span></span><span class="wc-checks"><label><input type="checkbox" data-f="bold"' + (F.bold ? ' checked' : '') + '> bold</label> <label><input type="checkbox" data-f="caps"' + (F.caps ? ' checked' : '') + '> capitals</label></span>' +
+        '<span class="wc-own"></span><button type="button" class="btn wc-reset">Back to ' + esc(C.LOOKS[C.DEFAULT][0]) + '</button></div></details>';
+      var showHue = F.colour === 'one' || F.colour === 'shade';
+      wrap.querySelector('[data-for="hue"]').hidden = wrap.querySelector('[data-f="hue"]').hidden = !showHue;
+      if (o.more) { var own = wrap.querySelector('.wc-own'); own.parentNode.insertBefore(o.more, own); }
+    }
+    draw();
+    var det = function () { return wrap.querySelector('.wc-more'); };
+    wrap.addEventListener('change', function (e) {
+      var k = e.target.dataset && e.target.dataset.f; if (!k) return;
+      var v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+      if (k === 'look') F = C.format({ look: v, hue: F.hue });
+      else { F[k] = typeof C.LOOKS.classic[1][k] === 'number' ? +v : v; if (k !== 'hue') F.look = 'own'; }
+      var open = det().open; draw(); det().open = open;
+      if (o.change) o.change(F);
+    });
+    wrap.addEventListener('click', function (e) {
+      if (!e.target.closest('.wc-reset')) return;
+      F = C.format({ hue: F.hue }); draw(); if (o.change) o.change(F);
+    });
+    document.addEventListener('mousedown', function (e) { var d = det(); if (d && d.open && !wrap.contains(e.target)) d.open = false; });
+    wrap.value = function () { return F; };
+    return wrap;
   };
 
   if (root.SW) root.SW.wordcloud = C;
