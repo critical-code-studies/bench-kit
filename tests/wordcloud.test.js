@@ -94,15 +94,16 @@
   yes('a word measured on the page', m.w > 40 && m.h > 10 && m.ascent > 0);
 
   T.group('Word cloud: looks and the format control');
-  eq('the looks', Object.keys(C.LOOKS), ['classic', 'oval', 'ink', 'poster', 'typewriter', 'heart']);
+  eq('the looks', Object.keys(C.LOOKS), ['oval', 'classic', 'ink', 'poster', 'typewriter', 'heart']);
+  eq('the default: the oval, half upright', [C.DEFAULT, C.format().shape, C.format().upright], ['oval', 'oval', 0.5]);
   eq('no format: the default look', C.format().look, C.DEFAULT);
   eq('a look gives the whole format', C.format({ look: 'poster' }).caps, true);
-  eq('a look with a detail set beside it keeps the detail', [C.format({ look: 'oval', upright: 0.5 }).shape, C.format({ look: 'oval', upright: 0.5 }).upright], ['oval', 0.5]);
+  eq('a look with a detail set beside it keeps the detail', [C.format({ look: 'oval', upright: 1 }).shape, C.format({ look: 'oval', upright: 1 }).upright], ['oval', 1]);
   eq('details from a link, as text, read as numbers and true or false', [C.format({ upright: '0.5', pad: '8', bold: 'true' }).upright, C.format({ pad: '8' }).pad, C.format({ bold: 'true' }).bold], [0.5, 8, true]);
   eq('a look of the old kind (own) is the default look with its details', [C.format({ look: 'own', shape: 'heart' }).look, C.format({ look: 'own', shape: 'heart' }).shape], [C.DEFAULT, 'heart']);
-  eq('brief: the look and only what differs from it', C.brief({ look: 'oval', upright: 0.5, shape: 'oval', font: 'serif' }), { look: 'oval', upright: 0.5 });
+  eq('brief: the look and only what differs from it', C.brief({ look: 'oval', upright: 1, shape: 'oval', font: 'serif' }), { look: 'oval', upright: 1 });
   eq('brief of a look as it is: the look alone', C.brief(C.format({ look: 'poster' })), { look: 'poster' });
-  eq('a format saved before looks: the default look', C.format({ colour: 'change', shape: 'oval' }).look, 'classic');
+  eq('a format saved before looks: the default look', C.format({ colour: 'change', shape: 'oval' }).look, C.DEFAULT);
   var op = C.options({ look: 'poster' });
   eq('the cloud\'s options from a look', [op.weight, op.caps, op.upright, op.shape, op.contrast], ['bold', true, 0.5, 'rect', 'linear']);
   var col = C.colour([{ w: 'sea', n: 10 }, { w: 'ship', n: 5 }], { look: 'ink' });

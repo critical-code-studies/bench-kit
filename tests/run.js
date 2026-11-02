@@ -42,11 +42,14 @@
       }));
     }
   };
-  function load(src) {
+  // a script, asked for a second time if the first fails (a connection dropped by the test server
+  // now and then), so that only a script that cannot be had is reported
+  function load(src, again) {
     return new Promise(function (res, rej) {
       var el = document.createElement('script');
       el.src = src + '?t=' + Date.now();
-      el.onload = res; el.onerror = function () { rej(new Error('could not load ' + src)); };
+      el.onload = res;
+      el.onerror = function () { el.remove(); if (again) rej(new Error('could not load ' + src)); else setTimeout(function () { load(src, true).then(res, rej); }, 300); };
       document.body.appendChild(el);
     });
   }

@@ -32,7 +32,8 @@
  *   measure(w, size, font, weight)   its width
  *   FONTS             the fonts a lens may offer, { id: [name, CSS font-family] }
  *   LOOKS, DEFAULT    formats that go together, { id: [name, format] }, and the one a cloud starts with
- *                     ('classic': many colours, Georgia, a few words upright, a rectangle)
+ *                     ('oval': many colours, Georgia, half the words upright, an oval; the Melville
+ *                     bench's, which David chose)
  *   format(F)         a whole format from a look and any details set beside it ({ look: 'oval', upright: 0.5 })
  *   brief(F)          the look and only the details that differ from it, for a link or a saved setting
  *   options(F)        the cloud's options for a format (font, weight, caps, upright, shape, pad, contrast)
@@ -285,14 +286,14 @@
   C.COLOURS = [['many', 'many colours'], ['ink', 'ink'], ['one', 'one colour'], ['shade', 'one colour, shaded by count'], ['size', 'by size']];
   C.HUES = [['var(--amber)', 'Accent'], ['var(--beam)', 'Beam'], ['var(--violet)', 'Violet'], ['var(--green)', 'Green'], ['var(--red)', 'Red'], ['var(--text)', 'Ink']];
   C.LOOKS = {
+    oval: ['Oval', { colour: 'many', font: 'serif', bold: false, caps: false, upright: 0.5, shape: 'oval', pad: 4, contrast: 'sqrt' }],
     classic: ['Classic', { colour: 'many', font: 'serif', bold: false, caps: false, upright: 0.1, shape: 'rect', pad: 4, contrast: 'sqrt' }],
-    oval: ['Oval', { colour: 'many', font: 'serif', bold: false, caps: false, upright: 0.1, shape: 'oval', pad: 4, contrast: 'sqrt' }],
     ink: ['Ink on paper', { colour: 'ink', font: 'old', bold: false, caps: false, upright: 0, shape: 'rect', pad: 4, contrast: 'sqrt' }],
     poster: ['Poster', { colour: 'size', font: 'sans', bold: true, caps: true, upright: 0.5, shape: 'rect', pad: 2, contrast: 'linear' }],
     typewriter: ['Typewriter', { colour: 'shade', font: 'mono', bold: false, caps: false, upright: 0, shape: 'square', pad: 4, contrast: 'sqrt' }],
     heart: ['Heart', { colour: 'one', font: 'serif', bold: false, caps: false, upright: 0.1, shape: 'heart', pad: 2, contrast: 'sqrt' }]
   };
-  C.DEFAULT = 'classic';
+  C.DEFAULT = 'oval';
   var WB = (root.SW && root.SW.BENCH && root.SW.BENCH.wordcloud) || {};
   if (WB.looks) {
     var mine = {}, k0;
