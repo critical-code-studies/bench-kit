@@ -17,7 +17,7 @@
 #view-book .bk-colhead { margin: 0 0 8px clamp(8px, 4vw, 56px); font: 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
 #view-book .bk-part { margin: 36px 0 10px clamp(8px, 4vw, 56px); font: 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
 
-.bk-page { max-width: none; margin: 0; font: 18px/1.65 var(--serif, Georgia, "Iowan Old Style", serif); color: var(--text); }
+.bk-page { max-width: none; margin: 0; font: var(--bk-size, 18px)/1.65 var(--serif, Georgia, "Iowan Old Style", serif); color: var(--text); }
 /* a sheet to a page: the text on the left with a margin, the page's image on the right at the
    slider's width (--bk-imgw, set on the view), held in view while its text is read */
 .bk-sheet { display: grid; grid-template-columns: minmax(0, 38em) var(--bk-imgw, 320px); gap: 0 40px; justify-content: start; padding-left: clamp(8px, 4vw, 56px); }
@@ -37,10 +37,10 @@
 #view-book.bk-noimg .bk-pb-img { display: inline-block; }
 .bk-pb::after { order: 3; }
 .bk-page p, .bk-page .bk-lg { margin: 0 0 0.9em; text-align: justify; hyphens: auto; }
-.bk-page h3.bk-head { font: 600 15px/1.5 var(--serif, Georgia, serif); letter-spacing: 0.14em; text-transform: uppercase; text-align: center; margin: 1.6em 0 1em; }
+.bk-page h3.bk-head { font: 600 0.833em/1.5 var(--serif, Georgia, serif); letter-spacing: 0.14em; text-transform: uppercase; text-align: center; margin: 1.6em 0 1em; }
 .bk-page p.bk-l { margin: 0 0 0 2em; text-align: left; }
 .bk-page .bk-lg { margin-left: 2em; text-align: left; }
-.bk-page p.bk-margin { font-size: 14px; color: var(--text-dim); border-left: 2px solid var(--line); padding-left: 10px; text-align: left; }
+.bk-page p.bk-margin { font-size: 0.78em; color: var(--text-dim); border-left: 2px solid var(--line); padding-left: 10px; text-align: left; }
 .bk-page p.bk-margin::before { content: attr(data-where); display: block; font: 10px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
 .bk-page .bk-r-center { text-align: center; }
 .bk-page hr.bk-divider { border: 0; border-top: 1px solid var(--line); width: 30%; margin: 1.6em auto; }
@@ -162,7 +162,7 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-nm:hover { border-color: var(--amber); color: var(--text); }
 .bk-selpop { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .bk-selpop .selref { margin-right: 4px; }
-.bk-notepop { max-width: 32em; font: 14px/1.5 var(--serif, Georgia, serif); }
+.bk-notepop { max-width: 32em; font: calc(var(--bk-size, 18px) * 0.78)/1.5 var(--serif, Georgia, serif); }
 
 @media (max-width: 760px) {
   .bk-sheet, .bk-two .bk-sheet { grid-template-columns: minmax(0, 1fr) min(96px, var(--bk-imgw, 320px)); gap: 0 12px; padding-left: 4px; }
@@ -174,7 +174,7 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
   #view-book .bk-cols.bk-two { grid-template-columns: minmax(0, 1fr); }
   #view-book .bk-two .bk-col { height: auto; max-height: 70vh; }
   #view-book .bk-two .bk-col + .bk-col { border-left: 0; border-top: 1px solid var(--line); }
-  .bk-page { font-size: 16px; }
+  .bk-page { font-size: calc(var(--bk-size, 18px) - 2px); }
   .bk-page p { text-align: left; }
 }
 @media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash, .bk-s.bk-strike-in, .bk-z.bk-zstage { animation: none; } }

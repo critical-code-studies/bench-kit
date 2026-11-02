@@ -27,7 +27,16 @@
     }
     de.style.setProperty('--code-font', f === 'system' ? 'var(--mono)' : '"' + f + '", var(--mono)');
     de.style.setProperty('--code-size', SW.codeSize() + 'px');
+    if (SW.store.get('book.size', null) != null) de.style.setProperty('--bk-size', SW.bookSize() + 'px');
     SW.emit('codetext');
+  };
+  // Book's text has a size of its own (18 px unless set), which A− and A+ set while Book is open
+  SW.bookSize = function () { var n = +SW.store.get('book.size', 18); return n >= 12 && n <= 32 ? n : 18; };
+  SW.setBookSize = function (n) {
+    n = Math.max(12, Math.min(32, Math.round(n)));
+    SW.store.set('book.size', n);
+    SW.applyCodeText();
+    SW.toast('Book text ' + n + ' px');
   };
   SW.setCodeSize = function (n) {
     n = Math.max(9, Math.min(24, Math.round(n)));

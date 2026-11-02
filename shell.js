@@ -183,8 +183,10 @@
     SW.applyCodeText();
     SW.applyNoteShade();
     SW.applyPalette();
-    SW.$('#btn-smaller').onclick = function () { SW.setCodeSize(SW.codeSize() - 1); };
-    SW.$('#btn-larger').onclick = function () { SW.setCodeSize(SW.codeSize() + 1); };
+    // in Book, Book's own text size; elsewhere the text's
+    function resize(d) { if (SW.state.tab === 'book' && SW.views.book) SW.setBookSize(SW.bookSize() + d); else SW.setCodeSize(SW.codeSize() + d); }
+    SW.$('#btn-smaller').onclick = function () { resize(-1); };
+    SW.$('#btn-larger').onclick = function () { resize(1); };
     // ◐: to the last light theme from a dark one, and back.
     SW.$('#btn-theme').onclick = function () {
       // the other kind: the last theme of that kind used here, if it still is of that kind (a bench may

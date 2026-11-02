@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A− and A+ size Book's text** (reported by David, through the Melville bench, where they changed nothing in Book): while Book is open they set Book's own size (18 px unless set, 12 to 32; 2 px less on a narrow screen), with its heads, margins and note pop-ups in proportion; elsewhere they set the text's size as before. Kept in the browser (`book.size`).
+
 ## 0.90.2 (2026-10-31)
 
 - Book's enlarged page closes only with ✕, a click outside it, or Esc (asked for by David): a click in its details (the image credit's chevron, the text) or on the image no longer closes it.
