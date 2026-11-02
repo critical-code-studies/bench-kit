@@ -57,6 +57,22 @@
     });
   }));
   yes('a mask keeps words off the left half', boxes(lay({ mask: function (x) { return x < 300; } })).every(function (p) { return p.x - p.w / 2 >= 300; }));
+  eq('the shapes a lens lists, the first ids kept', Object.keys(C.SHAPES), ['rect', 'square', 'oval', 'round', 'diamond', 'hexagon', 'triangle', 'heart']);
+  eq('each shape named', Object.keys(C.SHAPES).map(function (k) { return C.SHAPES[k][0]; }), ['Rectangle', 'Square', 'Oval', 'Circle', 'Diamond', 'Hexagon', 'Triangle', 'Heart']);
+  // a word's four corner pixels inside its shape
+  function within(r, id) {
+    var f = C.SHAPES[id][1];
+    return boxes(r).every(function (p) {
+      var x0 = Math.floor(p.x - p.w / 2), x1 = Math.ceil(p.x + p.w / 2) - 1, y0 = Math.floor(p.y - p.h / 2), y1 = Math.ceil(p.y + p.h / 2) - 1;
+      return f(x0, y0, 600, 300) && f(x1, y0, 600, 300) && f(x0, y1, 600, 300) && f(x1, y1, 600, 300);
+    });
+  }
+  Object.keys(C.SHAPES).forEach(function (id) {
+    var r = lay({ shape: id, upright: 0.3 });
+    yes(C.SHAPES[id][0] + ': some words, each inside the shape and apart', r.drawn.length > 3 && within(r, id) && apart(r));
+  });
+  eq('circle is the same as round', lay({ shape: 'circle' }).svg, lay({ shape: 'round' }).svg);
+  eq('a shape not known is the rectangle', lay({ shape: 'whale' }).svg, lay().svg);
 
   T.group('Word cloud: a layout kept');
   var later = C.cloud([{ w: 'whale', n: 250 }, { w: 'sea', n: 900 }, { w: 'kraken', n: 40 }], { width: 600, height: 300, measure: measure, places: r.places, scale: 1000, faint: true });

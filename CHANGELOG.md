@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Word cloud shapes** (asked for by David): a cloud may be a rectangle, square, oval, circle, diamond, hexagon, triangle or heart. `SW.wordcloud.SHAPES` lists them, `{ id: [name, inside(x, y, W, H)] }`, in that order, so a lens can build its shape menu from it and show new shapes without a change of its own (the Melville bench's request). The ids `rect`, `oval` and `round` stay as they were, for settings readers have saved; `circle` is taken for `round`, and a shape not known is the rectangle. Words are sized to the shape's share of the frame, as before for the oval and circle.
+- `tests/wordcloud.test.js`: 12 more checks (the list and its names; for each shape, words inside it and apart; `circle`; a shape not known).
+
 ## 0.92.1 (2026-11-02)
 
 - `tests/wordcloud.test.js`: the layout checks give each letter a fixed width, so they no longer depend on the fonts of the machine they run on. On GitHub's Linux runner, without Georgia, one check failed in 0.92.0 (a word that fitted there at its full size).
