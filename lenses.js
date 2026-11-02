@@ -128,16 +128,32 @@
       return;
     }
     var blocks = c.one[n](b, cards);
+    settle(n);
     if (blocks) exp(head, function () { return { title: b.v.label + ': ' + l[1].toLowerCase(), subtitle: l[2], meta: SW.docMeta(b), blocks: blocks() }; }, slug() + '-' + b.v.id + '-lens-' + n);
   }
   if (SW.$('#view-analyse')) SW.views.analyse = { show: function (b) { build = b; render(); } };
 
   // ---------- opening a lens ----------
   function open(n) { if (n !== lens) { lens = n; SW.store.set('an.lens', n); SW.forget('analyse'); } SW.setTab('analyse'); }
-  SW.openLens = function (n) { lens = +n; SW.store.set('an.lens', lens); SW.forget('analyse'); SW.setTab('analyse'); };
+  // a lens opened from elsewhere in the bench (another lens, a finding): a step on the trail back (SW.trail)
+  SW.openLens = function (n) { if (SW.trail) SW.trail.from(); lens = +n; SW.store.set('an.lens', lens); SW.forget('analyse'); SW.setTab('analyse'); };
   SW.setLens = function (n) { n = +n; if (valid(n)) { lens = n; SW.store.set('an.lens', n); } };
 
+  // a lens's own state, for the way back (SW.trail): a lens gives SW.lenses.state(n, get, set) as it
+  // is drawn; get() says what it is showing, as a string, when the reader leaves it by a jump, and
+  // set(s) has it show that again when the reader comes back (a lens that loads its data late keeps
+  // s until the data is there)
+  var states = {}, pending = null;
+  function settle(n) {
+    if (!pending || pending.n !== n) return;
+    var h = states[n], s = pending.s; pending = null;
+    if (h && h.set && s != null) h.set(s);
+  }
   SW.lenses = {
+    state: function (n, get, set) { states[+n] = { get: get, set: set }; },
+    capture: function () { var n = current(), h = states[n]; return { n: n, s: h && h.get ? h.get() : null }; },
+    restore: function (x) { if (x && x.n) { pending = { n: +x.n, s: x.s }; lens = +x.n; } },
+    name: function () { var l = L(current()); return l ? l[1] : 'Analyse'; },
     render: function () { if (build && SW.state.tab === 'analyse') render(); },
     build: function () { return build; },   // the version the view is drawn on, for a lens's late work to check
     card: card, wide: wide, bars: bars, expMenu: expMenu,

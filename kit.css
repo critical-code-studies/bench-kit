@@ -148,3 +148,6 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .tp-sum { border-collapse: collapse; font-size: 13px; }
 .tp-sum th { text-align: left; font-weight: 400; color: var(--text-dim); padding: 2px 14px 2px 0; vertical-align: top; white-space: nowrap; }
 .tp-sum td { padding: 2px 0; color: var(--text); }
+
+/* ← Back in the tab row, after a jump from one place to another (SW.trail, base.js) */
+.trail-back { color: var(--amber) !important; font-weight: 600; }

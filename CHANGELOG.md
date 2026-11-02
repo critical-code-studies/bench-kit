@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The way back** (asked for by David: after clicking a word in the word cloud, a way back to the cloud). A jump the reader did not choose from the tab row or a menu (a lens opening another, a word's link to the Words lens, a lens's or a finding's link to lines in Read) is a step in the browser's history. **← Back** in the tab row, named for the place left ("← Word cloud"), and the browser's Back, return to it as it was: the view, the version, the lines, the lens. A trail of jumps (the cloud, a word, a line) goes back one step at a time. `SW.trail` (`from`, `step`, `quietly`, `back`); `SW.setTab` takes a step when the view changes, the tab row and the menus quietly. Addresses rewritten as the reader moves keep their entry's place.
+- **A lens's own state** for the way back: `SW.lenses.state(n, get, set)`, given as the lens is drawn; `get()` says what it shows when the reader jumps away, and `set(s)` shows it again on the way back (the Melville bench's request).
+- `tests/trail.test.js`: 5 checks.
+
 ## 0.93.0 (2026-11-02)
 
 - **Menus and tabs a bench turns off** (`menusOff`, asked for by David): a name alone leaves that menu or tab out of the tab row (`'file'`, `'paratexts'`, `'topics'`), and `'menu:pick'` leaves out one item (`'help:sitemap'`, `'file:backup'`, `'text:6'` for lens 6 in Text ▾). A submenu, lens group or heading left empty goes too. It covers File ▾, Read ▾, Versions ▾, Help ▾, the lens menus, Graphics ▾ and a bench's own menus. A view left out of the tab row still opens from a link to it. `fileMenu: false` still works. `SW.menuOff(which, pick)` says whether one is off.

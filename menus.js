@@ -332,7 +332,7 @@
         var t = ev.target.closest('[data-pick]');
         if (!t) return;
         closeTabMenu();
-        pick(which, t.dataset.pick);
+        SW.trail.quietly(function () { pick(which, t.dataset.pick); });   // the reader's own choice: no step back
       });
     });
   });

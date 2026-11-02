@@ -67,6 +67,7 @@
     tab = (H().alias || {})[tab] || tab;
     if (ORDER().indexOf(tab) < 0) tab = 'read';
     var prev = SW.state.tab;
+    if (prev !== tab && SW.trail) SW.trail.step();   // a jump the reader did not choose from the tab row: a step on the way back
     if (prev !== tab && SW.views[prev] && SW.views[prev].hide) SW.views[prev].hide();
     SW.state.tab = tab;
     document.body.dataset.tab = tab;
@@ -155,7 +156,7 @@
     fillPicker();
     SW.$('#tabs').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-tab]');
-      if (b) SW.setTab(b.dataset.tab);
+      if (b) SW.trail.quietly(function () { SW.setTab(b.dataset.tab); });   // the reader's own choice: no step back
     });
     SW.$('#btn-settings').onclick = function () { SW.settings.open(); };
     SW.$('#btn-about').onclick = about;
@@ -276,6 +277,25 @@
     setTimeout(look, 5000); setInterval(look, 5 * 60 * 1000);
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') look(); });
     root.addEventListener('focus', look);
+  }
+  // Back to an entry of the trail (SW.trail, kit/base.js): the place it holds, from its address and
+  // what was kept in it
+  root.addEventListener('popstate', function (e) { if (e.state) SW.trail.quietly(function () { back(e.state); }); });
+  function back(st) {
+    var q = SW.readQuery(), place = st.place || {};
+    if (place.lens && SW.lenses && SW.lenses.restore) SW.lenses.restore(place.lens);
+    if (q.l) { var m = /^(\d+):(\d+)(?:-(\d+))?$/.exec(q.l); if (m) SW.state.sel = { p: +m[1], n0: +m[2], n1: +(m[3] || m[2]) }; }
+    if (q.b) SW.state.b = q.b;
+    if (q.tab) q.tab = (H().alias || {})[q.tab] || q.tab;
+    if (q.lens && SW.setLens) { SW.setLens(q.lens); if (!q.tab) q.tab = 'analyse'; }
+    if (q.g && SW.setGraphic) { SW.setGraphic(q.g); if (!q.tab) q.tab = 'graphics'; }
+    if (H().query) H().query(q);
+    var tab = ORDER().indexOf(q.tab) >= 0 ? q.tab : 'read';
+    SW.forget(tab);
+    if (q.v && q.v !== SW.state.v) { SW.state.tab = tab; document.body.dataset.tab = tab; SW.markTabs(); SW.$$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + tab); }); select(q.v); }
+    else SW.setTab(tab);
+    if (tab === 'read' && SW.state.sel) SW.emit('goto', { p: SW.state.sel.p, n: SW.state.sel.n0, tab: 'read' });
+    SW.trail.chip();
   }
   SW.newerRelease = newer;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
