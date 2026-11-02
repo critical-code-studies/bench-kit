@@ -1208,3 +1208,18 @@ ul.reading a { overflow-wrap: anywhere; }
 .menu-subbody[hidden] { display: none; }
 /* Read ▾: the ▾ opens the menu from another view, the name goes back to Read (kit/menus.js) */
 #tabs [data-menu="read"] .caret { padding: 4px 2px 4px 6px; margin: -4px -2px -4px 0; }
+/* Getting set up (kit/notes.js): where the reader stands, two steps for each service */
+.joinhelp .js-checkwrap { padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); margin: 6px 0 12px; }
+.joinhelp .js-checkwrap h3 { margin: 0 0 4px; }
+.js-checks { list-style: none; margin: 4px 0; padding: 0; }
+.js-ck { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; padding: 4px 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); }
+.js-ck:last-child { border-bottom: 0; }
+.js-ck .js-mark { display: inline-block; width: 1.2em; font-weight: 700; text-align: center; }
+.js-ck.good .js-mark { color: var(--green); }
+.js-ck.err .js-mark { color: var(--red); }
+.js-ck.todo .js-mark { color: var(--text-dim); }
+.js-ck .btn { padding: 1px 8px; font-size: 12px; }
+.joinhelp .js-svc { margin: 18px 0 2px; font-size: 16px; }
+.joinhelp .js-step[data-closed] { opacity: .7; }
+.joinhelp .js-ok ol { margin: 4px 0 0; }
+.set-setup { margin: 0 0 10px; }

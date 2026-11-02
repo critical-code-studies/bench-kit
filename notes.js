@@ -85,7 +85,7 @@
       },
       body: body ? JSON.stringify(body) : undefined
     }).then(function (r) {
-      if (!r.ok) return r.text().then(function (t) { throw new Error('Hypothesis ' + r.status + ': ' + t.slice(0, 160)); });
+      if (!r.ok) return r.text().then(function (t) { var e = new Error('Hypothesis ' + r.status + ': ' + t.slice(0, 160)); e.status = r.status; throw e; });
       return r.status === 204 ? null : r.json();
     });
   }
@@ -121,6 +121,17 @@
     return (note.rawTags || []).filter(function (t) { return ours(t) && !isBinTag(t); }).concat(note.tags || []);
   }
 
+  // Where a reader stands with Hypothesis, step by step: { token: 'none' | 'refused' | 'ok' | 'error',
+  // member: true | false | null (not known without a token), user, group (its name), message }
+  N.check = function () {
+    var c = cfg();
+    if (!c.token) return Promise.resolve({ token: 'none', member: null });
+    return hx('GET', '/profile').then(function (p) {
+      if (!p.userid) return { token: 'refused', member: null };
+      var found = (p.groups || []).filter(function (x) { return x.id === c.group; })[0];
+      return { token: 'ok', member: c.group ? !!found : null, user: String(p.userid).replace(/^acct:|@hypothes\.is$/g, ''), group: found ? found.name : null };
+    }, function (e) { return { token: e.status === 401 || e.status === 403 ? 'refused' : 'error', member: null, message: e.message }; });
+  };
   N.test = function () {
     return hx('GET', '/profile').then(function (p) {
       var g = cfg().group, found = (p.groups || []).filter(function (x) { return x.id === g; })[0];
@@ -1095,87 +1106,146 @@
   // ⚙ Settings to offer beside the token box.
   N.joinSteps = function () {
     var g = N.groupId(SW.groupSet()) || '(the group’s ID)';
+    var gl = g !== '(the group’s ID)' ? 'https://hypothes.is/groups/' + g : 'the group’s link from the project leads';
     return 'Annotations in the ' + (B.name || 'research') + ' bench: joining\n\n' +
-      '1. Make a Hypothesis account at https://hypothes.is/signup (free; any name will do).\n' +
-      '2. Ask for an invitation to the private group ' + g + ', and open the link you are sent.\n' +
-      '3. Open https://hypothes.is/account/developer and generate your personal API token.\n' +
-      '4. Paste the group and the token into the bench: ⚙ Settings, Annotations (' + SW.BASE_URI + '), then Test connection.\n\n' +
+      '1. Join the group: open ' + gl + ', sign up or log in there, and click Join.\n' +
+      '2. Your token: open https://hypothes.is/account/developer (logged in as the account that joined), generate your API token, and paste it into the bench: Help ▸ Joining the annotation group (' + SW.BASE_URI + '?help=join), then Save and test.\n\n' +
       'The token stays in your browser; keep it to yourself. Without it, annotations are kept as drafts here and can be published later.';
   };
+  // ---------- getting set up: a checklist, and the guide ----------
+  // Each service in two steps, joining first and the token second: Hypothesis (the group, then the API
+  // token) and, where the bench has paratexts, GitHub (the organisation's invitation, then a token).
+  // A step's "next" is the reader's own word; the tests are what verify it.
+  function ext(url, text) { return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + ' ↗</a>'; }
+  function groupURL(g) { return 'https://hypothes.is/groups/' + encodeURIComponent(g); }
+  // what a Hypothesis check means, and what to do: [class, html]
+  N.hypSay = function (r) {
+    var esc = SW.esc, g = N.groupId(SW.groupSet());
+    if (r.token === 'none') return ['warn', 'No token yet: annotations are kept as drafts in this browser.'];
+    if (r.token === 'refused') return ['err', 'The token was refused. ' + ext('https://hypothes.is/account/developer', 'Generate it again') + ' (logged in to Hypothesis), paste the new one, and test again.'];
+    if (r.token === 'error') return ['err', esc(r.message || 'Hypothesis could not be reached.')];
+    if (r.member === false) return ['warn', 'Connected as ' + esc(r.user) + ', but you are not in the group yet: ' + ext(groupURL(g), 'open the group and click Join') + ', then test again.'];
+    if (r.member === null) return ['warn', 'Connected as ' + esc(r.user) + '. No group is set: ask the project leads for the invitation link.'];
+    return ['good', '✓ Connected as ' + esc(r.user) + ' to “' + esc(r.group) + '”. You can annotate.'];
+  };
+  // what a GitHub check means, and what to do: [class, html]
+  N.ghSay = function (r) {
+    var esc = SW.esc, P = SW.paratexts;
+    if (!P) return ['', ''];
+    if (r.state === 'none') return ['warn', 'No GitHub token yet: Paratexts will show how to get one.'];
+    if (r.state === 'refused') return ['err', 'GitHub refused the token. ' + ext(P.TOKEN_URL, 'Make it again') + ', paste the new one, and test again.'];
+    if (r.state === 'error') return ['err', esc(r.message || 'GitHub could not be reached.')];
+    if (r.state === 'unreachable') return ['err', 'The token works (you are ' + esc(r.user) + ') but cannot reach ' + esc(P.ORG + '/' + P.RNAME) + '. Check, in this order:<ol class="ah-steps">' +
+      r.causes.map(function (c) { return '<li>' + esc(c[0]) + (c[1] ? ' · ' + ext(c[1], c[1].indexOf('invitation') >= 0 ? 'the invitation' : 'the token form') : '') + '</li>'; }).join('') + '</ol>'];
+    return ['good', '✓ Connected as ' + esc(r.user) + ': the paratexts are open to you (' + r.count + ' in the catalogue).'];
+  };
+  // the checklist, in el: two lines for each service, each with its state and the next thing to do
+  N.setupChecklist = function (el, go) {
+    if (!el) return;
+    var esc = SW.esc, P = SW.paratexts, g = N.groupId(SW.groupSet());
+    el.innerHTML = '<p class="hint">Checking…</p>';
+    Promise.all([N.check(), P ? P.diagnose() : Promise.resolve(null)]).then(function (rs) {
+      var h = rs[0], gh = rs[1], declared = SW.store.get('join.hyp', false), accepted = SW.store.get('join.gh', false);
+      function row(mark, what, state, act) { return '<li class="js-ck ' + (mark === '✓' ? 'good' : mark === '✗' ? 'err' : 'todo') + '"><span class="js-mark" aria-hidden="true">' + mark + '</span><b>' + what + '</b> <span class="hint">' + state + '</span>' + (act ? ' ' + act : '') + '</li>'; }
+      function btn(step, label) { return go ? '<button type="button" class="btn ghost" data-go="' + step + '">' + label + '</button>' : ''; }
+      var out = '<ul class="js-checks">';
+      out += row(h.member === true ? '✓' : h.member === false ? '✗' : '○', 'Hypothesis: in the group',
+        h.member === true ? 'a member of “' + esc(h.group) + '”' : h.member === false ? 'not a member yet' : !g ? 'no group set' : declared ? 'you said you have joined; the test checks once your token is in' : 'not yet',
+        h.member === true ? '' : g ? ext(groupURL(g), 'Open the group') : btn('hyp1', 'Step 1'));
+      out += row(h.token === 'ok' ? '✓' : h.token === 'none' ? '○' : '✗', 'Hypothesis: your token',
+        h.token === 'ok' ? 'works, as ' + esc(h.user) : h.token === 'refused' ? 'refused' : h.token === 'error' ? 'not checked: ' + esc(h.message || '') : 'none yet',
+        h.token === 'ok' ? '' : btn('hyp2', 'Step 2'));
+      if (gh) {
+        out += row(gh.state === 'ok' ? '✓' : gh.state === 'unreachable' ? '✗' : '○', 'GitHub: the invitation to ' + esc(P.ORG),
+          gh.state === 'ok' ? 'accepted' : gh.state === 'unreachable' ? 'perhaps not accepted (or the token is set up otherwise)' : accepted ? 'you said you have accepted; the test checks once your token is in' : 'not yet',
+          gh.state === 'ok' ? '' : ext(P.INVITE_URL, 'Open the invitation'));
+        out += row(gh.state === 'ok' ? '✓' : gh.state === 'none' ? '○' : '✗', 'GitHub: your token',
+          gh.state === 'ok' ? 'works, as ' + esc(gh.user) : gh.state === 'refused' ? 'refused' : gh.state === 'unreachable' ? 'works, but cannot reach ' + esc(P.RNAME) : gh.state === 'error' ? esc(gh.message || '') : 'none yet',
+          gh.state === 'ok' ? '' : btn('gh2', 'Step 2'));
+      }
+      el.innerHTML = out + '</ul>';
+    });
+  };
   N.joinHelp = function () {
-    function ext(url, text) { return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + ' ↗</a>'; }
-    var esc = SW.esc, grp = N.groupId(SW.store.get('group', '')), P = SW.paratexts;
+    var esc = SW.esc, grp = N.groupId(SW.groupSet()), benchGroup = N.groupId(B.group || ''), P = SW.paratexts;
+    var hypOpen = SW.store.get('join.hyp', false) || !!SW.store.get('token', ''), ghOpen = SW.store.get('join.gh', false) || !!SW.store.get('gh.token', '');
     var d = SW.el('dialog', { class: 'tray-big annohelp joinhelp' });
     function ok(t) { return '<p class="js-ok" data-ok="' + t + '"></p>'; }
-    d.innerHTML = '<div class="tray-bighead"><b>Joining the annotation group</b><span class="refhelp-acts"><button class="btn ghost" data-share title="' + (grp ? 'A link that opens this guide with your group filled in, to send privately to someone joining: anyone with it can join the group' : 'A link that opens this guide, to send to someone joining') + '">' + SW.SHARE_ICON + ' Share ' + (grp ? 'an invitation' : 'this guide') + '</button><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div><div class="ah">' +
+    function step(id, n, title, body, hidden) { return '<section class="js-step" data-step="' + id + '"' + (hidden ? ' data-closed' : '') + '><div class="js-num" aria-hidden="true">' + n + '</div><div class="js-body"><h3><span class="vh">Step ' + n + ': </span>' + title + '</h3>' + (hidden ? '<p class="hint js-wait">After step ' + (n - 1) + '.</p><div class="js-inner" hidden>' : '<div class="js-inner">') + body + '</div></div></section>'; }
+    d.innerHTML = '<div class="tray-bighead"><b>Getting set up</b><span class="refhelp-acts"><button class="btn ghost" data-share title="' + (grp ? 'A link that opens this guide with your group filled in, to send privately to someone joining: anyone with it can join the group' : 'A link that opens this guide, to send to someone joining') + '">' + SW.SHARE_ICON + ' Share ' + (grp ? 'an invitation' : 'this guide') + '</button><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div><div class="ah">' +
       (B.joinCard || '') +
-      '<p>Annotations on the bench are shared through a private group on <b>Hypothesis</b>, the open annotation service. To read and write them you need a Hypothesis account, membership of the group, and a personal key (an API token) that lets the bench write as you. About five minutes.</p>' +
+      '<div class="js-checkwrap"><h3>Where you are</h3><div class="js-check"></div><p class="row-l"><button type="button" class="btn ghost" data-a="recheck">Check again</button></p></div>' +
 
-      '<div class="js-steps"><section class="js-step"><div class="js-num" aria-hidden="true">1</div><div class="js-body"><h3><span class="vh">Step 1: </span>Create a Hypothesis account</h3>' +
-      '<ol class="ah-steps"><li>Open ' + ext('https://hypothes.is/signup', 'hypothes.is/signup') + '.</li>' +
-      '<li>Choose a username, and give your email address and a password.</li>' +
-      '<li>Confirm the address from the email Hypothesis sends you.</li></ol>' +
-      '<p class="hint">Already have an account? ' + ext('https://hypothes.is/login', 'Log in') + ' and go on to step 2.</p>' +
+      '<h2 class="js-svc">Hypothesis: the annotations</h2>' +
+      '<p>Annotations on the bench are shared through a private group on <b>Hypothesis</b>, the open annotation service. Two steps: join the group, then give the bench your key (an API token). A few minutes.</p>' +
+      '<div class="js-steps">' +
+      step('hyp1', 1, 'Join the group', grp
+        ? '<p>Open the group on Hypothesis. If you have no account, sign up there (and confirm the email Hypothesis sends); if you have one, log in. Then click <b>Join</b>.</p><p><a class="btn" href="' + groupURL(grp) + '" target="_blank" rel="noopener noreferrer">Open the group on Hypothesis ↗</a> <button type="button" class="btn ghost" data-a="hyp-next">I’ve joined: next</button></p>'
+        : '<p>The group is private: you need the invitation link from the project leads. Paste it here:</p><div class="js-form"><label><span>The group’s link</span><input data-j="group" placeholder="https://hypothes.is/groups/…" autocomplete="off"></label></div><p><button type="button" class="btn" data-a="hyp-group">Use it</button></p>' + ok('grp')) +
+      step('hyp2', 2, 'Your token', '<ol class="ah-steps"><li>Open ' + ext('https://hypothes.is/account/developer', 'hypothes.is/account/developer') + ', logged in as the account that joined.</li>' +
+        '<li>Click <b>Generate your API token</b>, and copy it (a long string beginning <span class="mono">6879-</span>).</li><li>Paste it below, with your initials, and <b>Save and test</b>.</li></ol>' +
+        '<div class="js-form">' +
+        '<label><span>Initials</span><input data-j="initials" maxlength="4" value="' + esc(SW.store.get('initials', '')) + '" placeholder="e.g. AB" autocomplete="off"></label>' +
+        '<label><span>Name</span><input data-j="name" value="' + esc(SW.store.get('name', '')) + '" autocomplete="name"></label>' +
+        '<label><span>API token</span><span class="js-pw"><input data-j="token" type="password" value="' + esc(SW.store.get('token', '')) + '" placeholder="6879-…" autocomplete="new-password" data-lpignore="true" data-1p-ignore><button class="btn ghost" data-show="token">Show</button></span></label>' +
+        '</div><p><button class="btn" data-a="hyp">Save and test</button></p>' + ok('hyp') +
+        '<p class="hint">The token lets the bench write in your name: keep it to yourself. Your annotations are signed with your initials. Both are kept in this browser only' + (benchGroup ? '; to use another group than the bench’s, see ⚙ Settings ▸ Annotations' : '') + '.</p>', !hypOpen || !grp) +
+      '</div>' +
 
-      '</div></section><section class="js-step"><div class="js-num" aria-hidden="true">2</div><div class="js-body"><h3><span class="vh">Step 2: </span>Join the group</h3>' +
-      (grp ? '<p>Your invitation has set the group here. Open it while logged in to Hypothesis, and click <b>Join</b>:</p><p><a class="btn" href="https://hypothes.is/groups/' + esc(grp) + '" target="_blank" rel="noopener noreferrer">Open the group on Hypothesis ↗</a></p>'
-        : '<ol class="ah-steps"><li>Ask the project leads for an invitation link if you do not have one. Opening it fills in the group here.</li>' +
-          '<li>Or paste the group’s link from your invitation into step 4, open it while logged in to Hypothesis, and click <b>Join</b>.</li></ol>') +
+      (P ? '<h2 class="js-svc">GitHub: the paratexts</h2>' +
+        '<p>The scans, clippings and documents are in a private repository, <b>' + esc(P.ORG + '/' + P.RNAME) + '</b>, on GitHub. You need a GitHub account (' + ext('https://github.com/signup', 'sign up') + ' if you have none) and an invitation to the <b>' + esc(P.ORG) + '</b> organisation from the project leads. Two steps: accept the invitation, then give the bench a token.</p>' +
+        '<div class="js-steps">' +
+        step('gh1', 1, 'Accept the invitation', '<p>Open the invitation, log in (or sign up) if GitHub asks, and click <b>Join ' + esc(P.ORG) + '</b>.</p><p><a class="btn" href="' + esc(P.INVITE_URL) + '" target="_blank" rel="noopener noreferrer">Open the invitation ↗</a> <button type="button" class="btn ghost" data-a="gh-next">I’ve accepted: next</button></p>') +
+        step('gh2', 2, 'Your token', '<p><a class="btn ghost" href="' + esc(P.TOKEN_URL) + '" target="_blank" rel="noopener noreferrer">Open the token form ↗</a> Its name, expiry and permission are filled in. Check three things before <b>Generate token</b>:</p>' +
+          '<ol class="ah-steps"><li><b>Resource owner</b>: <span class="mono">' + esc(P.ORG) + '</span>, not your own account (GitHub may show yours; choose ' + esc(P.ORG) + ').</li>' +
+          '<li><b>Repository access</b>: <b>Only select repositories</b>, then <span class="mono">' + esc(P.RNAME) + '</span>.</li>' +
+          '<li><b>Permissions ▸ Repository permissions ▸ Contents</b>: <b>Read and write</b>.</li></ol>' +
+          (BP.approval ? '<p class="hint">The organisation approves new tokens: yours waits until a project lead approves it, and GitHub emails you when it is.</p>' : '') +
+          '<p>Copy the token (it begins <span class="mono">github_pat_</span>) and paste it here:</p>' +
+          '<div class="js-form"><label><span>GitHub token</span><span class="js-pw"><input data-j="gh" type="password" value="' + esc(SW.store.get('gh.token', '')) + '" placeholder="github_pat_…" autocomplete="new-password" data-lpignore="true" data-1p-ignore><button class="btn ghost" data-show="gh">Show</button></span></label></div>' +
+          '<p><button class="btn" data-a="gh">Save and test</button></p>' + ok('gh') + (P.LOST ? '<p class="hint">' + esc(P.LOST) + '</p>' : ''), !ghOpen) +
+        '</div>' : '') +
 
-      '</div></section><section class="js-step"><div class="js-num" aria-hidden="true">3</div><div class="js-body"><h3><span class="vh">Step 3: </span>Get your API token</h3>' +
-      '<ol class="ah-steps"><li>Open ' + ext('https://hypothes.is/account/developer', 'hypothes.is/account/developer') + ' (logged in).</li>' +
-      '<li>Click <b>Generate your API token</b>, then copy the token it shows (a long string beginning <span class="mono">6879-</span>).</li></ol>' +
-      '<p class="hint">The token lets the bench write annotations in your name: keep it to yourself, like a password. If it is ever seen by someone else, generate a new one on the same page; the old one stops working.</p>' +
-
-      '</div></section><section class="js-step"><div class="js-num" aria-hidden="true">4</div><div class="js-body"><h3><span class="vh">Step 4: </span>Your details and the token, here</h3>' +
-      '<div class="js-form">' +
-      '<label><span>Initials</span><input data-j="initials" maxlength="4" value="' + esc(SW.store.get('initials', '')) + '" placeholder="e.g. AB" autocomplete="off"></label>' +
-      '<label><span>Name</span><input data-j="name" value="' + esc(SW.store.get('name', '')) + '" autocomplete="name"></label>' +
-      '<label><span>Group</span><input data-j="group" value="' + esc(grp) + '" placeholder="the group’s link, or its ID" autocomplete="off"></label>' +
-      '<label><span>API token</span><span class="js-pw"><input data-j="token" type="password" value="' + esc(SW.store.get('token', '')) + '" placeholder="6879-…" autocomplete="new-password" data-lpignore="true" data-1p-ignore><button class="btn ghost" data-show="token">Show</button></span></label>' +
-      '</div><p><button class="btn" data-a="hyp">Save and test</button></p>' + ok('hyp') +
-      '<p class="hint">Every annotation you write is signed with your initials. These are kept in this browser only (⚙ Settings has them too); on another computer, enter them again.</p>' +
-
-      (P ? '</div></section><section class="js-step"><div class="js-num" aria-hidden="true">5</div><div class="js-body"><h3><span class="vh">Step 5: </span>The paratexts (if you were invited to them)</h3>' +
-        '<p>The scans, clippings and documents are in a private GitHub repository. If GitHub has emailed you an invitation to the <b>' + esc(BP.org || '') + '</b> organisation, accept it, then:</p>' +
-        '<ol class="ah-steps"><li><a class="btn ghost" href="' + esc(P.TOKEN_URL) + '" target="_blank" rel="noopener noreferrer">Open the token form ↗</a> (its name, owner, expiry and permission are filled in).</li>' +
-        '<li>Under <b>Repository access</b>, choose <b>Only select repositories</b>, then <b>' + esc(BP.repo || '') + '</b>; then <b>Generate token</b> and copy it.</li></ol>' +
-        '<div class="js-form"><label><span>GitHub token</span><span class="js-pw"><input data-j="gh" type="password" value="' + esc(SW.store.get('gh.token', '')) + '" placeholder="github_pat_…" autocomplete="new-password" data-lpignore="true" data-1p-ignore><button class="btn ghost" data-show="gh">Show</button></span></label></div>' +
-        '<p><button class="btn" data-a="gh">Save and test</button></p>' + (P.LOST ? '<p class="hint">' + esc(P.LOST) + '</p>' : '') + ok('gh') : '') +
-
-      '</div></section><section class="js-step js-then"><div class="js-num" aria-hidden="true">✓</div><div class="js-body"><h3>Then</h3><ul class="ah-steps">' +
+      '<div class="js-steps"><section class="js-step js-then"><div class="js-num" aria-hidden="true">✓</div><div class="js-body"><h3>Then</h3><ul class="ah-steps">' +
       '<li>Annotate: select lines in Read and click <b>✎ Annotate</b>, or hover a line number and click <b>+A</b>. Help ▸ Advanced annotation covers formatting, links between annotations, searching and the rest.</li>' +
-      '<li>Without a group and token, annotations are kept as drafts in this browser; once connected, share them with <b>⇪ Publish drafts to the group</b> on Versions ▸ This version.</li>' +
+      '<li>Without the group and a token, annotations are kept as drafts in this browser; once connected, share them with <b>⇪ Publish drafts to the group</b> on Versions ▸ This version.</li>' +
       '<li>Annotations in the group are seen only by its members, on the bench and on Hypothesis’s own site (' + ext('https://hypothes.is/login', 'hypothes.is') + ').</li></ul>' +
       '</div></section></div></div>';
     document.body.appendChild(d);
     d.showModal();
     function val(k) { var el = d.querySelector('[data-j="' + k + '"]'); return el ? el.value.trim() : ''; }
-    function say(k, cls, t) { var el = d.querySelector('[data-ok="' + k + '"]'); el.className = 'js-ok ' + cls; el.textContent = t; }
+    function say(k, pair) { var el = d.querySelector('[data-ok="' + k + '"]'); if (!el) return; el.className = 'js-ok ' + pair[0]; el.innerHTML = pair[1]; }
+    function open(id) { var sct = d.querySelector('[data-step="' + id + '"]'); if (!sct) return; sct.removeAttribute('data-closed'); var w = sct.querySelector('.js-wait'); if (w) w.remove(); sct.querySelector('.js-inner').hidden = false; sct.scrollIntoView({ block: 'nearest' }); }
+    function recheck() { N.setupChecklist(d.querySelector('.js-check'), true); }
+    recheck();
     d.addEventListener('click', function (e) {
       var sh = e.target.closest('[data-show]');
       if (sh) { var inp = d.querySelector('[data-j="' + sh.dataset.show + '"]'), hid = inp.type === 'password'; inp.type = hid ? 'text' : 'password'; sh.textContent = hid ? 'Hide' : 'Show'; return; }
-      var a = e.target.closest('[data-a]');
-      if (a && a.dataset.a === 'hyp') {
+      var gt = e.target.closest('[data-go]'); if (gt) { open(gt.dataset.go); return; }
+      var a = e.target.closest('[data-a]'), k = a && a.dataset.a;
+      if (k === 'recheck') { recheck(); return; }
+      if (k === 'hyp-next') { SW.store.set('join.hyp', true); open('hyp2'); recheck(); return; }
+      if (k === 'gh-next') { SW.store.set('join.gh', true); open('gh2'); recheck(); return; }
+      if (k === 'hyp-group') {
+        var id = N.groupId(val('group'));
+        if (!/^[A-Za-z0-9]{4,}$/.test(id)) { say('grp', ['err', 'That is not a group’s link: it looks like https://hypothes.is/groups/AbCd1234/…']); return; }
+        SW.setGroup(id); d.close(); N.joinHelp(); return;
+      }
+      if (k === 'hyp') {
         var ini = val('initials').toUpperCase();
-        if (!ini) { say('hyp', 'err', 'Give your initials first.'); return; }
+        if (!ini) { say('hyp', ['err', 'Give your initials first.']); return; }
         SW.store.set('initials', ini); SW.store.set('name', val('name'));
-        SW.setGroup(N.groupId(val('group'))); if (val('token') || !SW.store.get('token', '') || confirm('Remove the Hypothesis API token from this browser?')) SW.store.set('token', val('token'));
+        if (val('token') || !SW.store.get('token', '') || confirm('Remove the Hypothesis API token from this browser?')) SW.store.set('token', val('token'));
         N.forget(); if (SW.state.v) N.invalidate(SW.state.v);
-        if (!val('group') || !val('token')) { say('hyp', 'warn', 'Saved. Without ' + (!val('group') ? 'the group' : 'a token') + ', annotations are kept as drafts here.'); return; }
-        say('hyp', '', 'Checking…');
-        N.test().then(function (r) {
-          if (r.group) say('hyp', 'good', '✓ Connected as ' + r.user.replace(/^acct:|@hypothes\.is$/g, '') + ', a member of “' + r.group + '”. You can annotate.');
-          else say('hyp', 'warn', 'Connected as ' + r.user.replace(/^acct:|@hypothes\.is$/g, '') + ', but not yet a member of the group: join it (step 2) with this account, then test again.');
-        }, function (err) { say('hyp', 'err', err.message); });
+        say('hyp', ['', 'Checking…']);
+        N.check().then(function (r) { say('hyp', N.hypSay(r)); if (r.member === false) open('hyp1'); recheck(); });
         return;
       }
-      if (a && a.dataset.a === 'gh' && P) {
+      if (k === 'gh' && P) {
         if (!val('gh') && SW.store.get('gh.token', '') && !confirm('Remove the GitHub token from this browser?')) return;
         SW.store.set('gh.token', val('gh')); P.reset();
-        if (!val('gh')) { say('gh', 'warn', 'No token: Paratexts will show how to get one.'); return; }
-        say('gh', '', 'Checking…');
-        P.test().then(function (n) { say('gh', 'good', '✓ The paratexts are open to you (' + n + ' in the catalogue).'); }, function (err) { say('gh', 'err', err.message); });
+        say('gh', ['', 'Checking…']);
+        P.diagnose().then(function (r) { say('gh', N.ghSay(r)); if (r.state === 'unreachable') open('gh1'); recheck(); });
         return;
       }
       if (e.target.closest('[data-share]')) {

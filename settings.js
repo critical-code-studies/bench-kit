@@ -31,13 +31,14 @@
       '<label class="check-row"><span><input type="checkbox" id="set-fresh"> Tell me when a newer release is live</span><span class="hint">A bar at the foot of the page, with a button to reload, when the bench has been updated since this page was opened.</span></label>' + rows('you') + '</section>' +
 
       '<section class="set-pane" data-sp="anno">' +
+      '<div id="set-setup" class="js-check set-setup"></div>' +
       '<p class="hint">' + (ST.groupHint || 'Annotations are shared through a private Hypothesis group. Paste the group link from your invitation (it fills in the group), and a personal API token (hypothes.is/account/developer). Without them, annotations are kept as drafts in this browser and can be exported or published later.') + '</p>' +
       '<label>Group link or ID <input id="set-group" placeholder="' + esc(ST.groupPlaceholder || 'The group link from your invitation') + '" autocomplete="off"></label>' +
       '<label for="set-token">API token</label>' +
       '<div class="token-row"><input id="set-token" type="password" placeholder="6879-…" autocomplete="new-password" data-lpignore="true" data-1p-ignore spellcheck="false"><button id="set-token-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l"><button id="set-test" type="button" class="btn ghost">Test connection</button> <span class="hint" id="set-check"></span></p>' +
       '<p class="row-l"><a class="btn ghost" href="https://hypothes.is/account/developer" target="_blank" rel="noopener">Open the token page ↗</a> <button type="button" class="btn ghost" id="set-hypsteps">Copy the steps to send</button></p>' +
-      '<p class="hint"><button type="button" class="btn ghost" id="set-join">New to this? How to join the group</button> An account, the group and your token, step by step.</p>' + rows('anno') + '</section>' +
+      '<p class="hint"><button type="button" class="btn ghost" id="set-join">New to this? Getting set up</button> The group, then your token, step by step; and the paratexts on GitHub.</p>' + rows('anno') + '</section>' +
 
       '<section class="set-pane" data-sp="px">' +
       '<p class="hint">The paratexts are kept in a private GitHub repository shared with the crew (' + esc((BP.org || '') + '/' + (BP.repo || '')) + '). Paste a fine-grained token limited to that repository, with Contents read and write (Paratexts, in the menu, says how). It is kept in this browser only.</p>' +
@@ -117,6 +118,7 @@
     grp.onchange = function () { grp.value = SW.notes.groupId(grp.value); };
     show.onclick = function () { var hidden = tok.type === 'password'; tok.type = hidden ? 'text' : 'password'; show.textContent = hidden ? 'Hide' : 'Show'; show.setAttribute('aria-pressed', String(hidden)); };
     SW.$('#set-join').onclick = function () { SW.notes.joinHelp(); };
+    SW.notes.setupChecklist(SW.$('#set-setup'));   // where the reader stands: the group, the token, and GitHub's two
     // the steps to send someone, copied rather than written out again; built by the modules that
     // own each service, so the group, the organisation and the repository stay right
     var hyps = SW.$('#set-hypsteps');
@@ -127,9 +129,7 @@
       SW.setGroup(SW.notes.groupId(grp.value));
       SW.store.set('token', tok.value.trim());
       SW.$('#set-check').textContent = 'Checking…';
-      SW.notes.test().then(function (r) {
-        SW.$('#set-check').textContent = 'Connected as ' + r.user + (r.group ? '; group “' + r.group + '” found.' : '; but that group was not found for this account.');
-      }, function (e) { SW.$('#set-check').textContent = e.message; });
+      SW.notes.check().then(function (r) { var say = SW.notes.hypSay(r); SW.$('#set-check').innerHTML = say[1]; SW.notes.setupChecklist(SW.$('#set-setup')); });
     };
     // Colour theme: previewed live, put back on Cancel.
     var themeSel = SW.$('#set-theme'), wasTheme = SW.theme();

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Getting set up** (asked for by David, through the Spacewar bench: newcomers found joining “very very confusing”). Help ▸ Joining the annotation group, now titled Getting set up, takes each service in two steps, joining first and the token second, the second opening once the reader says the first is done:
+  - Hypothesis: 1 Join the group (one button to the bench's group, where sign-up and log-in happen too; where the bench sets no group, the invitation link pasted here), 2 Your token (the developer page, initials and token, Save and test). The guide no longer asks for the group where the bench has one.
+  - GitHub, where the bench has paratexts: a GitHub account and the organisation's invitation are said to be needed; 1 Accept the invitation (`github.com/orgs/<org>/invitation`), 2 Your token (the prefilled form, and the three settings to check: resource owner the organisation, only the paratexts repository, Contents read and write; a note on approval where the bench sets `paratexts.approval`).
+  - Save and test says which step failed and what to do: a Hypothesis token refused (generate it again), a token that works but not in the group (open the group and click Join), connected as whom to which group; a GitHub token refused, or working but unable to reach the repository (the causes in order: the invitation, the resource owner, the repository chosen, approval where it applies), connected with the catalogue's size.
+  - **Where you are**: a checklist at the top of the guide and in ⚙ Settings ▸ Annotations, two lines for each service, each with ✓, ✗ or ○ and the next thing to do. `SW.notes.check`, `setupChecklist`, `hypSay`, `ghSay`; `SW.paratexts.diagnose`.
+  - GitHub's own messages: a 404 names the causes in order, a 403 says the token can read but not write.
+  - The steps to send (Settings, Copy the steps) follow the same order. `tests/kit.test.js`: 5 more checks.
 - **The bench's Hypothesis group when none is set** (reported by the Spacewar bench, for David): a group stored empty (Settings saved with the box empty) was kept for good, in place of the bench's `group`. The group is now the one set in this browser, else the bench's (`SW.groupSet()`); an empty box in Settings clears the browser's choice rather than storing an empty one (`SW.setGroup`, `SW.store.remove`). A group chosen in the browser still wins. `tests/kit.test.js`: 3 more checks.
 
 ## 0.96.1 (2026-11-02)

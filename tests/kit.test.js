@@ -113,4 +113,13 @@
     SW.BENCH.group = wasB;
     if (was == null) SW.store.remove('group'); else SW.store.set('group', was);
   })();
+
+  T.group('Getting set up');
+  if (SW.notes && SW.notes.hypSay) {
+    T.eq('no token: drafts, said so', SW.notes.hypSay({ token: 'none' })[0], 'warn');
+    T.eq('a token refused: what to do, with the link', [SW.notes.hypSay({ token: 'refused' })[0], /account\/developer/.test(SW.notes.hypSay({ token: 'refused' })[1])], ['err', true]);
+    T.eq('a token that works, but not in the group: back to joining', [SW.notes.hypSay({ token: 'ok', member: false, user: 'ab' })[0], /hypothes\.is\/groups\//.test(SW.notes.hypSay({ token: 'ok', member: false, user: 'ab' })[1])], ['warn', true]);
+    T.eq('all of it: connected, in the group', SW.notes.hypSay({ token: 'ok', member: true, user: 'ab', group: 'The crew' })[1].indexOf('Connected as ab to “The crew”') >= 0, true);
+    if (SW.paratexts && SW.paratexts.diagnose) T.eq('GitHub, the token unable to reach the repository: the invitation first', /invitation/.test(SW.notes.ghSay({ state: 'unreachable', user: 'ab', causes: [['The invitation is not accepted yet', SW.paratexts.INVITE_URL]] })[1]), true);
+  }
 })();

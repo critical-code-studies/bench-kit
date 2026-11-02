@@ -24,7 +24,7 @@
   // what to do when the token has gone: shown in ⚙ Settings, the join steps and Paratexts' own steps
   var LOST = 'If the token is lost (in another browser or on another computer, or when Safari clears a site’s stored data after seven days without a visit) or has expired, make a new one: open the token form again, choose Only select repositories and ' + RNAME + ', generate it, and paste it here. The old one can be deleted on GitHub under Settings ▸ Developer settings ▸ Fine-grained tokens.';
   P.LOST = LOST;
-  var STEPS = 'Paratexts in the ' + BNAME + ' research bench: setting up\n\n1. Accept the invitation to the ' + ORG + ' organisation on GitHub (sent by email).\n2. Open ' + TOKEN_URL + '\n   The name, owner, expiry and permission are filled in.\n3. Under Repository access choose Only select repositories, then ' + RNAME + '.\n4. Generate token, copy it, and paste it into the bench: ⚙ Settings, Paratexts (' + SW.BASE_URI + '?tab=paratexts).\n\nThe token stays in your browser; keep it to yourself.\n\n' + LOST.replace('paste it here', 'paste it into the bench');
+  var STEPS = 'Paratexts in the ' + BNAME + ' research bench: setting up\n\nYou need a GitHub account (https://github.com/signup) and an invitation to the ' + ORG + ' organisation from the project leads.\n\n1. Accept the invitation: open https://github.com/orgs/' + ORG + '/invitation, log in (or sign up), and click Join ' + ORG + '.\n2. Your token: open ' + TOKEN_URL + '\n   Check three things before Generate token:\n   - Resource owner: ' + ORG + ' (not your own account)\n   - Repository access: Only select repositories, then ' + RNAME + '\n   - Permissions, Repository permissions, Contents: Read and write\n' + (BP.approval ? '   The organisation approves new tokens: yours waits for a project lead, and GitHub emails you when it is approved.\n' : '') + '   Copy the token and paste it into the bench: Help ▸ Joining the annotation group (' + SW.BASE_URI + '?help=join), then Save and test.\n\nThe token stays in your browser; keep it to yourself.\n\n' + LOST.replace('paste it here', 'paste it into the bench');
 
 
   // ---------- GitHub ----------
@@ -33,9 +33,9 @@
     if (body) h['Content-Type'] = 'application/json';
     return fetch(API + path, { method: method, headers: h, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }).then(function (r) {
       if (r.ok) return accept === 'application/vnd.github.raw' ? r.blob() : r.status === 204 ? null : r.json();
-      var why = r.status === 401 ? 'The GitHub token was refused: check it in ⚙ Settings.' :
-        r.status === 403 ? 'GitHub refused: the token may lack write access to ' + REPO + ', or the rate limit is reached.' :
-        r.status === 404 ? 'Not found: the token may not reach ' + REPO + ' (ask to be added to the crew).' :
+      var why = r.status === 401 ? 'The GitHub token was refused: make a new one (Help ▸ Joining the annotation group, the GitHub steps).' :
+        r.status === 403 ? 'GitHub refused: the token can read but not write. In the token’s settings on GitHub, Repository permissions ▸ Contents must be Read and write (or the rate limit is reached).' :
+        r.status === 404 ? 'The token cannot reach ' + REPO + '. Check, in order: the invitation to ' + ORG + ' accepted; the token’s resource owner is ' + ORG + '; ' + RNAME + ' chosen under Only select repositories' + (BP.approval ? '; the token approved by a project lead' : '') + '. Help ▸ Joining the annotation group has each step.' :
         r.status === 409 || r.status === 422 ? 'conflict' : 'GitHub: ' + r.status;
       var e = new Error(why); e.status = r.status; throw e;
     });
@@ -2062,6 +2062,29 @@
     P.load().then(function () { SW.$$('a.pxlink[data-pcode]').forEach(function (a) { var t = P.titleOf(a.dataset.pcode); if (t) a.textContent = 'Paratext: ' + t; }); }, function () {});
   };
   // The token in Settings, tried: the number in the catalogue, or why not
+  // Where a reader stands with GitHub: { state: 'none' | 'refused' | 'unreachable' | 'ok' | 'error',
+  // user, count (the catalogue's items), causes ([[what, link]] in the order to check them) }
+  P.INVITE_URL = 'https://github.com/orgs/' + ORG + '/invitation';
+  P.diagnose = function () {
+    if (!token()) return Promise.resolve({ state: 'none' });
+    var h = { Authorization: 'Bearer ' + token(), Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+    return fetch('https://api.github.com/user', { headers: h, cache: 'no-store' }).then(function (r) {
+      if (r.status === 401) return { state: 'refused' };
+      if (!r.ok) return { state: 'error', message: 'GitHub: ' + r.status };
+      return r.json().then(function (u) {
+        return fetch(API, { headers: h, cache: 'no-store' }).then(function (q) {
+          if (q.status === 404 || q.status === 403) return { state: 'unreachable', user: u.login, causes: [
+            ['The invitation to the ' + ORG + ' organisation is not accepted yet', P.INVITE_URL],
+            ['The token’s resource owner is your own account, not ' + ORG + ' (make it again with the owner set to ' + ORG + ')', TOKEN_URL],
+            [RNAME + ' is not chosen under Repository access ▸ Only select repositories', TOKEN_URL]
+          ].concat(BP.approval ? [['The token waits for a project lead’s approval (GitHub emails you when it is approved)', null]] : []) };
+          if (!q.ok) return { state: 'error', message: 'GitHub: ' + q.status };
+          return P.test().then(function (n) { return { state: 'ok', user: u.login, count: n }; }, function (e) { return { state: 'error', user: u.login, message: e.message }; });
+        });
+      });
+    }, function (e) { return { state: 'error', message: e.message }; });
+  };
+  P.TOKEN_URL = TOKEN_URL; P.ORG = ORG; P.RNAME = RNAME;
   P.test = function () { cat = null; return P.load(true).then(function (c) { return c.items.filter(function (it) { return !it.withdrawn; }).length; }); };
   P.reset = function () { done = false; cat = null; wanted = false; if (!P.configured()) P.forgetCache(); if (SW.state.tab === 'paratexts') render(); };
 })(typeof window !== 'undefined' ? window : globalThis);
