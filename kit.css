@@ -159,3 +159,11 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .wc-ctl .wc-grid > :not(label):not(select):not(span):not(button) { grid-column: 1 / -1; }
 .wc-ctl .wc-reset { grid-column: 1 / -1; justify-self: start; }
 .wc-ctl [hidden] { display: none !important; }
+/* the cloud's figure (wordcloud.js frame()): zoom and export above it, the cloud scrolled when zoomed in */
+.wc-frame .wc-zbar { display: flex; align-items: center; justify-content: flex-end; gap: 4px; flex-wrap: wrap; margin: 0 0 4px; }
+.wc-frame .wc-zbar .btn { padding: 2px 8px; font-size: 12px; }
+.wc-frame .wc-zl { min-width: 3.4em; }
+.wc-frame .wc-exp { margin-left: 8px; }
+.wc-frame .wc-zoom { overflow: auto; max-height: 80vh; }
+.wc-frame .wc-zoom svg.wc-cloud { display: block; height: auto; }
+.wc-ctl .wc-reset[hidden] { display: none !important; }

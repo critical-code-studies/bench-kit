@@ -38,9 +38,11 @@
  *   brief(F)          the look and only the details that differ from it, for a link or a saved setting
  *   options(F)        the cloud's options for a format (font, weight, caps, upright, shape, pad, contrast)
  *   colour(items, F, o)  the items coloured by the format; o.colour(item, rank) for a bench's own colouring
- *   control(o)        a Look menu and ⚙ (the details in a pop-over) for one line of a lens's toolbar;
- *                     o.value, o.change(F), o.colours (the bench's own colourings), o.more (an element
- *                     of the bench's own options, in the pop-over)
+ *   control(o)        a Look menu, ⚙ (the details in a pop-over) and Default View, for one line of a
+ *                     lens's toolbar, keeping the view in the browser (see the function)
+ *   save, load        a view kept in the browser under a key: { format, view }
+ *   encode, decode    a view as one string for a Share link ('look:oval,upright:1,src:chapters')
+ *   frame(o)          the cloud's figure, with zoom (− Fit +) and the kit's SVG, PNG and My notes
  *   SHAPES            the shapes a cloud may take, { id: [name, inside(x, y, W, H)] }, in the order a
  *                     lens lists them: rect, square, oval, round (a circle), diamond, hexagon, triangle,
  *                     heart; inside says whether a point of the W × H frame is in the shape. 'circle'
@@ -309,7 +311,7 @@
   C.format = function (F) {
     F = F || {};
     var look = lookOf(F), base = C.LOOKS[look][1], out = { look: look, hue: F.hue || 'var(--amber)' };
-    KEYS.forEach(function (k) { var v = F[k] != null && F[k] !== '' ? F[k] : base[k]; out[k] = NUM[k] ? +v : k === 'bold' || k === 'caps' ? v === true || v === 'true' : v; });
+    KEYS.forEach(function (k) { var v = F[k] != null && F[k] !== '' ? F[k] : base[k]; out[k] = NUM[k] ? +v : k === 'bold' || k === 'caps' ? v === true || v === 'true' || v === '1' || v === 1 : v; });
     return out;
   };
   // a format as short as it can be said: its look, and only the details that differ from the look's
@@ -343,17 +345,63 @@
       return y;
     });
   };
-  // The control: a Look menu and ⚙, a pop-over with the format's details, in one line of a
-  // toolbar. o: value (a format), change(F) on every change, colours (the bench's own colourings,
-  // [[id, label]], put first), more (an element of the bench's own options, put at the pop-over's
-  // foot). Returns the element; el.value() gives the format.
+  // ---------- a view kept, shared and put back ----------
+  // A view is the format and whatever else the bench lets the reader set (which text, how many
+  // words…: the bench's own, as { key: value }). It is kept in the browser under a key the bench
+  // names, written into a Share link as one string, and put back to the bench's default by
+  // Default View.
+  function store() { return root.SW && root.SW.store; }
+  C.save = function (key, F, view) { var S = store(); if (S && key) S.set(key, { f: C.brief(F), v: view || null }); };
+  C.load = function (key) { var S = store(), x = S && key ? S.get(key, null) : null; return x && x.f ? { format: C.format(x.f), view: x.v || null } : null; };
+  // 'look:oval,upright:1,src:chapters,n:80': the format's brief and the view's own; read back with
+  // the format's keys taken as the format (a link from before looks, all details, reads the same)
+  C.encode = function (F, view) {
+    var b = C.brief(F), parts = [], k;
+    for (k in b) parts.push(k + ':' + b[k]);
+    for (k in view || {}) if (view[k] != null) parts.push(k + ':' + (view[k] === true ? 1 : view[k] === false ? 0 : view[k]));
+    return parts.join(',');
+  };
+  C.decode = function (s) {
+    var f = {}, v = {}, own = { look: 1, hue: 1 };
+    KEYS.forEach(function (k) { own[k] = 1; });
+    String(s || '').split(',').forEach(function (kv) {
+      var i = kv.indexOf(':'); if (i < 1) return;
+      var k = kv.slice(0, i), x = kv.slice(i + 1);
+      if (own[k]) f[k] = x; else v[k] = /^-?\d+(\.\d+)?$/.test(x) ? +x : x;
+    });
+    return { format: C.format(f), view: v };
+  };
+
+  // The control: a Look menu, ⚙ (a pop-over with the format's details) and Default View, in one
+  // line of a lens's toolbar. o:
+  //   value       the format to start with (a link's); else the one kept under key; else the default
+  //   key         where the view is kept in the browser (SW.store), on every change
+  //   view        the bench's own part of the view: { defaults, get(), set(v) }; Default View sets
+  //               defaults, and get() is kept with the format
+  //   change(F)   on every change of the format, and on Default View
+  //   colours     the bench's own colourings, [[id, label]], listed first
+  //   more        an element of the bench's own options, at the foot of the pop-over
+  //   frame       the cloud's figure (frame()), set back to Fit by Default View
+  // The element has value() (the format), refresh() (after the bench changes its own part: keeps the
+  // view, and shows Default View only when the view is not the default) and share() (the view as one
+  // string, for a link: decode() reads it).
   C.control = function (o) {
     o = o || {};
-    var F = C.format(o.value), wrap = document.createElement('span');
+    var kept = o.value ? null : C.load(o.key);
+    var F = C.format(o.value || (kept && kept.format)), wrap = document.createElement('span');
     wrap.className = 'wc-ctl';
     function opt(v, label, on) { return '<option value="' + esc(v) + '"' + (on ? ' selected' : '') + '>' + esc(label) + '</option>'; }
     function sel(k, list) { return '<select data-f="' + k + '">' + list.map(function (x) { return opt(x[0], x[1], String(F[k]) === String(x[0])); }).join('') + '</select>'; }
     function list(obj) { return Object.keys(obj).map(function (k) { return [k, obj[k][0]]; }); }
+    function viewNow() { return o.view && o.view.get ? o.view.get() : null; }
+    function same(a, b) { a = a || {}; b = b || {}; for (var k in b) if (String(a[k]) !== String(b[k])) return false; return true; }
+    // whether the view is the bench's default (where the bench's part cannot be read yet, as the control
+    // is built before the bench puts it in the page, it is taken to be)
+    function isDefault() {
+      if (JSON.stringify(C.brief(F)) !== JSON.stringify({ look: C.DEFAULT })) return false;
+      try { return !o.view || same(viewNow(), o.view.defaults); } catch (e) { return true; }
+    }
+    function safeView() { try { return viewNow(); } catch (e) { return null; } }
     function draw() {
       var changed = KEYS.some(function (k) { return String(F[k]) !== String(C.LOOKS[F.look][1][k]); });
       wrap.innerHTML = '<label class="wc-look">' + sel('look', list(C.LOOKS).map(function (x) { return x[0] === F.look && changed ? [x[0], x[1] + ', changed'] : x; })) + '</label>' +
@@ -366,28 +414,71 @@
         '<label>Spacing</label>' + sel('pad', [[2, 'tight'], [4, 'normal'], [8, 'loose']]) +
         '<label>Sizes</label>' + sel('contrast', [['log', 'closer together'], ['sqrt', 'normal'], ['linear', 'further apart']]) +
         '<span></span><span class="wc-checks"><label><input type="checkbox" data-f="bold"' + (F.bold ? ' checked' : '') + '> bold</label> <label><input type="checkbox" data-f="caps"' + (F.caps ? ' checked' : '') + '> capitals</label></span>' +
-        '<span class="wc-own"></span><button type="button" class="btn wc-reset">Back to ' + esc(C.LOOKS[F.look][0]) + '</button></div></details>';
+        '<span class="wc-own"></span></div></details>' +
+        '<button type="button" class="btn ghost wc-reset" title="The cloud as the bench first shows it">Default View</button>';
       var showHue = F.colour === 'one' || F.colour === 'shade';
       wrap.querySelector('[data-for="hue"]').hidden = wrap.querySelector('[data-f="hue"]').hidden = !showHue;
       if (o.more) { var own = wrap.querySelector('.wc-own'); own.parentNode.insertBefore(o.more, own); }
+      wrap.querySelector('.wc-reset').hidden = isDefault();
     }
+    function keep() { var v = safeView(); if (v || !o.view) C.save(o.key, F, v); }
     draw();
     var det = function () { return wrap.querySelector('.wc-more'); };
+    function redraw() { var open = det().open; draw(); det().open = open; }
     wrap.addEventListener('change', function (e) {
       var k = e.target.dataset && e.target.dataset.f; if (!k) return;
       var v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
       if (k === 'look') F = C.format({ look: v, hue: F.hue });
       else { F[k] = NUM[k] ? +v : v; F = C.format(F); }
-      var open = det().open; draw(); det().open = open;
+      keep(); redraw();
       if (o.change) o.change(F);
     });
     wrap.addEventListener('click', function (e) {
       if (!e.target.closest('.wc-reset')) return;
-      F = C.format({ look: F.look, hue: F.hue }); var open = det().open; draw(); det().open = open; if (o.change) o.change(F);
+      F = C.format();
+      if (o.view && o.view.set) o.view.set(o.view.defaults);
+      if (o.frame && o.frame.zoom) o.frame.zoom('fit');
+      keep(); draw();
+      if (o.change) o.change(F);
     });
     document.addEventListener('mousedown', function (e) { var d = det(); if (d && d.open && !wrap.contains(e.target)) d.open = false; });
     wrap.value = function () { return F; };
+    wrap.refresh = function () { keep(); var b = wrap.querySelector('.wc-reset'); if (b) b.hidden = isDefault(); };
+    wrap.share = function () { return C.encode(F, safeView()); };
+    wrap.kept = kept;   // what was kept under key (its view for the bench to put back), or null
     return wrap;
+  };
+
+  // A cloud's figure: the SVG with − and + to zoom (Fit to fill its width), and the kit's SVG, PNG
+  // and My notes buttons where the page has them. o: name (the file name, or a function giving it),
+  // ref (the source, stamped in the corner of an export). The element has show(svg) and zoom(z):
+  // z a scale (1 the cloud's own size) or 'fit'.
+  C.frame = function (o) {
+    o = o || {};
+    var SW = root.SW, el = document.createElement('div'), z = 'fit', svg = '';
+    el.className = 'wc-frame';
+    el.innerHTML = '<div class="wc-zbar"><button type="button" class="btn ghost" data-z="-" title="Smaller">−</button><button type="button" class="btn ghost wc-zl" data-z="fit" title="Fit the width">Fit</button><button type="button" class="btn ghost" data-z="+" title="Larger">+</button><span class="wc-exp"></span></div><div class="wc-zoom"></div>';
+    var box = el.querySelector('.wc-zoom'), zl = el.querySelector('.wc-zl');
+    if (SW && SW.figureButtons) el.querySelector('.wc-exp').appendChild(SW.figureButtons(function () { return svg; }, o.name || 'word-cloud', o.ref));
+    var STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
+    function natural() { var m = /\bwidth="([\d.]+)"/.exec(svg); return m ? +m[1] : 760; }
+    function fitScale() { return box.clientWidth ? box.clientWidth / natural() : 1; }
+    function apply() {
+      var s = box.querySelector('svg'); if (!s) return;
+      if (z === 'fit') { s.style.width = '100%'; s.style.maxWidth = 'none'; zl.textContent = 'Fit'; }
+      else { s.style.width = Math.round(natural() * z) + 'px'; s.style.maxWidth = 'none'; zl.textContent = Math.round(z * 100) + '%'; }
+    }
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-z]'); if (!b) return;
+      var cur = z === 'fit' ? fitScale() : z, d = b.dataset.z;
+      if (d === 'fit') z = 'fit';
+      else if (d === '+') z = STEPS.filter(function (x) { return x > cur + 0.01; })[0] || STEPS[STEPS.length - 1];
+      else z = STEPS.filter(function (x) { return x < cur - 0.01; }).pop() || STEPS[0];
+      apply();
+    });
+    el.show = function (s) { svg = s || ''; box.innerHTML = svg; apply(); };
+    el.zoom = function (x) { if (x != null) { z = x; apply(); } return z; };
+    return el;
   };
 
   if (root.SW) root.SW.wordcloud = C;

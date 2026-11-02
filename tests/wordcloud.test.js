@@ -119,4 +119,34 @@
   yes('the look marked as changed', / changed$/.test(ctl.querySelector('[data-f="look"] option:checked').textContent));
   var lk = ctl.querySelector('[data-f="look"]'); lk.value = 'typewriter'; lk.dispatchEvent(new Event('change', { bubbles: true }));
   eq('a look chosen: its format', got && [got.look, got.font, got.shape], ['typewriter', 'mono', 'square']);
+
+  T.group('Word cloud: a view kept, shared and put back');
+  var old = 'src:chapters,stable:0,stop:1,n:80,step:20,colour:many,hue:var(--amber),font:serif,bold:0,caps:0,upright:0.5,shape:oval,pad:4,contrast:sqrt';
+  var dec = C.decode(old);
+  eq('a link from before looks: the same format', [dec.format.shape, dec.format.upright, dec.format.bold, dec.format.font], ['oval', 0.5, false, 'serif']);
+  eq('and the bench\'s own part of the view', dec.view, { src: 'chapters', stable: 0, stop: 1, n: 80, step: 20 });
+  eq('a view as one string: the look, what differs, the bench\'s own', C.encode({ look: 'oval', shape: 'heart' }, { src: 'stages', n: 40, stop: true }), 'look:oval,shape:heart,src:stages,n:40,stop:1');
+  var back = C.decode(C.encode({ look: 'poster', pad: 8 }, { src: 'whole' }));
+  eq('read back as written', [back.format.look, back.format.pad, back.view.src], ['poster', 8, 'whole']);
+  if (window.SW.store) {
+    C.save('wc.test', { look: 'ink', caps: true }, { n: 150 });
+    var got2 = C.load('wc.test');
+    eq('kept in the browser and read back', [got2.format.look, got2.format.caps, got2.view.n], ['ink', true, 150]);
+    window.SW.store.set('wc.test', null);
+  }
+  var vw = { src: 'whole', n: 40 }, changes = 0;
+  var c2 = C.control({ value: { look: C.DEFAULT }, view: { defaults: { src: 'chapters', n: 80 }, get: function () { return vw; }, set: function (v) { vw = { src: v.src, n: v.n }; } }, change: function () { changes++; } });
+  yes('Default View shown when the view is not the default', !c2.querySelector('.wc-reset').hidden);
+  c2.querySelector('.wc-reset').click();
+  eq('Default View: the bench\'s defaults and the default look', [vw.src, vw.n, c2.value().look, changes], ['chapters', 80, C.DEFAULT, 1]);
+  c2.refresh();
+  yes('then hidden', c2.querySelector('.wc-reset').hidden);
+  eq('the control\'s share string', c2.share(), 'look:' + C.DEFAULT + ',src:chapters,n:80');
+  var fr = C.frame({ name: 'cloud' }); document.body.appendChild(fr);
+  fr.show(C.cloud([{ w: 'sea', n: 3 }], { width: 400, height: 200, ink: 'box' }).svg);
+  fr.querySelector('[data-z="fit"]').click(); fr.querySelector('[data-z="+"]').click();
+  yes('zoomed in: wider than it fits', parseFloat(fr.querySelector('svg').style.width) > 0 && fr.zoom() !== 'fit');
+  fr.querySelector('[data-z="fit"]').click();
+  eq('Fit: the width of its frame', [fr.zoom(), fr.querySelector('svg').style.width], ['fit', '100%']);
+  fr.remove();
 })();
