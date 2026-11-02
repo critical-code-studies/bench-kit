@@ -1209,7 +1209,7 @@
       '<div class="js-steps"><section class="js-step js-then"><div class="js-num" aria-hidden="true">✓</div><div class="js-body"><h3>Then</h3><ul class="ah-steps">' +
       '<li>Annotate: select lines in Read and click <b>✎ Annotate</b>, or hover a line number and click <b>+A</b>. Help ▸ Advanced annotation covers formatting, links between annotations, searching and the rest.</li>' +
       '<li>Without the group and a token, annotations are kept as drafts in this browser; once connected, share them with <b>⇪ Publish drafts to the group</b> on Versions ▸ This version.</li>' +
-      '<li>Annotations in the group are seen only by its members, on the bench and on Hypothesis’s own site (' + ext('https://hypothes.is/login', 'hypothes.is') + ').</li></ul>' +
+      '<li>Annotations in the group are seen only by its members, on the bench and on Hypothesis’s own site' + (grp ? ' (' + ext('https://hypothes.is/groups/' + encodeURIComponent(grp), 'the group on hypothes.is') + ')' : '') + '.</li></ul>' +
       '</div></section></div></div>';
     document.body.appendChild(d);
     d.showModal();
