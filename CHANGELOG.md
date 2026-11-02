@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- `tests/topics.test.js`: the check that a Help ▾ group with all its items off goes now turns off whatever the bench has in Annotating and sharing, its own items too. It had failed on the Spacewar bench in CI since 0.94.0, which adds items there.
+- `tests/topics.test.js`: the check that a Help ▾ group with all its items off goes now turns off whatever the bench has in Annotating and sharing, its own items too. It had failed on the Spacewar bench in CI since 0.93.0: Spacewar adds items there.
 
 ## 0.97.0 (2026-11-02)
 
