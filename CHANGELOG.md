@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.92.0 (2026-11-02)
 
 - **Word clouds** (`wordcloud.js`, `SW.wordcloud`, asked for by David so that every bench has one, and for the Melville bench's Word cloud lens, whose own `js/cloud.js` it replaces). The layout is ported from Andreas Mueller's word_cloud 1.9.6 (MIT; notice in `docs/wordcloud-LICENSE.txt`):
   - Words are placed largest first, each at a place chosen at random among every place where its box touches no ink already drawn, found through an integral image of the ink. In a page the ink is the letters' own shapes, so small words sit in the gaps of large ones; `layout: 'spiral'` places each word as near the middle as it fits instead.
