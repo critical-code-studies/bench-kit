@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `tests/topics.test.js`: the check that a Help ▾ group with all its items off goes now turns off whatever the bench has in Annotating and sharing, its own items too. It had failed on the Spacewar bench in CI since 0.94.0, which adds items there.
+
 ## 0.97.0 (2026-11-02)
 
 - **Getting set up** (asked for by David, through the Spacewar bench: newcomers found joining “very very confusing”). Help ▸ Joining the annotation group, now titled Getting set up, takes each service in two steps, joining first and the token second, the second opening once the reader says the first is done:

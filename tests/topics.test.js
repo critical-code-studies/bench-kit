@@ -17,7 +17,10 @@
   eq('the same pick in another menu is on', SW.menuOff('versions', 'sitemap'), false);
   var help = SW.helpList(), picks = help.reduce(function (a, g) { return a.concat(g[1].map(function (h) { return h[0]; })); }, []);
   eq('Help ▾ without an item turned off', picks.indexOf('sitemap'), -1);
-  eq('Help ▾: a group whose items are all off goes', help.some(function (g) { return g[0] === 'Annotating and sharing'; }), false);
+  // the bench may add its own items to the group (Spacewar does), so turn off whatever it has there
+  var ann = (SW.helpList().filter(function (g) { return g[0] === 'Annotating and sharing'; })[0] || [0, []])[1];
+  B.menusOff = B.menusOff.concat(ann.map(function (h) { return 'help:' + h[0]; }));
+  eq('Help ▾: a group whose items are all off goes', SW.helpList().some(function (g) { return g[0] === 'Annotating and sharing'; }), false);
   var el = document.createElement('div');
   el.innerHTML = '<button data-pick="a"></button><hr class="menu-rule"><div class="menu-group">Group</div><button data-pick="backup"></button>' +
     '<hr class="menu-rule"><button data-pick="b"></button>' +
