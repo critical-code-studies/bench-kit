@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- File ▾ and Help: **Back up my data** and **Restore my data (non-destructive)**, with no line under them (asked for by David). A menu item given no description shows none.
+
 ## 0.90.3 (2026-11-02)
 
 - **A− and A+ size Book's text** (reported by David, through the Melville bench, where they changed nothing in Book): while Book is open they set Book's own size (18 px unless set, 12 to 32; 2 px less on a narrow screen), with its heads, margins and note pop-ups in proportion; elsewhere they set the text's size as before. Kept in the browser (`book.size`).

@@ -57,7 +57,7 @@
   }
   function FILE() {
     var groups = [projectItems(), H().file || [],
-                  [['backup', 'Back up my data', 'My notes, drafts, settings and a copy of the group’s annotations, in one file; nothing on GitHub'], ['restore', 'Restore my data…', 'Non-destructive: adds notes and drafts from a backup beside those here, and settings only where none is set; replaces nothing, and touches nothing on GitHub']]];
+                  [['backup', 'Back up my data', ''], ['restore', 'Restore my data (non-destructive)', '']]];
     return groups.filter(function (g) { return g.length; });
   }
 
@@ -92,8 +92,8 @@
                                         ['paratexts', 'Paratexts', 'Scans and documents: collections, views, metadata, links']]
                                        .concat(B.implementations ? [['implementations', 'Implementations', 'Ports, translations and reimplementations: their descent, features and comparison']] : [])],
             ['Your bench', [['settings', 'Settings', 'Initials, group, theme, fonts'],
-                            ['backup', 'Back up my data', 'My notes, drafts, settings and a copy of the group’s annotations, in one file; nothing on GitHub'],
-                            ['restore', 'Restore my data…', 'Non-destructive: adds notes and drafts from a backup beside those here, and settings only where none is set; replaces nothing, and touches nothing on GitHub']]],
+                            ['backup', 'Back up my data', ''],
+                            ['restore', 'Restore my data (non-destructive)', '']]],
             ['The project', [['code', 'Source code on GitHub ↗', repo],
                              ['issue', 'Report a problem ↗', 'GitHub issues'],
                              ['about', 'About the bench', 'Version, sources, citation']]]];
@@ -207,7 +207,7 @@
   // what a submenu holds, in brief: its first items' names
   function firstOf(list) { return list.slice(0, 3).map(function (h) { return h[1].replace(/ ↗$/, ''); }).join(', ') + (list.length > 3 ? '…' : ''); }
   SW.menuFirst = firstOf;
-  function item(h, on) { return '<button data-pick="' + SW.esc(h[0]) + '"' + (on ? ' class="on"' : '') + '><b>' + SW.esc(h[1]) + '</b><span>' + SW.esc(h[2]) + '</span></button>'; }
+  function item(h, on) { return '<button data-pick="' + SW.esc(h[0]) + '"' + (on ? ' class="on"' : '') + '><b>' + SW.esc(h[1]) + '</b>' + (h[2] ? '<span>' + SW.esc(h[2]) + '</span>' : '') + '</button>'; }   // an item with no line under it, where none is given
 
   function menuHTML(which) {
     if (which === 'help') {
