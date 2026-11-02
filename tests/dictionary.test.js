@@ -20,6 +20,7 @@
   eq("'s, curly or straight", has('captain', 'Captain’s'), true);
   eq('no lemma under three letters', has('wa', 'was'), false);
   eq('nothing for no letters', D.forms('—'), []);
+  eq('a word that is also an object’s name', D.forms('constructor')[0], { w: 'constructor', how: 'as written' });
   T.group('Dictionary: shards and finding');
   eq('two first letters', D.shardOf('Mizzen'), 'mi');
   eq('a one-letter word in _', D.shardOf('a'), '_');

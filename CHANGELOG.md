@@ -1,5 +1,16 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Dictionaries** (`dictionary.js`, asked for by David, for the Melville bench's rare words and any bench's): a bench names its dictionaries (`dictionaries`) and a list of word frequencies (`wordFreq`).
+  - **📕 Look up** on words selected in Read's selection bar and Book's selection pop-up shows each word's entries in every dictionary, each with its source's credit: head, part of speech, field labels (Naut., Law…), senses and a short etymology. The word's Zipf frequency is shown beside it.
+  - A word not found as written is tried in simple English lemmas, modern and archaic (sallies → sally, stopped → stop, walketh → walk), and the form found is named.
+  - A dictionary is one file, or shards fetched as needed for a large one. Webster's 1913 whole is 101,367 headwords in 330 shards (26 MB); the 8,120 words of Melville's texts need 5,841 of them in one 3.9 MB file.
+  - `SW.dict.lookupMany(words)`, then `lookupNow(word)`, serve a lens checking thousands of words; `SW.dict.zipf(word)` gives a word's frequency.
+  - Settings ▸ Dictionaries turns each dictionary off or on.
+  - `tools/dict-build.js` makes the files from Project Gutenberg's text of Webster's 1913 (ebook 29765, public domain in the United States; only the definitions are taken) or from a JSON list, optionally only the entries a list of words needs.
+  - `tests/dictionary.test.js`: 18 checks of the lemmas, shards and finding.
+
 ## 0.90.3 (2026-11-02)
 
 - **A− and A+ size Book's text** (reported by David, through the Melville bench, where they changed nothing in Book): while Book is open they set Book's own size (18 px unless set, 12 to 32; 2 px less on a narrow screen), with its heads, margins and note pop-ups in proportion; elsewhere they set the text's size as before. Kept in the browser (`book.size`).

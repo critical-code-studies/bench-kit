@@ -35,7 +35,7 @@
   // consonant undone (stopped, stop). No lemma shorter than three letters.
   D.forms = function (word) {
     var w = String(word || '').toLowerCase().replace(/[’`]/g, "'").replace(/^[^a-z]+|[^a-z']+$/g, '').replace(/'$/, '');
-    var out = [], seen = {};
+    var out = [], seen = Object.create(null);   // no object's own names: constructor is a word
     function add(f, how) { if (f && f.length >= (how === 'as written' ? 1 : 3) && /^[a-z][a-z'-]*$/.test(f) && !seen[f]) { seen[f] = 1; out.push({ w: f, how: how }); } }
     if (!w) return out;
     add(w, 'as written');
@@ -147,7 +147,7 @@
         var link = d.entryURL ? d.entryURL(e.head || r.as) : '';
         return '<div class="dict-entry"><span class="dict-head">' + esc(e.head || r.as) + '</span>' + (e.pos ? ' <i>' + esc(e.pos) + '</i>' : '') +
           (e.field || []).map(function (f) { return ' <span class="dict-field">' + esc(f) + '</span>'; }).join('') +
-          (e.senses && e.senses.length ? '<ol class="dict-senses">' + e.senses.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' : '') +
+          (e.senses && e.senses.length ? '<div class="dict-senses">' + e.senses.map(function (s) { return '<div class="dict-sense">' + esc(s) + '</div>'; }).join('') + '</div>' : '') +
           (e.etym ? '<div class="dict-etym">' + esc(e.etym) + '</div>' : '') + (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener">the full entry ↗</a>' : '') + '</div>';
       }).join('') + (d.credit ? '<div class="dict-credit">' + d.credit + '</div>' : '');
   };
@@ -183,7 +183,7 @@
 
   // ---------- Settings ▸ Dictionaries ----------
   if (all().length && SW.settings && SW.settings.add) {
-    SW.settings.addTab('dict', 'Dictionaries');
+    SW.settings.addTab('dict', 'Dictionaries', 4);   // after Book, where it has one
     SW.settings.add({
       tab: 'dict',
       html: '<h2>Dictionaries</h2><p class="hint">The dictionaries 📕 Look up asks, on a word selected in the text. Kept in this browser.</p>' +
