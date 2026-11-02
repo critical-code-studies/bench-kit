@@ -99,4 +99,18 @@
   yes('where it is defined, and used', h.indexOf('◆ 1  foo bar') > 0 && h.indexOf('· 2  baz') > 0);
   yes('with the file named', SW.symbolRefs(b, s, { file: true }).indexOf('f.x:1') > 0);
   yes('links to the lines', /data-p="0" data-n="2"/.test(h));
+
+  T.group('The Hypothesis group');
+  (function () {
+    var was = SW.store.get('group', null), wasB = SW.BENCH.group;
+    SW.BENCH.group = 'BenchGrp1';
+    SW.store.set('group', '');
+    T.eq('an empty group kept from before: the bench\'s', SW.groupSet(), 'BenchGrp1');
+    SW.store.set('group', 'MyGroup22');
+    T.eq('a group set in this browser wins', SW.groupSet(), 'MyGroup22');
+    SW.setGroup('');
+    T.eq('an empty box clears the browser\'s choice', [SW.store.get('group', null), SW.groupSet()], [null, 'BenchGrp1']);
+    SW.BENCH.group = wasB;
+    if (was == null) SW.store.remove('group'); else SW.store.set('group', was);
+  })();
 })();

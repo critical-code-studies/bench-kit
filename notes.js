@@ -70,7 +70,7 @@
     return m ? m[1] : s;
   };
   function cfg() {
-    return { group: N.groupId(SW.store.get('group', B.group || '')), token: SW.store.get('token', '') };
+    return { group: N.groupId(SW.groupSet()), token: SW.store.get('token', '') };
   }
   N.configured = function () { var c = cfg(); return !!(c.group && c.token); };
 
@@ -1094,7 +1094,7 @@
   // The steps to send someone who is joining the annotation group, as plain text, for
   // ⚙ Settings to offer beside the token box.
   N.joinSteps = function () {
-    var g = N.groupId(SW.store.get('group', B.group || '')) || '(the group’s ID)';
+    var g = N.groupId(SW.groupSet()) || '(the group’s ID)';
     return 'Annotations in the ' + (B.name || 'research') + ' bench: joining\n\n' +
       '1. Make a Hypothesis account at https://hypothes.is/signup (free; any name will do).\n' +
       '2. Ask for an invitation to the private group ' + g + ', and open the link you are sent.\n' +
@@ -1160,7 +1160,7 @@
         var ini = val('initials').toUpperCase();
         if (!ini) { say('hyp', 'err', 'Give your initials first.'); return; }
         SW.store.set('initials', ini); SW.store.set('name', val('name'));
-        SW.store.set('group', N.groupId(val('group'))); if (val('token') || !SW.store.get('token', '') || confirm('Remove the Hypothesis API token from this browser?')) SW.store.set('token', val('token'));
+        SW.setGroup(N.groupId(val('group'))); if (val('token') || !SW.store.get('token', '') || confirm('Remove the Hypothesis API token from this browser?')) SW.store.set('token', val('token'));
         N.forget(); if (SW.state.v) N.invalidate(SW.state.v);
         if (!val('group') || !val('token')) { say('hyp', 'warn', 'Saved. Without ' + (!val('group') ? 'the group' : 'a token') + ', annotations are kept as drafts here.'); return; }
         say('hyp', '', 'Checking…');

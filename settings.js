@@ -104,7 +104,7 @@
     SW.$('#set-initials').value = SW.store.get('initials', '');
     SW.$('#set-name').value = SW.store.get('name', '');
     var grp = SW.$('#set-group'), tok = SW.$('#set-token'), show = SW.$('#set-token-show');
-    grp.value = SW.notes.groupId(SW.store.get('group', B.group || ''));
+    grp.value = SW.notes.groupId(SW.groupSet());
     tok.value = SW.store.get('token', '');
     tok.type = 'password'; show.textContent = 'Show'; show.setAttribute('aria-pressed', 'false');
     SW.$('#set-ahead').value = String(SW.store.get('px.ahead', 1));
@@ -124,7 +124,7 @@
     var ghs = SW.$('#set-ghsteps');
     if (ghs) ghs.onclick = function () { SW.copyText(PX.STEPS, 'the steps'); };
     SW.$('#set-test').onclick = function () {
-      SW.store.set('group', SW.notes.groupId(grp.value));
+      SW.setGroup(SW.notes.groupId(grp.value));
       SW.store.set('token', tok.value.trim());
       SW.$('#set-check').textContent = 'Checking…';
       SW.notes.test().then(function (r) {
@@ -174,7 +174,7 @@
       }
       SW.store.set('initials', SW.$('#set-initials').value.trim().toUpperCase());
       SW.store.set('name', SW.$('#set-name').value.trim());
-      SW.store.set('group', SW.notes.groupId(grp.value));
+      SW.setGroup(SW.notes.groupId(grp.value));
       // the tokens: written only when changed in the box (so a box a browser filled, or left empty, does not
       // overwrite one held), and taken out only when asked
       keepToken('token', tok.value.trim(), 'Hypothesis API token');

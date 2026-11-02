@@ -572,7 +572,7 @@
       return group.then(function (all) {
         var shared = all.filter(function (n) { return n.source === 'hypothesis'; });
         var out = { kind: B.slug + '-bench-backup', bench: SW.VERSION, made: new Date().toISOString(), by: SW.me().initials || '',
-                    group: SW.store.get('group', B.group || ''), myNotes: load(), drafts: SW.store.get('drafts', []), settings: settings,
+                    group: SW.groupSet(), myNotes: load(), drafts: SW.store.get('drafts', []), settings: settings,
                     groupAnnotations: shared };
         root.SWExport.download(B.slug + '-bench-backup-' + (SW.me().initials || 'bench') + '-' + SW.today() + '.json', JSON.stringify(out, null, 1), 'application/json');
         SW.toast('Backed up: ' + out.myNotes.items.length + ' of my notes, ' + out.drafts.length + ' drafts, ' + shared.length + ' group annotations', 5000);

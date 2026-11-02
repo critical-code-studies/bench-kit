@@ -91,8 +91,14 @@
     },
     set: function (k, v) {
       try { localStorage.setItem(pre() + k, JSON.stringify(v)); } catch (e) { /* ignore */ }
-    }
+    },
+    remove: function (k) { try { localStorage.removeItem(pre() + k); } catch (e) { /* ignore */ } }
   };
+  // The Hypothesis group: the one set in this browser, else the bench's (SW.BENCH.group). An empty one
+  // kept from before (a Settings saved with the box empty) is no choice, so the bench's is used.
+  SW.groupSet = function () { return SW.store.get('group', '') || (SW.BENCH && SW.BENCH.group) || ''; };
+  // kept as set: an empty box clears the browser's choice, so the bench's group applies again
+  SW.setGroup = function (id) { if (id) SW.store.set('group', id); else SW.store.remove('group'); };
 
   // A draggable divide between the first and last columns of a three-column
   // grid (left, divide, right); the width is kept under key, double-click resets.

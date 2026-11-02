@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The bench's Hypothesis group when none is set** (reported by the Spacewar bench, for David): a group stored empty (Settings saved with the box empty) was kept for good, in place of the bench's `group`. The group is now the one set in this browser, else the bench's (`SW.groupSet()`); an empty box in Settings clears the browser's choice rather than storing an empty one (`SW.setGroup`, `SW.store.remove`). A group chosen in the browser still wins. `tests/kit.test.js`: 3 more checks.
+
 ## 0.96.1 (2026-11-02)
 
 - **`SW.book.openAt(vid, { p, n0, n1 }, stage)`** (asked for by David, through the Melville bench: a stage's document in Topics opens in Book at that stage): Book on a version at those lines, selected and flashed, and at a stage of the revision where the version is one of the text's states (0 before revision, n after the nth stage); a step on the way back. Where the bench has no Book, Read at the lines. `tests/book.test.js`: 1 more check.
