@@ -51,6 +51,13 @@
   // the menus and tabs left out of the tab row
   SW.$$('#tabs [data-menu], #tabs [data-tab]').forEach(function (b) { if (SW.menuOff(b.dataset.menu || b.dataset.tab)) b.remove(); });
   var FILE_ON = B.fileMenu !== false && !SW.menuOff('file');
+  // Read is a plain tab: one click goes to the version being read, at its place. Versions are opened
+  // from File ▾ ▸ Open a version… (or Versions ▾, where the bench has no File ▾), and the picker in
+  // the top bar. A bench that sets readMenu: true keeps Read ▾ as it was.
+  if (B.readMenu !== true) SW.$$('#tabs [data-menu="read"]').forEach(function (b) {
+    b.removeAttribute('data-menu'); b.removeAttribute('data-tabs'); b.removeAttribute('aria-expanded');
+    b.setAttribute('data-tab', 'read'); b.textContent = 'Read'; b.title = 'Read the version open, where you left it (File ▾ ▸ Open a version… for another)';
+  });
   // File ▾ in the tab row, before Read (or first)
   (function () {
     var tabs = SW.$('#tabs'); if (!FILE_ON || !tabs || SW.$('[data-menu="file"]', tabs)) return;
@@ -65,8 +72,9 @@
                                                        ['proj-save', 'Save the project to a file', 'Its versions, files, repairs, settings, drafts and notes']] : [])
       .concat(SW.projectFile && SW.projectFile.save && B.samples ? [['proj-samples', 'Open a sample', 'A project from CCS Workbench Classic']] : []);
   }
+  var OPEN = ['open', 'Open a version…', (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘' : 'Ctrl-') + 'O · the versions in their groups, and their files'];
   function FILE() {
-    var groups = [projectItems(), H().file || [],
+    var groups = [[OPEN], projectItems(), H().file || [],
                   [['backup', 'Back up my data', ''], ['restore', 'Restore my data (non-destructive)', '']]];
     return groups.map(function (g) { return g.filter(kept('file')); }).filter(function (g) { return g.length; });
   }
@@ -85,7 +93,7 @@
     return [['about', 'This version', 'Its record, sources and annotations'],
             ['compare', 'Collate', collateText()],
             ['genealogy', 'Genealogy', 'How the versions descend']]
-      .concat(FILE_ON ? [] : projectItems());   // in File ▾, where the bench has it
+      .concat(FILE_ON ? [] : [OPEN].concat(projectItems()));   // in File ▾, where the bench has it
   }
   // the items of a menu drawn as HTML that the bench has turned off, and what they leave empty: a
   // submenu or a lens group with no items, a group's heading with none under it, a rule with nothing
@@ -228,6 +236,141 @@
       }
     });
   }
+
+  // ---------- Open a version ----------
+  // A box laid out as a chooser: folders on the left (Recent, then the version picker's groups, or for
+  // a bench in layers each layer and its groups), the versions on the right with the columns the bench
+  // has (name, date, reference, medium), each opening to its files; a search over name, date and
+  // reference. Double-click or Enter opens one in Read at its kept place (a file, at that file); the
+  // arrow keys move, → and ← open and close a version's files, Esc closes. A choice is a step on the
+  // way back (SW.trail). ⌘O or Ctrl-O opens it.
+  var V = root.SWVersions;
+  function recent() {
+    var ks = Object.keys(SW.store.get('read.places', {}) || {}).reverse(), last = SW.store.get('read.last', ''), out = [];
+    [last].concat(ks).forEach(function (id) { if (id && out.indexOf(id) < 0 && V.byId(id)) out.push(id); });
+    return out.map(V.byId);
+  }
+  function folders() {
+    var all = V.VERSIONS.slice().sort(function (a, b) { return a.sort - b.sort; }), F = [{ id: 'recent', label: 'Recent', vs: recent() }];
+    if (SW.layers && SW.layers.list().length) {
+      var C2 = B.layers || {}, order = (C2.readOrder || []).map(SW.layers.byId).filter(Boolean);
+      SW.layers.list().forEach(function (l) { if (order.indexOf(l) < 0) order.push(l); });
+      order.forEach(function (l) {
+        var ws = C2.shown ? C2.shown(l.id, SW.layers.versionsOf(l.id)) : SW.layers.versionsOf(l.id);
+        var more = typeof l.more === 'function' ? l.more() : l.more || [];
+        F.push({ id: 'L:' + l.id, label: l.label, note: l.below ? (l.relation || 'on') + ' ' + ((SW.layers.byId(l.below) || {}).label || '') : '', vs: ws, more: more.length ? more : null });
+        (l.groups || []).forEach(function (g, i) {
+          var line = g.line ? (V.LINES || []).filter(function (x) { return x.id === g.line; })[0] : null, gids = g.ids || (line ? line.ids : []);
+          var gv = ws.filter(function (v) { return gids.indexOf(v.id) >= 0; });
+          if (gv.length) F.push({ id: 'L:' + l.id + ':' + i, label: g.label, note: g.note || '', vs: gv, sub: true });
+        });
+      });
+    } else {
+      var groups = SW.versionGroups ? SW.versionGroups('Versions') : B.forks && B.forks.length ? B.forks : [[null, 'Versions']];   // the shell's, where it is loaded
+      var inG = SW.inGroup || function (v, g) { return g[0] == null || v.fork === g[0]; };
+      groups.forEach(function (g, i) { var vs = all.filter(function (v) { return inG(v, g); }); if (vs.length) F.push({ id: 'G:' + i, label: g[1], vs: vs }); });
+    }
+    return F;
+  }
+  function fileName(src) { return String(src).split('/').pop(); }
+  var ovState = { folder: null, open: {}, q: '' };
+  SW.openVersion = function () {
+    var d = SW.$('#dlg-open');
+    if (!d) {
+      d = SW.el('dialog', { id: 'dlg-open', class: 'set-dlg ov-dlg', 'aria-label': 'Open a version' });
+      d.innerHTML = '<form method="dialog" class="settings"><div class="ov-head"><h2>Open a version</h2><input type="search" class="ov-q" placeholder="Find by name, date or reference" aria-label="Find a version"></div>' +
+        '<div class="ov-body"><nav class="ov-folders" aria-label="Groups"></nav><div class="ov-list" role="listbox" tabindex="0" aria-label="Versions"></div></div>' +
+        '<div class="row"><span class="hint ov-hint">Double-click or Enter opens a version in Read where you left it; ▸ shows its files.</span><button value="cancel" class="btn ghost">Close</button> <button type="button" class="btn ov-go">Open</button></div></form>';
+      document.body.appendChild(d);
+      wireOpen(d);
+    }
+    var F = folders();
+    if (!ovState.folder || !F.some(function (f) { return f.id === ovState.folder; })) {
+      var cur = SW.state.v, home = F.filter(function (f) { return f.id !== 'recent' && !f.sub && f.vs.some(function (v) { return v.id === cur; }); })[0];
+      ovState.folder = F[0].vs.length ? 'recent' : (home || F[1] || F[0]).id;
+    }
+    ovState.q = ''; SW.$('.ov-q', d).value = '';
+    drawOpen(d);
+    d.showModal();
+    setTimeout(function () { var on = SW.$('.ov-row.on', d) || SW.$('.ov-row', d); if (on) { on.scrollIntoView({ block: 'nearest' }); } SW.$('.ov-list', d).focus(); }, 0);
+  };
+  function cols(vs) {
+    var any = function (f) { return vs.some(function (v) { return f(v); }); };
+    return { date: any(function (v) { return v.date; }), ref: any(function (v) { return v.build; }), medium: any(function (v) { return v.medium; }) };
+  }
+  function drawOpen(d) {
+    var F = folders(), q = ovState.q.trim().toLowerCase(), cur = SW.state.v, sel = ovState.sel || cur;
+    SW.$('.ov-folders', d).innerHTML = F.map(function (f) {
+      return '<button type="button" class="ov-folder' + (f.sub ? ' sub' : '') + (!q && f.id === ovState.folder ? ' on' : '') + '" data-f="' + SW.esc(f.id) + '"><span class="ov-ico">' + (f.id === 'recent' ? '🕘' : '🗀') + '</span>' + SW.esc(f.label) + ' <span class="hint">' + f.vs.length + '</span></button>';
+    }).join('');
+    var folder = F.filter(function (f) { return f.id === ovState.folder; })[0] || F[0];
+    var vs = q ? V.VERSIONS.slice().sort(function (a, b) { return a.sort - b.sort; }).filter(function (v) { return [v.label, v.date, v.build ? SW.refText(v.id) : '', v.id].join(' ').toLowerCase().indexOf(q) >= 0; }) : folder.vs;
+    var c = cols(vs.length ? vs : V.VERSIONS);
+    var head = '<div class="ov-row ov-th" aria-hidden="true"><span class="ov-tw"></span><span class="ov-name">Name</span>' + (c.date ? '<span class="ov-date">Date</span>' : '') + (c.ref ? '<span class="ov-ref">Reference</span>' : '') + (c.medium ? '<span class="ov-med">Medium</span>' : '') + '</div>';
+    var rows = vs.map(function (v) {
+      var parts = v.build || [], open = ovState.open[v.id], lost = !v.build;
+      var r = '<div class="ov-row' + (v.id === sel ? ' on' : '') + (v.id === cur ? ' cur' : '') + (lost ? ' lost' : '') + '" role="option" data-v="' + SW.esc(v.id) + '" title="' + SW.esc(v.label + (lost ? ': lost, known from the record' : '')) + '">' +
+        '<span class="ov-tw">' + (parts.length ? '<button type="button" class="ov-twist" data-tw="' + SW.esc(v.id) + '" aria-label="Its files">' + (open ? '▾' : '▸') + '</button>' : '') + '</span>' +
+        '<span class="ov-name">' + SW.esc(v.label) + (v.id === cur ? ' <span class="hint">· open</span>' : '') + '</span>' +
+        (c.date ? '<span class="ov-date">' + SW.esc(v.date || '') + '</span>' : '') + (c.ref ? '<span class="ov-ref mono">' + SW.esc(v.build ? SW.refText(v.id) : '') + '</span>' : '') +
+        (c.medium ? '<span class="ov-med">' + SW.esc(lost ? 'lost' : v.medium || '') + '</span>' : '') + '</div>';
+      if (open) r += fileRows(v);
+      return r;
+    }).join('');
+    var more = !q && folder.more ? '<div class="ov-more">' + folder.more.map(function (m) { return '<button type="button" class="btn ghost" data-more="' + SW.esc(m[0]) + '" title="' + SW.esc(m[2] || '') + '">' + SW.esc(m[1]) + '</button>'; }).join(' ') + '</div>' : '';
+    SW.$('.ov-list', d).innerHTML = head + (rows || '<p class="hint">No version matches.</p>') + more;
+  }
+  // a version's files, by the bench's groups of them (readFiles) where it has them
+  function fileRows(v) {
+    var parts = (v.build || []).map(function (b, i) { return [b, i]; }), RF = B.readFiles, out = '', used = {};
+    function row(x) { return '<div class="ov-row ov-file" role="option" data-v="' + SW.esc(v.id) + '" data-p="' + x[1] + '"><span class="ov-tw"></span><span class="ov-name">' + SW.esc(fileName(x[0].src)) + ' <span class="hint">' + SW.esc(RF && RF.about ? RF.about(x[0].src, x[0].role) : x[0].role || '') + '</span></span></div>'; }
+    if (RF && RF.groups) {
+      var stem = function (src) { return fileName(src).replace(/\.[^.]*$/, '').replace(/\.\d+$/, '').toLowerCase(); };
+      RF.groups.forEach(function (g) {
+        var fs = g.test ? parts.filter(function (x) { return !used[x[1]] && g.test.test(stem(x[0].src)); }) : [];
+        fs.forEach(function (x) { used[x[1]] = 1; });
+        if (g.rest) fs = fs.concat(parts.filter(function (x) { return !used[x[1]] && !RF.groups.some(function (h) { return h.test && h.test.test(stem(x[0].src)); }); }));
+        if (fs.length) out += '<div class="ov-fgroup">' + SW.esc(g.label) + '</div>' + fs.map(row).join('');
+      });
+      return out;
+    }
+    return parts.map(row).join('');
+  }
+  function openIt(d, row) {
+    var id = row.dataset.v, v = V.byId(id), p = row.dataset.p;
+    d.close();
+    if (id !== SW.state.v && SW.trail) SW.trail.from();
+    if (p != null) { SW.openAt(id, { p: +p, n0: 1 }); return; }   // a file: Read at its head
+    if (SW.nav && SW.layers && SW.layers.list().length && v && v.build) { SW.nav.go({ v: id, p: null, n: null }); SW.setTab('read'); return; }
+    if (id !== SW.state.v) SW.select(id);
+    SW.trail.quietly(function () { SW.setTab(v && v.build ? 'read' : 'about'); });   // a lost version: its record
+  }
+  function wireOpen(d) {
+    var list = SW.$('.ov-list', d);
+    function rows() { return SW.$$('.ov-row[data-v]', list); }
+    function mark(r) { rows().forEach(function (x) { x.classList.toggle('on', x === r); }); if (r) { r.scrollIntoView({ block: 'nearest' }); if (!r.dataset.p) ovState.sel = r.dataset.v; } }
+    d.addEventListener('click', function (e) {
+      var f = e.target.closest('[data-f]'); if (f) { ovState.folder = f.dataset.f; ovState.q = ''; SW.$('.ov-q', d).value = ''; drawOpen(d); return; }
+      var t = e.target.closest('[data-tw]'); if (t) { ovState.open[t.dataset.tw] = !ovState.open[t.dataset.tw]; drawOpen(d); return; }
+      var m = e.target.closest('[data-more]'); if (m) { d.close(); if (H().pick) H().pick('read', m.dataset.more); else if (B.layers && B.layers.pick) B.layers.pick(m.dataset.more); return; }
+      if (e.target.closest('.ov-go')) { var on = SW.$('.ov-row.on', list); if (on) openIt(d, on); return; }
+      var r = e.target.closest('.ov-row[data-v]'); if (r) mark(r);
+    });
+    list.addEventListener('dblclick', function (e) { var r = e.target.closest('.ov-row[data-v]'); if (r && !e.target.closest('[data-tw]')) openIt(d, r); });
+    SW.$('.ov-q', d).addEventListener('input', function (e) { ovState.q = e.target.value; drawOpen(d); });
+    d.addEventListener('keydown', function (e) {
+      var rs = rows(), on = SW.$('.ov-row.on', list), i = rs.indexOf(on);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); mark(rs[Math.max(0, Math.min(rs.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))] || rs[0]); }
+      else if (e.key === 'Enter' && on && !e.target.matches('button')) { e.preventDefault(); openIt(d, on); }
+      else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && on && !on.dataset.p && !e.target.matches('input')) {
+        e.preventDefault(); var id = on.dataset.v; ovState.open[id] = e.key === 'ArrowRight'; drawOpen(d); mark(SW.$('.ov-row[data-v="' + id + '"]:not([data-p])', list));
+      }
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && (e.key === 'o' || e.key === 'O')) { e.preventDefault(); if (!document.querySelector('dialog[open]')) SW.openVersion(); }
+  });
+
   function closeTabMenu() { if (!tabMenu) return; tabMenu.el.remove(); tabMenu.btn.setAttribute('aria-expanded', 'false'); tabMenu = null; }
   // what a submenu holds, in brief: its first items' names
   function firstOf(list) { return list.slice(0, 3).map(function (h) { return h[1].replace(/ ↗$/, ''); }).join(', ') + (list.length > 3 ? '…' : ''); }
@@ -308,6 +451,7 @@
     if (which === 'help') { SW.help(p); return; }
     if (which === 'read' && /^f:/.test(p)) { SW.openAt(SW.state.v, { p: +p.slice(2), n0: 1 }); return; }   // a file of the open version
     if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) { if (SW.trail) SW.trail.from(); SW.select(p.slice(2)); } SW.setTab('read'); return; }   // another version: a step on the way back
+    if ((which === 'file' || which === 'versions') && p === 'open') { SW.openVersion(); return; }
     if (which === 'file' && p === 'backup') { SW.backup.save(); return; }
     if (which === 'file' && p === 'restore') { SW.backup.restore(); return; }
     if ((which === 'versions' || which === 'file') && p === 'builder' && SW.builder) { SW.builder.open(); return; }

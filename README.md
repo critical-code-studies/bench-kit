@@ -15,7 +15,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `md.js` | Rich text in annotations: Markdown shown and as plain text, rich text back to Markdown, and the note editor (`SW.mdTools`). |
 | `themes.js` | How the bench looks: code text, the hands written into the text, colour schemes and themes, and figures and documents for export. |
 | `shell.js` | The bench's frame, loaded last: start-up, the version picker, the tabs and the views drawn in them, the colour theme, the top bar's buttons, and what a link asks for (`?v=`, `&tab=`, `&l=`, `&b=`, `&a=`, `&code=`, `&help=`, `&tour=`, `&join=`, `&tr=`). `SW.setTab`, `SW.select`, `SW.forget`, `SW.setTheme`, `SW.markTabs`, `SW.help(name)`. The bench's parts from `SW.BENCH.shell`. |
-| `menus.js` | The drop-down menus in the tab row: Versions ▾ and Help ▾, and the bench's own (lenses, graphics), from `SW.BENCH.menus`. |
+| `menus.js` | The drop-down menus in the tab row: File ▾, Versions ▾ and Help ▾, and the bench's own (lenses, graphics), from `SW.BENCH.menus`; Read as a plain tab; File ▾ ▸ Open a version… (⌘O), the versions and their files in a chooser (`SW.openVersion()`). |
 | `version.js` | Versions ▸ This version (the view `about`): a version's record, its place in the variorum, its annotations and build log, the bin, every annotation on every version; the bench's own rows from `SW.BENCH.version`. |
 | `versionlist.js` | A bench's list of versions from its records (`js/versions.js`): each version's link, its descent (parent, witness, also, influence), the chain to any version, the lines of descent, and loading a version's files (`SWVersionList`, in the browser and Node). |
 | `builds.js` | A bench's texts fetched and built, the unit every view reads: `SW.fetchText`, `SW.fetchBytes`, `SW.build(id, extra)` (cached), `SW.current()`, `SW.openAt(vid, a)`, `SW.docMeta(b)`, `SW.oct`. The bench says how a version is read: `SW.builds({ read, split, key, meta })` in its `js/core.js`. |
@@ -138,6 +138,7 @@ SW.BENCH = {
   editable: false,                   // true: its user sets these in Settings ▸ Bench (kit/project.js)
   beside: false,                     // Read without Beside (another file of the version read beside the one chosen)
   fileMenu: false,                   // no File ▾ (by default it is before Read: the project's own items, menus.file, and Back up and Restore)
+  readMenu: true,                    // keep Read ▾ (the versions in a menu) in place of a plain Read tab and File ▾ ▸ Open a version…
   menusOff: ['paratexts', 'help:sitemap', 'text:6'],   // left out of the tab row: a menu or tab by name, one item as 'menu:pick' (fileMenu: false is menusOff: ['file'])
   annotationTypes: true,             // types an annotation may be given: true for CCS Workbench's six, or [[id, label, what for]]; none by default
   samples: true,                     // Versions ▸ Open a sample (kit/projectfile.js): true, or the tag of CCS-WB Classic to read them at

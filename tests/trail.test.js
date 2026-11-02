@@ -36,4 +36,14 @@
   var q = (function () { var h = location.href; SW.writeQuery(); var out = location.search; history.replaceState(history.state, '', h); return out; })();
   eq('the address carries the line at the top of Read', /[?&]at=1%3A12(&|$)/.test(q), true);
   SW.state.at = was; SW.state.tab = wasTab; SW.state.sel = wasSel;
+
+  T.group('Open a version');
+  if (SW.openVersion && root0().SWVersions) {
+    SW.openVersion();
+    var dlg = document.getElementById('dlg-open');
+    eq('the box opens, titled as it is', [!!(dlg && dlg.open), dlg && dlg.querySelector('h2').textContent], [true, 'Open a version']);
+    yes('its folders begin with Recent, then the groups', dlg && dlg.querySelector('.ov-folder').textContent.indexOf('Recent') >= 0 && dlg.querySelectorAll('.ov-folder').length >= 2);
+    if (dlg) dlg.close();
+  }
+  function root0() { return window; }
 })();
