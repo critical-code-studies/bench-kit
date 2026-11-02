@@ -1180,9 +1180,11 @@
     var cite = SW.cite(b, s.p, s.n0, s.n1), a = { p: s.p, n0: s.n0, n1: s.n1 };
     var pop = SW.pop(x, y, '<div class="bk-selpop"><span class="selref">' + SW.refTag(b.v.id, s.p, s.n0, s.n1, b.parts.length) + '</span>' +
       (N ? '<button class="btn" data-a="note">✎ Annotate</button>' : '') + '<button class="btn" data-a="cite">❝ Copy citation</button>' +
-      '<button class="btn" data-a="link">🔗 Copy link</button><button class="btn" data-a="read">≡ Read</button></div>');
+      '<button class="btn" data-a="link">🔗 Copy link</button><button class="btn" data-a="read">≡ Read</button>' +
+      (SW.dict && SW.dict.list && SW.dict.list().length ? '<button class="btn" data-a="dict" title="The words selected, in the bench’s dictionaries">📕 Look up</button>' : '') + '</div>');
     pop.addEventListener('click', function (e) {
       var k = (e.target.closest('[data-a]') || {}).dataset; if (!k) return;
+      if (k.a === 'dict') { var ws = SW.dict.selectedWords(); SW.dict.show(ws.length ? ws : quote.split(/\s+/).slice(0, 6), x, y); return; }
       SW.unpop();
       if (k.a === 'note') N.dialog({ vid: b.v.id, kind: 'line', anchor: { p: s.p, n0: s.n0, n1: s.n1, c0: s.c0, c1: s.c1, src: b.parts[s.p].src }, quote: quote, heading: 'Annotate', anchorText: cite });
       if (k.a === 'cite') SW.copyText(cite, 'the citation');

@@ -111,3 +111,15 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .fo-cell { font: inherit; background: none; border: 0; color: var(--beam); cursor: pointer; padding: 0 4px; text-decoration: underline dotted; }
 .fo-cell.on { color: var(--text); font-weight: 700; }
 .fo-pairs h4 { margin: 12px 0 6px; }
+
+/* dictionary.js: a word looked up */
+.dict-pop { max-width: 30em; max-height: 60vh; overflow: auto; font-size: 13px; line-height: 1.45; }
+.dict-word + .dict-word { border-top: 1px solid var(--line-soft); margin-top: 8px; padding-top: 8px; }
+.dict-q { margin-bottom: 4px; }
+.dict-src { font: 10.5px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); margin: 6px 0 2px; }
+.dict-head { font-weight: 600; }
+.dict-field { font-size: 11px; padding: 0 5px; border: 1px solid var(--line); border-radius: 8px; color: var(--text-dim); }
+.dict-senses { margin: 3px 0 3px 0.9em; }
+.dict-sense { margin: 2px 0; }   /* the source's own numbers, (1., (a)), kept in the text */
+.dict-etym { color: var(--text-dim); font-size: 12px; }
+.dict-credit { color: var(--text-faint); font-size: 11px; margin-top: 4px; }
