@@ -1,6 +1,7 @@
 /*
  * tests/wordcloud.test.js - checks of kit/wordcloud.js, run by tests/run.js: a cloud laid out with
- * each word's box as its ink (so the checks do not depend on the page's fonts), its words inside the
+ * each word's box as its ink and a fixed width for each letter (so the checks do not depend on the
+ * fonts of the machine they run on), its words inside the
  * frame and apart, the same cloud for the same seed, words that do not fit, upright words, the oval,
  * and a layout kept and redrawn.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -9,8 +10,9 @@
   'use strict';
   var T = window.T, eq = T.eq, yes = T.yes, C = window.SW.wordcloud;
   var WORDS = 'whale sea ship ahab captain boat man old ishmael queequeg starbuck stubb flask pequod white sperm oil harpoon line deck'.split(' ');
+  function measure(w, s) { return w.length * s * 0.52; }
   var items = WORDS.map(function (w, i) { return { w: w, n: Math.round(1000 / (i + 1)) }; });
-  function lay(o) { return C.cloud(items, Object.assign({ width: 600, height: 300, ink: 'box' }, o || {})); }
+  function lay(o) { return C.cloud(items, Object.assign({ width: 600, height: 300, measure: measure }, o || {})); }
   function boxes(r) { return Object.keys(r.places).map(function (w) { return r.places[w]; }); }
   function apart(r) {
     var P = boxes(r);
@@ -35,11 +37,11 @@
   eq('word_cloud\'s relative sizes: each from the one before', (function (s) { return s.places.sea.size; })(lay({ contrast: 'relative' })), Math.round((0.5 * 500 / 1000 + 0.5) * 60));
 
   T.group('Word cloud: words that do not fit');
-  var small = C.cloud(items, { width: 100, height: 60, ink: 'box', max: 40 });
+  var small = C.cloud(items, { width: 100, height: 60, measure: measure, max: 40 });
   yes('some are dropped', small.dropped.length > 0);
   eq('the dropped and the drawn are every word', small.dropped.length + small.drawn.length, WORDS.length);
   yes('a word that does not fit at its size is set smaller', small.places.whale && small.places.whale.size < 40);
-  var rel = C.cloud(items, { width: 100, height: 60, ink: 'box', max: 40, contrast: 'relative' });
+  var rel = C.cloud(items, { width: 100, height: 60, measure: measure, max: 40, contrast: 'relative' });
   eq('with relative sizes, every word after the first that does not fit is dropped (as word_cloud stops)', rel.drawn.length + rel.dropped.length, WORDS.length);
   yes('and none is drawn after it', WORDS.indexOf(rel.dropped[0]) > WORDS.indexOf(rel.drawn[rel.drawn.length - 1]));
 
@@ -57,7 +59,7 @@
   yes('a mask keeps words off the left half', boxes(lay({ mask: function (x) { return x < 300; } })).every(function (p) { return p.x - p.w / 2 >= 300; }));
 
   T.group('Word cloud: a layout kept');
-  var later = C.cloud([{ w: 'whale', n: 250 }, { w: 'sea', n: 900 }, { w: 'kraken', n: 40 }], { width: 600, height: 300, ink: 'box', places: r.places, scale: 1000, faint: true });
+  var later = C.cloud([{ w: 'whale', n: 250 }, { w: 'sea', n: 900 }, { w: 'kraken', n: 40 }], { width: 600, height: 300, measure: measure, places: r.places, scale: 1000, faint: true });
   eq('a word keeps its place', later.places.whale, r.places.whale);
   yes('a word whose count falls is drawn smaller', +/font-size="([\d.]+)"[^>]*data-w="whale"/.exec(later.svg)[1] < r.places.whale.size);
   eq('a word whose count rises is drawn no larger than its place', +/font-size="([\d.]+)"[^>]*data-w="sea"/.exec(later.svg)[1], Math.round(r.places.sea.size * 10) / 10);

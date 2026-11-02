@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `tests/wordcloud.test.js`: the layout checks give each letter a fixed width, so they no longer depend on the fonts of the machine they run on. On GitHub's Linux runner, without Georgia, one check failed in 0.92.0 (a word that fitted there at its full size).
+
 ## 0.92.0 (2026-11-02)
 
 - **Word clouds** (`wordcloud.js`, `SW.wordcloud`, asked for by David so that every bench has one, and for the Melville bench's Word cloud lens, whose own `js/cloud.js` it replaces). The layout is ported from Andreas Mueller's word_cloud 1.9.6 (MIT; notice in `docs/wordcloud-LICENSE.txt`):
