@@ -33,7 +33,8 @@
  *   FONTS             the fonts a lens may offer, { id: [name, CSS font-family] }
  *   LOOKS, DEFAULT    formats that go together, { id: [name, format] }, and the one a cloud starts with
  *                     ('classic': many colours, Georgia, a few words upright, a rectangle)
- *   format(F)         a whole format from a look, or the reader's own ({ look: 'own', … })
+ *   format(F)         a whole format from a look and any details set beside it ({ look: 'oval', upright: 0.5 })
+ *   brief(F)          the look and only the details that differ from it, for a link or a saved setting
  *   options(F)        the cloud's options for a format (font, weight, caps, upright, shape, pad, contrast)
  *   colour(items, F, o)  the items coloured by the format; o.colour(item, rank) for a bench's own colouring
  *   control(o)        a Look menu and ⚙ (the details in a pop-over) for one line of a lens's toolbar;
@@ -276,7 +277,10 @@
 
   // ---------- looks: formats that go together, and the control that chooses them ----------
   // A format F is { look, colour, hue, font, bold, caps, upright, shape, pad, contrast }. A look
-  // sets all of them but look and hue; changing one of them makes the format the reader's own.
+  // sets all of them but look and hue; a detail set besides is kept beside the look (look: 'oval',
+  // upright: 0.5), so a link or a saved setting holds the look and only what was changed from it.
+  // A bench adds looks of its own and names the one a cloud starts with in SW.BENCH.wordcloud
+  // ({ looks: { id: [name, format] }, look: id }); its looks come first in the menu.
   C.PALETTE = ['var(--amber)', 'var(--beam)', 'var(--red)', 'var(--green)', 'var(--violet)'];
   C.COLOURS = [['many', 'many colours'], ['ink', 'ink'], ['one', 'one colour'], ['shade', 'one colour, shaded by count'], ['size', 'by size']];
   C.HUES = [['var(--amber)', 'Accent'], ['var(--beam)', 'Beam'], ['var(--violet)', 'Violet'], ['var(--green)', 'Green'], ['var(--red)', 'Red'], ['var(--text)', 'Ink']];
@@ -289,11 +293,29 @@
     heart: ['Heart', { colour: 'one', font: 'serif', bold: false, caps: false, upright: 0.1, shape: 'heart', pad: 2, contrast: 'sqrt' }]
   };
   C.DEFAULT = 'classic';
-  // a format from a look (the default look's where none is given), with anything the reader set kept
+  var WB = (root.SW && root.SW.BENCH && root.SW.BENCH.wordcloud) || {};
+  if (WB.looks) {
+    var mine = {}, k0;
+    for (k0 in WB.looks) mine[k0] = WB.looks[k0];
+    for (k0 in C.LOOKS) if (!mine[k0]) mine[k0] = C.LOOKS[k0];
+    C.LOOKS = mine;
+  }
+  if (WB.look && C.LOOKS[WB.look]) C.DEFAULT = WB.look;
+  var KEYS = ['colour', 'font', 'bold', 'caps', 'upright', 'shape', 'pad', 'contrast'], NUM = { upright: 1, pad: 1 };
+  function lookOf(F) { return C.LOOKS[F.look] ? F.look : C.DEFAULT; }
+  // a whole format: its look's (the default look where it names none it knows), with any detail it sets
+  // itself kept (a format from before looks, or with look: 'own', is all details)
   C.format = function (F) {
     F = F || {};
-    var look = C.LOOKS[F.look] ? F.look : F.look === 'own' ? 'own' : C.DEFAULT, base = C.LOOKS[look === 'own' ? C.DEFAULT : look][1], out = { look: look, hue: F.hue || 'var(--amber)' };
-    for (var k in base) out[k] = look === 'own' && F[k] != null ? F[k] : base[k];
+    var look = lookOf(F), base = C.LOOKS[look][1], out = { look: look, hue: F.hue || 'var(--amber)' };
+    KEYS.forEach(function (k) { var v = F[k] != null && F[k] !== '' ? F[k] : base[k]; out[k] = NUM[k] ? +v : k === 'bold' || k === 'caps' ? v === true || v === 'true' : v; });
+    return out;
+  };
+  // a format as short as it can be said: its look, and only the details that differ from the look's
+  C.brief = function (F) {
+    var W = C.format(F), base = C.LOOKS[W.look][1], out = { look: W.look };
+    KEYS.forEach(function (k) { if (String(W[k]) !== String(base[k])) out[k] = W[k]; });
+    if (W.hue !== 'var(--amber)') out.hue = W.hue;
     return out;
   };
   function hash(w) { for (var h = 0, i = 0; i < w.length; i++) h = (h * 31 + w.charCodeAt(i)) | 0; return Math.abs(h); }
@@ -332,7 +354,8 @@
     function sel(k, list) { return '<select data-f="' + k + '">' + list.map(function (x) { return opt(x[0], x[1], String(F[k]) === String(x[0])); }).join('') + '</select>'; }
     function list(obj) { return Object.keys(obj).map(function (k) { return [k, obj[k][0]]; }); }
     function draw() {
-      wrap.innerHTML = '<label class="wc-look">' + sel('look', list(C.LOOKS).concat(F.look === 'own' ? [['own', 'Your own']] : [])) + '</label>' +
+      var changed = KEYS.some(function (k) { return String(F[k]) !== String(C.LOOKS[F.look][1][k]); });
+      wrap.innerHTML = '<label class="wc-look">' + sel('look', list(C.LOOKS).map(function (x) { return x[0] === F.look && changed ? [x[0], x[1] + ', changed'] : x; })) + '</label>' +
         '<details class="menu wc-more"><summary class="btn" title="Colour, font, shape, spacing and sizes">⚙</summary><div class="menu-body wc-grid">' +
         '<label>Colour</label>' + sel('colour', (o.colours || []).concat(C.COLOURS)) +
         '<label data-for="hue">Hue</label>' + sel('hue', C.HUES) +
@@ -342,7 +365,7 @@
         '<label>Spacing</label>' + sel('pad', [[2, 'tight'], [4, 'normal'], [8, 'loose']]) +
         '<label>Sizes</label>' + sel('contrast', [['log', 'closer together'], ['sqrt', 'normal'], ['linear', 'further apart']]) +
         '<span></span><span class="wc-checks"><label><input type="checkbox" data-f="bold"' + (F.bold ? ' checked' : '') + '> bold</label> <label><input type="checkbox" data-f="caps"' + (F.caps ? ' checked' : '') + '> capitals</label></span>' +
-        '<span class="wc-own"></span><button type="button" class="btn wc-reset">Back to ' + esc(C.LOOKS[C.DEFAULT][0]) + '</button></div></details>';
+        '<span class="wc-own"></span><button type="button" class="btn wc-reset">Back to ' + esc(C.LOOKS[F.look][0]) + '</button></div></details>';
       var showHue = F.colour === 'one' || F.colour === 'shade';
       wrap.querySelector('[data-for="hue"]').hidden = wrap.querySelector('[data-f="hue"]').hidden = !showHue;
       if (o.more) { var own = wrap.querySelector('.wc-own'); own.parentNode.insertBefore(o.more, own); }
@@ -353,13 +376,13 @@
       var k = e.target.dataset && e.target.dataset.f; if (!k) return;
       var v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
       if (k === 'look') F = C.format({ look: v, hue: F.hue });
-      else { F[k] = typeof C.LOOKS.classic[1][k] === 'number' ? +v : v; if (k !== 'hue') F.look = 'own'; }
+      else { F[k] = NUM[k] ? +v : v; F = C.format(F); }
       var open = det().open; draw(); det().open = open;
       if (o.change) o.change(F);
     });
     wrap.addEventListener('click', function (e) {
       if (!e.target.closest('.wc-reset')) return;
-      F = C.format({ hue: F.hue }); draw(); if (o.change) o.change(F);
+      F = C.format({ look: F.look, hue: F.hue }); var open = det().open; draw(); det().open = open; if (o.change) o.change(F);
     });
     document.addEventListener('mousedown', function (e) { var d = det(); if (d && d.open && !wrap.contains(e.target)) d.open = false; });
     wrap.value = function () { return F; };
