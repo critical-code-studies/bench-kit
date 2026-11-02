@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.92.1 (2026-11-02)
 
 - `tests/wordcloud.test.js`: the layout checks give each letter a fixed width, so they no longer depend on the fonts of the machine they run on. On GitHub's Linux runner, without Georgia, one check failed in 0.92.0 (a word that fitted there at its full size).
 
