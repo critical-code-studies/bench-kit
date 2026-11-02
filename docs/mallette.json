@@ -1,11 +1,11 @@
 {
   "name": "mallette",
   "repository": "https://github.com/Computational-Hermeneutics/mallette",
-  "release": "v0.2.0",
+  "release": "v0.2.1",
   "licence": "Apache-2.0",
   "files": {
-    "mallette.js": "c711059db976b4411ec2e15807374c9abad2517903ca44d869fd79e7c4d756cd",
-    "mallette-worker.js": "2c46bc20ff806dc0d35e7bc1dbc89fa47752ca904a9cfa9574fa5d9cbb9ce622",
+    "mallette.js": "427efdbef17c61f2669e489fb05f441406b17017193ed51eb812efcb9566bd6a",
+    "mallette-worker.js": "5888c9486489e259fc5ad6f499967bf577b9cf06e3665dc7349a47ce0821512c",
     "docs/mallette-NOTICE.txt": "fcfc82f25a0b72d939c49309956218e5bfb345011a78efdcb7d6ad8487e7ae12"
   }
 }
