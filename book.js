@@ -81,6 +81,9 @@
   'use strict';
   var SW = root.SW, B = SW.BENCH || {}, D = B.doc || {};
   var K = SW.book = {};
+  // Book at a version's lines, and at a stage of its revision where it has stages: from another view
+  // (a topic's documents, say). Where the bench has no Book, Read at the lines.
+  K.openAt = function (vid, a) { SW.openAt(vid, a); };
 
   // ---------- the pure parts ----------
   // a stage's place in the list (1 for the first); a change in no stage counts from the first
@@ -1221,6 +1224,24 @@
     else writeQ();
   }
   SW.views.book = { show: show, enter: enter, hide: function () { stop(); SW.unpop(); } };
+  // SW.book.openAt(vid, { p, n0, n1 }, stage): Book on vid, at those lines (selected, as in Read), and
+  // at stage (0 before revision, n after the nth of doc.stages) where vid is one of the text's states;
+  // a step on the way back (SW.trail)
+  K.openAt = function (vid, a, stage) {
+    if (SW.trail && SW.state.tab !== 'book') SW.trail.from();
+    if (stage != null && STATES && inStates(vid) && !isNaN(+stage)) { st.stage = Math.max(0, Math.min(STAGES.length, Math.round(+stage))); st.all = false; st.own = true; }
+    var sel = a ? { p: a.p, n0: a.n0, n1: a.n1 != null ? a.n1 : a.n0 } : null;
+    if (vid !== SW.state.v) SW.select(vid, true);
+    SW.state.sel = sel;
+    var drawn = cols[0] && cols[0].b && cols[0].vid === textOf(vid);
+    if (drawn && SW.state.tab === 'book') {
+      st.own = false; apply(true);
+      if (sel) placeIn(cols[0], { vid: vid, a: sel }).then(function (x) { if (x) { goTo(cols[0], x, true); place = x; writeQ(); } });
+      return;
+    }
+    SW.forget('book');
+    SW.trail.quietly(function () { SW.setTab('book'); });
+  };
 
   // Settings ▸ Book: the pages' edges, dragged on a page of the text open in Book (or typed, as a
   // percentage of the page); the bench's (doc.trim) to go back to, and none. Kept in this browser

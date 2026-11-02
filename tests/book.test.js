@@ -40,4 +40,7 @@
   eq('across lines, to the end of a span', K.selection({ n: 5, c0: 10, c1: 30, off: 2 }, { n: 7, c0: 0, c1: 12, off: null }), { n0: 5, n1: 7, c0: 12, c1: 12 });
   eq('made backwards: the same lines', K.selection({ n: 7, c0: 0, c1: 12, off: 4 }, { n: 5, c0: 10, c1: 30, off: 2 }), { n0: 5, n1: 7, c0: 12, c1: 4 });
   eq('a span not in the lines: no selection', K.selection({ c0: 0, c1: 3, off: 0 }, { n: 2, c0: 0, c1: 3, off: 1 }), null);
+
+  T.group('Book: opened from elsewhere');
+  eq('SW.book.openAt is there for any bench', typeof (window.SW.book || {}).openAt, 'function');
 })();

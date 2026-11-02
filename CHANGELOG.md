@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **`SW.book.openAt(vid, { p, n0, n1 }, stage)`** (asked for by David, through the Melville bench: a stage's document in Topics opens in Book at that stage): Book on a version at those lines, selected and flashed, and at a stage of the revision where the version is one of the text's states (0 before revision, n after the nth stage); a step on the way back. Where the bench has no Book, Read at the lines. `tests/book.test.js`: 1 more check.
+
 ## 0.96.0 (2026-11-02)
 
 - **Read is a plain tab, and File ▾ ▸ Open a version…** (asked for by David, through the Spacewar bench; since 0.47.0 Read had opened only its menu). One click on Read goes to the version being read, where it was left. Versions are opened from **File ▾ ▸ Open a version…** (⌘O or Ctrl-O; in Versions ▾ where a bench has no File ▾), a box laid out as a chooser in the bench's own style: folders on the left (Recent, then the version picker's groups, or for a bench in layers each layer and its groups), the versions on the right with the columns the bench has (name, date, reference, medium), each opening to its files (by `readFiles` groups where the bench has them); a search over name, date and reference; double-click or Enter opens a version in Read at its kept place, a file at that file, a lost version at its record; the arrow keys move, → and ← open and close a version's files, Esc closes. A choice is a step on the way back. The version picker in the top bar stays. A bench that sets `readMenu: true` keeps Read ▾ (then a click on Read from another view goes back to Read and its ▾ opens the menu). `SW.openVersion()`.
