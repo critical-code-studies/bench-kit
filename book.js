@@ -29,8 +29,11 @@
  *     deletions. The revisions come and go as the slider moves; with Strike deletions the
  *     deletions made up to the stage stay, struck through in red, and the revisions made at the
  *     stage itself are marked more strongly;
- *   - Compare: a second text facing the first, the two held at the same page break (facs) as
- *     either is scrolled.
+ *   - Compare: other texts beside the first (up to SW.BENCH.doc.besideMax, 3 if not given), all held
+ *     at the same page break (facs) as any is scrolled: Compare with… and + another in the toolbar.
+ *     With three columns or more, the page images are beside the first column only (a ▣ at each page
+ *     break in the others opens one). SW.BENCH.doc.imageSide: 'left' sets each page's image to the
+ *     left of its text (image | text | text … for a translation read beside its source).
  * The text is set in sheets, a page to each, the page's image beside it (from the bench's own files
  * where SW.BENCH.doc.image gives one, else the page's IIIF service); a click opens it
  * larger, with its lines, its reference and SW.BENCH.doc.imageCredit (HTML), ◀ ▶ (or ← →) for the
@@ -65,8 +68,8 @@
  * page's width or height, or a function (pb) giving each page its own, or null); beside the text and in
  * the enlarged page, the boxes and bands with them.
  * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
- * for both columns, kept for this browser and in the address as img (off, or a width).
- * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the text beside),
+ * for every column, kept for this browser and in the address as img (off, or a width).
+ * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the texts beside, by commas),
  * img, l (the place), hz, pz and zm (a shared link's box, page and zoom). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
  * them), so an annotation made here is the same as one made in Read; the group's annotations are
  * marked on their lines. A state of the text is annotated on the source version's lines.
@@ -144,7 +147,8 @@
 
   // the address as the page was opened, read before the shell rewrites it
   var Q0 = SW.readQuery();
-  var st = { stage: STAGES.length, all: false, hands: true, play: null, right: Q0.bb || null, first: true, own: false };
+  var BESIDE = Math.max(1, +D.besideMax || 3);   // the most texts beside the first
+  var st = { stage: STAGES.length, all: false, hands: true, play: null, beside: String(Q0.bb || '').split(',').filter(Boolean), first: true, own: false };
   if (Q0.stage != null && Q0.stage !== '') st.stage = Q0.stage === '0' ? 0 : (AT[Q0.stage] || STAGES.length);
   if (Q0.all === '1') st.all = true;
   // deletions struck in red at the stage, not taken out (Strike deletions): kept for this browser, and in a link as del=strike
@@ -161,6 +165,7 @@
   else if (imgw(Q0.img)) { st.imgOn = true; st.imgW = imgw(Q0.img); }
   function showImages() {
     view.classList.toggle('bk-noimg', !st.imgOn);
+    view.classList.toggle('bk-imgleft', D.imageSide === 'left');
     view.style.setProperty('--bk-imgw', st.imgW + 'px');
     (cols || []).forEach(function (c) { c.stale = true; });
   }
@@ -495,8 +500,11 @@
   function words(t) { return String(t).toLowerCase().match(/[a-z\u00c0-\u024f']{3,}/g) || []; }
   function facing(s0, on) {
     if (cols.length < 2 || !s0._leaf || !s0._leaf.facs) return;
-    var here = cols.filter(function (c) { return c.el.contains(s0); })[0], other = here && cols[1 - cols.indexOf(here)];
-    if (!here || here.states || !other || !other.states) return;
+    var here = cols.filter(function (c) { return c.el.contains(s0); })[0];
+    if (!here || here.states) return;
+    cols.forEach(function (other) { if (other !== here && other.states) facingIn(other, s0, on); });
+  }
+  function facingIn(other, s0, on) {
     if (other.stale || !other.byFacs) measure(other);
     var pg = other.pages[other.byFacs[s0._leaf.facs]]; if (!pg) return;
     if (pg.sheet) pg.sheet.classList.toggle('bk-leaflit', on);
@@ -900,14 +908,14 @@
   function writeQ() {
     if (SW.state.tab !== 'book') return;
     // the version named is the one whose lines the place numbers: for a version's states, their source
-    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, del: st.strike && cols.some(function (c) { return c.states; }) ? 'strike' : null, bb: st.right, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place) });
+    SW.writeQuery({ v: cols[0] ? cols[0].vid : null, stage: stageQ(), all: st.all && cols.some(function (c) { return c.states; }) ? 1 : null, del: st.strike && cols.some(function (c) { return c.states; }) ? 'strike' : null, bb: st.beside.join(',') || null, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place) });
   }
   // a link to Book as it is set: the version, the stage, the settings, the place, and what is held
   // (the box clicked), with the enlarged page and its zoom where the link is made there (pz, zm)
   function shareLink(extra) {
     var hasStates = cols.some(function (c) { return c.states; });
     var q = { v: cols[0] ? cols[0].vid : SW.state.v, tab: 'book', stage: stageQ(), all: st.all && hasStates ? 1 : null, del: st.strike && hasStates ? 'strike' : null,
-      bb: st.right, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place), hz: heldZone };
+      bb: st.beside.join(',') || null, img: !st.imgOn ? 'off' : st.imgW !== IMGW0 ? st.imgW : null, l: lineQ(place), hz: heldZone };
     for (var k in extra || {}) q[k] = extra[k];
     return SW.permalink(q);
   }
@@ -917,8 +925,14 @@
   function toolbar(left) {
     var tb = SW.el('div', { class: 'toolbar bk-bar' }), list = texts(), hasStates = cols.some(function (c) { return c.states; });
     var chips = list.map(function (t) { return '<button class="btn' + (t === textOf(left) ? ' on' : '') + '" data-text="' + esc(t) + '">' + esc(textLabel(t)) + '</button>'; }).join('');
-    var beside = '<label class="check" title="A second text facing this one, held at the same ' + esc(PAGE) + ' as either is scrolled (Versions ▸ Collate sets two versions out line by line)">Compare <select id="bk-right"><option value="">with nothing</option>' +
-      list.filter(function (t) { return t !== textOf(left); }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === st.right ? ' selected' : '') + '>with ' + esc(textLabel(t)) + '</option>'; }).join('') + '</select></label>';
+    // Compare: a select for each text beside, and one more while there are texts and room
+    var others = list.filter(function (t) { return t !== textOf(left); }), slots = st.beside.slice();
+    if (slots.length < BESIDE && others.length > slots.length) slots.push('');
+    var beside = '<span class="check bk-beside" title="Other texts beside this one, held at the same ' + esc(PAGE) + ' as any is scrolled (Versions ▸ Collate sets two versions out line by line)">Compare ' +
+      slots.map(function (cur, i) {
+        return (i ? '<span class="faint">and</span> ' : '') + '<select data-slot="' + i + '" aria-label="' + (i ? 'Another text beside' : 'A text beside') + '"><option value="">' + (i ? 'nothing more' : 'with nothing') + '</option>' +
+          others.filter(function (t) { return t === cur || st.beside.indexOf(t) < 0; }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === cur ? ' selected' : '') + '>with ' + esc(textLabel(t)) + '</option>'; }).join('') + '</select>';
+      }).join(' ') + '</span>';
     tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
       '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; Off folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
@@ -943,7 +957,7 @@
         writeQ(); return;
       }
       var t = b0.dataset.text != null ? b0 : null;
-      if (t) { stop(); var to = t.dataset.text; if (to === st.right) st.right = null; st.own = true; SW.select(to === textOf(SW.state.v) ? SW.state.v : to); return; }
+      if (t) { stop(); var to = t.dataset.text; st.beside = st.beside.filter(function (x) { return x !== to; }); st.own = true; SW.select(to === textOf(SW.state.v) ? SW.state.v : to); return; }
       if (e.target.id === 'bk-prev') { stop(); st.stage = Math.max(0, st.stage - 1); apply(true); }
       if (e.target.id === 'bk-next') { stop(); st.stage = Math.min(STAGES.length, st.stage + 1); apply(true); }
       if (e.target.id === 'bk-play') { if (st.play) stop(); else play(); }
@@ -967,7 +981,11 @@
       if (e.target.id === 'bk-all') { st.all = e.target.checked; stop(); var sk = SW.$('#bk-strike', tb); if (sk) sk.disabled = st.all; apply(false); }
       if (e.target.id === 'bk-strike') { st.strike = e.target.checked; SW.store.set('book.del', st.strike ? 'strike' : ''); apply(true); }
       if (e.target.id === 'bk-hands') { st.hands = e.target.checked; apply(false); }
-      if (e.target.id === 'bk-right') { st.right = e.target.value || null; draw(SW.state.v); }
+      if (e.target.dataset.slot != null) {
+        var i = +e.target.dataset.slot, val = e.target.value;
+        if (val) st.beside[i] = val; else st.beside.splice(i, 1);
+        draw(SW.state.v);
+      }
     });
     return tb;
   }
@@ -996,13 +1014,15 @@
   function draw(vid) {
     stop(); SW.unpop();
     var left = textOf(vid);
-    if (st.right === left) st.right = null;
+    var known = texts();
+    st.beside = st.beside.filter(function (t, i, a) { return t !== left && a.indexOf(t) === i && known.indexOf(t) >= 0; }).slice(0, BESIDE);
     cols = [];
     view.innerHTML = '';
-    var holder = SW.el('div', { class: 'bk-cols' + (st.right ? ' bk-two' : '') });
+    var holder = SW.el('div', { class: 'bk-cols' + (st.beside.length ? ' bk-two' : '') + (st.beside.length > 1 ? ' bk-many' : '') });
+    holder.style.setProperty('--bk-n', String(st.beside.length + 1));
     view.appendChild(holder);
     cols.push(column(left, holder));
-    if (st.right) cols.push(column(st.right, holder));
+    st.beside.forEach(function (t) { cols.push(column(t, holder)); });
     view.insertBefore(toolbar(vid), holder);
     var top = holder.getBoundingClientRect().top + (window.scrollY || 0);
     holder.style.setProperty('--bk-top', Math.max(0, Math.round(top)) + 'px');
@@ -1078,7 +1098,7 @@
         // the place follows the reader's scrolling, not a jump Book made itself
         placeTimer = setTimeout(function () { if (i === 0 && col.moved) { var e = topSpan(col); place = e ? { p: +e.dataset.p, n0: +e.dataset.n, n1: +e.dataset.n } : null; writeQ(); } }, 250);
         if (cols.length < 2 || col.frame) return;
-        col.frame = requestAnimationFrame(function () { col.frame = 0; follow(col, cols[1 - i]); });
+        col.frame = requestAnimationFrame(function () { col.frame = 0; cols.forEach(function (o) { if (o !== col) follow(col, o); }); });
       };
     });
   }
