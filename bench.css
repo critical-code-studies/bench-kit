@@ -1227,3 +1227,28 @@ ul.reading a { overflow-wrap: anywhere; }
 /* kit/folder.js: the folder read in place of the published files */
 .folder-chip { margin-left: auto; font: 12px var(--sans, system-ui); padding: 2px 8px; border: 1px solid var(--amber, #c90); border-radius: 10px; background: var(--surface-2); color: var(--text); cursor: pointer; white-space: nowrap; }
 .folder-chip:hover { background: var(--surface); }
+
+/* kit/library.js: the Library, and an entry in a box over the bench */
+#view-library .lib { padding: 16px clamp(12px, 3vw, 32px) 80px; max-width: 72em; }
+#view-library .lib h2 { margin: 0 0 6px; }
+.lib-intro { color: var(--text-dim); margin: 0 0 12px; max-width: 48em; }
+.lib-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.lib-q { flex: 1 1 16em; min-width: 10em; }
+.lib-n { margin-left: auto; font-size: 12px; }
+.lib-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.lib-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; text-align: left; padding: 9px 6px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--text); cursor: pointer; font: inherit; }
+.lib-row:hover { background: var(--surface-2); }
+.lib-t { font-weight: 600; }
+.lib-m { grid-column: 1; color: var(--text-dim); font-size: 13px; }
+.lib-h { grid-column: 2; grid-row: 1 / span 2; align-self: center; font: 11px var(--mono); color: var(--text-faint); white-space: nowrap; }
+.lib-h.held { color: var(--text-dim); }
+.lib-acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.lib-copies { display: inline-flex; gap: 6px; align-items: center; margin-left: 6px; }
+.lib-rec { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 14px; margin: 0 0 12px; font-size: 14px; }
+.lib-rec dt { color: var(--text-faint); }
+.lib-rec dd { margin: 0; }
+.lib-frame { width: 100%; height: 72vh; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.lib-img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.lib-text { white-space: pre-wrap; font: 15px/1.6 var(--serif, Georgia, serif); max-height: 72vh; overflow: auto; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); }
+.lib-md { max-height: 72vh; overflow: auto; padding: 4px 12px; border: 1px solid var(--line); border-radius: 4px; }
+@media (max-width: 760px) { .lib-row { grid-template-columns: minmax(0, 1fr); } .lib-h { grid-column: 1; grid-row: auto; } .lib-frame { height: 64vh; } }
