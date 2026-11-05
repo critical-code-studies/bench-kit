@@ -122,4 +122,11 @@
     T.eq('all of it: connected, in the group', SW.notes.hypSay({ token: 'ok', member: true, user: 'ab', group: 'The crew' })[1].indexOf('Connected as ab to “The crew”') >= 0, true);
     if (SW.paratexts && SW.paratexts.diagnose) T.eq('GitHub, the token unable to reach the repository: the invitation first', /invitation/.test(SW.notes.ghSay({ state: 'unreachable', user: 'ab', causes: [['The invitation is not accepted yet', SW.paratexts.INVITE_URL]] })[1]), true);
   }
+
+  T.group('A page’s image from a IIIF service');
+  var spread = { service: 'https://iiif.example/R3/', v: 2, w: 3680, h: 2624, key: 'p1' };
+  eq('the right half of a spread, in pixels, as a level 1 service takes it', SW.iiifImage(spread, { region: 'right' }).src, 'https://iiif.example/R3/1840,0,1840,2624/560,/0/default.jpg');
+  eq('a tall page enlarged by its height', SW.iiifImage(spread, { region: 'left' }).large, 'https://iiif.example/R3/0,0,1840,2624/,1600/0/default.jpg');
+  eq('the full size kept for the enlarged page (max in version 3)', [SW.iiifImage(spread).sharp, SW.iiifImage({ service: 'https://s/x', v: 3 }).sharp], ['https://iiif.example/R3/full/full/0/default.jpg', 'https://s/x/full/max/0/default.jpg']);
+  eq('the bench’s own copies where it holds them', SW.iiifImage(spread, { held: 'img/pages' }).src, 'img/pages/p1.jpg');
 })();

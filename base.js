@@ -171,6 +171,31 @@
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { SW.toast('Copied ' + t); }, function () { window.prompt('Copy:', t); });
   }, true);
 
+  // A page's image from a IIIF image service, for SW.BENCH.doc.image(pb): x is an entry of an image map
+  // (tools/iiif-map.js: { service, v, w, h, region, key }) or a service's URL. o.region (else x.region):
+  // 'left' or 'right' (half a spread), 'full', or IIIF's x,y,w,h; o.width (560) for the image beside
+  // the text, o.large (1600, on the long side) for the enlarged page; o.held, a folder of the bench's own
+  // copies (<held><key>.jpg and <key>-large.jpg, from tools/iiif-map.js --fetch), used in place of the
+  // service's. Asks only what a level 1 service answers (a region in pixels, a size by width or height),
+  // so it needs the image's size (w, h) for a half. Gives { src, large, sharp }: sharp the service's full
+  // size, fetched only when the page is enlarged.
+  SW.iiifRegion = function (x, region) {
+    var r = region || 'full', w = x.w, h = x.h;
+    if ((r === 'left' || r === 'right') && w && h) { var half = Math.floor(w / 2); return { r: r === 'left' ? '0,0,' + half + ',' + h : half + ',0,' + (w - half) + ',' + h, w: r === 'left' ? half : w - half, h: h }; }
+    var m = /^(\d+),(\d+),(\d+),(\d+)$/.exec(r);
+    return m ? { r: r, w: +m[3], h: +m[4] } : { r: r === 'left' ? 'pct:0,0,50,100' : r === 'right' ? 'pct:50,0,50,100' : r, w: w, h: h };
+  };
+  SW.iiifImage = function (x, o) {
+    o = o || {};
+    if (!x) return null;
+    if (typeof x === 'string') x = { service: x };
+    var g = SW.iiifRegion(x, o.region || x.region), base = String(x.service).replace(/\/$/, '') + '/' + g.r + '/';
+    var sharp = base + (x.v === 3 ? 'max' : 'full') + '/0/default.jpg', W = o.width || 560, L = o.large || 1600;
+    var key = o.key != null ? o.key : x.key;
+    if (o.held && key != null) { var hp = String(o.held).replace(/\/?$/, '/') + key; return { src: hp + '.jpg', large: hp + '-large.jpg', sharp: sharp }; }
+    var large = g.w && g.h && g.h > g.w ? ',' + Math.min(L, g.h) : Math.min(L, g.w || L) + ',';
+    return { src: base + Math.min(W, g.w || W) + ',/0/default.jpg', large: base + large + '/0/default.jpg', sharp: sharp };
+  };
   SW.permalink = function (params) {
     var q = [];
     for (var k in params) if (params[k] != null && params[k] !== '') q.push(k + '=' + encodeURIComponent(params[k]));
