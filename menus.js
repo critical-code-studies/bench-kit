@@ -74,7 +74,7 @@
   }
   var OPEN = ['open', 'Open a version…', (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘' : 'Ctrl-') + 'O · the versions in their groups, and their files'];
   function FILE() {
-    var groups = [[OPEN], projectItems(), H().file || [],
+    var groups = [[OPEN], projectItems(), SW.folder ? SW.folder.items() : [], H().file || [],
                   [['backup', 'Back up my data', ''], ['restore', 'Restore my data (non-destructive)', '']]];
     return groups.map(function (g) { return g.filter(kept('file')); }).filter(function (g) { return g.length; });
   }
@@ -93,7 +93,7 @@
     return [['about', 'This version', 'Its record, sources and annotations'],
             ['compare', 'Collate', collateText()],
             ['genealogy', 'Genealogy', 'How the versions descend']]
-      .concat(FILE_ON ? [] : [OPEN].concat(projectItems()));   // in File ▾, where the bench has it
+      .concat(FILE_ON ? [] : [OPEN].concat(projectItems(), SW.folder ? SW.folder.items() : []));   // in File ▾, where the bench has it
   }
   // the items of a menu drawn as HTML that the bench has turned off, and what they leave empty: a
   // submenu or a lens group with no items, a group's heading with none under it, a rule with nothing
@@ -452,6 +452,7 @@
     if (which === 'read' && /^f:/.test(p)) { SW.openAt(SW.state.v, { p: +p.slice(2), n0: 1 }); return; }   // a file of the open version
     if (which === 'read' && /^v:/.test(p)) { if (p.slice(2) !== SW.state.v) { if (SW.trail) SW.trail.from(); SW.select(p.slice(2)); } SW.setTab('read'); return; }   // another version: a step on the way back
     if ((which === 'file' || which === 'versions') && p === 'open') { SW.openVersion(); return; }
+    if ((which === 'file' || which === 'versions') && /^folder-/.test(p) && SW.folder) { SW.folder.pick(p); return; }
     if (which === 'file' && p === 'backup') { SW.backup.save(); return; }
     if (which === 'file' && p === 'restore') { SW.backup.restore(); return; }
     if ((which === 'versions' || which === 'file') && p === 'builder' && SW.builder) { SW.builder.open(); return; }

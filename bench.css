@@ -1223,3 +1223,7 @@ ul.reading a { overflow-wrap: anywhere; }
 .joinhelp .js-step[data-closed] { opacity: .7; }
 .joinhelp .js-ok ol { margin: 4px 0 0; }
 .set-setup { margin: 0 0 10px; }
+
+/* kit/folder.js: the folder read in place of the published files */
+.folder-chip { margin-left: auto; font: 12px var(--sans, system-ui); padding: 2px 8px; border: 1px solid var(--amber, #c90); border-radius: 10px; background: var(--surface-2); color: var(--text); cursor: pointer; white-space: nowrap; }
+.folder-chip:hover { background: var(--surface); }

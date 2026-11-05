@@ -13,7 +13,7 @@
  *     meta(b)            [[label, value]]: the bench's rows in an export's details, before
  *                        Generated (how the text was read)
  * It gives SW.build(id, extra), SW.current(), SW.fetchText(path), SW.fetchBytes(path),
- * SW.openAt(vid, a), SW.docMeta(b) and SW.oct(n, width). A file the page holds itself (a version made
+ * SW.openAt(vid, a), SW.docMeta(b), SW.oct(n, width) and SW.forgetBuilds(). A file the page holds itself (a version made
  * from files, kit/builder.js) is read from SW.fileSource ({ has(path), text(path), bytes(path) }) instead.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -69,6 +69,8 @@
     buildCache[key].catch(function () { delete buildCache[key]; });
     return buildCache[key];
   };
+  // every file and build read afresh (kit/folder.js, when a folder is opened, read again or closed)
+  SW.forgetBuilds = function () { textCache = {}; buildCache = {}; };
   SW.current = function () { return SW.state.v ? SW.build(SW.state.v) : Promise.reject(new Error('no version')); };
 
   // Open a version at a line range (or its record when there is none).
