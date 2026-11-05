@@ -2,19 +2,26 @@
  * dictionary.js - dictionaries for a bench: a word looked up in the dictionaries the bench names,
  * from the text (📕 Look up, on a selection in Read and Book) or in bulk for a lens; and a list of
  * word frequencies beside them, since what is rare is a matter of use, not of being in a dictionary.
- * SW.BENCH.dictionaries: [{ id, name, short, url | base, credit, licence, entryURL }]
+ * SW.BENCH.dictionaries: [{ id, name, short, url | base, credit, licence, entryURL, lang, forms }]
  *   url        one file holding the whole dictionary, fetched when first wanted (a bench's own
  *              selection, as the words of its texts that the dictionary has)
  *   base       a folder of shards for a large one: index.json, then a file to each two first letters
  *              (ab.json, …; _.json for the rest), each fetched when a word in it is first wanted
  *   credit     HTML shown with every entry; entryURL(head) a link to the source's own entry, if any
+ *   lang       the dictionary's language ('en' if not given). English words are tried with English
+ *              lemmas and sharded by their first two letters a–z, as before. Any other language: the
+ *              word as written (NFKC, lower case), and in a script written without spaces (Chinese,
+ *              Japanese, Thai) every prefix of the selection, longest first, so that a run of
+ *              characters finds the longest word it begins with; shards by first character (u3042.json).
+ *   forms      (word) -> [form], the bench's own forms to try in place of these (a deinflector)
  * A dictionary file: { kind: 'bench-kit-dictionary', name, source, licence, entries: { word: [entry] } }
  * (a shard is { entries }; index.json the same without entries, with shards: [key]); the words are
- * keys in lower case, an entry is { head, pos, etym, field: [label], senses: [text] }, plain text.
- * tools/dict-build.js makes them (Webster's 1913 from Project Gutenberg's text, or a JSON list).
+ * keys in lower case, an entry is { head, reading, pos, etym, field: [label], senses: [text] }, plain
+ * text (reading: a head's pronunciation, as JMdict's kana). tools/dict-build.js makes them (Webster's
+ * 1913 from Project Gutenberg's text, JMdict from jmdict-simplified's JSON, or a JSON list).
  * SW.BENCH.wordFreq: { url, name, credit }: a file { kind: 'bench-kit-frequencies', name, source,
  * licence, scale: 'zipf', words: { word: n } }.
- * SW.dict: forms(word) and shardOf(word) (pure); list(); load() (every one-file dictionary and the
+ * SW.dict: forms(word, lang), shardOf(word, lang), find(entries, word, has, dict) and words(text) (pure); list(); load() (every one-file dictionary and the
  * shards' indexes, and the frequencies); lookup(word) and lookupMany(words) (promises, fetching the
  * shards needed); lookupNow(word), from what is loaded (a lens's thousands of words, after
  * lookupMany or load); zipf(word); show(words, x, y); selActs().
@@ -33,7 +40,22 @@
   // modern and archaic: 's; -men to -man (seamen, Englishmen); -ies, -ied to -y; -es, -s; -ed, -d; -ing; -ly, -ily; -ness; -er, -est,
   // -ier, -iest; -eth, -est (thou walkest, he walketh); each with a final e put back, and a doubled
   // consonant undone (stopped, stop). No lemma shorter than three letters.
-  D.forms = function (word) {
+  // a script written without spaces between words
+  var UNSPACED = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u0e00-\u0e7f\u0e80-\u0eff\u1000-\u109f\u1780-\u17ff]/;
+  var EDGE = /^[^\p{L}\p{N}]+|[^\p{L}\p{M}\p{N}]+$/gu;
+  function other(word) {
+    var w = String(word || '').normalize('NFKC').toLowerCase().replace(EDGE, '');
+    var out = [];
+    if (!w) return out;
+    out.push({ w: w, how: 'as written' });
+    if (UNSPACED.test(w)) {   // the longest word the run begins with: each prefix, longest first
+      var cs = Array.from(w).slice(0, 16);
+      for (var n = Math.min(cs.length, 16) - (cs.length > 16 ? 0 : 1); n >= 1; n--) out.push({ w: cs.slice(0, n).join(''), how: 'from ' + w });
+    }
+    return out;
+  }
+  D.forms = function (word, lang) {
+    if (lang && lang !== 'en' && !/^en-/.test(lang)) return other(word);
     var w = String(word || '').toLowerCase().replace(/[’`]/g, "'").replace(/^[^a-z]+|[^a-z']+$/g, '').replace(/'$/, '');
     var out = [], seen = Object.create(null);   // no object's own names: constructor is a word
     function add(f, how) { if (f && f.length >= (how === 'as written' ? 1 : 3) && /^[a-z][a-z'-]*$/.test(f) && !seen[f]) { seen[f] = 1; out.push({ w: f, how: how }); } }
@@ -61,10 +83,25 @@
     return out;
   };
   // the shard a word is in: its first two letters, or _ for a word that does not begin with two
-  D.shardOf = function (word) { var k = String(word || '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 2); return k.length === 2 ? k : '_'; };
+  // (any other language: its first character's code point, u3042)
+  D.shardOf = function (word, lang) {
+    if (lang && lang !== 'en' && !/^en-/.test(lang)) { var c = String(word || '').normalize('NFKC').toLowerCase().codePointAt(0); return c == null ? '_' : 'u' + c.toString(16); }
+    var k = String(word || '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 2); return k.length === 2 ? k : '_'; };
+  // the forms a dictionary tries: the bench's own (d.forms), or those of its language
+  function formsIn(d, word) {
+    if (d && typeof d.forms === 'function') return (d.forms(word) || []).map(function (f, i) { return typeof f === 'string' ? { w: f, how: i ? 'from ' + word : 'as written' } : f; });
+    return D.forms(word, d && d.lang);
+  }
+  D.formsIn = formsIn;
+  // the words to look up in a passage: spaced words of two letters or more, and each run of a script
+  // written without spaces as one (its forms then try each prefix); at most six
+  D.words = function (text) {
+    return String(text || '').normalize('NFKC').split(/[^\p{L}\p{M}\p{N}’'\-ー々]+/u).map(function (w) { return w.replace(/^['’\-]+|['’\-]+$/g, ''); })
+      .filter(function (w) { return /[A-Za-z]{2}/.test(w) || /[^\u0000-\u024f]/.test(w) && /\p{L}/u.test(w) || /\p{L}{2}/u.test(w); }).slice(0, 6);
+  };
   // a word in a dictionary's entries (a map of word to entries): the first of its forms found
-  D.find = function (entries, word, has) {
-    var fs = D.forms(word);
+  D.find = function (entries, word, has, d) {
+    var fs = formsIn(d, word);
     for (var i = 0; i < fs.length; i++) {
       var e = entries(fs[i].w);
       if (e && e.length) return { as: fs[i].w, how: fs[i].how, entries: e };
@@ -105,7 +142,7 @@
   function entriesOf(d) {
     return function (w) {
       if (d.url) return get(held[d.id], w);
-      var ss = shards[d.id] || {}, k = D.shardOf(w);
+      var ss = shards[d.id] || {}, k = D.shardOf(w, d.lang);
       return ss[k] ? get(ss[k], w) : undefined;
     };
   }
@@ -121,14 +158,14 @@
       return ready(d).then(function () {
         if (d.url) return;
         var ks = {};
-        words.forEach(function (w) { D.forms(w).forEach(function (f) { ks[D.shardOf(f.w)] = 1; }); });
+        words.forEach(function (w) { formsIn(d, w).forEach(function (f) { ks[D.shardOf(f.w, d.lang)] = 1; }); });
         return Promise.all(Object.keys(ks).map(function (k) { return shard(d, k); }));
       }).catch(function () {});
     }));
   }
   D.lookupNow = function (word) {
     var found = [];
-    D.list().forEach(function (d) { var r = D.find(entriesOf(d), word, !d.url); if (r) { r.dict = d; found.push(r); } });
+    D.list().forEach(function (d) { var r = D.find(entriesOf(d), word, !d.url, d); if (r) { r.dict = d; found.push(r); } });
     return { word: word, found: found };
   };
   D.lookup = function (word) { return need([word]).then(function () { return D.lookupNow(word); }); };
@@ -146,7 +183,7 @@
     return '<div class="dict-src">' + esc(d.short || d.name) + (r.how !== 'as written' ? ' <span class="faint">· ' + esc(r.as) + ', ' + esc(r.how) + '</span>' : '') + '</div>' +
       r.entries.map(function (e) {
         var link = d.entryURL ? d.entryURL(e.head || r.as) : '';
-        return '<div class="dict-entry"><span class="dict-head">' + esc(e.head || r.as) + '</span>' + (e.pos ? ' <i>' + esc(e.pos) + '</i>' : '') +
+        return '<div class="dict-entry"' + (d.lang ? ' lang="' + esc(d.lang) + '"' : '') + '><span class="dict-head">' + esc(e.head || r.as) + '</span>' + (e.reading ? ' <span class="dict-read">' + esc(e.reading) + '</span>' : '') + (e.pos ? ' <i>' + esc(e.pos) + '</i>' : '') +
           (e.field || []).map(function (f) { return ' <span class="dict-field">' + esc(f) + '</span>'; }).join('') +
           (e.senses && e.senses.length ? '<div class="dict-senses">' + e.senses.map(function (s) { return '<div class="dict-sense">' + esc(s) + '</div>'; }).join('') + '</div>' : '') +
           (e.etym ? '<div class="dict-etym">' + esc(e.etym) + '</div>' : '') + (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener">the full entry ↗</a>' : '') + '</div>';
@@ -170,7 +207,7 @@
   };
   // the words of the text selected on the page (at most six)
   D.selectedWords = function () {
-    return String(window.getSelection() || '').split(/[^A-Za-z’'-]+/).map(function (w) { return w.replace(/^['’-]+|['’-]+$/g, ''); }).filter(function (w) { return /[A-Za-z]{2}/.test(w); }).slice(0, 6);
+    return D.words(window.getSelection());
   };
   // 📕 Look up on a selection bar: the words selected, or nothing where the bench names no dictionary
   D.selActs = function () {

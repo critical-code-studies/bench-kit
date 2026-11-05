@@ -118,6 +118,7 @@ dialog.set-dlg { width: min(94vw, 600px); }
 .dict-q { margin-bottom: 4px; }
 .dict-src { font: 10.5px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); margin: 6px 0 2px; }
 .dict-head { font-weight: 600; }
+.dict-read { color: var(--muted, #666); }
 .dict-field { font-size: 11px; padding: 0 5px; border: 1px solid var(--line); border-radius: 8px; color: var(--text-dim); }
 .dict-senses { margin: 3px 0 3px 0.9em; }
 .dict-sense { margin: 2px 0; }   /* the source's own numbers, (1., (a)), kept in the text */

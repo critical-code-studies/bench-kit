@@ -7,6 +7,7 @@
  *   node tools/dict-build.js webster pg29765.txt --one data/webster.json --words words.txt
  *   node tools/dict-build.js webster pg29765.txt --out data/webster/          every entry, in shards
  *   node tools/dict-build.js json entries.json --one data/glossary.json --name "A glossary"
+ *   node tools/dict-build.js jmdict jmdict-eng-3.6.1.json --lang ja --out data/jmdict/ --words words.txt
  *
  * Sources:
  *   webster   Webster's Revised Unabridged Dictionary (1913), Project Gutenberg's plain text (ebook
@@ -15,9 +16,15 @@
  *             A headword is a capitalised line after a blank one ("COLOR; COLOUR" two heads), then
  *             its form line (part of speech, Etym: [...], a field such as (Naut.)), then its senses
  *             ("Defn: …", "1. …", "(a) …"). Up to three entries a head, three senses an entry.
- *   json      [{ head, pos, etym, field, senses }], or a dictionary file already ({ entries }).
+ *   jmdict    JMdict, Japanese–English (Electronic Dictionary Research and Development Group, CC BY-SA
+ *             4.0), from jmdict-simplified's JSON (github.com/scriptin/jmdict-simplified, jmdict-eng):
+ *             every kanji and kana writing a head, the entry headed by its first writing with its kana
+ *             as the reading; common words first; up to three senses, their English glosses.
+ *   json      [{ head, reading, pos, etym, field, senses }], or a dictionary file already ({ entries }).
  * --words: a file of words (one a line, or a JSON list or { word: n }); the entries kept are those of
- * the words' forms (dictionary.js's forms()). --name, --source, --licence set the file's own lines.
+ * the words' forms (dictionary.js's forms()). --lang: the dictionary's language (en if not given; give
+ * the same as lang in the bench's SW.BENCH.dictionaries), which sets the forms tried and the shards.
+ * --name, --source, --licence set the file's own lines.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 'use strict';
@@ -28,8 +35,8 @@ const D = globalThis.SW.dict;
 const args = process.argv.slice(2);
 function opt(k) { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; }
 const kind = args[0], src = args[1];
-if (!kind || !src || !/^(webster|json)$/.test(kind) || !(opt('--one') || opt('--out'))) {
-  console.error('node tools/dict-build.js webster|json <source> (--one <file.json> | --out <folder>) [--words <file>] [--name …] [--source …] [--licence …]');
+if (!kind || !src || !/^(webster|json|jmdict)$/.test(kind) || !(opt('--one') || opt('--out'))) {
+  console.error('node tools/dict-build.js webster|json|jmdict <source> (--one <file.json> | --out <folder>) [--words <file>] [--name …] [--source …] [--licence …]');
   process.exit(1);
 }
 
@@ -77,6 +84,28 @@ function webster(text) {
   }
   return entries;
 }
+// ---------- JMdict, from jmdict-simplified ----------
+function jmdict(j) {
+  const entries = Object.create(null);
+  const words = (j.words || []).slice().sort((a, b) => (common(b) - common(a)));
+  function common(w) { return (w.kanji || []).concat(w.kana || []).some(x => x.common) ? 1 : 0; }
+  words.forEach(w => {
+    const kanji = (w.kanji || []).map(x => x.text), kana = (w.kana || []).map(x => x.text);
+    const head = kanji[0] || kana[0];
+    if (!head) return;
+    const senses = (w.sense || []).slice(0, 3);
+    const e = { head: head, reading: kanji.length ? kana.slice(0, 3).join('・') : '',
+      pos: [...new Set(senses.flatMap(s => s.partOfSpeech || []))].slice(0, 4).join(', '), etym: '',
+      field: [...new Set(senses.flatMap(s => s.field || []))].slice(0, 4),
+      senses: senses.map(s => (s.gloss || []).map(g => g.text).join('; ').slice(0, 280)).filter(Boolean) };
+    if (!e.senses.length) return;
+    [...new Set(kanji.concat(kana))].forEach(h => {
+      const k = h.normalize('NFKC').toLowerCase(), list = entries[k] = entries[k] || [];
+      if (list.length < 3) list.push(e);
+    });
+  });
+  return entries;
+}
 function fromJSON(j) {
   if (j && j.entries) return j.entries;
   const entries = Object.create(null);
@@ -84,7 +113,8 @@ function fromJSON(j) {
   return entries;
 }
 
-let entries = kind === 'webster' ? webster(fs.readFileSync(src, 'utf8')) : fromJSON(JSON.parse(fs.readFileSync(src, 'utf8')));
+const lang = opt('--lang') || (kind === 'jmdict' ? 'ja' : 'en');
+let entries = kind === 'webster' ? webster(fs.readFileSync(src, 'utf8')) : kind === 'jmdict' ? jmdict(JSON.parse(fs.readFileSync(src, 'utf8'))) : fromJSON(JSON.parse(fs.readFileSync(src, 'utf8')));
 const all = Object.keys(entries).length;
 
 // only what a list of words needs: each word's forms
@@ -94,15 +124,16 @@ if (wl) {
   let words;
   try { const j = JSON.parse(t); words = Array.isArray(j) ? j : Object.keys(j.words || j); } catch (e) { words = t.split(/\s+/); }
   const keep = Object.create(null);
-  words.forEach(w => { const f = D.find(x => entries[x] || null, w); if (f) keep[f.as] = entries[f.as]; });
+  words.forEach(w => { const f = D.find(x => entries[x] || null, w, false, { lang }); if (f) keep[f.as] = entries[f.as]; });
   entries = keep;
 }
 
 const meta = {
   kind: 'bench-kit-dictionary',
-  name: opt('--name') || (kind === 'webster' ? 'Webster’s Revised Unabridged Dictionary (1913)' : path.basename(src)),
-  source: opt('--source') || (kind === 'webster' ? 'Project Gutenberg ebook 29765, plain text; definitions only' : src),
-  licence: opt('--licence') || (kind === 'webster' ? 'Public domain in the United States' : ''),
+  name: opt('--name') || (kind === 'webster' ? 'Webster’s Revised Unabridged Dictionary (1913)' : kind === 'jmdict' ? 'JMdict (Japanese–English)' : path.basename(src)),
+  source: opt('--source') || (kind === 'webster' ? 'Project Gutenberg ebook 29765, plain text; definitions only' : kind === 'jmdict' ? 'jmdict-simplified, ' + path.basename(src) : src),
+  licence: opt('--licence') || (kind === 'webster' ? 'Public domain in the United States' : kind === 'jmdict' ? 'CC BY-SA 4.0, Electronic Dictionary Research and Development Group' : ''),
+  lang,
   made: 'tools/dict-build.js ' + kind + ', ' + new Date().toISOString().slice(0, 10)
 };
 const n = Object.keys(entries).length;
@@ -113,7 +144,7 @@ if (opt('--one')) {
   console.log(`${n} of ${all} heads; ${out}, ${Math.round(fs.statSync(out).size / 1024)} KB`);
 } else {
   const dir = opt('--out'), by = {};
-  Object.keys(entries).forEach(w => { const k = D.shardOf(w); (by[k] = by[k] || {})[w] = entries[w]; });
+  Object.keys(entries).forEach(w => { const k = D.shardOf(w, lang); (by[k] = by[k] || {})[w] = entries[w]; });
   fs.mkdirSync(dir, { recursive: true });
   const keys = Object.keys(by).sort();
   keys.forEach(k => fs.writeFileSync(path.join(dir, k + '.json'), JSON.stringify({ entries: by[k] })));

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Dictionaries in any language** (for the translation benches; approved by David, 2026-11-05). A dictionary in `SW.BENCH.dictionaries` may give `lang` (en if not): English is looked up as before; any other language as written (NFKC, lower case), and in a script written without spaces (Chinese, Japanese, Thai…) each prefix of the selected run, longest first, so a run finds the longest word it begins with. Shards of a large one go by first character (`u5076.json`). `forms(word)` gives a bench's own forms to try (a deinflector). An entry may carry `reading`, shown after its head; the entry has the dictionary's `lang`. 📕 Look up takes accented words whole and a run of an unspaced script as one (`SW.dict.words`). `tools/dict-build.js jmdict`: JMdict from jmdict-simplified's JSON (CC BY-SA 4.0), with `--lang`. `tests/dictionary.test.js`: 11 more checks.
+
 ## 0.97.1 (2026-11-02)
 
 - `tests/topics.test.js`: the check that a Help ▾ group with all its items off goes now turns off whatever the bench has in Annotating and sharing, its own items too. It had failed on the Spacewar bench in CI since 0.93.0: Spacewar adds items there.

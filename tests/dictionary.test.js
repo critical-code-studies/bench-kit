@@ -31,4 +31,19 @@
   eq('by a lemma, and from what', [D.find(get, 'sallies').as, D.find(get, 'sallies').how], ['sally', 'from sallies']);
   eq('not there', D.find(get, 'hawser'), null);
   eq('a shard not loaded is not known', D.find(function () { return undefined; }, 'mizzen', true), undefined);
+  T.group('Dictionary: any language');
+  eq('English as before where lang is en', D.forms('Sallies', 'en')[0], { w: 'sallies', how: 'as written' });
+  eq('another spaced language: as written, normalised, no English lemmas', D.forms('Häuser,', 'de').map(function (f) { return f.w; }), ['häuser']);
+  eq('an unspaced script: the run, then each prefix, longest first', D.forms('偶然性の問題', 'ja').map(function (f) { return f.w; }), ['偶然性の問題', '偶然性の問', '偶然性の', '偶然性', '偶然', '偶']);
+  eq('full-width letters normalised', D.forms('ＡＢＣ', 'ja')[0].w, 'abc');
+  eq('shards by first character', [D.shardOf('偶然', 'ja'), D.shardOf('あい', 'ja'), D.shardOf('', 'ja')], ['u5076', 'u3042', '_']);
+  var jt = { '偶然': [{ head: '偶然', reading: 'ぐうぜん', senses: ['chance; accident'] }] };
+  function jget(w) { return Object.prototype.hasOwnProperty.call(jt, w) ? jt[w] : null; }
+  eq('the longest word a run begins with', [D.find(jget, '偶然性の問題', false, { lang: 'ja' }).as, D.find(jget, '偶然性の問題', false, { lang: 'ja' }).how], ['偶然', 'from 偶然性の問題']);
+  eq('a bench’s own forms', D.find(jget, '偶然だ', false, { lang: 'ja', forms: function (w) { return [w, w.replace(/だ$/, '')]; } }).as, '偶然');
+  T.group('Dictionary: the words of a selection');
+  eq('English words, two letters or more', D.words('the captain’s cabin, a'), ['the', 'captain’s', 'cabin']);
+  eq('accented words whole', D.words('café éclat'), ['café', 'éclat']);
+  eq('an unspaced run as one', D.words('九鬼周造 「偶然性の問題」'), ['九鬼周造', '偶然性の問題']);
+  eq('at most six', D.words('a1 bb cc dd ee ff gg hh').length, 6);
 })();
