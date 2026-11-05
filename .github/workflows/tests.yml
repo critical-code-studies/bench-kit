@@ -21,6 +21,7 @@ jobs:
           - { bench: spacewar1962/spacewar, kit: research/kit, dir: research }
           - { bench: critical-code-studies/ELIZA, kit: research/kit, dir: research }
           - { bench: vector-humanities/melville, kit: kit, dir: . }
+          - { bench: vector-humanities/kuki-bench, kit: kit, dir: . }
     steps:
       - uses: actions/checkout@v4
         with:

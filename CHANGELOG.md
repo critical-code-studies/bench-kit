@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- CI: the kuki-bench translation bench (vector-humanities/kuki-bench, the first made from `templates/translation/`) added to the benches tested with each push.
+
 ## 0.98.0 (2026-11-05)
 
 - **A figure's labels centred and turned** (David, 2026-11-05, for Kuki's Figure 1). A label in the Images tab's labels file may give `anchor: 'center'` (its centre at x, y) and `angle` (degrees, clockwise, about that point), so that a word set along a diagonal or down beside the drawing has its English the same way; the PNG and SVG exports draw them so. Labels without them are placed as before. `docs/figure-labels.md`: the format, and the rules for placing labels.
