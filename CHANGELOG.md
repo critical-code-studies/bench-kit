@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.98.0 (2026-11-05)
 
 - **A figure's labels centred and turned** (David, 2026-11-05, for Kuki's Figure 1). A label in the Images tab's labels file may give `anchor: 'center'` (its centre at x, y) and `angle` (degrees, clockwise, about that point), so that a word set along a diagonal or down beside the drawing has its English the same way; the PNG and SVG exports draw them so. Labels without them are placed as before. `docs/figure-labels.md`: the format, and the rules for placing labels.
 - **The readable is the translation** (David, 2026-11-05: "make it everywhere… standardise now"). In `vt-reader.js`, `vt-views.js` and the translation template the two texts are the translation (`translation`, TR) and the literal translation (`literal`, LT); Pages opens on the translation with its image, the literal one switch away. The old name is read as the new wherever it appears: a change list's `### readable | p. 12`, a descriptor's `readable` paths and `versions.readable`. `tests/vt.test.js`: 1 more check.
