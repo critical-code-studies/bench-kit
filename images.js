@@ -10,7 +10,10 @@
  *            has no labels, the key from its caption beside it; On the page (its region of the page
  *            image, outlined, in the zooming box); the page in Book; and a labelled copy exported as PNG
  *            or SVG (made then, never stored)
- * SW.BENCH.images: true, or { label, map, figures: { url, overlays }, intro, credit }. figures.url gives
+ * SW.BENCH.images: true, or { label, map, figures: { url, overlays }, intro, credit, labelsNote }:
+ *   labelsNote, HTML folded under a figure's key ("About the labels"), with a figure's own labelsNote
+ *   before it: why some of the source's writing has no label of its own (a word written a character
+ *   at a time along a line has one label). figures.url gives
  *   { items: [{ id, n, file, original, page, image, region, overlays, caption, key }] }: image is the
  *   page image's key in the map, region IIIF's x,y,w,h in that image's full-size pixels, overlays false
  *   where the figure is shown without labels (whatever the labels file holds); figures.overlays gives
@@ -210,7 +213,9 @@
       var wrap = SW.el('div', { class: 'im-figwrap' });
       wrap.innerHTML = '<div class="im-stage"><img class="im-figimg" alt="Figure ' + esc(f.n) + '"><div class="im-labels"' + (B.textLang ? ' lang="en"' : '') + '></div></div>' +
         '<div class="im-figtext">' + (f.caption ? '<p class="im-cap"><b>Figure ' + esc(f.n) + '.</b> ' + esc(f.caption) + '</p>' : '') +
-        (f.key ? '<p class="im-key' + (hasLabels ? '' : ' im-key-on') + '">' + esc(f.key) + '</p>' : '') + '</div>';
+        (f.key ? '<p class="im-key' + (hasLabels ? '' : ' im-key-on') + '">' + esc(f.key) + '</p>' : '') +
+        // why not every piece of the source has a label: the bench's note, and the figure's own (HTML)
+        (hasLabels && (C.labelsNote || f.labelsNote) ? '<details class="im-about"><summary>About the labels</summary>' + (f.labelsNote ? '<p>' + f.labelsNote + '</p>' : '') + (C.labelsNote ? '<p>' + C.labelsNote + '</p>' : '') + '</details>' : '') + '</div>';
       d.appendChild(wrap);
       var img = SW.$('.im-figimg', wrap), lab = SW.$('.im-labels', wrap);
       lab.innerHTML = f.labels.map(function (l) {

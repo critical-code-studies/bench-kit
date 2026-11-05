@@ -1292,3 +1292,6 @@ ul.reading a { overflow-wrap: anywhere; }
 @media (max-width: 760px) { .im-figwrap { grid-template-columns: minmax(0, 1fr); } .im-zoombox { height: 64vh; } }
 .lib-h.group { color: var(--amber, #c90); }
 .lib-size { margin: 0 0 8px; } .lib-size.lib-big { color: var(--amber, #c90); }
+.im-about { margin-top: 10px; font-size: 14px; color: var(--text-dim); }
+.im-about summary { cursor: pointer; color: var(--text); }
+.im-about p { margin: 6px 0 0; }
