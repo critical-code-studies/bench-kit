@@ -37,8 +37,8 @@ For a literary or historical text in its witnesses: Melville (*Billy Budd*). Mad
 
 For a translation made by the vector translation method, read beside its source: Kuki's *The Problem of Contingency* is the first. Made from `templates/translation/`.
 
-- **Line**: a line of the translation's Markdown file, which is a paragraph or a note. **Version**: the literal, the readable, the source's OCR.
-- **Kit modules**: as a prose bench, and `vt-reader.js` (the method's layout: page and image markers, sections, notes, the glossary, change lists, OCR), Book's Compare with the image to the left (image | literal | readable), `folder.js` (a translator's working copy, read without a token), `dictionary.js` in the source's language, `textstats.js` with the word breaker for unspaced scripts, `library.js` (the corpus), `tools/iiif-map.js` (pages cut from the library's spreads).
+- **Line**: a line of the translation's Markdown file, which is a paragraph or a note. **Version**: the translation, the literal translation, the source's OCR.
+- **Kit modules**: as a prose bench, and `vt-reader.js` (the method's layout: page and image markers, sections, notes, the glossary, change lists, OCR), Book with the image to the left of the translation, and the literal beside it on a switch (image | translation | literal), `folder.js` (a translator's working copy, read without a token), `dictionary.js` in the source's language, `textstats.js` with the word breaker for unspaced scripts, `library.js` (the corpus), `tools/iiif-map.js` (pages cut from the library's spreads).
 - **The bench supplies**: its descriptor (`SW.BENCH.translation`: where its files are, its markers), a snapshot of its texts at a commit, its image map, its findings and tour.
 
 ## 5. Choosing

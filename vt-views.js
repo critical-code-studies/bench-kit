@@ -1,7 +1,7 @@
 /*
  * vt-views.js - the views of a translation bench (templates/translation), on kit/vt-reader.js:
  *   glossary  the glossary as a concordance: each source term, its readings and renderings, and where
- *             each rendering falls in the readable translation, by section; English words that
+ *             each rendering falls in the translation, by section; English words that
  *             render more than one source term marked
  *   changes   the change lists: every change with its target, page, OLD and NEW, why and origin
  *             (internal, a witness, unmarked), and whether it is in the text now (applied, pending,
@@ -11,7 +11,8 @@
  * Loaded after kit/vt-reader.js and kit/builds.js, before kit/shell.js. The bench lists the views in
  * its shell.views, with a tab and a section for each (view-glossary, view-changes, view-search).
  * SW.BENCH.translation, the descriptor (kit/vt-reader.js), with:
- *   versions  { literal, readable, ocr }: the ids of the versions in js/versions.js
+ *   versions  { literal, translation, ocr }: the ids of the versions in js/versions.js (readable, the
+ *             translation's old name, is read as translation)
  *   glossary  { path, kind, heading }; changes [paths]; ocr { path, split }  (paths as the versions'
  *             files are fetched, so a folder opened (kit/folder.js) is read too)
  * SW.vt: ids(), texts(), glossary(), changes(), ocr(), states() (each change with its state).
@@ -22,14 +23,14 @@
   var SW = root.SW, B = SW.BENCH || {}, VT = root.SWVT, esc = SW.esc;
   if (!VT || !B.translation) return;
   var D = VT.layout(B.translation), V = SW.vt = {};
-  V.ids = function () { return Object.assign({ literal: 'literal', readable: 'readable', ocr: 'ocr' }, B.translation.versions || {}); };
+  V.ids = function () { return Object.assign({ literal: 'literal', translation: 'translation', ocr: 'ocr' }, D.versions || {}); };
   var RAW = {};
   function once(f) { var p = null; return function () { return p || (p = f().catch(function (e) { p = null; throw e; })); }; }
   // each text's build, its parts as read by vt-reader (b.vt) and its raw text whole
   RAW.texts = function () {
     var ids = V.ids();
-    return Promise.all([ids.literal, ids.readable].map(function (id) { return SW.build(id).catch(function () { return null; }); })).then(function (bs) {
-      return { literal: bs[0], readable: bs[1] };
+    return Promise.all([ids.literal, ids.translation].map(function (id) { return SW.build(id).catch(function () { return null; }); })).then(function (bs) {
+      return { literal: bs[0], translation: bs[1] };
     });
   };
   // each read once, until a folder is opened or closed
@@ -50,7 +51,7 @@
   };
   RAW.states = function () {
     return Promise.all([V.changes(), V.texts()]).then(function (r) {
-      var texts = { literal: whole(r[1].literal), readable: whole(r[1].readable) };
+      var texts = { literal: whole(r[1].literal), translation: whole(r[1].translation) };
       r[0].forEach(function (c) { c.state = VT.applied(c, texts); c.origin1 = VT.originOf(c); });
       return r[0];
     });
@@ -80,10 +81,10 @@
     var view = SW.$('#view-glossary'); if (!view) return;
     pending(view, 'glossary');
     Promise.all([V.glossary(), V.texts()]).then(function (r) {
-      var gl = r[0], rb = r[1].readable, ids = V.ids();
+      var gl = r[0], rb = r[1].translation, ids = V.ids();
       if (!gl.length) { view.innerHTML = '<p class="hint pad">The bench names no glossary (SW.BENCH.translation.glossary).</p>'; return; }
       var col = {}; VT.collisions(gl).forEach(function (c) { col[c.english] = c.terms.map(function (g) { return g.source.join(' / '); }); });
-      // each rendering's places in the readable's body, by section
+      // each rendering's places in the translation's body, by section
       var ts = rb ? rb.parts.map(function (p) { return VT.read(p.raw, D); }) : [];
       function where(word) {
         var w = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), R = new RegExp('(^|[^\\p{L}])' + w + '(?![\\p{L}])', 'giu'), out = {}, order = [];
@@ -99,9 +100,9 @@
         });
         return order.map(function (s) { return [s, out[s]]; });
       }
-      view.innerHTML = '<div class="vt-pad"><h2>Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the readable translation, section by section (a count opens Read at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
+      view.innerHTML = '<div class="vt-pad"><h2>Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the translation, section by section (a count opens Read at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
         '<div class="toolbar"><input type="search" class="vt-q" placeholder="Filter: a source term, a reading or an English word" aria-label="Filter the glossary"><span class="faint vt-n"></span></div>' +
-        '<table class="vt-table vt-gloss"><thead><tr><th>Source</th><th>Reading</th><th>English</th><th>Where, in the readable</th></tr></thead><tbody>' +
+        '<table class="vt-table vt-gloss"><thead><tr><th>Source</th><th>Reading</th><th>English</th><th>Where, in the translation</th></tr></thead><tbody>' +
         gl.map(function (g, i) {
           return '<tr data-i="' + i + '" data-hay="' + esc([g.source.join(' '), g.reading.join(' '), g.english.join(' '), g.note || ''].join(' ').toLowerCase()) + '"><td class="vt-src" lang="' + esc(B.textLang || 'ja') + '">' + esc(g.source.join(' / ')) + '</td><td>' + esc(g.reading.join(' / ')) + '</td><td>' +
             g.english.map(function (e) { var c = col[e.toLowerCase()]; return '<div>' + esc(e) + (c ? ' <span class="vt-warn" title="Also renders ' + esc(c.filter(function (x) { return x !== g.source.join(' / '); }).join(', ')) + '">⚠</span>' : '') + '</div>'; }).join('') +
@@ -115,7 +116,7 @@
           var g = gl[k], cell = SW.$('[data-where="' + k + '"]', view);
           cell.innerHTML = g.english.map(function (e) {
             var ws = where(e);
-            return ws.length ? '<div><span class="faint">' + esc(e) + ':</span> ' + ws.map(function (x) { return '<button class="vt-chip" data-go="' + esc(JSON.stringify(x[1].at)) + '" title="' + esc(x[0]) + '">' + esc(x[0].slice(0, 28)) + ' ' + x[1].n + '</button>'; }).join(' ') + '</div>' : '<div class="faint">' + esc(e) + ': not in the readable</div>';
+            return ws.length ? '<div><span class="faint">' + esc(e) + ':</span> ' + ws.map(function (x) { return '<button class="vt-chip" data-go="' + esc(JSON.stringify(x[1].at)) + '" title="' + esc(x[0]) + '">' + esc(x[0].slice(0, 28)) + ' ' + x[1].n + '</button>'; }).join(' ') + '</div>' : '<div class="faint">' + esc(e) + ': not in the translation</div>';
           }).join('');
         }
         if (k < rowsEl.length) setTimeout(next, 0);
@@ -123,7 +124,7 @@
       var q = SW.$('.vt-q', view), n = SW.$('.vt-n', view);
       function filter() { var s = q.value.toLowerCase(), c = 0; rowsEl.forEach(function (tr) { var on = !s || tr.dataset.hay.indexOf(s) >= 0; tr.hidden = !on; if (on) c++; }); n.textContent = c + ' of ' + gl.length; }
       q.addEventListener('input', filter); filter();
-      view.addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b) SW.openAt(ids.readable, JSON.parse(b.dataset.go)); });
+      view.addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b) SW.openAt(ids.translation, JSON.parse(b.dataset.go)); });
     }, function (e) { failed(view, e); });
   }
 
@@ -167,7 +168,7 @@
         var f = e.target.closest('[data-f]');
         if (f) { CF[f.dataset.f] = CF[f.dataset.f] === f.dataset.v ? '' : f.dataset.v; SW.$$('[data-f="' + f.dataset.f + '"]', view).forEach(function (b) { b.classList.toggle('on', CF[f.dataset.f] === b.dataset.v); }); list(); return; }
         var a = e.target.closest('[data-at]');
-        if (a) { var c = cs[+a.dataset.at], b = bs[c.target], at = find(b, c.state === 'pending' ? c.old : c.new || c.old); if (at && b) SW.openAt(b.v.id, at); else SW.toast('Not found in the ' + c.target + ' now.', 3000); }
+        if (a) { var c = cs[+a.dataset.at], b = bs[c.target === 'readable' ? 'translation' : c.target], at = find(b, c.state === 'pending' ? c.old : c.new || c.old); if (at && b) SW.openAt(b.v.id, at); else SW.toast('Not found in the ' + c.target + ' now.', 3000); }
       });
       SW.$('.vt-q', view).addEventListener('input', function (e) { CF.q = e.target.value; list(); });
     }, function (e) { failed(view, e); });
@@ -192,7 +193,7 @@
           return '<div class="vt-hit" lang="' + esc(B.textLang || 'ja') + '"><span class="faint">image ' + h.img + (pg != null ? ', near p. ' + pg : '') + '</span> ' + (h.near ? '<span class="vt-st vt-st-both">near: ' + esc(h.found) + '</span> ' : '') + esc(h.context) +
             (pg != null && ids.literal ? ' <button class="vt-chip" data-book="' + pg + '">Book ↗</button>' : '') + '</div>';
         }).join('');
-        ['literal', 'readable'].forEach(function (k) {
+        ['translation', 'literal'].forEach(function (k) {
           var b = r[1][k]; if (!b) return;
           var found = [];
           b.parts.forEach(function (p, pi) { VT.splitLines(p.raw).forEach(function (s, i) { if (VT.fold(s).indexOf(VT.fold(w)) >= 0) found.push({ p: pi, n: i + 1, s: s }); }); });

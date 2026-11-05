@@ -29,11 +29,12 @@
   var md = '## Glossary\n\n| Japanese | Reading | English |\n|---|---|---|\n| 存在 / 非存在 | そんざい / ひそんざい | existence / non-existence |\n';
   eq('a Markdown pair split, one row to each term', VT.glossary(md, 'md', { heading: 'Glossary' }).map(function (g) { return [g.source[0], g.english[0]]; }), [['存在', 'existence'], ['非存在', 'non-existence']]);
   T.group('Translation: change lists');
-  var ch = VT.changes('### readable | p. 12\nOLD: the chance\nNEW: the contingency\nSRC: 偶然\nWHY: the glossary\nORIGIN: witness W1\n\n### p. 13 | CHANGES\nOLD: a\nNEW: b\nJP: 甲\n\n## Literal problems\n- p. 14 a reading in doubt\n', 'checks/x.md');
-  eq('the method’s form and the first run’s', ch.map(function (c) { return [c.target, c.page, c.kind, c.src]; }), [['readable', 12, null, '偶然'], ['readable', 13, 'CHANGES', '甲'], ['literal', 14, 'PROBLEM', '']]);
+  var ch = VT.changes('### translation | p. 12\nOLD: the chance\nNEW: the contingency\nSRC: 偶然\nWHY: the glossary\nORIGIN: witness W1\n\n### p. 13 | CHANGES\nOLD: a\nNEW: b\nJP: 甲\n\n## Literal problems\n- p. 14 a reading in doubt\n', 'checks/x.md');
+  eq('the method’s form and the first run’s', ch.map(function (c) { return [c.target, c.page, c.kind, c.src]; }), [['translation', 12, null, '偶然'], ['translation', 13, 'CHANGES', '甲'], ['literal', 14, 'PROBLEM', '']]);
   eq('origin: a witness, with its id', VT.originOf(ch[0]), { k: 'witness', id: 'W1' });
-  eq('applied, pending, both, gone', ['the contingency here', 'the chance here', 'the chance and the contingency', 'nothing'].map(function (s) { return VT.applied(ch[0], { readable: s }); }), ['applied', 'pending', 'both', 'gone']);
-  eq('a NEW of two paragraphs is applied when a note is inserted between them', VT.applied({ target: 'readable', old: 'x', new: 'one\n\ntwo' }, { readable: 'one\n\na note added\n\ntwo' }), 'applied');
+  eq('readable, the translation’s old name, read as translation', [VT.changes('### readable | p. 1\nOLD: a\nNEW: b\n', 'x')[0].target, VT.applied({ target: 'readable', old: 'a', new: 'b' }, { translation: 'b' }), VT.layout({ versions: { readable: 'rd' } }).versions.translation], ['translation', 'applied', 'rd']);
+  eq('applied, pending, both, gone', ['the contingency here', 'the chance here', 'the chance and the contingency', 'nothing'].map(function (s) { return VT.applied(ch[0], { translation: s }); }), ['applied', 'pending', 'both', 'gone']);
+  eq('a NEW of two paragraphs is applied when a note is inserted between them', VT.applied({ target: 'translation', old: 'x', new: 'one\n\ntwo' }, { translation: 'one\n\na note added\n\ntwo' }), 'applied');
   T.group('Translation: the source');
   var pages = VT.ocr('=== PAGE 7\n偶然性の\n問題\n=== PAGE 8\n借然性\n', null);
   eq('OCR divided by image, its line breaks no matter', VT.search(pages, '偶然性の問題').map(function (h) { return h.img; }), [7]);

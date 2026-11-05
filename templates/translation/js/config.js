@@ -17,7 +17,7 @@
     // the translation, as the vector translation method lays it out (kit/vt-reader.js): what differs
     // from the method's layout. EDIT
     translation: {
-      versions: { literal: 'literal', readable: 'readable', ocr: 'ocr' },   // the ids in js/versions.js
+      versions: { translation: 'translation', literal: 'literal', ocr: 'ocr' },   // the ids in js/versions.js
       page: '\\[p\\. (\\d+)\\]',                           // the page marker
       image: '\\[コマ (\\d+)\\]',                          // the image marker (the library's image number), or null
       body: { from: null, until: '^#+ (Appendix|Glossary)' },   // EDIT: where the author's text begins (from, after the translator's front matter) and the apparatus begins (until)
@@ -29,18 +29,19 @@
       side: function (page) { return page % 2 ? 'right' : 'left'; }
     },
 
-    refs: { names: { literal: 'LT', readable: 'RT', ocr: 'SRC' }, prefix: 'EX-', dir: '' },   // EDIT: [REF: RT, 01.md:12]
+    refs: { names: { translation: 'TR', literal: 'LT', ocr: 'SRC' }, prefix: 'EX-', dir: '' },   // EDIT: [REF: TR, 01.md:12]
     forks: [['translation', 'The translation'], ['source', 'The source']],
-    start: 'readable',
+    start: 'translation',
     comment: [],
 
-    // Book: the pages, the source's image to the left, the literal and the readable side by side
+    // Book: the pages, the source's image to the left of the translation; the literal beside it is one
+    // switch away (Compare), not open at first
     doc: {
-      versions: ['literal', 'readable'],
-      beside: ['readable'],
+      versions: ['translation', 'literal'],
+      beside: [],
       besideMax: 2,
       imageSide: 'left',
-      imagesFirst: true,                                   // the page's image once, beside the first text
+      imagesFirst: true,                                   // the page's image once, beside the first text, when the literal is beside
       words: { page: 'page' },
       // a page's image from the library's IIIF service (js/images.js, made by kit/tools/iiif-map.js), the
       // half the page is on; null until the bench has its image map
@@ -68,7 +69,7 @@
       icon: '<img src="img/icon.svg" alt="" width="40" height="40">',
       author: 'Your Name', citeAuthor: 'Name, Y.',          // EDIT
       purpose: 'A bench for reading a translation made by the vector translation method beside its source: the pages, the glossary, the changes. This is the template: replace this text.',   // EDIT
-      inside: 'The literal and readable translations, divided into lines and set as pages; the glossary; the change lists; the source as OCR.',   // EDIT
+      inside: 'The translation and the literal translation, divided into lines and set as pages; the glossary; the change lists; the source as OCR.',   // EDIT
       sources: 'An invented example. Details under Versions.',   // EDIT
       code: 'https://github.com/vector-humanities/example-bench',   // EDIT
       catalogue: { skip: [], held: 'held' }
@@ -87,25 +88,25 @@
     annoHelp: {
       manual: 'https://github.com/vector-humanities/vector-translation', manualName: 'the vector translation method',
       start: 'Contingency, it is said', search: 'contingency',
-      refA: 'CD, RT, 01.md:5', refB: 'EF, LT, 01.md:5',
+      refA: 'CD, TR, 01.md:5', refB: 'EF, LT, 01.md:5',
       noteA: 'On the rendering of 偶然…', noteB: 'The literal has chance…', quoteA: 'On the rendering of 偶然…',
-      boxA: 'Readable translation, 01.md, line 5', boxB: 'Literal translation, 01.md, line 5',
+      boxA: 'Translation, 01.md, line 5', boxB: 'Literal translation, 01.md, line 5',
       tryText: 'The source’s `偶然`', code: '`偶然`',
-      caption: 'A link from an annotation on the readable to one on the literal'
+      caption: 'A link from an annotation on the translation to one on the literal'
     },
     compare: { comment: '', normalised: false, reading: 'Reading', modes: ['text'] },
     comparePrefix: 'Example Translation: ',
-    genealogy: { set: ['literal', 'readable'], line: 'main', lineNames: { main: 'Source, literal, readable' } },
+    genealogy: { set: ['literal', 'translation'], line: 'main', lineNames: { main: 'Source, literal, translation' } },
     // the group's one private repository: the Library's private shelf (its library/ folder), and Paratexts
     // (documents about the work: reviews, letters, photographs, archival records), off until wanted
     paratexts: { org: 'vector-humanities', repo: 'example_paratexts', cache: 'example-paratexts' },   // EDIT: the private repository
-    examples: { date: 'e.g. 1935', archive: 'e.g. National Diet Library', versions: 'e.g. literal, readable', refs: 'e.g. [REF: RT, 01.md:5]', publisher: 'e.g. Iwanami Shoten', finding: 'F1' },
+    examples: { date: 'e.g. 1935', archive: 'e.g. National Diet Library', versions: 'e.g. translation, literal', refs: 'e.g. [REF: TR, 01.md:5]', publisher: 'e.g. Iwanami Shoten', finding: 'F1' },
     stemma: { root: 'ocr', lostBetween: {}, skip: [], lostOnTrunk: false },
     edition: { built: function () { return ['Read as', 'Markdown, divided into lines']; }, layout: function (raw) { return String(raw); }, words: true, files: ['all files', 'Every file'] },
     refHelp: {
-      example: '[REF: RT, 01.md:5]',
-      about: '<p><b>RT</b> (the readable; <b>LT</b> the literal, <b>SRC</b> the OCR), then the file (<b>01.md</b>) and the lines (<b>5</b>).</p>',
-      form: 'Form: [REF: RT, <file>:<lines>], e.g. [REF: RT, 01.md:5].',
+      example: '[REF: TR, 01.md:5]',
+      about: '<p><b>TR</b> (the translation; <b>LT</b> the literal, <b>SRC</b> the OCR), then the file (<b>01.md</b>) and the lines (<b>5</b>).</p>',
+      form: 'Form: [REF: TR, <file>:<lines>], e.g. [REF: TR, 01.md:5].',
       versions: { title: 'The texts', all: true }
     },
     sitemap: true

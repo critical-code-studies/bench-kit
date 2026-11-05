@@ -6,8 +6,9 @@
  * the argument given to SWVT.layout), and the defaults are the method's layout.
  *
  * The descriptor (every field optional except where a translation departs from the layout):
- *   literal, readable  [paths] of the two versions, in reading order (default text/literal/*.md and
- *                      text/readable/*.md, listed by the bench or by tools/vt-index.js)
+ *   literal, translation  [paths] of the two versions, in reading order (default text/literal/*.md
+ *                      and text/translation/*.md). The translation was called the readable until
+ *                      November 2026: readable is read as translation wherever it appears
  *   glossary           { path, kind: 'csv' | 'md' }: the method's glossary.csv, or a Markdown table
  *                      (Japanese | Reading | English) under a heading named in `heading`
  *   changes            [paths] of change lists (method format; also the older forms named below)
@@ -56,7 +57,7 @@
   var VT = {};
 
   var DEFAULTS = {
-    literal: ['text/literal/*.md'], readable: ['text/readable/*.md'],
+    literal: ['text/literal/*.md'], translation: ['text/translation/*.md'],
     glossary: { path: 'glossary.csv', kind: 'csv' },
     changes: ['checks/*.md'], page: '\\[p\\. (\\d+)\\]', image: null,
     body: { until: '^#+ (Appendix|Glossary)' },
@@ -66,6 +67,10 @@
     var d = {}, k;
     for (k in DEFAULTS) d[k] = DEFAULTS[k];
     for (k in (desc || {})) if (desc[k] !== undefined) d[k] = desc[k];
+    // the old name: readable (paths, and the versions' ids) read as translation
+    if (desc && desc.readable && !desc.translation) d.translation = desc.readable;
+    delete d.readable;
+    if (d.versions && d.versions.readable && !d.versions.translation) { d.versions = Object.assign({}, d.versions, { translation: d.versions.readable }); delete d.versions.readable; }
     return d;
   };
 
@@ -273,10 +278,10 @@
 
   // ---------- change lists ----------
   // The method's form (templates/change-list.md):
-  //   ### readable | p. 123      (target and a page or label, either order)
+  //   ### translation | p. 123   (target and a page or label, either order; readable, the old name, read as translation)
   //   OLD: … NEW: … SRC: … WHY: … ORIGIN: internal | witness <ID>    (multi-line in ~~~ fences)
   // and the older forms of the first run: JP: for SRC; '### p. 50 | CHANGES' (the read-through's
-  // kinds: ADDS, DROPS, CHANGES, RULE; the target is then the readable); a '## Literal problems'
+  // kinds: ADDS, DROPS, CHANGES, RULE; the target is then the translation); a '## Literal problems'
   // section of bullets (each kept as a note on the literal, not a change); '## Summary' ends a list.
   var KINDS = /^(ADDS|DROPS|CHANGES|RULE|POEM)$/;
   VT.changes = function (raw, file, o) {
@@ -302,10 +307,10 @@
           var pg = /^p\.\s*(\d+)/.exec(h);
           if (pg) cur.page = +pg[1];
           else if (KINDS.test(h)) cur.kind = h;
-          else if (/^(readable|literal)$/i.test(h)) cur.target = h.toLowerCase();
+          else if (/^(translation|readable|literal)$/i.test(h)) cur.target = /^lit/i.test(h) ? 'literal' : 'translation';
           else if (h) cur.label = h;
         });
-        if (!cur.target) cur.target = 'readable';
+        if (!cur.target) cur.target = 'translation';
         out.push(cur); field = null; return;
       }
       if (!cur) return;
@@ -337,7 +342,8 @@
   }
   VT.present = present;
   VT.applied = function (c, texts) {
-    var t = texts[c.target]; if (t == null || c.kind === 'PROBLEM') return null;
+    var t = texts[c.target === 'readable' ? 'translation' : c.target]; if (t == null) t = c.target === 'translation' ? texts.readable : null;
+    if (t == null || c.kind === 'PROBLEM') return null;
     var hasNew = c.new ? present(t, c.new) : false, hasOld = c.old ? present(t, c.old) : false;
     if (!c.new) return hasOld ? 'pending' : 'applied';
     return hasNew && !hasOld ? 'applied' : hasOld && !hasNew ? 'pending' : hasNew ? 'both' : 'gone';
