@@ -55,6 +55,8 @@
 
     folder: true,                                          // File ▾ ▸ Open a folder…: a working copy, read in place of the published files
     library: true,                                         // the Library tab, from library/library.json
+    // the Images tab (kit/images.js): the pages from js/images.js, and the author's figures with their labels
+    images: { figures: null, credit: '' },                 // EDIT: figures: { url: 'figures/figures.json', overlays: 'figures/overlays.json' }
     // dictionaries in the source's language (kit/dictionary.js; kit/tools/dict-build.js jmdict … --lang ja)
     dictionaries: [],                                      // EDIT: e.g. [{ id: 'jmdict', name: 'JMdict', base: 'data/jmdict/', lang: 'ja', credit: 'JMdict, EDRDG, CC BY-SA 4.0' }]
     menusOff: ['topics'],                                  // EDIT: take 'topics' out once a model is made (kit/docs/topics-guide.md)

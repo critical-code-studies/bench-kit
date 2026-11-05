@@ -13,6 +13,7 @@ This is the template, with an invented example. Every value marked `EDIT` in `js
 | `js/versions.js` | the texts held: literal, readable, the source's OCR, and their files |
 | `js/core.js` | how a file is read: bench-kit's `vt-reader.js`, the lines and Book's document |
 | `js/main.js`, `js/read.js`, `js/tour.js` | the views in tab order, Read's settings, the tour |
+| `js/images.js` | the source's images and their IIIF services (`kit/tools/iiif-map.js`) |
 | `text/literal/`, `text/readable/` | the translation, a snapshot of its repository at a commit |
 | `glossary.csv`, `checks/` | the glossary and the change lists |
 | `source/ocr.txt` | the source's OCR, divided by image (`=== PAGE n`) |
