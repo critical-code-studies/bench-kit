@@ -153,7 +153,7 @@
       if (e.file) show(SW.$('.lib-file', d), e, k);
       L.copies(e.id).then(function (cs) {
         var box = SW.$('.lib-copies', d); if (!box || !cs.length) return;
-        box.innerHTML = '<span class="faint">The group’s copy:</span> ' + cs.map(function (c) { return '<button class="btn ghost" data-px="' + esc(c.code) + '" title="' + esc(c.title || '') + '">' + esc(c.code) + ' in Paratexts</button>'; }).join(' ');
+        box.innerHTML = '<span class="faint">The group’s copy:</span> ' + cs.map(function (c) { return '<button class="btn ghost" data-px="' + esc(c.code) + '" title="' + esc(c.title || '') + '">' + esc(c.code) + ' in ' + SW.px('Many') + '</button>'; }).join(' ');
       });
     });
   };

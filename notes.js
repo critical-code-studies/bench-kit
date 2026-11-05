@@ -1132,12 +1132,12 @@
   N.ghSay = function (r) {
     var esc = SW.esc, P = SW.paratexts;
     if (!P) return ['', ''];
-    if (r.state === 'none') return ['warn', 'No GitHub token yet: Paratexts will show how to get one.'];
+    if (r.state === 'none') return ['warn', 'No GitHub token yet: ' + SW.px('Many') + ' will show how to get one.'];
     if (r.state === 'refused') return ['err', 'GitHub refused the token. ' + ext(P.TOKEN_URL, 'Make it again') + ', paste the new one, and test again.'];
     if (r.state === 'error') return ['err', esc(r.message || 'GitHub could not be reached.')];
     if (r.state === 'unreachable') return ['err', 'The token works (you are ' + esc(r.user) + ') but cannot reach ' + esc(P.ORG + '/' + P.RNAME) + '. Check, in this order:<ol class="ah-steps">' +
       r.causes.map(function (c) { return '<li>' + esc(c[0]) + (c[1] ? ' · ' + ext(c[1], c[1].indexOf('invitation') >= 0 ? 'the invitation' : 'the token form') : '') + '</li>'; }).join('') + '</ol>'];
-    return ['good', '✓ Connected as ' + esc(r.user) + ': the paratexts are open to you (' + r.count + ' in the catalogue).'];
+    return ['good', '✓ Connected as ' + esc(r.user) + ': the ' + SW.px('many') + ' are open to you (' + r.count + ' in the catalogue).'];
   };
   // the checklist, in el: two lines for each service, each with its state and the next thing to do
   N.setupChecklist = function (el, go) {
@@ -1192,7 +1192,7 @@
         '<p class="hint">The token lets the bench write in your name: keep it to yourself. Your annotations are signed with your initials. Both are kept in this browser only' + (benchGroup ? '; to use another group than the bench’s, see ⚙ Settings ▸ Annotations' : '') + '.</p>', !hypOpen || !grp) +
       '</div>' +
 
-      (P ? '<h2 class="js-svc">GitHub: the paratexts</h2>' +
+      (P ? '<h2 class="js-svc">GitHub: the ' + SW.px('many') + '</h2>' +
         '<p>The scans, clippings and documents are in a private repository, <b>' + esc(P.ORG + '/' + P.RNAME) + '</b>, on GitHub. You need a GitHub account (' + ext('https://github.com/signup', 'sign up') + ' if you have none) and an invitation to the <b>' + esc(P.ORG) + '</b> organisation from the project leads. Two steps: accept the invitation, then give the bench a token.</p>' +
         '<div class="js-steps">' +
         step('gh1', 1, 'Accept the invitation', '<p>Open the invitation, log in (or sign up) if GitHub asks, and click <b>Join ' + esc(P.ORG) + '</b>.</p><p><a class="btn" href="' + esc(P.INVITE_URL) + '" target="_blank" rel="noopener noreferrer">Open the invitation ↗</a> <button type="button" class="btn ghost" data-a="gh-next">I’ve accepted: next</button></p>') +

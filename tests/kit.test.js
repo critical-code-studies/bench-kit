@@ -129,4 +129,8 @@
   eq('a tall page enlarged by its height', SW.iiifImage(spread, { region: 'left' }).large, 'https://iiif.example/R3/0,0,1840,2624/,1600/0/default.jpg');
   eq('the full size kept for the enlarged page (max in version 3)', [SW.iiifImage(spread).sharp, SW.iiifImage({ service: 'https://s/x', v: 3 }).sharp], ['https://iiif.example/R3/full/full/0/default.jpg', 'https://s/x/full/max/0/default.jpg']);
   eq('the bench’s own copies where it holds them', SW.iiifImage(spread, { held: 'img/pages' }).src, 'img/pages/p1.jpg');
+
+  T.group('The private collection’s name');
+  var pw = SW.BENCH.paratexts, had = pw && pw.words;
+  if (pw) { delete pw.words; eq('Paratexts by default', [SW.px('one'), SW.px('Many')], ['paratext', 'Paratexts']); pw.words = { one: 'parallel text', many: 'parallel texts' }; eq('the bench’s own words', [SW.px('One'), SW.px('many')], ['Parallel text', 'parallel texts']); if (had) pw.words = had; else delete pw.words; }
 })();

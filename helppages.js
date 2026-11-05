@@ -299,7 +299,7 @@
   var MARKS = [
     ['lost', '<span class="mk-lost">— 1 page lost: the camera failed —</span>', '[---]  ·  [--- c. 46 lines ---]  ·  [.3.]',
       'Lost and not restored: the band stands in the place of what is missing, with how much and why.', 'the open seam',
-      'A page a scan failed on, a tape torn, a reel that drops out (a paratext’s gaps).'],
+      'A page a scan failed on, a tape torn, a reel that drops out (a ' + SW.px('one') + '’s gaps).'],
     ['restored', '<span class="mk-fill">PRINT COMMENT</span>', '[PRINT COMMENT]',
       'Restored by an editor where nothing can be read: a conjecture, never merged into the text.', 'kake, a missing piece remade',
       'A line remade where none can be read; a gap filled by conjecture.'],

@@ -179,6 +179,14 @@
   // service's. Asks only what a level 1 service answers (a region in pixels, a size by width or height),
   // so it needs the image's size (w, h) for a half. Gives { src, large, sharp }: sharp the service's full
   // size, fetched only when the page is enlarged.
+  // The word for the group's private collection (kit/paratexts.js) in the bench's own text: Paratexts,
+  // or what SW.BENCH.paratexts.words gives ({ one: 'parallel text', many: 'parallel texts' } on a
+  // translation bench, where a paratext is the translator's preface and notes). k: one, many, One, Many
+  SW.px = function (k) {
+    var w = ((SW.BENCH || {}).paratexts || {}).words || {}, one = w.one || 'paratext', many = w.many || one + 's';
+    var s = /^m/i.test(k) ? many : one;
+    return /^[A-Z]/.test(k) ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  };
   SW.iiifRegion = function (x, region) {
     var r = region || 'full', w = x.w, h = x.h;
     if ((r === 'left' || r === 'right') && w && h) { var half = Math.floor(w / 2); return { r: r === 'left' ? '0,0,' + half + ',' + h : half + ',0,' + (w - half) + ',' + h, w: r === 'left' ? half : w - half, h: h }; }

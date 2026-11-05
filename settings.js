@@ -12,7 +12,7 @@
 (function (root) {
   'use strict';
   var SW = root.SW, S = SW.settings = {}, extra = [];
-  var TABS = [['you', 'You'], ['anno', 'Annotations'], ['px', 'Paratexts'], ['display', 'Display'], ['dev', 'Developer']], OWN = TABS.map(function (t) { return t[0]; });
+  var TABS = [['you', 'You'], ['anno', 'Annotations'], ['px', SW.px('Many')], ['display', 'Display'], ['dev', 'Developer']], OWN = TABS.map(function (t) { return t[0]; });
   S.add = function (row) { extra.push(row); };
   S.addTab = function (id, label, at) { if (!TABS.some(function (t) { return t[0] === id; })) TABS.splice(at == null ? TABS.length : at, 0, [id, label]); };
 
@@ -38,15 +38,15 @@
       '<div class="token-row"><input id="set-token" type="password" placeholder="6879-…" autocomplete="new-password" data-lpignore="true" data-1p-ignore spellcheck="false"><button id="set-token-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l"><button id="set-test" type="button" class="btn ghost">Test connection</button> <span class="hint" id="set-check"></span></p>' +
       '<p class="row-l"><a class="btn ghost" href="https://hypothes.is/account/developer" target="_blank" rel="noopener">Open the token page ↗</a> <button type="button" class="btn ghost" id="set-hypsteps">Copy the steps to send</button></p>' +
-      '<p class="hint"><button type="button" class="btn ghost" id="set-join">New to this? Getting set up</button> The group, then your token, step by step; and the paratexts on GitHub.</p>' + rows('anno') + '</section>' +
+      '<p class="hint"><button type="button" class="btn ghost" id="set-join">New to this? Getting set up</button> The group, then your token, step by step; and the ' + SW.px('many') + ' on GitHub.</p>' + rows('anno') + '</section>' +
 
       '<section class="set-pane" data-sp="px">' +
-      '<p class="hint">The paratexts are kept in a private GitHub repository shared with the crew (' + esc((BP.org || '') + '/' + (BP.repo || '')) + '). Paste a fine-grained token limited to that repository, with Contents read and write (Paratexts, in the menu, says how). It is kept in this browser only.</p>' +
+      '<p class="hint">The ' + SW.px('many') + ' are kept in a private GitHub repository shared with the crew (' + esc((BP.org || '') + '/' + (BP.repo || '')) + '). Paste a fine-grained token limited to that repository, with Contents read and write (' + SW.px('Many') + ', in the menu, says how). It is kept in this browser only.</p>' +
       '<label for="set-ghtoken">GitHub token</label>' +
       '<div class="token-row"><input id="set-ghtoken" type="password" placeholder="github_pat_…" autocomplete="new-password" data-lpignore="true" data-1p-ignore spellcheck="false"><button id="set-ghtoken-show" type="button" class="btn ghost" aria-pressed="false">Show</button></div>' +
       '<p class="row-l">' + (PX.TOKEN_URL ? '<a class="btn ghost" href="' + esc(PX.TOKEN_URL) + '" target="_blank" rel="noopener">Open the token form ↗</a> ' : '') +
       (PX.STEPS ? '<button type="button" class="btn ghost" id="set-ghsteps">Copy the steps to send</button>' : '') + '</p>' +
-      '<p class="hint">The form arrives with its name, owner, a year’s expiry and the permission filled in; <b>Only select repositories</b> and <b>' + esc(BP.repo || '') + '</b> are chosen by hand. The token is read and write, so send the steps only to people who are to catalogue. Help ▸ Paratexts says the same at length.</p>' +
+      '<p class="hint">The form arrives with its name, owner, a year’s expiry and the permission filled in; <b>Only select repositories</b> and <b>' + esc(BP.repo || '') + '</b> are chosen by hand. The token is read and write, so send the steps only to people who are to catalogue. Help ▸ ' + SW.px('Many') + ' says the same at length.</p>' +
       (PX.LOST ? '<p class="hint">' + esc(PX.LOST) + '</p>' : '') +
       '<h2>Fetching ahead</h2><p class="hint">When an item is open, the items either side of it in the list (and in any sequence it is in) are fetched quietly into this browser, so Back and Next open at once. Files over 25 MB wait until asked for.</p>' +
       '<label>Fetch ahead <select id="set-ahead">' + [0, 1, 2, 3, 5, 10].map(function (n) { return '<option value="' + n + '">' + (n ? n + ' each way' : 'Off') + '</option>'; }).join('') + '</select></label>' + rows('px') + '</section>' +

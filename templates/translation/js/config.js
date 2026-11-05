@@ -91,7 +91,9 @@
     compare: { comment: '', normalised: false, reading: 'Reading', modes: ['text'] },
     comparePrefix: 'Example Translation: ',
     genealogy: { set: ['literal', 'readable'], line: 'main', lineNames: { main: 'Source, literal, readable' } },
-    paratexts: { org: 'vector-humanities', repo: 'example_paratexts', cache: 'example-paratexts' },   // EDIT: a private repository for the group's copies
+    // the group's private collection, named Parallel texts here (a paratext, on a translation bench, is the
+    // translator's preface and notes, which the bench shows in its public text)
+    paratexts: { org: 'vector-humanities', repo: 'example_paratexts', cache: 'example-paratexts', words: { one: 'parallel text', many: 'parallel texts' } },   // EDIT: a private repository for the group's copies
     examples: { date: 'e.g. 1935', archive: 'e.g. National Diet Library', versions: 'e.g. literal, readable', refs: 'e.g. [REF: RT, 01.md:5]', publisher: 'e.g. Iwanami Shoten', finding: 'F1' },
     stemma: { root: 'ocr', lostBetween: {}, skip: [], lostOnTrunk: false },
     edition: { built: function () { return ['Read as', 'Markdown, divided into lines']; }, layout: function (raw) { return String(raw); }, words: true, files: ['all files', 'Every file'] },

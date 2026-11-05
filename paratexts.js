@@ -20,11 +20,11 @@
   function token() { return String(SW.store.get('gh.token', '') || '').trim(); }
   P.configured = function () { return !!token(); };
   // A token form with everything filled in but the repository (GitHub's links cannot choose that)
-  var TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new?name=' + plus(BP.tokenName || BNAME + ' research bench') + '&description=' + plus('Paratexts in the ' + BNAME + ' research bench (' + RNAME + ')') + '&target_name=' + ORG + '&expires_in=366&contents=write';
+  var TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new?name=' + plus(BP.tokenName || BNAME + ' research bench') + '&description=' + plus(SW.px('Many') + ' in the ' + BNAME + ' research bench (' + RNAME + ')') + '&target_name=' + ORG + '&expires_in=366&contents=write';
   // what to do when the token has gone: shown in ⚙ Settings, the join steps and Paratexts' own steps
   var LOST = 'If the token is lost (in another browser or on another computer, or when Safari clears a site’s stored data after seven days without a visit) or has expired, make a new one: open the token form again, choose the resource owner ' + ORG + ', Only select repositories and ' + RNAME + ', generate it, and paste it here. The old one can be deleted on GitHub under Settings ▸ Developer settings ▸ Fine-grained tokens.';
   P.LOST = LOST;
-  var STEPS = 'Paratexts in the ' + BNAME + ' research bench: setting up\n\nYou need a GitHub account (https://github.com/signup) and an invitation to the ' + ORG + ' organisation from the project leads.\n\n1. Accept the invitation: open https://github.com/orgs/' + ORG + '/invitation, log in (or sign up), and click Join ' + ORG + '.\n2. Your token: open ' + TOKEN_URL + '\n   Check three things before Generate token:\n   - Resource owner: ' + ORG + ' (not your own account)\n   - Repository access: Only select repositories, then ' + RNAME + '\n   - Permissions, Repository permissions, Contents: Read and write\n' + (BP.approval ? '   The organisation approves new tokens: yours waits for a project lead, and GitHub emails you when it is approved.\n' : '') + '   Copy the token and paste it into the bench: Help ▸ Joining the annotation group (' + SW.BASE_URI + '?help=join), then Save and test.\n\nThe token stays in your browser; keep it to yourself.\n\n' + LOST.replace('paste it here', 'paste it into the bench');
+  var STEPS = SW.px('Many') + ' in the ' + BNAME + ' research bench: setting up\n\nYou need a GitHub account (https://github.com/signup) and an invitation to the ' + ORG + ' organisation from the project leads.\n\n1. Accept the invitation: open https://github.com/orgs/' + ORG + '/invitation, log in (or sign up), and click Join ' + ORG + '.\n2. Your token: open ' + TOKEN_URL + '\n   Check three things before Generate token:\n   - Resource owner: ' + ORG + ' (not your own account)\n   - Repository access: Only select repositories, then ' + RNAME + '\n   - Permissions, Repository permissions, Contents: Read and write\n' + (BP.approval ? '   The organisation approves new tokens: yours waits for a project lead, and GitHub emails you when it is approved.\n' : '') + '   Copy the token and paste it into the bench: Help ▸ Joining the annotation group (' + SW.BASE_URI + '?help=join), then Save and test.\n\nThe token stays in your browser; keep it to yourself.\n\n' + LOST.replace('paste it here', 'paste it into the bench');
 
 
   // ---------- GitHub ----------
@@ -155,7 +155,7 @@
   // by it: a code resolves whatever its corpus (byCode reads the whole catalogue), Related and
   // sequence links open across corpora, Withdrawn and the Tag, Type, Language and Kind menus
   // cover all of them, and the export writes every corpus.
-  var PX_NAME = 'Paratexts';
+  var PX_NAME = SW.px('Many');
   function corpora() { return (cat && cat.corpora) || []; }
   function corpusDef(id) { return id ? corpora().filter(function (c) { return c.id === id; })[0] || null : null; }
   function corpusOf(it) { return String(it.corpus || ''); }
@@ -198,7 +198,7 @@
     var home = corpusOf(it), cur = F.corpus || '';
     if (home === cur) return '';
     if (!home && (cur === '' || F.corpus === '_all')) return '';
-    return chipFor(it, !home ? 'A paratext, listed in this corpus too' : '');
+    return chipFor(it, !home ? 'A ' + SW.px('one') + ', listed in this corpus too' : '');
   }
   // the same mark on a link to an item (Related, a sequence's rows), shown whenever the item's
   // home is a corpus
@@ -209,7 +209,7 @@
   function busy(d) { busyN += d; var el = view && SW.$('.px-busy', view); if (el) el.textContent = busyN ? 'Saving…' : ''; }
   function prep(c) { c.items = c.items || []; c.collections = c.collections || []; }
   function change(label, fn) {
-    if (me() === '?') return SW.askInitials('Changes to the paratexts are signed with your initials, and none are set.').then(function (ini) { return ini ? change(label, fn) : false; });
+    if (me() === '?') return SW.askInitials('Changes to the ' + SW.px('many') + ' are signed with your initials, and none are set.').then(function (ini) { return ini ? change(label, fn) : false; });
     try { prep(cat); fn(cat); } catch (e) { /* shown again after the save */ }
     refresh(); busy(1);
     return save(label + ', by ' + me(), function (c) { prep(c); fn(c); }).then(function () { busy(-1); refresh(); return true; }, function (e) {
@@ -217,7 +217,7 @@
       return P.load(true).then(function () { refresh(); return false; }, function () { return false; });
     });
   }
-  function who(codes) { return codes.length === 1 ? 'Paratext ' + codes[0] : 'Paratexts ' + (codes.length <= 3 ? codes.join(', ') : codes[0] + ' and ' + (codes.length - 1) + ' more'); }
+  function who(codes) { return codes.length === 1 ? SW.px('One') + ' ' + codes[0] : SW.px('Many') + ' ' + (codes.length <= 3 ? codes.join(', ') : codes[0] + ' and ' + (codes.length - 1) + ' more'); }
   function each(codes, fn) { return function (c) { c.items.forEach(function (x) { if (codes.indexOf(x.code) >= 0) fn(x); }); }; }
   function put(x, id) { var l = (x.collections || []).slice(); if (l.indexOf(id) < 0) l.push(id); x.collections = l; }
   function take(x, id) { if (!x.collections) return; x.collections = x.collections.filter(function (k) { return k !== id; }); if (!x.collections.length) delete x.collections; }
@@ -226,24 +226,24 @@
   function moveTo(codes, from, to) { var a = coll(from), b = coll(to); if (!a || !b) return addTo(codes, to); return change(who(codes) + ': moved from “' + a.name + '” to “' + b.name + '”', each(codes, function (x) { take(x, from); put(x, to); })); }
   function newColl(name, parent, codes) {
     var id = collId(); codes = codes || [];
-    return change('Paratexts: collection “' + name + '” made' + (codes.length ? ', with ' + codes.length : ''), function (c) {
+    return change(SW.px('Many') + ': collection “' + name + '” made' + (codes.length ? ', with ' + codes.length : ''), function (c) {
       if (!c.collections.some(function (x) { return x.id === id; })) c.collections.push({ id: id, name: name, parent: parent || '', created: now(), by: me() });
       c.items.forEach(function (x) { if (codes.indexOf(x.code) >= 0) put(x, id); });
     }).then(function () { return id; });
   }
-  function renameColl(id, name) { var c0 = coll(id); if (!c0 || c0.name === name) return; change('Paratexts: collection “' + c0.name + '” renamed “' + name + '”', function (c) { c.collections.forEach(function (x) { if (x.id === id) x.name = name; }); }); }
+  function renameColl(id, name) { var c0 = coll(id); if (!c0 || c0.name === name) return; change(SW.px('Many') + ': collection “' + c0.name + '” renamed “' + name + '”', function (c) { c.collections.forEach(function (x) { if (x.id === id) x.name = name; }); }); }
   function nest(id, parent) {
     var c0 = coll(id); if (!c0 || (c0.parent || '') === parent) return;
     if (parent === id || isUnder(parent, id)) { SW.toast('A collection cannot go inside itself.', 3000); return; }
     var p = coll(parent);
-    change('Paratexts: collection “' + c0.name + '” ' + (p ? 'moved into “' + p.name + '”' : 'moved to the top'), function (c) { c.collections.forEach(function (x) { if (x.id === id) x.parent = parent; }); });
+    change(SW.px('Many') + ': collection “' + c0.name + '” ' + (p ? 'moved into “' + p.name + '”' : 'moved to the top'), function (c) { c.collections.forEach(function (x) { if (x.id === id) x.parent = parent; }); });
   }
   function delColl(id) {
     var c0 = coll(id); if (!c0) return;
     var n = cat.items.filter(function (it) { return inColl(it).indexOf(id) >= 0; }).length, sub = kidsOf(id).length;
     if (!confirm('Delete the collection “' + c0.name + '”?' + (n ? ' Its ' + n + ' item' + (n > 1 ? 's stay' : ' stays') + ' in the catalogue.' : '') + (sub ? ' The collections inside it move up a level.' : ''))) return;
     if (F.c === id) setF('c', parentOf(c0));
-    change('Paratexts: collection “' + c0.name + '” deleted', function (c) {
+    change(SW.px('Many') + ': collection “' + c0.name + '” deleted', function (c) {
       var me0 = c.collections.filter(function (x) { return x.id === id; })[0], p = me0 ? me0.parent || '' : '';
       c.collections = c.collections.filter(function (x) { return x.id !== id; });
       c.collections.forEach(function (x) { if (x.parent === id) x.parent = p; });
@@ -266,7 +266,7 @@
   function withdrawBox(codes, after) {
     if (!codes.length) return;
     var esc = SW.esc, one = codes.length === 1, key = one ? codes[0] : String(codes.length), d = SW.el('dialog', { class: 'tray-big px-dlg px-wdbox' });
-    d.innerHTML = '<div class="tray-bighead"><b>Withdraw ' + (one ? esc(codes[0]) : codes.length + ' paratexts') + ' from the list</b><span class="refhelp-acts"><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
+    d.innerHTML = '<div class="tray-bighead"><b>Withdraw ' + (one ? esc(codes[0]) : codes.length + ' ' + SW.px('many')) + ' from the list</b><span class="refhelp-acts"><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
       '<ul class="px-wdlist">' + codes.map(function (c) { var it = byCode(c); return '<li><span class="mono">' + esc(c) + '</span> ' + esc(it ? it.title : '') + '</li>'; }).join('') + '</ul>' +
       '<p>' + (one ? 'It leaves' : 'They leave') + ' the list for the whole crew. ' + (one ? 'Its file stays' : 'Their files stay') + ' in the repository, with ' + (one ? 'its' : 'their') + ' history, and ' + (one ? 'it' : 'they') + ' can be brought back from Withdrawn.</p>' +
       '<label class="px-wdf"><span>Why</span><input class="px-why" placeholder="A reason, kept with the record"></label>' +
@@ -285,7 +285,7 @@
       var r = why.value.trim(); go.disabled = true;
       d.close(); if (after) after();
       change(who(codes) + ': withdrawn (' + r + ')', each(codes, function (x) { x.withdrawn = now(); x.withdrawnBy = me(); x.withdrawnWhy = r; x.updatedBy = me(); }))
-        .then(function (done0) { if (done0) SW.toast((one ? codes[0] : codes.length + ' paratexts') + ' withdrawn: Withdrawn, on the left, lists ' + (one ? 'it' : 'them'), 5000); });
+        .then(function (done0) { if (done0) SW.toast((one ? codes[0] : codes.length + ' ' + SW.px('many')) + ' withdrawn: Withdrawn, on the left, lists ' + (one ? 'it' : 'them'), 5000); });
     });
   }
 
@@ -375,15 +375,15 @@
     view = SW.$('#view-paratexts'); if (!view) return;
     done = true;
     var esc = SW.esc;
-    view.innerHTML = '<div class="pad px"><div class="px-head"><h2>Paratexts</h2><button class="icon-btn px-ib" aria-expanded="false" title="About Paratexts">ⓘ</button></div><p class="hint px-lede" hidden>The scans, clippings, photographs and documents around the program, kept for the crew in a private repository (' + esc(REPO) + '). Click one to read it; add with ＋. To link to one from an annotation, note or finding, write its code (P-XXXXX).</p><div class="px-body"></div></div>';
+    view.innerHTML = '<div class="pad px"><div class="px-head"><h2>' + SW.px('Many') + '</h2><button class="icon-btn px-ib" aria-expanded="false" title="About Paratexts">ⓘ</button></div><p class="hint px-lede" hidden>The scans, clippings, photographs and documents around the program, kept for the crew in a private repository (' + esc(REPO) + '). Click one to read it; add with ＋. To link to one from an annotation, note or finding, write its code (P-XXXXX).</p><div class="px-body"></div></div>';
     var body = SW.$('.px-body', view), ib = SW.$('.px-ib', view), lede = SW.$('.px-lede', view);
     ib.onclick = function () { lede.hidden = !lede.hidden; ib.setAttribute('aria-expanded', String(!lede.hidden)); };
     if (!P.configured()) {
-      body.innerHTML = '<div class="px-howto"><p>The paratexts are in a private repository for the crew. To open them here, the bench needs a GitHub token of your own, limited to that repository. Four steps, once:</p><ol>' +
+      body.innerHTML = '<div class="px-howto"><p>The ' + SW.px('many') + ' are in a private repository for the crew. To open them here, the bench needs a GitHub token of your own, limited to that repository. Four steps, once:</p><ol>' +
         '<li>Be a member of the <b>' + ORG + '</b> organisation on GitHub: ask to be added if you are not, and accept the invitation GitHub emails you. (A token cannot reach the repository for someone added to it alone, as an outside collaborator.)</li>' +
         '<li><a class="btn" href="' + SW.esc(TOKEN_URL) + '" target="_blank" rel="noopener">Open the token form ↗</a> Its name, owner (' + ORG + '), a year’s expiry and the permission it needs (Contents, read and write) are filled in.</li>' +
         '<li>Under <b>Repository access</b>, choose <b>Only select repositories</b>, then <b>' + RNAME + '</b>: the one choice the link cannot make. If GitHub asks for a reason, “the ' + BNAME + ' research bench” will do.</li>' +
-        '<li><b>Generate token</b>, copy it, and paste it into ⚙ Settings, Paratexts. It stays in this browser only; on another computer, paste it there too.</li></ol>' +
+        '<li><b>Generate token</b>, copy it, and paste it into ⚙ Settings, ' + SW.px('Many') + '. It stays in this browser only; on another computer, paste it there too.</li></ol>' +
         '<p class="hint">' + SW.esc(LOST.replace('paste it here', 'paste it into ⚙ Settings')) + '</p>' +
         '<p><button class="btn" data-px="settings">Open ⚙ Settings</button> <button class="btn ghost" data-copy="' + SW.esc(STEPS) + '" title="These steps as text, to send to someone joining the crew">Copy the steps</button></p></div>';
       body.onclick = function (e) { if (e.target.closest('[data-px="settings"]')) SW.settings ? SW.settings.open('px') : SW.$('#btn-settings') && SW.$('#btn-settings').click(); };
@@ -440,7 +440,7 @@
     }).join('');
     nav.innerHTML = '<button class="btn px-addbtn" data-px="add" title="Upload a file with its details, to the crew’s repository">＋ Add an item</button>' + row('', '▤', 'All', lv.length) + row('_none', '◌', 'Not in a collection', lv.filter(function (it) { return !inColl(it).length; }).length) +
       (corpusing() ? '<div class="px-ch"><span>Corpora</span></div>' +
-        [{ id: '', name: PX_NAME, note: 'The paratexts proper: every item not put in a corpus.', n: cat.items.filter(live).filter(function (it) { return !corpusOf(it); }).length, bad: false }].concat(corporaIn()).map(function (c) {
+        [{ id: '', name: PX_NAME, note: 'The ' + SW.px('many') + ' proper: every item not put in a corpus.', n: cat.items.filter(live).filter(function (it) { return !corpusOf(it); }).length, bad: false }].concat(corporaIn()).map(function (c) {
           var tip = c.undeclared ? 'Not declared in the catalogue\u2019s corpora.' : (c.note ? c.note + ' ' : '') + (c.also || c.nbad ? c.own + ' of its own and ' + c.also + ' ' + (c.also === 1 ? 'paratext' : 'paratexts') + ' listed in it' + (c.nbad ? '; ⚠ ' + c.nbad + ' listed in its also ' + (c.nbad === 1 ? 'has' : 'have') + ' another corpus as home' : '') + '.' : '');
           return '<div class="px-coll px-corow' + ((F.corpus || '') === c.id ? ' on' : '') + (c.bad ? ' px-cx-bad' : '') + '" data-corpus="' + esc(c.id) + '" tabindex="0" title="' + esc(tip.trim() || c.name) + '"><span class="px-cn">' + (c.bad ? '⚠' : '▤') + ' ' + esc(c.name) + '</span><span class="px-cnt">' + c.n + '</span></div>';
         }).join('') + '<div class="px-coll px-corow' + (F.corpus === '_all' ? ' on' : '') + '" data-corpus="_all" tabindex="0" title="Every item, whatever its corpus"><span class="px-cn">▦ Every corpus</span><span class="px-cnt">' + cat.items.filter(live).length + '</span></div>' : '') +
@@ -767,7 +767,7 @@
         var su = SW.$('.px-nt-std', q).value.trim(); if (su) { if (!/^https?:\/\/(id\.loc\.gov|vocab\.getty\.edu)\//.test(su)) { msg.textContent = 'The standard term is a link to id.loc.gov or vocab.getty.edu.'; return; } rec.std = { uri: su, label: SW.$('.px-nt-stdl', q).value.trim(), match: 'close' }; }
         if (which === 'type') { rec.group = SW.$('.px-nt-group', q).value; var dc = SW.$('.px-nt-dcmi', q).value; if (dc) rec.dcmi = dc; var nt = SW.$('.px-nt-note', q).value.trim(); if (nt) rec.note = nt; }
         b.disabled = true; msg.textContent = 'Saving…';
-        save('Paratexts: ' + which + ' “' + label + '” added to the list, by ' + me(), function (c) { var k = which === 'type' ? 'types' : 'media'; c[k] = c[k] || []; if (!c[k].some(function (x) { return x.id === id; })) c[k].push(rec); })
+        save(SW.px('Many') + ': ' + which + ' “' + label + '” added to the list, by ' + me(), function (c) { var k = which === 'type' ? 'types' : 'media'; c[k] = c[k] || []; if (!c[k].some(function (x) { return x.id === id; })) c[k].push(rec); })
           .then(function () { syncTypes(); finish(id); }, function (err) { b.disabled = false; msg.textContent = err.message; });
       });
       q.showModal(); SW.$('.px-nt-label', q).focus();
@@ -907,7 +907,7 @@
       if (x.DOI) o.DOI = x.DOI; if (x.ISBN) o.ISBN = x.ISBN;
       o.URL = okURL(it.url) ? it.url.trim() : okURL(it.archiveUrl) ? it.archiveUrl.trim() : x.URL || benchLink(it);
       if ((it.tags || []).length) o.keyword = it.tags.join(', ');
-      o.note = BNAME + ' paratext ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '') + gapsAll(it).map(function (g) { return '. ' + gapLine(g); }).join('');
+      o.note = BNAME + ' ' + SW.px('one') + ' ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '') + gapsAll(it).map(function (g) { return '. ' + gapLine(g); }).join('');
       return o;
     }), null, 2) + '\n';
   }
@@ -921,7 +921,7 @@
         line('PY', dp ? dp[0][0] : '') + line('DA', da) + line('PB', it.publisher) + line('AB', it.description) +
         (it.tags || []).map(function (g) { return line('KW', g); }).join('') + line('LA', it.language) + line('DO', x.DOI) + line('SN', x.ISBN) +
         line('UR', okURL(it.url) ? it.url.trim() : okURL(it.archiveUrl) ? it.archiveUrl.trim() : x.URL || benchLink(it)) + line('AV', [it.archive, it.archiveId].filter(Boolean).join(', ')) +
-        line('N1', BNAME + ' paratext ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '')) + gapsAll(it).map(function (g) { return line('N1', gapLine(g)); }).join('') + 'ER  - \r\n';
+        line('N1', BNAME + ' ' + SW.px('one') + ' ' + it.code + ' (' + benchLink(it) + ')' + (it.source ? '. Source: ' + it.source : '')) + gapsAll(it).map(function (g) { return line('N1', gapLine(g)); }).join('') + 'ER  - \r\n';
     }).join('\r\n');
   }
   // the export menu's formats: [key, label, file extension, mime, maker]
@@ -1510,7 +1510,7 @@
     var esc = SW.esc, d = SW.el('dialog', { class: 'tray-big px-dlg' });
     var gh0 = it.file ? 'https://github.com/' + REPO + '/blob/main/' + it.file.split('/').map(encodeURIComponent).join('/') : '';
     d.innerHTML = '<div class="tray-bighead"><span class="px-code mono" data-copy="' + esc(it.code) + '" title="Its code: click to copy">' + esc(it.code) + '</span> <b>' + esc(it.title) + '</b>' +
-      '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This paratext, with its details, in My notes (private)">＋ My notes</button>' + fileMenu(it, gh0) + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
+      '<span class="refhelp-acts"><button class="btn ghost" data-share="' + esc(it.code) + '" title="Send it to someone: a link that opens the bench at this paratext">' + SW.SHARE_ICON + ' Share</button><button class="btn ghost" data-a="keep" title="This ' + SW.px('one') + ', with its details, in My notes (private)">＋ My notes</button>' + fileMenu(it, gh0) + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
       '<div class="px-stepbars">' + stepBars(it, ctx) + '</div>' +
       '<div class="px-cols"><div class="px-view' + (altList(it).length || gapCount(it) ? ' px-withalts' : '') + '">' +
       (altList(it).length || gapCount(it) ? '<div class="px-viewbar">' + (gapCount(it) ? SW.flip.html('gaps', [['kintsugi', 'Kintsugi', 'Gaps drawn as seams in gold, with what is known of each.'], ['leiden', 'Leiden', 'Gaps in Leiden’s notation, as a quotation or an export carries them.']]) : '') + altBar(it) + (altList(it).length ? '<p class="px-altcap" aria-live="polite" hidden></p>' : '') + '</div>' : '') +
@@ -1551,7 +1551,7 @@
     function saveDetails() {   // resolves true once saved, false if it failed
       var a = SW.$('[data-a="save"]', d), msg = SW.$('.px-msg', d), o = readFields(SW.$('.px-side', d)), was = JSON.stringify(o);
       a.disabled = true; msg.textContent = 'Saving…';
-      return save('Paratext ' + it.code + ': details, by ' + me(), function (c) { c.items.forEach(function (x) { if (x.code === it.code) { Object.assign(x, o); x.updated = now(); x.updatedBy = me(); } }); })
+      return save(SW.px('One') + ' ' + it.code + ': details, by ' + me(), function (c) { c.items.forEach(function (x) { if (x.code === it.code) { Object.assign(x, o); x.updated = now(); x.updatedBy = me(); } }); })
         .then(function () { a.disabled = false; msg.textContent = 'Saved'; kept = was; it = byCode(code); SW.$('.tray-bighead b', d).textContent = it.title; refresh(); return true; },
           function (err) { a.disabled = false; msg.textContent = err.message; return false; });
     }
@@ -1562,16 +1562,16 @@
     function talk(label, change) {   // a rating, emoji or comment: saved, then the talk redrawn
       var who = me();
       if (who === '?') return SW.askInitials('Ratings, reactions and comments are signed with your initials, and none are set.').then(function (ini) { return ini ? talk(label, change) : null; });
-      return save('Paratext ' + it.code + ': ' + label + ', by ' + who, function (c) { c.items.forEach(function (x) { if (x.code === it.code) change(x, who); }); })
+      return save(SW.px('One') + ' ' + it.code + ': ' + label + ', by ' + who, function (c) { c.items.forEach(function (x) { if (x.code === it.code) change(x, who); }); })
         .then(function () { it = byCode(code); var t = SW.$('.px-talk', d), op = SW.$('.px-cfold', t) && SW.$('.px-cfold', t).open; t.innerHTML = talkHTML(it); if (op) SW.$('.px-cfold', t).open = true; SW.mdTools(SW.$('.px-cbox textarea', t)); refresh(); }, function (err) { SW.toast(err.message, 5000); });
     }
     SW.mdTools(SW.$('.px-cbox textarea', d));
     function colls0() { it = byCode(code); var b = SW.$('.px-colls', d); if (b) b.innerHTML = collsHTML(it); }
     function seqs0() { it = byCode(code); var b = SW.$('.px-seqs', d); if (b) b.innerHTML = seqsHTML(it); var sb = SW.$('.px-stepbars', d); if (sb) sb.innerHTML = stepBars(it, ctx); }
-    function seqSave(label, change) { return save('Paratext ' + code + ': ' + label + ', by ' + me(), function (c) { c.sequences = c.sequences || []; change(c.sequences); }).then(seqs0, function (err) { SW.toast(err.message, 5000); }); }
+    function seqSave(label, change) { return save(SW.px('One') + ' ' + code + ': ' + label + ', by ' + me(), function (c) { c.sequences = c.sequences || []; change(c.sequences); }).then(seqs0, function (err) { SW.toast(err.message, 5000); }); }
     function rel0() { it = byCode(code); var b = SW.$('.px-related', d); if (b) b.innerHTML = relatedHTML(it); }
     function relSave(label, other, add) {
-      return save('Paratexts ' + code + ', ' + other + ': ' + label + ', by ' + me(), function (c) {
+      return save(SW.px('Many') + ' ' + code + ', ' + other + ': ' + label + ', by ' + me(), function (c) {
         c.items.forEach(function (x) {
           var mate = x.code === code ? other : x.code === other ? code : null; if (!mate) return;
           var r = (x.related || []).filter(function (y) { return y !== mate; }); if (add) r.push(mate);
@@ -1639,12 +1639,12 @@
         var mm = a.closest('details'); if (mm) mm.open = false;
         withdrawBox([it.code], function () { d.close(); });
       } else if (a.dataset.a === 'restore') {
-        change('Paratext ' + it.code + ': brought back', each([it.code], unwithdraw))
+        change(SW.px('One') + ' ' + it.code + ': brought back', each([it.code], unwithdraw))
           .then(function (ok) { if (ok) { d.close(); SW.toast(it.code + ' brought back'); } });
       } else if (a.dataset.a === 'keep') {
         if (!SW.tray) return;
         var rows = FIELDS.map(function (f) { var v = it[f[0]]; return [f[1], Array.isArray(v) ? v.join(', ') : v || '']; }).filter(function (r) { return r[1]; });
-        SW.tray.addDoc({ title: 'Paratext ' + it.code + ': ' + it.title, subtitle: it.file ? REPO + ', ' + it.file : it.url || REPO, blocks: [SW.tableBlock('The paratext', ['', ''], rows)] }, { tags: ['paratext'], vid: (it.versions || [])[0] || SW.state.v });
+        SW.tray.addDoc({ title: SW.px('One') + ' ' + it.code + ': ' + it.title, subtitle: it.file ? REPO + ', ' + it.file : it.url || REPO, blocks: [SW.tableBlock('The ' + SW.px('one'), ['', ''], rows)] }, { tags: ['paratext'], vid: (it.versions || [])[0] || SW.state.v });
       }
     });
   }
@@ -1710,7 +1710,7 @@
       rateTimer = null;
       var want = {}; Object.keys(pendingRates).forEach(function (c) { want[c] = pendingRates[c]; });
       var codes = Object.keys(want); if (!codes.length) return;
-      save('Paratext ' + codes.join(', ') + ': rated, by ' + who, function (c) {
+      save(SW.px('One') + ' ' + codes.join(', ') + ': rated, by ' + who, function (c) {
         c.items.forEach(function (x) {
           if (!(x.code in want)) return;
           x.rates = x.rates || {};
@@ -1770,7 +1770,7 @@
       '<div class="px-linkin" hidden><label><span>Link</span><input class="px-url" type="url" placeholder="https://… a YouTube, Vimeo or Internet Archive recording, an audio or video file, or a page"></label>' +
       '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="">— choose —</option><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="text">Text file</option><option value="software">Code</option><option value="link">Web page or document</option><option value="other">Other</option></select></label>' +
       '<p class="hint">Catalogued with nothing copied: it plays or shows here from where it is held.</p></div>' +
-      '<div class="px-missin" hidden><p class="hint">A stub for something known to have existed that the archive holds no copy of and no link to. Before adding it, read a source that shows it existed. In the description: the line “Provenance found but item not available or missing”; what it is; where it is cited, as the citing paratext’s code (P-XXXXX) with the page or time and a short quotation, or a reference; and, after “Searched:”, where it has been looked for and not found. Tag it to-locate; if a holder can be asked, tag it to-request too and say what to ask for in a paragraph beginning “Request:”, before “Searched:”. When a copy is found, add it as an item of its own, carrying the provenance over, and withdraw this stub giving the new code as the reason.</p></div>' +
+      '<div class="px-missin" hidden><p class="hint">A stub for something known to have existed that the archive holds no copy of and no link to. Before adding it, read a source that shows it existed. In the description: the line “Provenance found but item not available or missing”; what it is; where it is cited, as the citing ' + SW.px('one') + '’s code (P-XXXXX) with the page or time and a short quotation, or a reference; and, after “Searched:”, where it has been looked for and not found. Tag it to-locate; if a holder can be asked, tag it to-request too and say what to ask for in a paragraph beginning “Request:”, before “Searched:”. When a copy is found, add it as an item of its own, carrying the provenance over, and withdraw this stub giving the new code as the reason.</p></div>' +
       fieldsHTML(blank) + (into ? '<label class="check px-into"><input type="checkbox" class="px-intoc" checked> Into the collection “' + esc(into.name) + '”</label>' : '') + '<div class="px-acts"><button class="btn" data-a="up">Upload</button> <span class="hint px-msg"></span></div>';
     document.body.appendChild(d);
     d.addEventListener('close', function () { d.remove(); });
@@ -1819,12 +1819,12 @@
       if (!o.genre) { msg.textContent = 'Choose its Type: what the thing is.'; return; }
       if (mode === 'missing') {
         if (!o.title) { msg.textContent = 'Give it a title, as it is cited.'; return; }
-        if (!/\bP-[A-Z0-9]{5}\b|cited/i.test(o.description || '') || /P-XXXXX/.test(o.description || '')) { msg.textContent = 'Say in the description where it is cited: the citing paratext’s code (P-…) with the page, or a reference.'; return; }
+        if (!/\bP-[A-Z0-9]{5}\b|cited/i.test(o.description || '') || /P-XXXXX/.test(o.description || '')) { msg.textContent = 'Say in the description where it is cited: the citing ' + SW.px('one') + '’s code (P-…) with the page, or a reference.'; return; }
         ['missing', 'to-locate'].forEach(function (g) { if (o.tags.indexOf(g) < 0) o.tags.push(g); });   // the stub rule's tags
         a.disabled = true; msg.textContent = 'Recording it in the catalogue…';
         P.load(true).then(function () {
           var code = newCode();
-          return save('Paratext ' + code + ': ' + o.title + ' (missing, a stub), catalogued by ' + me(), function (c) {
+          return save(SW.px('One') + ' ' + code + ': ' + o.title + ' (missing, a stub), catalogued by ' + me(), function (c) {
             c.items.push(Object.assign({ code: code, kind: 'missing' }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me() }));
           }).then(function () { return code; });
         }).then(function (code) { d.close(); refresh(); SW.toast(code + ' added'); openItem(code); }, function (err) { a.disabled = false; msg.textContent = err.message; });
@@ -1841,7 +1841,7 @@
         o.url = url; a.disabled = true; msg.textContent = 'Recording it in the catalogue…';
         P.load(true).then(function () {
           var code = newCode();
-          return save('Paratext ' + code + ': ' + o.title + ' (a link), catalogued by ' + me(), function (c) {
+          return save(SW.px('One') + ' ' + code + ': ' + o.title + ' (a link), catalogued by ' + me(), function (c) {
             c.items.push(Object.assign({ code: code, kind: lk }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me() }));
           }).then(function () { return code; });
         }).then(function (code) { d.close(); refresh(); SW.toast(code + ' added'); openItem(code); }, function (err) { a.disabled = false; msg.textContent = err.message; });
@@ -1860,16 +1860,16 @@
         else if (kind === 'file' && TEXT_EXT.test(ext)) { kind = 'text'; mime = 'text/plain'; }
         var fileSha = null;
         return fileB64(file).then(function (b64) {
-          return gh('PUT', '/contents/' + path, { message: 'Paratext ' + code + ': ' + o.title + ', added by ' + me(), content: b64 });
+          return gh('PUT', '/contents/' + path, { message: SW.px('One') + ' ' + code + ': ' + o.title + ', added by ' + me(), content: b64 });
         }).then(function (r) {
           fileSha = r && r.content && r.content.sha;
           msg.textContent = 'Recording it in the catalogue…';
-          return save('Paratext ' + code + ': catalogued, by ' + me(), function (c) {
+          return save(SW.px('One') + ' ' + code + ': catalogued, by ' + me(), function (c) {
             c.items.push(Object.assign({ code: code, file: path, name: file.name, kind: kind, mime: mime, size: file.size }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me() }));
           }).then(function () { return code; }, function (err) {
             // the record could not be saved: the file just uploaded is taken out again, so none is left without a record
             if (!fileSha) throw err;
-            return gh('DELETE', '/contents/' + path, { message: 'Paratext ' + code + ': upload taken back, its record not saved, by ' + me(), sha: fileSha }).then(function () { throw err; }, function () { throw new Error(err.message + ' The file ' + path + ' was uploaded but has no record: tell whoever keeps the archive.'); });
+            return gh('DELETE', '/contents/' + path, { message: SW.px('One') + ' ' + code + ': upload taken back, its record not saved, by ' + me(), sha: fileSha }).then(function () { throw err; }, function () { throw new Error(err.message + ' The file ' + path + ' was uploaded but has no record: tell whoever keeps the archive.'); });
           });
         });
       }).then(function (code) { d.close(); refresh(); SW.toast(code + ' added'); openItem(code); }, function (err) { a.disabled = false; msg.textContent = err.message; });
@@ -1891,7 +1891,7 @@
       if (e.target.closest('[data-px="join"]')) { d.close(); d.remove(); if (SW.notes) SW.notes.joinHelp(); }
     });
     if (!P.configured()) {
-      d.innerHTML = head('A paratext') + '<p>' + esc(code) + ' is one of the paratexts, kept for the crew in a private repository. To read it here, the bench needs a GitHub token of your own.</p><p><button class="btn" data-px="join">How to get access</button></p>';
+      d.innerHTML = head('A ' + SW.px('one')) + '<p>' + esc(code) + ' is one of the ' + SW.px('many') + ', kept for the crew in a private repository. To read it here, the bench needs a GitHub token of your own.</p><p><button class="btn" data-px="join">How to get access</button></p>';
       d.showModal(); return;
     }
     d.innerHTML = head('Opening…'); d.showModal();
@@ -1910,7 +1910,7 @@
         '<div class="px-tags">' + summary(it) + '</div>' +
         (nc ? '<details class="px-cfold"><summary class="fd-rh">Comments <span class="faint">' + nc + '</span></summary>' + it.comments.map(function (c) { return '<div class="fd-reply"><div class="fd-rhead"><b>' + esc(c.by) + '</b> <span class="faint">' + esc(SW.fmtDate(c.date)) + '</span></div><div class="note-md">' + SW.md(c.text) + '</div></div>'; }).join('') + '</details>' : '') +
         '<div class="px-cited"></div></div></div>' +
-        '<div class="px-peekfoot"><a href="?tab=paratexts&code=' + esc(code) + '" data-px="full" title="In Paratexts, where it can be edited, rated and commented on">Go to ' + esc(code) + ' in Paratexts →</a></div>';
+        '<div class="px-peekfoot"><a href="?tab=paratexts&code=' + esc(code) + '" data-px="full" title="In ' + SW.px('Many') + ', where it can be edited, rated and commented on">Go to ' + esc(code) + ' in ' + SW.px('Many') + ' →</a></div>';
       showFile(it, SW.$('.px-view', d), SW.$('[data-a="dl"]', d));
     citedIn(code, SW.$('.px-cited', d));
     }, function (e) { d.innerHTML = head('Could not open') + '<p class="badge err">' + esc(e.message) + '</p>'; });
@@ -1918,7 +1918,7 @@
   document.addEventListener('click', function (e) {
     var sb = e.target.closest && e.target.closest('dialog [data-share^="P-"]'); if (!sb) return;
     var it = byCode(sb.dataset.share);
-    SW.share({ title: 'Paratext ' + sb.dataset.share + (it ? ': ' + it.title : ''), text: it ? it.title : '', url: SW.BASE_URI + '?code=' + sb.dataset.share });
+    SW.share({ title: SW.px('One') + ' ' + sb.dataset.share + (it ? ': ' + it.title : ''), text: it ? it.title : '', url: SW.BASE_URI + '?code=' + sb.dataset.share });
   });
   // Two paratexts side by side: pictures zoom (wheel, pinch, +/−, double-click) and pan (drag) together
   // while Together is on, as for two printings of one page; a PDF or a text scrolls on its own.
@@ -2059,7 +2059,7 @@
   P.want = function () {
     if (cat || wanted || !P.configured()) return;
     wanted = true;
-    P.load().then(function () { SW.$$('a.pxlink[data-pcode]').forEach(function (a) { var t = P.titleOf(a.dataset.pcode); if (t) a.textContent = 'Paratext: ' + t; }); }, function () {});
+    P.load().then(function () { SW.$$('a.pxlink[data-pcode]').forEach(function (a) { var t = P.titleOf(a.dataset.pcode); if (t) a.textContent = SW.px('One') + ': ' + t; }); }, function () {});
   };
   // The token in Settings, tried: the number in the catalogue, or why not
   // Where a reader stands with GitHub: { state: 'none' | 'refused' | 'unreachable' | 'ok' | 'error',

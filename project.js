@@ -39,7 +39,7 @@
 
   var GH = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/, NAME = /^[\w.-]+$/;
   P.FIELDS = [
-    { group: 'The project', path: 'name', label: 'Short name', hint: 'In menus, messages and the relation of a paratext to a version.' },
+    { group: 'The project', path: 'name', label: 'Short name', hint: 'In menus, messages and the relation of a ' + SW.px('one') + ' to a version.' },
     { group: 'The project', path: 'title', label: 'Title', hint: 'At the head of the page and the About box.' },
     { group: 'The project', path: 'about.project', label: 'Project and leads', kind: 'area', hint: 'The first row of the About box. HTML.' },
     { group: 'The project', path: 'about.cite.authors', label: 'Cited as (the leads)', hint: 'As in a citation: Berry, D. M. and Jonik, M.' },
@@ -52,8 +52,8 @@
     { group: 'GitHub', path: 'repo', label: 'Repository', locked: true, pattern: GH, hint: 'https://github.com/owner/name, where the sources are.' },
     { group: 'GitHub', path: 'refs.repo', label: 'Repository for references', locked: true, pattern: GH, only: function () { return P.def('refs.repo') != null; } },
     { group: 'GitHub', path: 'base', label: 'Published address', locked: true, pattern: /^https:\/\/\S+$/, hint: 'Where the project is read, once published.' },
-    { group: 'GitHub', path: 'paratexts.org', label: 'Paratext archive: owner', locked: true, pattern: NAME },
-    { group: 'GitHub', path: 'paratexts.repo', label: 'Paratext archive: repository', locked: true, pattern: NAME, hint: 'A private repository, read and written with the token in the Paratexts tab.' }
+    { group: 'GitHub', path: 'paratexts.org', label: SW.px('One') + ' archive: owner', locked: true, pattern: NAME },
+    { group: 'GitHub', path: 'paratexts.repo', label: SW.px('One') + ' archive: repository', locked: true, pattern: NAME, hint: 'A private repository, read and written with the token in the ' + SW.px('Many') + ' tab.' }
   ];
 
   // the values config.js gave, before any of the user's are laid over them

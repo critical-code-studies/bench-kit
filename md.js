@@ -42,7 +42,7 @@
       if (code.charAt(0) === 'P') {   // a paratext: by its title once the catalogue is read (the code until then, or without access)
         var PT = SW.paratexts, t = PT && PT.titleOf(code);
         if (!t && PT) PT.want();
-        return pre + stash('<a class="swlink swcode pxlink" data-pcode="' + code + '" href="?code=' + code + '" title="Paratext ' + code + ': read it here">Paratext: ' + SW.esc(t || code) + '</a>');
+        return pre + stash('<a class="swlink swcode pxlink" data-pcode="' + code + '" href="?code=' + code + '" title="Paratext ' + code + ': read it here">' + SW.px('One') + ': ' + SW.esc(t || code) + '</a>');
       }
       return pre + stash('<a class="swlink swcode mono" href="?code=' + code + '" title="Go to ' + code + '">' + code + '</a>');
     });

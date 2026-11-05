@@ -114,7 +114,7 @@
     var parents = r.parents.map(function (p) { return nb(p.code, p.relation, p.confidence, p.via, p.evidence); }).join('') || '<div class="nb"><small>no declared parent</small></div>';
     var kids = (r.children || []).map(function (c) { var k = BY[c], p = k && k.parents.filter(function (x) { return x.code === r.code; })[0]; return nb(c, p && p.relation, p && p.confidence, p && p.via, p && p.evidence); }).join('') || '<div class="nb"><small>no known descendant</small></div>';
     var meta = [['Date', r.date + (r.dateBasis ? ' (' + r.dateBasis + ')' : '')], ['Author', r.creator], ['Language', r.progLanguage], ['Machine', r.machine], ['OS', r.os], ['Family', famName(r.family)],
-      ['Runs on', (r.runsOn || []).map(label).join('; ')], ['Paratexts', (r.paratexts || []).join(', ')], ['Files', r.publish === 'files' ? 'published' + (r.clearance ? ' (' + r.clearance.basis + ')' : '') : 'held privately' + (r.heldAt && !/^(NEW:|private$)/.test(r.heldAt) ? ' at ' + r.heldAt : ', awaiting clearance')],
+      ['Runs on', (r.runsOn || []).map(label).join('; ')], [SW.px('Many'), (r.paratexts || []).join(', ')], ['Files', r.publish === 'files' ? 'published' + (r.clearance ? ' (' + r.clearance.basis + ')' : '') : 'held privately' + (r.heldAt && !/^(NEW:|private$)/.test(r.heldAt) ? ' at ' + r.heldAt : ', awaiting clearance')],
       ['Rights', r.rights], ['Source', r.source]].filter(function (x) { return x[1]; });
     return '<details class="card"' + (open ? ' open' : '') + '><summary><span class="mono">' + esc(r.code) + '</span><b>' + esc(r.title) + '</b>' + chip(r.status) + '</summary><div class="body">' +
       '<div class="grid">' + meta.map(function (m) { return '<div>' + esc(m[0]) + '</div><div>' + esc(m[1]) + '</div>'; }).join('') + '</div>' +

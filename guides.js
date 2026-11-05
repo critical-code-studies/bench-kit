@@ -18,17 +18,17 @@
   }
 
   var GUIDES = {
-    paratexts: ['Paratexts', [
+    paratexts: [SW.px('Many'), [
       ['What they are', '<p>The scans, clippings, photographs and documents around the program, kept for the crew in a private GitHub repository (' + BP.org + '/' + BP.repo + '): a catalogue of records, and the files. Every change made here is saved there as a commit, signed with your initials, so the history of each item is kept.</p>'],
       ['Getting access', ul([
         'Accept the invitation to the <b>' + BP.org + '</b> organisation that GitHub emails you. Until that is accepted the token form will not offer the owner.',
         'Open the token form: its name, owner, a year’s expiry and the permission it needs (Contents, read and write) are filled in. ' + tokenBtn(),
         'On the form, under <b>Repository access</b>, choose <b>Only select repositories</b> and then <b>' + BP.repo + '</b>. GitHub will not take the repository from a link, so this step is by hand.',
-        '<b>Generate token</b>, copy it, and paste it into the bench: ⚙ Settings, Paratexts, then <b>Save and test</b>. Help ▸ Joining the annotation group, step 5, has the same box.',
-        'The token stays in this browser, and is sent to nobody but GitHub. On another computer, paste it there too. Each browser keeps its own, and Safari clears what a site has stored after seven days without a visit; a token that is lost, or has expired, is replaced by making a new one from the same form (Only select repositories, the paratexts repository) and pasting it in. The old one can be deleted on GitHub under Settings ▸ Developer settings ▸ Fine-grained tokens.'])],
+        '<b>Generate token</b>, copy it, and paste it into the bench: ⚙ Settings, ' + SW.px('Many') + ', then <b>Save and test</b>. Help ▸ Joining the annotation group, step 5, has the same box.',
+        'The token stays in this browser, and is sent to nobody but GitHub. On another computer, paste it there too. Each browser keeps its own, and Safari clears what a site has stored after seven days without a visit; a token that is lost, or has expired, is replaced by making a new one from the same form (Only select repositories, the ' + SW.px('many') + ' repository) and pasting it in. The old one can be deleted on GitHub under Settings ▸ Developer settings ▸ Fine-grained tokens.'])],
       ['Inviting someone', '<p>Send them the four steps above with the link, which is what the button below copies. Two things to know before you do.</p>' + ul([
         'They must be a member of the <b>' + BP.org + '</b> organisation first, so invite them there before sending the steps.',
-        'The token is <b>read and write</b>. Whoever holds one can add, change and withdraw paratexts. Every change is a commit in ' + BP.org + '/' + BP.repo + ' under their initials, so nothing is anonymous and nothing is lost, but there is no reading-only form of this link. Send it to people you mean to catalogue with.',
+        'The token is <b>read and write</b>. Whoever holds one can add, change and withdraw ' + SW.px('many') + '. Every change is a commit in ' + BP.org + '/' + BP.repo + ' under their initials, so nothing is anonymous and nothing is lost, but there is no reading-only form of this link. Send it to people you mean to catalogue with.',
         'Tokens expire after a year. GitHub emails a warning first; a new one is made the same way and pasted over the old.'])],
       ['The left panel', ul([
         '<b>＋ Add an item</b>: <b>A file</b> (a scan, photograph, PDF, text, audio or video, up to 50 MB), or <b>A link</b> (a YouTube, Vimeo or Internet Archive recording, an audio or video file online, or a page), catalogued with nothing copied, which plays or shows in the item’s box from where it is held. Give it a title and its <b>Type</b> (what the thing is: a memo scanned to PDF is a memo; type in the find box beside the list to narrow it), a <b>Medium</b> if it is a program or an object (paper tape, DECtape, a disk), and for a link how it <b>Shows as</b>. When no type or medium fits, <b>＋ New type…</b> or <b>＋ New medium…</b> at the foot of the list adds one to this archive’s list for the whole crew, with its Library of Congress or Getty term if it has one. Each type and medium is matched to such a standard term (shown under More metadata as Standard terms), which the Dublin Core export carries beside the bench’s own label. Then what else you know, and Upload (or Add). Program source (.lisp, .bas, .c and the like) is kept as text, to read in the box. A file of the same name and size, or a link already catalogued, is named before it is added again. It goes into the collection you are in, unless you untick it.',
@@ -62,20 +62,20 @@
       ['Missing items', ul([
         'Something known to have existed that the archive holds no copy of and no link to gets a <b>stub</b>: ＋ Add an item ▸ <b>Missing</b>. Its card shows ❔ and <b>Not available or missing</b>; Kind ▸ missing lists them all.',
         'Before adding one, read a source that shows it existed. Something planned and never made is not a stub. An object in a catalogue that is not digitised is not missing either: add it as <b>A link</b> to its catalogue page.',
-        'The description says, in order: “Provenance found but item not available or missing.”; what it is; where it is cited, as the citing paratext’s code with the page or time and a short quotation (each code becomes a link); and, after “Searched:”, where it has been looked for and not found.',
+        'The description says, in order: “Provenance found but item not available or missing.”; what it is; where it is cited, as the citing ' + SW.px('one') + '’s code with the page or time and a short quotation (each code becomes a link); and, after “Searched:”, where it has been looked for and not found.',
         'Two tags make worklists: <b>to-locate</b> on every stub (no holder known) and <b>to-request</b> on anything a known holder could be asked for, a stub or a link to a catalogue page. The ask goes in the description as a paragraph beginning “Request:”: the holder, the collection and number, the part and the form wanted (in a stub, before “Searched:”). Tag ▸ to-request lists them.',
         'When a copy is found, add it as an item of its own with the provenance carried over, and withdraw the stub, giving the new item’s code as the reason.'])],
       ['Corpora', ul([
-        'A <b>corpus</b> is a body of material taken in as a set, gathered by one collector or by one search, such as every reimplementation on one collector’s site, kept in the catalogue but out of the default list so that it does not crowd out the paratexts proper. Where a catalogue has one, <b>Corpus</b> is the first menu in the bar and <b>Corpora</b> heads the left panel, each with its count; the list shows <b>Paratexts</b> until another is chosen, and <b>Every corpus</b> lists them all.',
-        'A search looks through every corpus. What it finds in the others is told after the count, as “3 more hidden by Corpus: Paratexts only”, with a button to show them; an item from another corpus carries its name beside the title.',
+        'A <b>corpus</b> is a body of material taken in as a set, gathered by one collector or by one search, such as every reimplementation on one collector’s site, kept in the catalogue but out of the default list so that it does not crowd out the ' + SW.px('many') + ' proper. Where a catalogue has one, <b>Corpus</b> is the first menu in the bar and <b>Corpora</b> heads the left panel, each with its count; the list shows <b>' + SW.px('Many') + '</b> until another is chosen, and <b>Every corpus</b> lists them all.',
+        'A search looks through every corpus. What it finds in the others is told after the count, as “3 more hidden by Corpus: ' + SW.px('Many') + ' only”, with a button to show them; an item from another corpus carries its name beside the title.',
         'Nothing else is divided by corpus: a code opens its item wherever it is, Related and sequence links cross corpora and mark an item whose home is a corpus, Withdrawn and the Tag, Type, Language and Kind menus cover them all, and the export writes every one, its corpus given as isPartOf.',
-        'An item has one home, its corpus or the paratexts. A corpus may also list paratexts that belong to its set: they stay in Paratexts and its counts, and appear in the corpus as well, marked Paratexts, with the count saying how many (“42 in Versions, 10 of them also in Paratexts”).',
+        'An item has one home, its corpus or the ' + SW.px('many') + '. A corpus may also list ' + SW.px('many') + ' that belong to its set: they stay in ' + SW.px('Many') + ' and its counts, and appear in the corpus as well, marked ' + SW.px('Many') + ', with the count saying how many (“42 in Versions, 10 of them also in ' + SW.px('Many') + '”).',
         'A corpus named on an item but not declared in the catalogue is marked ⚠ in the menu and on the item.'])],
       ['Withdrawing', '<p>Withdrawing takes an item out of the list for the whole crew. It asks for a reason, kept with the record, and for the item’s code typed in (for several, their number). The file stays in the repository, with its history. <b>Withdrawn</b>, in the left panel, lists them, with who withdrew each and why; select them there and <b>Bring back</b>.</p>'],
       ['Linking to one', ul([
-        'In an annotation, note or finding, write its code, as <span class="mono">P-XXXXX</span>. It shows as a link, <b>Paratext:</b> and its title.',
-        'Clicking the link opens the paratext read-only, over whatever you were doing, and closes back to it. At its foot, <b>Go to P-… in Paratexts →</b> opens its full box.',
-        '<b>Share</b> sends a link that opens the bench at the paratext; whoever opens it needs access to see it.',
+        'In an annotation, note or finding, write its code, as <span class="mono">P-XXXXX</span>. It shows as a link, <b>' + SW.px('One') + ':</b> and its title.',
+        'Clicking the link opens the ' + SW.px('one') + ' read-only, over whatever you were doing, and closes back to it. At its foot, <b>Go to P-… in ' + SW.px('Many') + ' →</b> opens its full box.',
+        '<b>Share</b> sends a link that opens the bench at the ' + SW.px('one') + '; whoever opens it needs access to see it.',
         'Its box lists where it is <b>Cited in</b>: the group’s annotations, replies and findings, the bench’s findings and your notes that write its code, each a link.'])],
       ['Speed and privacy', '<p>The catalogue and each file are kept in this browser’s cache after the first time, so the list appears at once and pictures load from here; the bench checks GitHub behind them and redraws if anything has changed. Taking your token out of ⚙ Settings clears the cache.</p>']
     ]],
@@ -84,15 +84,15 @@
         '<span class="mono">A-XXXXX</span> an annotation, <span class="mono">R-XXXXX</span> a reply',
         '<span class="mono">C-XXXXX</span> a finding of the crew’s, <span class="mono">' + (EX.finding || 'F1') + '</span> one of the bench’s own',
         '<span class="mono">XX-N1</span> a note in My notes (your initials and its number)',
-        '<span class="mono">P-XXXXX</span> a paratext',
+        '<span class="mono">P-XXXXX</span> a ' + SW.px('one'),
         B.implementations ? '<span class="mono">I-XXXXX</span> an implementation (Help ▸ Implementations)' : null])],
       ['Going to one', ul([
         '<b>#</b> in the top bar: type a code and Enter.',
-        'In an annotation, note or finding, a code written in the text becomes a link (a paratext’s shows as <b>Paratext:</b> and its title, and opens read-only where you are).',
+        'In an annotation, note or finding, a code written in the text becomes a link (a ' + SW.px('one') + '’s shows as <b>' + SW.px('One') + ':</b> and its title, and opens read-only where you are).',
         'A web link can carry one: <span class="mono">…/research/?code=A-XXXXX</span>.'])],
       ['Sharing', ul([
         B.topShare ? SW.SHARE_ICON + ' in the top bar shares what you are looking at: the version, view, lines or comparison.' : null,
-        '<b>Share</b> on a paratext sends a link to it. Where the browser has a share sheet (Safari, phones), it opens it: Mail, Messages and the rest. Elsewhere the link is copied, to paste.',
+        '<b>Share</b> on a ' + SW.px('one') + ' sends a link to it. Where the browser has a share sheet (Safari, phones), it opens it: Mail, Messages and the rest. Elsewhere the link is copied, to paste.',
         'Help ▸ Joining the annotation group, <b>Share an invitation</b>: a link that sets up the annotation group for whoever opens it. Send it only to the crew: anyone with it can join.'])],
       ['Findings and My notes', ul([
         'A note in My notes can be shared to Findings, where the crew can reply, rate it and react; it moves to the <b>Shared</b> box in My notes. Recalling it brings it back, with its replies.',
@@ -103,15 +103,15 @@
 
   // Implementations, where the bench has the tab (kit/implementations.js)
   if (B.implementations) GUIDES.implementations = ['Implementations', [
-    ['What they are', '<p>The program’s other texts: its copies, ports, translations, revisions and reimplementations, and the tapes, disks and listings that carry them. Paratexts are the documents around the program; implementations are the program written again, on other machines and in other languages. Each has an entry in a public catalogue kept in the bench’s repository, so the tab reads without a token.</p>' + ul([
-      'An entry gives the title, author, date, language, machine and operating system, its <b>family</b> (a line of implementations the catalogue groups together), its <b>status</b>, its <b>parents</b>, the bench’s <b>features</b> read in it, the paratexts that document it, and what it runs on (an interpreter or a system that is itself an entry).',
-      'Status says what survives: <b>held</b>, a copy is held; <b>linked</b>, a public copy is held elsewhere at a stable place; <b>printed</b>, the whole program text survives in print, its scan kept as a paratext; <b>attested</b>, known only from mentions; <b>lost</b>.'])],
+    ['What they are', '<p>The program’s other texts: its copies, ports, translations, revisions and reimplementations, and the tapes, disks and listings that carry them. ' + SW.px('Many') + ' are the documents around the program; implementations are the program written again, on other machines and in other languages. Each has an entry in a public catalogue kept in the bench’s repository, so the tab reads without a token.</p>' + ul([
+      'An entry gives the title, author, date, language, machine and operating system, its <b>family</b> (a line of implementations the catalogue groups together), its <b>status</b>, its <b>parents</b>, the bench’s <b>features</b> read in it, the ' + SW.px('many') + ' that document it, and what it runs on (an interpreter or a system that is itself an entry).',
+      'Status says what survives: <b>held</b>, a copy is held; <b>linked</b>, a public copy is held elsewhere at a stable place; <b>printed</b>, the whole program text survives in print, its scan kept as a ' + SW.px('one') + '; <b>attested</b>, known only from mentions; <b>lost</b>.'])],
     ['Descent', ul([
       'Each parent of an entry is another entry, or one of the bench’s own versions (shown as the original, in the variorum).',
-      'With it go the <b>relation</b> (port, adaptation, translation, revision, copy, reimplementation, inspired-by, recovery), the route it came by (<b>via</b> a publication, a print listing, a tape, DECUS, a network, a disk), the <b>confidence</b> (established, probable or possible) and the <b>evidence</b>, citing paratexts by their P-codes or findings.'])],
+      'With it go the <b>relation</b> (port, adaptation, translation, revision, copy, reimplementation, inspired-by, recovery), the route it came by (<b>via</b> a publication, a print listing, a tape, DECUS, a network, a disk), the <b>confidence</b> (established, probable or possible) and the <b>evidence</b>, citing ' + SW.px('many') + ' by their P-codes or findings.'])],
     ['The views', ul([
       '<b>List</b>: every entry, with its code, date, title, language, machine, family, status and whether its files are published. Click a heading to sort by it, again to reverse. <b>Features</b> adds a column for each of the bench’s features: ✓ present, ✗ absent, ? not yet read.',
-      '<b>Read</b>: one entry. Its record folds above its source. The strip under the record runs from its parents through the entry to its descendants, each with its relation, route and confidence; hover one for the evidence, click it to move along the descent. A source with several files has a button for each (the main file and its alternates); an alternate held privately is named, with the paratext that holds it.',
+      '<b>Read</b>: one entry. Its record folds above its source. The strip under the record runs from its parents through the entry to its descendants, each with its relation, route and confidence; hover one for the evidence, click it to move along the descent. A source with several files has a button for each (the main file and its alternates); an alternate held privately is named, with the ' + SW.px('one') + ' that holds it.',
       '<b>Tree</b>: the descent drawn with the families as lanes and the date across, the bench’s own versions in the top lane. A solid line is established, dashed probable, dotted possible. A filled node is held, a node with a dot printed, an open one attested, linked or lost. Hover a line for its relation and evidence; click a node to read the entry.',
       '<b>Matrix</b>: every entry against the features, grouped by family and in date order; <b>only rows with a feature read</b> leaves out the rest.',
       'Find (code, title, author, language, machine, date, description), family, status and published or not narrow the List, the Tree and the Matrix alike.'])],
@@ -123,10 +123,10 @@
       'Two in different languages, or too long to align, are shown side by side.'])],
     ['Published and held', ul([
       'Every entry is public. A file is published only once its publication is cleared: by the author’s permission, a licence, the public domain, a release from the rights holder, or research fair dealing. The basis is recorded with the entry (Files, in its record).',
-      'Until then the file stays in the private paratext archive, awaiting clearance, and the entry says that it is held privately. A tape or disk with other programs on it stays private as a whole; its entry publishes what can be cleared and describes the rest.',
+      'Until then the file stays in the private ' + SW.px('one') + ' archive, awaiting clearance, and the entry says that it is held privately. A tape or disk with other programs on it stays private as a whole; its entry publishes what can be cleared and describes the rest.',
       'Files published or Entry only, in the filters, lists one or the other.'])],
     ['Linking to one', ul([
-      'Every entry has a code, <span class="mono">I-XXXXX</span>, shown in the List and on its record. Written in an annotation, note, finding or paratext description it becomes a link that opens the entry in Read.',
+      'Every entry has a code, <span class="mono">I-XXXXX</span>, shown in the List and on its record. Written in an annotation, note, finding or ' + SW.px('one') + ' description it becomes a link that opens the entry in Read.',
       '<b>#</b> in the top bar opens one by its code, and a web link can carry one: <span class="mono">…/research/?code=I-XXXXX</span>.',
       'While the tab is open the address carries its view, the entry read, the two compared, the filters and the feature columns, so a link copied from it opens the tab as it stands.'])]
   ]];
