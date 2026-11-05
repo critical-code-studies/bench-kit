@@ -89,7 +89,7 @@
         var w = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), R = new RegExp('(^|[^\\p{L}])' + w + '(?![\\p{L}])', 'giu'), out = {}, order = [];
         ts.forEach(function (t, p) {
           t.lines.forEach(function (L) {
-            if (L.n >= t.bodyEnd || L.kind === 'head' || L.kind === 'working') return;
+            if (L.n >= t.bodyEnd || L.n < t.bodyStart || L.kind === 'head' || L.kind === 'working') return;
             R.lastIndex = 0; var k = 0; while (R.exec(L.raw)) k++;
             if (!k) return;
             var s = sectionOf(t, L.n) || '(before the first heading)';
@@ -99,13 +99,13 @@
         });
         return order.map(function (s) { return [s, out[s]]; });
       }
-      view.innerHTML = '<div class="vt-pad"><h2>Glossary</h2><p class="hint">Each source term, its renderings, and where each rendering falls in the readable translation, section by section (a count opens Read at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
+      view.innerHTML = '<div class="vt-pad"><h2>Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the readable translation, section by section (a count opens Read at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
         '<div class="toolbar"><input type="search" class="vt-q" placeholder="Filter: a source term, a reading or an English word" aria-label="Filter the glossary"><span class="faint vt-n"></span></div>' +
         '<table class="vt-table vt-gloss"><thead><tr><th>Source</th><th>Reading</th><th>English</th><th>Where, in the readable</th></tr></thead><tbody>' +
         gl.map(function (g, i) {
           return '<tr data-i="' + i + '" data-hay="' + esc([g.source.join(' '), g.reading.join(' '), g.english.join(' '), g.note || ''].join(' ').toLowerCase()) + '"><td class="vt-src" lang="' + esc(B.textLang || 'ja') + '">' + esc(g.source.join(' / ')) + '</td><td>' + esc(g.reading.join(' / ')) + '</td><td>' +
             g.english.map(function (e) { var c = col[e.toLowerCase()]; return '<div>' + esc(e) + (c ? ' <span class="vt-warn" title="Also renders ' + esc(c.filter(function (x) { return x !== g.source.join(' / '); }).join(', ')) + '">⚠</span>' : '') + '</div>'; }).join('') +
-            (g.note ? '<div class="faint">' + esc(g.note) + '</div>' : '') + '</td><td class="vt-where" data-where="' + i + '"><span class="faint">…</span></td></tr>';
+            (g.note ? '<div class="faint vt-note" title="A note in the glossary, not a rendering">(' + esc(g.note) + ')</div>' : '') + '</td><td class="vt-where" data-where="' + i + '"><span class="faint">…</span></td></tr>';
         }).join('') + '</tbody></table></div>';
       // the counts, row by row, so the table shows at once
       var rowsEl = SW.$$('tr[data-i]', view), k = 0;

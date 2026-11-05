@@ -1,3 +1,4 @@
 { "title": "Library", "intro": "Texts for wider reading on the work. Replace these entries with your own.", "items": [
- { "id": "lib-example", "title": "An example entry, held elsewhere", "author": "A. Scholar", "date": "2001", "kind": "article", "licence": "In copyright", "url": "https://example.org/", "note": "A record with a link out: the bench holds no copy." }
+ { "id": "lib-example", "title": "An example entry, held elsewhere", "author": "A. Scholar", "date": "2001", "kind": "article", "licence": "In copyright", "url": "https://example.org/", "note": "A record with a link out: the bench holds no copy." },
+ { "id": "lib-parallel", "title": "An earlier translation, for the group", "author": "B. Translator", "date": "1967", "kind": "parallel text", "licence": "In copyright", "shelf": "private", "file": "library/earlier-translation.pdf", "note": "On the private shelf: members open it with their token; everyone else sees this record." }
 ] }

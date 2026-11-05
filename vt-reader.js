@@ -17,7 +17,9 @@
  *                      [markers] page; default '\[p\. (\d+)\]')
  *   image              the image marker, a RegExp source with the image number in group 1
  *                      (Kuki: '\[コマ (\d+)\]'), or none
- *   body               { until: RegExp source of the heading where the apparatus begins }
+ *   body               { from: RegExp source of the heading where the author's text begins (the
+ *                      translator's front matter before it), until: of the heading where the
+ *                      apparatus begins }; counts and concordances read only between them
  *   exclude            [path prefixes] never read into a snapshot (tools/vt-index.js refuses them)
  *
  * A text is read a line of its file to a line of the bench (the kit's unit), so a reference to a
@@ -31,7 +33,7 @@
  *   layout(desc)                    the descriptor with the method's defaults filled in
  *   read(raw, desc)                 { lines: [{ n, raw, kind, … }], pages: [{ page, n, c }],
  *                                     images: [{ img, n, c }], sections: [{ n, level, title, … }],
- *                                     notes: { label: n }, refs: [{ label, n, c }], bodyEnd: n }
+ *                                     notes: { label: n }, refs: [{ label, n, c }], bodyStart: n, bodyEnd: n }
  *   pageAt(t, n, c)                 the page a place in the text is on
  *   inline(s)                       a line's text as spans: [{ s, c0, c1, marks }] (markers taken
  *                                     out; italic, bold, note references, insertions 〔 〕, notes 〔Tr.: 〕)
@@ -74,8 +76,8 @@
   // ---------- a text ----------
   VT.read = function (raw, desc) {
     var d = VT.layout(desc), PG = re(d.page, 'g'), IM = d.image ? re(d.image, 'g') : null;
-    var until = d.body && d.body.until ? re(d.body.until) : null;
-    var t = { lines: [], pages: [], images: [], sections: [], notes: {}, refs: [], bodyEnd: null };
+    var until = d.body && d.body.until ? re(d.body.until) : null, from = d.body && d.body.from ? re(d.body.from) : null;
+    var t = { lines: [], pages: [], images: [], sections: [], notes: {}, refs: [], bodyStart: from ? null : 1, bodyEnd: null };
     var working = false, fence = false;
     splitLines(raw).forEach(function (s, i) {
       var n = i + 1, L = { n: n, raw: s, kind: 'para' }, m;
@@ -91,6 +93,7 @@
         if (orig) { L.orig = orig[1]; title = title.slice(0, orig.index); }
         L.title = title.trim();
         if (until && until.test(s) && t.bodyEnd == null) t.bodyEnd = n;
+        if (from && t.bodyStart == null && from.test(s)) t.bodyStart = n;
         t.sections.push({ n: n, level: L.level, title: L.title, orig: L.orig || null });
       }
       else if ((m = /^\[\^([^\]]+)\]:\s?/.exec(s))) { L.kind = 'note'; L.label = m[1]; t.notes[m[1]] = n; }
@@ -108,6 +111,7 @@
       t.lines.push(L);
     });
     if (t.bodyEnd == null) t.bodyEnd = t.lines.length + 1;
+    if (t.bodyStart == null) t.bodyStart = 1;
     // the section each line is in: the nearest heading above it, by level
     var stack = [];
     t.lines.forEach(function (L) {
@@ -170,7 +174,7 @@
     var lastImg = null;
     t.lines.forEach(function (L) {
       if (L.kind === 'blank' || L.kind === 'working' || L.kind === 'fence') return;
-      if (o.bodyOnly && L.n >= t.bodyEnd) return;
+      if (o.bodyOnly && (L.n >= t.bodyEnd || L.n < t.bodyStart)) return;
       var tks = VT.inline(L.raw), cur = null, cont = false, kind = L.kind === 'head' ? 'head' : L.kind === 'note' ? 'note' : 'p';
       function open() { cur = { t: kind, n0: L.n, n1: L.n, spans: [], cont: cont || undefined, level: L.level, id: L.label }; blocks.push(cur); }
       tks.forEach(function (tk) {

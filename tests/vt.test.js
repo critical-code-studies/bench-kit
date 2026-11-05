@@ -15,6 +15,7 @@
   eq('a heading: its title, the source’s title and the image range', [t.lines[2].title, t.lines[2].orig, t.lines[2].imageRange], ['Chapter 1', '第一章', '7-8']);
   eq('a note’s definition', t.notes['1'], 11);
   eq('the body ends where the apparatus begins', t.bodyEnd, 13);
+  eq('the author’s text begins after the translator’s front matter', VT.read('## Preface\n\nMine.\n\n## Chapter 1\n\nHis.\n', { body: { from: '^## Chapter' } }).bodyStart, 5);
   eq('the page a place is on', [VT.pageAt(t, 5, 0), VT.pageAt(t, 5, 60), VT.pageAt(t, 3, 0)], [1, 2, null]);
   var d = VT.doc(t), pbs = d.blocks.filter(function (b) { return b.t === 'pb'; });
   eq('Book’s document: a page break to each page, with its image', pbs.map(function (b) { return [b.facs, b.img]; }), [['1', 7], ['2', 7]]);

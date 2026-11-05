@@ -20,7 +20,7 @@
       versions: { literal: 'literal', readable: 'readable', ocr: 'ocr' },   // the ids in js/versions.js
       page: '\\[p\\. (\\d+)\\]',                           // the page marker
       image: '\\[コマ (\\d+)\\]',                          // the image marker (the library's image number), or null
-      body: { until: '^#+ (Appendix|Glossary)' },          // where the apparatus begins
+      body: { from: null, until: '^#+ (Appendix|Glossary)' },   // EDIT: where the author's text begins (from, after the translator's front matter) and the apparatus begins (until)
       glossary: { path: 'glossary.csv', kind: 'csv' },     // or { path: 'Translation.md', kind: 'md', heading: 'Glossary' }
       changes: ['checks/changes-1.md'],                    // the change lists, each path
       ocr: { path: 'source/ocr.txt', split: '^=== PAGE (\\d+)' },
@@ -54,12 +54,15 @@
     },
 
     folder: true,                                          // File ▾ ▸ Open a folder…: a working copy, read in place of the published files
-    library: true,                                         // the Library tab, from library/library.json
+    // the Library (kit/library.js), from library/library.json: the public shelf (files in library/files/ here)
+    // and the group's private shelf (shelf: 'private', files in the private repository's library/, opened with
+    // a member's token); parallel texts are a kind within it
+    library: true,
     // the Images tab (kit/images.js): the pages from js/images.js, and the author's figures with their labels
     images: { figures: null, credit: '' },                 // EDIT: figures: { url: 'figures/figures.json', overlays: 'figures/overlays.json' }
     // dictionaries in the source's language (kit/dictionary.js; kit/tools/dict-build.js jmdict … --lang ja)
     dictionaries: [],                                      // EDIT: e.g. [{ id: 'jmdict', name: 'JMdict', base: 'data/jmdict/', lang: 'ja', credit: 'JMdict, EDRDG, CC BY-SA 4.0' }]
-    menusOff: ['topics'],                                  // EDIT: take 'topics' out once a model is made (kit/docs/topics-guide.md)
+    menusOff: ['topics', 'paratexts'],                     // EDIT: take 'topics' out once a model is made (kit/docs/topics-guide.md), 'paratexts' to show Paratexts
 
     about: {
       icon: '<img src="img/icon.svg" alt="" width="40" height="40">',
@@ -93,9 +96,9 @@
     compare: { comment: '', normalised: false, reading: 'Reading', modes: ['text'] },
     comparePrefix: 'Example Translation: ',
     genealogy: { set: ['literal', 'readable'], line: 'main', lineNames: { main: 'Source, literal, readable' } },
-    // the group's private collection, named Parallel texts here (a paratext, on a translation bench, is the
-    // translator's preface and notes, which the bench shows in its public text)
-    paratexts: { org: 'vector-humanities', repo: 'example_paratexts', cache: 'example-paratexts', words: { one: 'parallel text', many: 'parallel texts' } },   // EDIT: a private repository for the group's copies
+    // the group's one private repository: the Library's private shelf (its library/ folder), and Paratexts
+    // (documents about the work: reviews, letters, photographs, archival records), off until wanted
+    paratexts: { org: 'vector-humanities', repo: 'example_paratexts', cache: 'example-paratexts' },   // EDIT: the private repository
     examples: { date: 'e.g. 1935', archive: 'e.g. National Diet Library', versions: 'e.g. literal, readable', refs: 'e.g. [REF: RT, 01.md:5]', publisher: 'e.g. Iwanami Shoten', finding: 'F1' },
     stemma: { root: 'ocr', lostBetween: {}, skip: [], lostOnTrunk: false },
     edition: { built: function () { return ['Read as', 'Markdown, divided into lines']; }, layout: function (raw) { return String(raw); }, words: true, files: ['all files', 'Every file'] },

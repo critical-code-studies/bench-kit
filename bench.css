@@ -1290,3 +1290,5 @@ ul.reading a { overflow-wrap: anywhere; }
 .im-key { margin: 0; color: var(--text-dim); font-size: 14px; }
 .im-key-on { color: var(--text); }
 @media (max-width: 760px) { .im-figwrap { grid-template-columns: minmax(0, 1fr); } .im-zoombox { height: 64vh; } }
+.lib-h.group { color: var(--amber, #c90); }
+.lib-size { margin: 0 0 8px; } .lib-size.lib-big { color: var(--amber, #c90); }
