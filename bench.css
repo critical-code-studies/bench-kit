@@ -1286,6 +1286,7 @@ ul.reading a { overflow-wrap: anywhere; }
 .im-labels { position: absolute; inset: 0; pointer-events: none; font: clamp(9px, 1.25vw, 15px)/1.15 "Helvetica Neue", Arial, sans-serif; color: #1a1a1a; }
 .im-lab { position: absolute; max-width: 45%; white-space: pre-line; text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff; pointer-events: auto; }
 .im-lab-r { text-align: right; }
+.im-lab-c { text-align: center; white-space: nowrap; max-width: none; }
 .im-cap { margin: 0 0 8px; }
 .im-key { margin: 0; color: var(--text-dim); font-size: 14px; }
 .im-key-on { color: var(--text); }
