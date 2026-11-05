@@ -31,8 +31,10 @@
  *     stage itself are marked more strongly;
  *   - Compare: other texts beside the first (up to SW.BENCH.doc.besideMax, 3 if not given), all held
  *     at the same page break (facs) as any is scrolled: Compare with… and + another in the toolbar.
+ *     SW.BENCH.doc.beside: [ids], the texts beside the first until the reader or a link chooses (bb);
+ *     where the first is one of them, the next of doc.versions takes its place.
  *     With three columns or more, the page images are beside the first column only (a ▣ at each page
- *     break in the others opens one). SW.BENCH.doc.imageSide: 'left' sets each page's image to the
+ *     break in the others opens one); SW.BENCH.doc.imagesFirst: true does so with two. SW.BENCH.doc.imageSide: 'left' sets each page's image to the
  *     left of its text (image | text | text … for a translation read beside its source).
  * The text is set in sheets, a page to each, the page's image beside it (from the bench's own files
  * where SW.BENCH.doc.image gives one, else the page's IIIF service); a click opens it
@@ -148,7 +150,7 @@
   // the address as the page was opened, read before the shell rewrites it
   var Q0 = SW.readQuery();
   var BESIDE = Math.max(1, +D.besideMax || 3);   // the most texts beside the first
-  var st = { stage: STAGES.length, all: false, hands: true, play: null, beside: String(Q0.bb || '').split(',').filter(Boolean), first: true, own: false };
+  var st = { stage: STAGES.length, all: false, hands: true, play: null, beside: String(Q0.bb || '').split(',').filter(Boolean), besideSet: Q0.bb != null, first: true, own: false };
   if (Q0.stage != null && Q0.stage !== '') st.stage = Q0.stage === '0' ? 0 : (AT[Q0.stage] || STAGES.length);
   if (Q0.all === '1') st.all = true;
   // deletions struck in red at the stage, not taken out (Strike deletions): kept for this browser, and in a link as del=strike
@@ -984,6 +986,7 @@
       if (e.target.dataset.slot != null) {
         var i = +e.target.dataset.slot, val = e.target.value;
         if (val) st.beside[i] = val; else st.beside.splice(i, 1);
+        st.besideSet = true;
         draw(SW.state.v);
       }
     });
@@ -1015,10 +1018,14 @@
     stop(); SW.unpop();
     var left = textOf(vid);
     var known = texts();
+    if (!st.besideSet && D.beside) {   // the bench's texts beside, the first left out
+      var want = D.beside.length;
+      st.beside = D.beside.concat(D.versions || []).filter(function (t, i, a) { return t !== left && a.indexOf(t) === i; }).slice(0, want);
+    }
     st.beside = st.beside.filter(function (t, i, a) { return t !== left && a.indexOf(t) === i && known.indexOf(t) >= 0; }).slice(0, BESIDE);
     cols = [];
     view.innerHTML = '';
-    var holder = SW.el('div', { class: 'bk-cols' + (st.beside.length ? ' bk-two' : '') + (st.beside.length > 1 ? ' bk-many' : '') });
+    var holder = SW.el('div', { class: 'bk-cols' + (st.beside.length ? ' bk-two' : '') + (st.beside.length > 1 ? ' bk-many' : '') + (D.imagesFirst ? ' bk-onefig' : '') });
     holder.style.setProperty('--bk-n', String(st.beside.length + 1));
     view.appendChild(holder);
     cols.push(column(left, holder));

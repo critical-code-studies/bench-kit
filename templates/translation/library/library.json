@@ -1,0 +1,3 @@
+{ "title": "Library", "intro": "Texts for wider reading on the work. Replace these entries with your own.", "items": [
+ { "id": "lib-example", "title": "An example entry, held elsewhere", "author": "A. Scholar", "date": "2001", "kind": "article", "licence": "In copyright", "url": "https://example.org/", "note": "A record with a link out: the bench holds no copy." }
+] }

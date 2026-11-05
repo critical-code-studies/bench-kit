@@ -8,7 +8,7 @@ For a session asked to start a new bench. Settle these with the person who wants
 2. **What is a line?** A line of code, of a transcription, a sentence or segment, a paragraph. Every reference, annotation and model will point at it, so it must stay the same as the texts are revised.
 3. **Where are the texts, and at what commit?** Each source repository and the commit the bench reads it at. Texts the bench cannot hold (copyright, a library's terms) are named, not copied.
 4. **What are the page images, and on what terms?** A library's IIIF manifest (`tools/iiif-map.js`), or the bench's own files. Whether copies may be held in the bench, at what size, with what credit, needs the holder's permission in writing (Melville: the Houghton Library, 30 October 2026).
-5. **What languages and scripts?** For a dictionary (`dictionary.js`, with its `lang`), a word breaker (`SW.BENCH.lang`, `tokenise`), fonts.
+5. **What languages and scripts?** For a dictionary (`dictionary.js`, with its `lang`), a word breaker (`SW.BENCH.textLang`, `tokenise`), fonts.
 
 ## The repository
 

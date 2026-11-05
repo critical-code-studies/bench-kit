@@ -8,10 +8,10 @@
  *   rng(seed)                     a seeded generator (mulberry32), for results that repeat
  *   STOP, stopSet(list)           English stopwords (SW.BENCH.textstats.stopwords replaces them)
  *   tokens(text, o)               the words of a text, lower-cased; o.keepCase, o.possessive (keep 's).
- *                                 The words are the bench's (SW.BENCH.tokenise(text, lang) -> [word]),
+ *                                 The words are the bench's (SW.BENCH.tokenise(text, textLang) -> [word]),
  *                                 else, where the text is in a script written without spaces (Chinese,
  *                                 Japanese, Thai…), the browser's word breaker (Intl.Segmenter, in
- *                                 SW.BENCH.lang or the language the script suggests), else runs of letters
+ *                                 SW.BENCH.textLang or the language the script suggests), else runs of letters
  *   segment(text, lang)           a text's words by Intl.Segmenter (null where it is not to be had)
  *   unspaced(text)                whether a text has a script written without spaces
  *   counts(toks, stop), total(c), top(c, n), chunks(toks, size)
@@ -94,8 +94,8 @@
   // the bench's own words, or the word breaker's for an unspaced script; null for runs of letters
   function words(t) {
     var B = (root.SW && root.SW.BENCH) || {};
-    if (typeof B.tokenise === 'function') return B.tokenise(t, B.lang) || [];
-    return UNSPACED.test(t) ? T.segment(t, B.lang) : null;
+    if (typeof B.tokenise === 'function') return B.tokenise(t, B.textLang) || [];
+    return UNSPACED.test(t) ? T.segment(t, B.textLang) : null;
   }
   T.tokens = function (text, o) {
     o = o || {};

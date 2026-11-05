@@ -33,14 +33,14 @@
 #view-book.bk-noimg .bk-two .bk-sheet { grid-template-columns: minmax(0, 1fr); }
 #view-book.bk-noimg .bk-fig { display: none; }
 /* three columns or more: the images beside the first only, a ▣ at each page break in the others */
-#view-book .bk-many .bk-col + .bk-col .bk-sheet { grid-template-columns: minmax(0, 1fr); }
-#view-book .bk-many .bk-col + .bk-col .bk-fig { display: none; }
-#view-book .bk-many .bk-col + .bk-col .bk-pb-img { display: inline-block; }
+#view-book :is(.bk-many, .bk-onefig) .bk-col + .bk-col .bk-sheet { grid-template-columns: minmax(0, 1fr); }
+#view-book :is(.bk-many, .bk-onefig) .bk-col + .bk-col .bk-fig { display: none; }
+#view-book :is(.bk-many, .bk-onefig) .bk-col + .bk-col .bk-pb-img { display: inline-block; }
 /* the image to the left of its text (SW.BENCH.doc.imageSide: 'left') */
 #view-book.bk-imgleft .bk-sheet { grid-template-columns: var(--bk-imgw, 320px) minmax(0, 38em); }
 #view-book.bk-imgleft .bk-two .bk-sheet { grid-template-columns: calc(var(--bk-imgw, 320px) * 0.45) minmax(0, 1fr); }
 #view-book.bk-imgleft .bk-fig { order: -1; }
-#view-book.bk-imgleft.bk-noimg .bk-sheet, #view-book.bk-imgleft .bk-many .bk-col + .bk-col .bk-sheet { grid-template-columns: minmax(0, 1fr); }
+#view-book.bk-imgleft.bk-noimg .bk-sheet, #view-book.bk-imgleft :is(.bk-many, .bk-onefig) .bk-col + .bk-col .bk-sheet { grid-template-columns: minmax(0, 1fr); }
 .bk-beside select + .faint { margin-left: 4px; }
 .bk-pb-img { display: none; order: 2; font: 12px var(--sans, system-ui); padding: 0 5px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); color: var(--text-dim); cursor: zoom-in; }
 .bk-pb-img:hover { border-color: var(--amber); color: var(--text); }
