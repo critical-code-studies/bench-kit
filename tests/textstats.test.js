@@ -57,6 +57,18 @@
       var co = S.collocates('the old sea and the old ship and the new sea'.split(' '), 'old', { window: 1, min: 1 });
       eq('collocates: occurrences, and the words beside them', [co.hits, co.list.map(function (x) { return x.w; }).sort()], [2, ['sea', 'ship', 'the']]);
 
+      T.group('Text statistics: words in any script');
+      var TS = S, had = SW.BENCH.tokenise;
+      eq('a spaced text: runs of letters, as before', TS.tokens('The captain’s cabin, and Häuser.'), ['the', 'captain', 'cabin', 'and', 'häuser']);
+      eq('an unspaced script found', [TS.unspaced('偶然性の問題'), TS.unspaced('Billy Budd')], [true, false]);
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        var ja = TS.tokens('偶然性の問題は、偶然性を論じる。');
+        eq('Japanese by the word breaker: words, not the whole run', ja.length > 3 && ja.indexOf('偶然性の問題は') < 0 && ja.join('') === '偶然性の問題は偶然性を論じる', true);
+      }
+      SW.BENCH.tokenise = function (t) { return t.split('|'); };
+      eq('the bench’s own words, lower-cased', TS.tokens('A|B|c'), ['a', 'b', 'c']);
+      SW.BENCH.tokenise = had;
+
     });
   });
 })();

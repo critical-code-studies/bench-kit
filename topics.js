@@ -612,8 +612,13 @@
     c.appendChild(bar); c.appendChild(out); wire(bar, m); wire(out, m); cards.appendChild(c);
     blocks = function () { return [SW.tableBlock('The topics of ' + docLabel(d), ['Topic', 'Share', 'Words'], rows.map(function (x) { return [tname(m, x[0]), pct(x[1]), tw(m, x[0], 8)]; }))]; };
   }
-  // the words of a passage, as the bench's documents have them: SW.BENCH.topics.tokens(text), or words of letters
-  T.tokens = function (text) { return C.tokens ? C.tokens(text) : (String(text).toLowerCase().match(/\p{L}[\p{L}'’]*\p{L}|\p{L}/gu) || []).map(function (w) { return w.replace(/['’]s$/, ''); }); };
+  // the words of a passage, as the bench's documents have them: SW.BENCH.topics.tokens(text); the bench's
+  // or the word breaker's (kit/textstats.js) where it has its own or the text is unspaced; or words of letters
+  T.tokens = function (text) {
+    if (C.tokens) return C.tokens(text);
+    var TS = SW.textstats;
+    if (TS && (typeof B.tokenise === 'function' || TS.unspaced(text))) return TS.tokens(text);
+    return (String(text).toLowerCase().match(/\p{L}[\p{L}'’]*\p{L}|\p{L}/gu) || []).map(function (w) { return w.replace(/['’]s$/, ''); }); };
   // a passage inferred on a model: { theta, known, length }
   T.infer = function (m, text, o) {
     var M = mallette(), s = T.settings(m.settings || {});

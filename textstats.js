@@ -7,7 +7,13 @@
  * The engine, which needs no page (node can load it):
  *   rng(seed)                     a seeded generator (mulberry32), for results that repeat
  *   STOP, stopSet(list)           English stopwords (SW.BENCH.textstats.stopwords replaces them)
- *   tokens(text, o)               the words of a text, lower-cased; o.keepCase, o.possessive (keep 's)
+ *   tokens(text, o)               the words of a text, lower-cased; o.keepCase, o.possessive (keep 's).
+ *                                 The words are the bench's (SW.BENCH.tokenise(text, lang) -> [word]),
+ *                                 else, where the text is in a script written without spaces (Chinese,
+ *                                 Japanese, Thai…), the browser's word breaker (Intl.Segmenter, in
+ *                                 SW.BENCH.lang or the language the script suggests), else runs of letters
+ *   segment(text, lang)           a text's words by Intl.Segmenter (null where it is not to be had)
+ *   unspaced(text)                whether a text has a script written without spaces
  *   counts(toks, stop), total(c), top(c, n), chunks(toks, size)
  *   g2(a, b, A, B)                Dunning's log-likelihood, signed: + where a/A exceeds b/B
  *   keyness(cA, cB, o)            every word's G² between two counts; o.min, o.stop
@@ -64,11 +70,38 @@
     'said say says like well even much many every whose whether either neither among within without towards toward').split(' ');
   T.stopSet = function (list) { var s = Object.create(null); (list || T.STOP).forEach(function (w) { s[w] = 1; }); return s; };
   var WORD = /[\p{L}]+(?:'[\p{L}]+)*/gu;
+  var UNSPACED = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u0e00-\u0e7f\u0e80-\u0eff\u1000-\u109f\u1780-\u17ff]/;
+  T.unspaced = function (text) { return UNSPACED.test(String(text || '')); };
+  // the language a script suggests: kana Japanese, Han alone Chinese, Thai, Lao, Burmese, Khmer
+  function guess(t) {
+    if (/[\u3040-\u30ff]/.test(t)) return 'ja';
+    if (/[\u0e00-\u0e7f]/.test(t)) return 'th';
+    if (/[\u0e80-\u0eff]/.test(t)) return 'lo';
+    if (/[\u1000-\u109f]/.test(t)) return 'my';
+    if (/[\u1780-\u17ff]/.test(t)) return 'km';
+    return 'zh';
+  }
+  var segs = {};
+  T.segment = function (text, lang) {
+    var t = String(text || '');
+    if (typeof Intl === 'undefined' || !Intl.Segmenter) return null;
+    var l = lang || guess(t);
+    try { segs[l] = segs[l] || new Intl.Segmenter(l, { granularity: 'word' }); } catch (e) { return null; }
+    var out = [];
+    for (var it = segs[l].segment(t)[Symbol.iterator](), r = it.next(); !r.done; r = it.next()) if (r.value.isWordLike && /[\p{L}\p{N}]/u.test(r.value.segment)) out.push(r.value.segment);
+    return out;
+  };
+  // the bench's own words, or the word breaker's for an unspaced script; null for runs of letters
+  function words(t) {
+    var B = (root.SW && root.SW.BENCH) || {};
+    if (typeof B.tokenise === 'function') return B.tokenise(t, B.lang) || [];
+    return UNSPACED.test(t) ? T.segment(t, B.lang) : null;
+  }
   T.tokens = function (text, o) {
     o = o || {};
     var t = String(text || '').replace(/[’‘ʼ]/g, "'");
     if (!o.keepCase) t = t.toLowerCase();
-    var m = t.match(WORD) || [], out = [];
+    var m = words(t) || t.match(WORD) || [], out = [];
     for (var i = 0; i < m.length; i++) {
       var w = m[i];
       if (!o.possessive && /'s$/i.test(w)) w = w.slice(0, -2);
