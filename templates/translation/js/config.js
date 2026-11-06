@@ -34,6 +34,7 @@
     refs: { names: { translation: 'TR', literal: 'LT', ocr: 'SRC' }, prefix: 'EX-', dir: '' },   // EDIT: [REF: TR, 01.md:12]
     forks: [['translation', 'The translation'], ['source', 'The source']],
     start: 'translation',
+    picker: false,                                         // true puts the text picker in the top bar; otherwise File ▾ ▸ Open a version… (⌘O)
     comment: [],
 
     // Book: the pages, the source's image to the left of the translation; the literal beside it is one

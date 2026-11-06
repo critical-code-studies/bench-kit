@@ -114,7 +114,7 @@
       '  .top a { margin-right: 14px; }\n</style>\n</head>\n<body>\n<main>\n' +
       '<p class="top"><a href="index.html">← The research bench</a>' + (c.site ? '<a href="' + esc(c.site[0]) + '">' + esc(c.site[1]) + '</a>' : '') + '</p>\n' +
       '<h1>Site map</h1>\n<p>' + (c.intro || 'Every view of the ' + esc(title) + ' as a plain link, for when a menu will not open. The bench runs in JavaScript; without it, the source files below open on GitHub.') + '</p>\n' +
-      '<p class="dim">Each link opens ' + esc(c.opens || (first ? first.label : 'the first version')) + ' unless it names a version; the version picker at the top of the bench changes it. Any view’s address can be shared as it stands.</p>\n' +
+      '<p class="dim">Each link opens ' + esc(c.opens || (first ? first.label : 'the first version')) + ' unless it names a version; ' + (B.picker === true ? 'the version picker at the top of the bench' : 'File ▾ ▸ Open a version…') + ' changes it. Any view’s address can be shared as it stands.</p>\n' +
       '<h2>Views</h2>\n<div class="grid">' + groups.map(function (g) { return '<div><h3>' + esc(g[0]) + '</h3><ul>' + g[1].map(item).join('') + '</ul></div>'; }).join('').replace(/<ul><\/ul>/g, '') + '</div>\n' +
       '<h2>Versions and their sources</h2>\n<p class="dim">References as in Help ▸ Referencing and versions.' + (c.files ? ' ' + esc(c.files) : '') + '</p>\n' +
       '<div class="wrap"><table><thead><tr><th>No.</th><th>Reference</th><th>Version</th><th>Dated</th><th>Open</th><th>Source files</th></tr></thead><tbody>\n' + rows + '\n</tbody></table></div>\n' +

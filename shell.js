@@ -12,7 +12,7 @@
  *   query(q)      the bench's own parts of a link (a lens, a graphic, a view's settings), before
  *                 the view is chosen; it may set q.tab
  *   help          { name: fn } the bench's own Help items a link can open (&help=name)
- * and from SW.BENCH: forks (the picker's groups: [[fork, label]]), picker (false: no picker in the
+ * and from SW.BENCH: forks (the picker's groups: [[fork, label]]), picker (true: the picker in the
  * top bar), start (the version shown first), examples.finding (in the code box). The bench's views register in SW.views
  * ({ show(b), hide(), enter(b) }).
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -25,9 +25,10 @@
   // however the bench sets its own list
   function ORDER() { var v = H().views || ['read']; (SW.kitViews || []).forEach(function (x) { if (v.indexOf(x) < 0) v = v.concat(x); }); return v; }
   if (B.tagsHint) SW.$('#note-tags').placeholder = B.tagsHint;
-  // picker: false leaves the version picker (with its reference and language) out of the top bar;
-  // the versions are then chosen from Read ▾
-  if (B.picker === false) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); var hb = SW.$('header.bar'); if (hb) hb.classList.add('no-pick'); }   // .no-pick: the name stays, bench.css
+  // The version picker (with its reference and language) is in the top bar only for a bench that sets
+  // picker: true; otherwise the versions are chosen from File ▾ ▸ Open a version… (⌘O), or Versions ▾
+  // where the bench has no File ▾, and Book's own row of texts
+  if (B.picker !== true) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); var hb = SW.$('header.bar'); if (hb) hb.classList.add('no-pick'); }   // .no-pick: the name stays, bench.css
 
   // the picker's groups (SW.BENCH.forks), and the samples opened from CCS Workbench (kit/projectfile.js,
   // fork 'samples') in one of their own, kept out of the bench's own versions

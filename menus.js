@@ -53,7 +53,7 @@
   var FILE_ON = B.fileMenu !== false && !SW.menuOff('file');
   // Read is a plain tab: one click goes to the version being read, at its place. Versions are opened
   // from File ▾ ▸ Open a version… (or Versions ▾, where the bench has no File ▾), and the picker in
-  // the top bar. A bench that sets readMenu: true keeps Read ▾ as it was.
+  // the top bar where the bench sets picker: true. A bench that sets readMenu: true keeps Read ▾ as it was.
   if (B.readMenu !== true) SW.$$('#tabs [data-menu="read"]').forEach(function (b) {
     b.removeAttribute('data-menu'); b.removeAttribute('data-tabs'); b.removeAttribute('aria-expanded');
     b.setAttribute('data-tab', 'read'); b.textContent = 'Read'; b.title = 'Read the version open, where you left it (File ▾ ▸ Open a version… for another)';
