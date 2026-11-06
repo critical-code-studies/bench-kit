@@ -33,6 +33,7 @@ What making and keeping the Spacewar!, SHRDLU, ELIZA, Melville and CCSbench benc
 
 ## Images and languages
 
+- **A library's image service is not a CDN.** It may answer a bench's readers with 429 when many images are asked for at once, and pages then break for everyone. Where the rights allow, hold copies in the bench (`images.held`, `doc.image`) and ask the library for nothing. Where they do not, ask through a queue, a few at a time, backing off on failure. (Kuki, the National Diet Library, 2026-11-06.)
 - **Ask a IIIF service only what its level answers.** A level 1 service (the National Diet Library's) takes a region in pixels and a size by width or height, not a region in per cent or a size to fit a box. (`tools/iiif-map.js`, 2026-11-05.)
 - **Unspaced scripts need a word breaker.** Japanese read as runs of letters gives one "word" to a clause; the kit uses the browser's `Intl.Segmenter`, or the bench's own tokeniser. Dictionary lookup in such a script tries the longest word a selection begins with. (The translation bench, 2026-11-05.)
 - **OCR of a pre-war source is weak on exactly the terms that matter.** On Kuki's NDL scans the OCR never reads 邂逅, and a fuzzy match of three characters takes 必然性 for 偶然性; search the translation's own source text where it has one. (The translation bench, 2026-11-05.)

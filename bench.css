@@ -1262,6 +1262,8 @@ ul.reading a { overflow-wrap: anywhere; }
 .im-card { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); color: var(--text); cursor: zoom-in; font: 12px var(--sans, system-ui); text-align: left; }
 .im-card:hover { border-color: var(--amber); }
 .im-card img { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #fff; }
+.im-card.im-fail img { visibility: hidden; }
+.im-zmsg { position: absolute; left: 8px; bottom: 8px; margin: 0; padding: 4px 8px; background: var(--surface); border-radius: 4px; }
 .im-figs .im-card img { aspect-ratio: 1; }
 .im-zoombox { position: relative; height: min(78vh, 900px); }
 .im-zoom { position: relative; overflow: hidden; background: #222; border-radius: 4px; cursor: grab; touch-action: none; outline: none; }

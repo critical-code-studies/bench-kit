@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Page images that do not depend on the library** (reported by David on the Kuki bench: the National Diet Library answers 429 and pages break). `images.held: { thumb, full }` (paths with `{key}` or `{key3}`): the Images tab's thumbnails and zooming box come from the bench's own files and nothing is asked of the library; the box zooms on the one full-size file, a figure's region still in its pixels; a plain link to the library's copy stays. For a bench that holds no copies, requests to a library's service go through one queue (`SW.images.makeQueue`): four at a time, what the reader has just asked for first, a failure stopping the queue and the request made again after a wait that grows, then given up; a thumbnail shown only as it comes into view; no broken image left. `tests/images.test.js`: 11 more checks.
 - **Closing a figure's box no longer saves a file** (reported by David on the Kuki bench). The box's ✕ and its export buttons shared an attribute (`data-x`), so ✕ also exported the figure as an SVG, and PNG or SVG also closed the box. The export buttons are now `data-exp`. `tests/images.test.js`: 8 checks, on a real box, of what ✕ and each export button do. `images.figures` may give `{ items, labels }` in place of files.
 
 ## 0.98.0 (2026-11-05)
