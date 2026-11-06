@@ -46,6 +46,8 @@
       T.eq('a book: in italics in the page, with its publisher, a note in brackets left out', cite({ title: 'A Book', author: 'A. Scholar', date: '1966', kind: 'book', in: '(monograph)', publisher: 'A Press', pages: 'ix, 198 p.' }), 'A. Scholar (1966) A Book. A Press.');
       T.yes('its title in italics', /<i>A Book<\/i>/.test(L.citation({ title: 'A Book', kind: 'book' }).html));
       T.eq('a chapter', cite({ title: 'A Part', author: 'E. Editor', date: '1999', kind: 'chapter', in: 'A Whole', publisher: 'A Press', pages: '5–9', doi: 'https://doi.org/10.1/x' }), 'E. Editor (1999) ‘A Part’, in A Whole. A Press, pp. 5–9. https://doi.org/10.1/x');
+      T.yes('its DOI a live link in the page', /<a href="https:\/\/doi\.org\/10\.1\/x"/.test(L.citation({ title: 'A Part', kind: 'chapter', doi: '10.1/x' }).html));
+      T.yes('a link that is not a web address is not made live', !/<a /.test(L.citation({ title: 'x', kind: 'book', url: 'javascript:alert(1)' }).html));
       T.eq('no author, no date', cite({ title: 'What Is It?', kind: 'book' }), '(n.d.) What Is It?');
       T.eq('a date cited by its year', cite({ title: 'A Talk', kind: 'talk', date: '2020-11-21' }), '(2020) A Talk.');
       T.eq('as written, where it is', cite({ title: 'x', citation: 'By hand.' }), 'By hand.');

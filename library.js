@@ -489,7 +489,7 @@
       return tail.length ? s + ' ' + stop(tail.join(', ')) : s;
     }
     var text = join(plain), html = esc(plain[0]) + ' ' + rich[1] + (/[.?!]['’"”]?$/.test(plain[1]) ? '' : '.') + (tail.length ? ' ' + esc(stop(tail.join(', '))) : '');
-    if (link) { text += ' ' + link; html += ' ' + esc(link); }
+    if (link) { text += ' ' + link; html += ' ' + (/^https?:\/\//i.test(link) ? '<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + esc(link) + '</a>' : esc(link)); }
     return { text: text, html: html };
   };
 
