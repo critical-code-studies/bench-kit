@@ -335,7 +335,7 @@
     var before = after ? after.nextSibling : SW.$('[data-menu="versions"], [data-menu="help"]', tabs);
     tabs.insertBefore(btn, before || null);
   }
-  var main = SW.$('#view-read') && SW.$('#view-read').parentNode;
+  var main = SW.$('section.view') && SW.$('section.view').parentNode;   // beside the bench's own views, whichever it has
   if (main && !SW.$('#view-topics')) main.appendChild(SW.el('section', { class: 'view', id: 'view-topics' }));
   SW.kitViews = (SW.kitViews || []).concat('topics');   // among the shell's views, whatever list the bench sets after this file
 
