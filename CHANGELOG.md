@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Edit's Beside: Image, Literal, Off** (David, 2026-11-06). Off gives the text alone, at a reading width; the choice is kept (`edit.beside`). The image and the text stay side by side down to phone width. Fixed: switching Beside after scrolling lost the page's image.
 - **Book's images button** (David, 2026-11-06): an eye, crossed when the images are hidden, in place of the word Off, which read the same in both states. Images show whenever a page opens, unless a link says otherwise; the last click is no longer remembered (`book.imgon` is no longer read).
 - **Further image collections in the Images tab** (David, 2026-11-06, through the translation session: "expandable with additional image file collections"). `images.collections`, each one more part beside Pages and Figures, with its count, its credit on the set and in the box, and links `?tab=images&set=<id>&img=<key>`. A set shows the bench's own copies; a `zoom` copy on another site is asked for with an `<img>` only when the reader zooms past them, and a failure leaves the bench's copy with a small note. `images.js`'s zooming box takes `deep` for this.
 - **The picker no longer flashes on a reload** (David, 2026-11-06, through the translation session). `bench.css` hides `.pick` until `shell.js` marks the bar `.with-pick`, for a bench with `picker: true`, so a bench without it never paints it.

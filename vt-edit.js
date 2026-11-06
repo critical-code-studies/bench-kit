@@ -318,7 +318,7 @@
   var D = VT.layout(B.translation), esc = SW.esc, VERS = root.SWVersions;
   var CFG = Object.assign({ dir: 'checks/', tool: 'tools/vt_apply.py' }, D.edit || {});
   var TARGETS = ['translation', 'literal'];
-  var S = { target: 'translation', key: null, beside: 'image', docs: {}, cur: null, locked: true };
+  var S = { target: 'translation', key: null, beside: SW.store.get('edit.beside', 'image'), docs: {}, cur: null, locked: true };
 
   // ---------- kept in this browser: drafts, and lists saved where the folder cannot be written ----------
   var DB = 'bench-kit-edit';
@@ -382,7 +382,7 @@
         '<button class="btn vte-lock" data-do="lock"></button>' +
         '<span class="vte-do"><button class="btn ghost" data-do="undo" title="Undo (⌘Z)">↶ Undo</button><button class="btn ghost" data-do="redo" title="Redo (⇧⌘Z)">↷ Redo</button></span>' +
         '<button class="btn" data-do="save" title="Write what has changed as a change list (⌘S)">Save</button>' +
-        '<span class="vte-beside"><span class="faint">Beside</span> <span class="im-seg"><button class="btn" data-beside="image">Image</button><button class="btn" data-beside="other"></button></span></span>' +
+        '<span class="vte-beside"><span class="faint">Beside</span> <span class="im-seg"><button class="btn" data-beside="image">Image</button><button class="btn" data-beside="other"></button><button class="btn" data-beside="off" title="The text alone, the full width">Off</button></span></span>' +
       '</div>' +
       '<div class="vte-status hint"></div>' +
       '<div class="vte-split"><div class="vte-pane"></div><div class="vte-text"><div class="vte-stack"><pre class="vte-back" aria-hidden="true"></pre><textarea class="vte-in" spellcheck="true" aria-label="The text of this page, as the file has it"></textarea></div></div></div>' +
@@ -443,6 +443,8 @@
     winSel.innerHTML = wins.map(function (w) { return '<option value="' + w.i + '">' + esc(w.label.slice(0, 48)) + '</option>'; }).join('');
   }
   function drawPane(doc, w) {
+    SW.$('.vte-split', view).classList.toggle('vte-alone', S.beside === 'off');
+    if (S.beside === 'off') { pane.innerHTML = ''; return; }
     if (S.beside === 'other') {
       var other = S.target === 'literal' ? 'translation' : 'literal';
       pane.innerHTML = '<p class="hint pad">Reading the ' + other + '…</p>';
@@ -673,7 +675,7 @@
     view.addEventListener('click', function (e) {
       var t = e.target.closest('[data-target]'); if (t) { took(); go(t.dataset.target, S.key); return; }
       var g = e.target.closest('[data-go]'); if (g) { took(); move(+g.dataset.go); return; }
-      var b = e.target.closest('[data-beside]'); if (b) { S.beside = b.dataset.beside; buttons(); if (S.cur && S.cur.win) drawPane(S.cur, S.cur.win); return; }
+      var b = e.target.closest('[data-beside]'); if (b) { S.beside = b.dataset.beside; SW.store.set('edit.beside', S.beside); buttons(); if (S.cur && S.cur.page) drawPane(S.cur, S.cur.page); return; }
       var d = e.target.closest('[data-do]'); if (!d) return;
       if (d.dataset.do === 'lock') setLock(!S.locked);
       else if (d.dataset.do === 'undo') step(-1);
