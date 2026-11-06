@@ -159,6 +159,8 @@ The entry and its note stay as written. The record goes from `catalogue.json` in
 
 ## A large library
 
+The tab's **Filters** narrow by kind, decade, author, language and tag, with counts. They come from the entries' `kind`, `date`, `author`, `lang` and `tags`, so a large library is easier to search where those are filled in consistently, with one spelling for a kind and for a surname. A facet with only one value does not show.
+
 Tried with 1,000 link-only entries in a browser: searching, filtering, ordering and switching view each took about 50 milliseconds or less, measured to the end of layout. There is no limit in the covers. A page of 1,000 covers is long to scroll, so search, the filters and the list do that work; `library: { view: 'list' }` starts a large library as a list.
 
 ## Transcripts and other forms

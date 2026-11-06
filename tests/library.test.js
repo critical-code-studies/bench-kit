@@ -139,11 +139,35 @@
       // a transcript on each shelf, a citation, and a code that has moved here
       T.group('Library: the box');
       var was1 = B.library, Lm = null;
+      var vf = document.getElementById('view-library') || document.body.appendChild(Object.assign(document.createElement('section'), { id: 'view-library', className: 'view' }));
       B.library = { items: [{ id: 'P-AAAAA', title: 'A talk', author: 'A. Speaker', contributor: 'B. Host', date: '2020', kind: 'talk', file: 'library/files/t.mp3', url: 'https://example.org/t',
         alts: [{ label: 'Open', lang: 'en', file: 'data:text/plain,hello.txt' }, { label: 'Held back', file: 'library/t1.md', shelf: 'private' }] },
+        { id: 'F-1', title: 'First', kind: 'article', date: '1995', author: 'A. One', tags: ['x'] }, { id: 'F-2', title: 'Second', kind: 'article', date: '2001', author: 'B. Two and A. One', tags: ['x', 'y'] }, { id: 'F-3', title: 'Third', kind: 'book', date: '2005', author: 'C. Three', lang: 'fr' },
         { id: 'P-LINK1', title: 'A linked film', kind: 'film', url: 'https://vimeo.com/123' }, { id: 'P-BOTH1', title: 'Both', kind: 'talk', file: 'library/files/b.mp3', url: 'https://vimeo.com/456' }], private: { org: 'group', repo: 'archive' } };
       return load().then(function () { Lm = SW.library; return Lm.load(); }).then(function () {
         T.yes('it has the code', Lm.has('P-AAAAA'));
+        SW.views.library.show();
+        return wait(40);
+      }).then(function () {
+        var vw = document.getElementById('view-library');
+        function facet(f, val) { return vw.querySelector('[data-facet="' + f + '"][data-val="' + val + '"]'); }
+        function n(f, val) { var b = facet(f, val); return b ? +b.querySelector('i').textContent : null; }
+        function shown() { return Array.prototype.map.call(vw.querySelectorAll('[data-lib]'), function (x) { return x.dataset.lib; }).sort().join(' '); }
+        T.eq('a facet counts its values', [n('kind', 'article'), n('kind', 'book')], [2, 1]);
+        T.eq('by decade', [n('decade', '1990s'), n('decade', '2000s')], [1, 2]);
+        T.eq('each author counted, by surname', n('author', 'One'), 2);
+        T.yes('entries with no date are named', facet('decade', 'No date'));
+        facet('kind', 'article').click();
+        T.eq('a value filters', shown(), 'F-1 F-2');
+        T.yes('another in that facet stays to add', facet('kind', 'book'));
+        T.eq('another facet narrows, and counts what is left', n('decade', '1990s'), 1);
+        facet('kind', 'book').click();
+        T.eq('values in one facet widen', shown(), 'F-1 F-2 F-3');
+        facet('decade', '2000s').click();
+        T.eq('facets narrow one another', shown(), 'F-2 F-3');
+        vw.querySelector('[data-fclear]').click();
+        T.eq('clearing shows all', vw.querySelectorAll('[data-lib]').length, 6);
+        T.eq('the reader’s tag facet', n('tag', 'x'), 2);
         T.eq('and no other', Lm.has('P-BBBBB'), false);
         return Lm.open('P-AAAAA');
       }).then(function () { return wait(30); }).then(function () {

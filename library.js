@@ -38,8 +38,9 @@
  *   thumb     an image for its cover: a path from the page, or a link. Without one, a public image file
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter
- * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search
- * and filters (held, linked, by kind); an entry opens
+ * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search,
+ * filters (held, linked, annotated) and facets with their counts (kind, decade, author, language, tag); an
+ * entry opens
  * in a box over the bench: its record, the file shown (a PDF in the browser's own viewer), Open in a
  * new tab, Download, the link out, and a link to the entry.
  * The group's own copy: where the reader has a paratexts token (kit/paratexts.js), the paratexts that
@@ -67,7 +68,7 @@
   var L = SW.library = {};
   if (!C || (SW.menuOff && SW.menuOff('library')) || !SW.views) return;
   var esc = SW.esc, URL0 = C.url || 'library/library.json';
-  var man = null, loading = null, addRead = false, F = { q: '', show: 'all', kind: '', view: SW.store.get('library.view', '') || C.view || 'icons', order: SW.store.get('library.order', '') || C.order || 'author' };
+  var man = null, loading = null, addRead = false, F = { q: '', show: 'all', facets: {}, more: {}, view: SW.store.get('library.view', '') || C.view || 'icons', order: SW.store.get('library.order', '') || C.order || 'author' };
   var Q0 = SW.readQuery ? SW.readQuery() : {};
 
   L.load = function () {
@@ -368,7 +369,40 @@
       '<span class="lib-t">' + esc(e.title) + '</span><span class="lib-m">' + meta(e) + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></button>';
   }
-  function rows() {
+  // ---------- facets ----------
+  // An entry's values for each facet. Values within a facet widen the choice, and facets narrow one another.
+  var FACETS = [['kind', 'Kind'], ['decade', 'Decade'], ['author', 'Author'], ['lang', 'Language'], ['tag', 'Tag']];
+  function facetValues(e, f) {
+    if (f === 'kind') return e.kind ? [String(e.kind)] : [];
+    if (f === 'decade') { var y = L.year(e.date); return [y == null ? 'No date' : Math.floor(y / 10) * 10 + 's']; }
+    if (f === 'author') return e.author ? String(e.author).split(/\s*(?:;|&|\band\b)\s*/).map(function (a) { return L.surname(a); }).filter(Boolean) : [];
+    if (f === 'lang') return e.lang ? [String(e.lang)] : [];
+    return (e.tags || []).map(String);
+  }
+  function facetsOn() { return Object.keys(F.facets).some(function (f) { return Object.keys(F.facets[f] || {}).length; }); }
+  function inFacets(e, skip) {
+    return FACETS.every(function (x) {
+      var f = x[0], on = Object.keys(F.facets[f] || {});
+      return f === skip || !on.length || facetValues(e, f).some(function (v) { return F.facets[f][v]; });
+    });
+  }
+  // each facet's counts leave out its own choice, so the others in it stay to be added
+  function facetHTML() {
+    var any = facetsOn();
+    return (any ? '<button class="btn ghost lib-fclear" data-fclear>Clear these filters</button>' : '') + FACETS.map(function (x) {
+      var f = x[0], c = {}, on = F.facets[f] || {};
+      rows(f).forEach(function (e) { var seen = {}; facetValues(e, f).forEach(function (v) { if (!seen[v]) { seen[v] = 1; c[v] = (c[v] || 0) + 1; } }); });
+      Object.keys(on).forEach(function (v) { if (!c[v]) c[v] = 0; });
+      var vs = Object.keys(c);
+      if (vs.length < 2 && !Object.keys(on).length) return '';
+      vs.sort(f === 'decade' ? function (a, b) { return a === 'No date' ? 1 : b === 'No date' ? -1 : a < b ? 1 : -1; } : function (a, b) { return (c[b] - c[a]) || AZ(a, b); });
+      var cap = f === 'decade' || F.more[f] ? vs.length : 8, shown = vs.filter(function (v, i) { return i < cap || on[v]; });
+      return '<details class="lib-facet" open><summary>' + x[1] + '</summary>' + shown.map(function (v) {
+        return '<button class="lib-f' + (on[v] ? ' on' : '') + '" data-facet="' + f + '" data-val="' + esc(v) + '" aria-pressed="' + (on[v] ? 'true' : 'false') + '"><span>' + esc(v) + '</span><i>' + c[v] + '</i></button>';
+      }).join('') + (vs.length > 8 && f !== 'decade' ? '<button class="lib-fmore" data-fmore="' + f + '">' + (F.more[f] ? 'Fewer' : 'All ' + vs.length) + '</button>' : '') + '</details>';
+    }).join('');
+  }
+  function rows(skip) {
     var q = F.q.toLowerCase();
     return L.items().filter(function (e) {
       if (F.show === 'held' && (!e.file || isPrivate(e))) return false;
@@ -376,7 +410,7 @@
       if (F.show === 'out' && (e.file || !e.url)) return false;
       if (F.show === 'added' && !isAdded(e)) return false;
       if (F.show === 'noted' && !NC[e.id]) return false;
-      if (F.kind && e.kind !== F.kind) return false;
+      if (!inFacets(e, skip)) return false;
       if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, (e.tags || []).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
@@ -428,7 +462,10 @@
   function setting(key, name, v) { F[key] = v; SW.store.set('library.' + name, v); }
   function list(view) {
     var box = SW.$('.lib-list', view); if (!box) return;
+    var fp = SW.$('.lib-facets', view), fb = SW.$('.lib-fbody', view);
+    if (fp) fp.hidden = F.view === 'notes';
     if (F.view === 'notes') { drawNotes(view, box); paintCounts(view); return; }
+    if (fb) fb.innerHTML = facetHTML();
     var rs = L.sorted(rows(), F.order), icons = F.view !== 'list';
     box.classList.toggle('lib-shelf', icons);
     box.innerHTML = rs.length ? rs.map(icons ? tile : row).join('') : '<p class="hint pad">Nothing in the library answers the search.</p>';
@@ -439,18 +476,16 @@
     var view = SW.$('#view-library'); if (!view) return;
     view.innerHTML = '<p class="hint pad">Reading the library…</p>';
     L.load().then(function (m) {
-      var kinds = []; m.items.forEach(function (e) { if (e.kind && kinds.indexOf(e.kind) < 0) kinds.push(e.kind); });
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
         ((C.intro || m.intro) ? '<div class="lib-intro">' + (C.intro || m.intro) + '</div>' : '') +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
-        (kinds.length > 1 ? '<select class="lib-kind" aria-label="Kind"><option value="">Every kind</option>' + kinds.sort().map(function (k) { return '<option' + (k === F.kind ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>' : '') +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span>' + (L.member() ? '<button class="btn lib-add">＋ Add a work</button>' : '') + '</div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
-        '<div class="lib-list"></div></div>';
+        '<div class="lib-body"><details class="lib-facets"' + (root.innerWidth >= 860 ? ' open' : '') + '><summary>Filters</summary><div class="lib-fbody"></div></details><div class="lib-list"></div></div></div>';
       list(view);
       var q = SW.$('.lib-q', view);
       q.addEventListener('input', function () { F.q = q.value; list(view); });
@@ -459,6 +494,10 @@
         view.addEventListener('click', function (ev) {
           if (ev.target.closest('.lib-add')) { L.form(); return; }
           if (ev.target.closest('.lib-help')) { L.help(); return; }
+          var fv = ev.target.closest('[data-facet]');
+          if (fv) { var fk = fv.dataset.facet, fo = F.facets[fk] = F.facets[fk] || {}; if (fo[fv.dataset.val]) delete fo[fv.dataset.val]; else fo[fv.dataset.val] = 1; list(view); return; }
+          var fm = ev.target.closest('[data-fmore]'); if (fm) { F.more[fm.dataset.fmore] = !F.more[fm.dataset.fmore]; list(view); return; }
+          if (ev.target.closest('[data-fclear]')) { F.facets = {}; list(view); return; }
           var no = ev.target.closest('[data-noteopen]'); if (no) { SW.notes.openItem(no.dataset.noteopen); return; }
           var ng = ev.target.closest('[data-at]'), sec = ev.target.closest('[data-code]');
           if (ng && sec) { var nq = ng.dataset.at === 'q' ? ng.textContent : '', nat = ng.dataset.at; SW.notes.openItem(sec.dataset.code).then(function () { setTimeout(function () { var ds = SW.$$('dialog[open]'); SW.notes.itemGo(nat, nq, ds[ds.length - 1]); }, 800); }); return; }
@@ -467,7 +506,6 @@
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
         });
       }
-      var k = SW.$('.lib-kind', view); if (k) k.addEventListener('change', function () { F.kind = k.value; list(view); });
       var o = SW.$('.lib-order select', view); o.addEventListener('change', function () { setting('order', 'order', o.value); list(view); });
       // a picture that will not load: the drawn cover under it, or the row's mark
       SW.$('.lib-list', view).addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-thumb')) ev.target.remove(); }, true);
@@ -483,7 +521,8 @@
       ['Finding a work', ul([
         '<b>▦</b> shows covers on a shelf, and <b>☰</b> a list. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view and order is kept in this browser.',
-        'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only, and <b>Every kind</b> narrows to one kind.'])],
+        'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
+        '<b>Filters</b> beside the list narrow by kind, decade, author, language and tag, each value with its count. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
       ['Opening a work', ul([
         'Click a cover or a row: the record opens in a box over the bench, with its citation (<b>Copy</b> copies it), the file where you can read it, and a link to where it is published.',
         'A work may have other forms, such as a transcript: a button below it opens one under the work, so you can read it while a recording plays.',
