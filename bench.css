@@ -1285,7 +1285,7 @@ ul.reading a { overflow-wrap: anywhere; }
 .im-figwrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14em, 22em); gap: 16px; align-items: start; }
 .im-stage { position: relative; background: #fff; }
 .im-figimg { display: block; width: 100%; height: auto; }
-.im-labels { position: absolute; inset: 0; pointer-events: none; font: clamp(9px, 1.25vw, 15px)/1.15 "Helvetica Neue", Arial, sans-serif; color: #8f6c00; }   /* kintsugi gold that reads on the figure's white, in every theme */
+.im-labels { position: absolute; inset: 0; pointer-events: none; font: clamp(9px, 1.25vw, 15px)/1.15 "Helvetica Neue", Arial, sans-serif; color: #7a5c00; }   /* kintsugi gold that reads on the figure's white, in every theme */
 .im-lab { position: absolute; max-width: 45%; white-space: pre-line; text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff; pointer-events: auto; }
 .im-lab-r { text-align: right; }
 .im-lab-c { text-align: center; white-space: nowrap; max-width: none; }
