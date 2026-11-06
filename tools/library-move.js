@@ -15,6 +15,10 @@
  *   node research/kit/tools/library-move.js <clone> --back P-AAAAA,P-BBBBB [--write]
  *       the reverse: the catalogue record restored whole, at its old place, with its files, and the
  *       entry taken out of library.json.
+ *   node research/kit/tools/library-move.js <clone> --adopt P-AAAAA,P-BBBBB [--write]
+ *       for entries already in library.json, put there by hand: the entry and its note stay as written, the
+ *       record goes from catalogue.json into library/moved.json, and its files stay where they are in the
+ *       clone, for --back. --back then restores the record and takes the entry and its public copies out.
  *   --dir <folder>     the bench's folder (research if it has an index.html, else .)
  *   --manifest <file>  the public manifest (<dir>/library/library.json)
  *
@@ -32,9 +36,9 @@ const flag = (f) => { const i = argv.indexOf(f); if (i < 0) return false; argv.s
 const opt = (f) => { const i = argv.indexOf(f); if (i < 0) return null; const v = argv[i + 1]; argv.splice(i, 2); return v; };
 const die = (m) => { console.error(m); process.exit(1); };
 
-const WRITE = flag('--write'), PLAN = opt('--plan'), APPLY = opt('--apply'), BACK = opt('--back'), OUT = opt('--out'), DIR = opt('--dir'), MANIFEST = opt('--manifest');
+const WRITE = flag('--write'), PLAN = opt('--plan'), APPLY = opt('--apply'), BACK = opt('--back'), ADOPT = opt('--adopt'), OUT = opt('--out'), DIR = opt('--dir'), MANIFEST = opt('--manifest');
 const clone = argv[0];
-if (!clone || [PLAN, APPLY, BACK].filter(Boolean).length !== 1) die('node kit/tools/library-move.js <clone of the private repository> --plan P-A,P-B | --apply plan.json [--write] | --back P-A,P-B [--write]');
+if (!clone || [PLAN, APPLY, BACK, ADOPT].filter(Boolean).length !== 1) die('node kit/tools/library-move.js <clone of the private repository> --plan P-A,P-B | --apply plan.json [--write] | --adopt P-A,P-B [--write] | --back P-A,P-B [--write]');
 
 const dir = DIR || (fs.existsSync(path.join('research', 'index.html')) ? 'research' : '.');
 const manifest = MANIFEST || path.join(dir, 'library', 'library.json');
@@ -148,6 +152,38 @@ function apply() {
   console.log('\n' + jobs.length + ' moved. Nothing is committed: commit and push the bench and the private repository.');
 }
 
+// ---------- entries already in the manifest ----------
+function adopt() {
+  const bad = [], jobs = [];
+  codes(ADOPT).forEach((code) => {
+    const it = record(code), e = man.items.filter((x) => x.id === code)[0];
+    if (!it) { bad.push(code + ': not in the catalogue'); return; }
+    if (!e) { bad.push(code + ': not in ' + manifest + ', so --plan and --apply are the way'); return; }
+    if (moved.items.some((x) => x.code === code)) { bad.push(code + ': already in ' + movedFile); return; }
+    // what the entry names has to be there; what the record names stays in the clone
+    const named = [e].concat(e.alts || []).filter((x) => x.file);
+    named.forEach((x) => { if (!fs.existsSync(onDisk(x.file, x.shelf === 'private' ? 'private' : 'public'))) bad.push(code + ': ' + onDisk(x.file, x.shelf === 'private' ? 'private' : 'public') + ' is not there'); });
+    const kept = [it.file].concat(list(it.alts).map((a) => a && a.file)).filter(Boolean);
+    kept.forEach((f) => { if (!fs.existsSync(path.join(clone, f))) bad.push(code + ': the clone does not hold ' + f); });
+    jobs.push({ code, it, e, kept, publicCopies: named.filter((x) => x.shelf !== 'private').map((x) => x.file) });
+  });
+  jobs.forEach((j) => {
+    console.log(j.code + '  ' + j.it.title);
+    console.log('   the record moves to library/moved.json; the entry stays as written');
+    if (j.kept.length) console.log('   kept in the clone for --back: ' + j.kept.join(', '));
+    if (j.publicCopies.length) console.log('   public copies: ' + j.publicCopies.join(', '));
+  });
+  if (jobs.some((j) => j.publicCopies.length)) console.log('\n' + HISTORY);
+  if (bad.length) { bad.forEach((b) => console.error('  ✗ ' + b)); die('Nothing written.'); }
+  if (!WRITE) { console.log('\n' + jobs.length + ' item(s). Nothing changed; --write takes their records out of the catalogue.'); return; }
+  jobs.forEach((j) => {
+    moved.items.push({ code: j.code, index: cat.items.indexOf(j.it), date: new Date().toISOString().slice(0, 10), record: j.it, moves: [], publicCopies: j.publicCopies, entry: j.e });
+    cat.items.splice(cat.items.indexOf(j.it), 1);
+  });
+  saveAll(true);
+  console.log('\n' + jobs.length + ' adopted. Nothing is committed: commit and push the private repository.');
+}
+
 // ---------- back ----------
 function back() {
   const bad = [], jobs = [];
@@ -164,10 +200,11 @@ function back() {
   jobs.forEach((m) => {
     console.log(m.code + '  ' + m.record.title);
     m.moves.forEach((x) => console.log('   ' + (x.shelf === 'public' ? 'public: ' + path.join(dir, x.to) : 'private: ' + x.to) + ' → ' + x.from));
+    (m.publicCopies || []).forEach((f) => console.log('   public: ' + path.join(dir, f) + ' removed'));
     const now = man.items.filter((e) => e.id === m.code)[0];
     if (now && JSON.stringify(now) !== JSON.stringify(m.entry)) console.log('   Its entry has changed since it moved, and those changes are not carried back.');
   });
-  if (jobs.some((m) => m.moves.some((x) => x.shelf === 'public'))) console.log('\n' + HISTORY);
+  if (jobs.some((m) => m.moves.some((x) => x.shelf === 'public') || (m.publicCopies || []).length)) console.log('\n' + HISTORY);
   if (bad.length) { bad.forEach((b) => console.error('  ✗ ' + b)); die('Nothing written.'); }
   if (!WRITE) { console.log('\n' + jobs.length + ' item(s). Nothing changed; --write moves them back.'); return; }
   // the last moved first, so that each index means what it did
@@ -178,6 +215,7 @@ function back() {
       fs.copyFileSync(src, dst);
       fs.unlinkSync(src);
     });
+    (m.publicCopies || []).forEach((f) => { const p = path.join(dir, f); if (fs.existsSync(p)) fs.unlinkSync(p); });
     cat.items.splice(Math.min(m.index, cat.items.length), 0, m.record);
     man.items = man.items.filter((e) => e.id !== m.code);
     moved.items = moved.items.filter((x) => x !== m);
@@ -186,10 +224,13 @@ function back() {
   console.log('\n' + jobs.length + ' moved back. Nothing is committed: commit and push the bench and the private repository.');
 }
 
-function saveAll() {
+// keepManifest: the file left exactly as it is, an adopted entry being as written
+function saveAll(keepManifest) {
   fs.writeFileSync(catFile, JSON.stringify(cat, null, 1) + '\n');
-  fs.mkdirSync(path.dirname(manifest), { recursive: true });
-  fs.writeFileSync(manifest, JSON.stringify(man, null, 2) + '\n');
+  if (!keepManifest) {
+    fs.mkdirSync(path.dirname(manifest), { recursive: true });
+    fs.writeFileSync(manifest, JSON.stringify(man, null, 2) + '\n');
+  }
   fs.mkdirSync(path.dirname(movedFile), { recursive: true });
   if (moved.items.length) fs.writeFileSync(movedFile, JSON.stringify(moved, null, 1) + '\n');
   else if (fs.existsSync(movedFile)) fs.unlinkSync(movedFile);
@@ -197,4 +238,5 @@ function saveAll() {
 
 if (PLAN) makePlan();
 else if (APPLY) apply();
+else if (ADOPT) adopt();
 else back();

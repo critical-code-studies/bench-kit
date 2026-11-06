@@ -147,6 +147,18 @@ That restores the record at its old place, and its files, and takes the entry ou
 
 Moving does not reduce the size of the private repository (see Files and size).
 
+An entry already in `library.json`, put there by hand, is taken over with `--adopt`:
+
+```bash
+node research/kit/tools/library-move.js ../my-paratexts --adopt P-AAAAA,P-BBBBB --write
+```
+
+The entry and its note stay as written. The record goes from `catalogue.json` into `library/moved.json`, and its files stay where they are in the private repository, for `--back`. `--back` then restores the record and takes out the entry and any public copies the entry named.
+
+## A large library
+
+Tried with 1,000 link-only entries in a browser: searching, filtering, ordering and switching view each took about 50 milliseconds or less, measured to the end of layout. There is no limit in the covers. A page of 1,000 covers is long to scroll, so search, the filters and the list do that work; `library: { view: 'list' }` starts a large library as a list.
+
 ## Transcripts and other forms
 
 `alts` gives a work other forms, each on its own shelf:

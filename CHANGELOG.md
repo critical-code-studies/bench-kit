@@ -4,6 +4,7 @@
 
 - **A linked work plays in the Library's box** (David, 2026-11-06, through Spacewar: "youtube links can be embedded"). YouTube, Vimeo and the Internet Archive, through the function Paratexts used, now `SW.embedPlayer` in `base.js`. Where a file opens, the file comes first and ▶ Play from… opens the player beside it.
 - The Library's tooltip and guides say held and linked throughout (David).
+- **`tools/library-move.js --adopt`** (Spacewar's request): for entries already in `library.json` by hand, the record goes to `library/moved.json` and the entry stays as written; `--back` restores the record and takes out the entry and its public copies.
 
 ## 1.0.0 (2026-11-06)
 
