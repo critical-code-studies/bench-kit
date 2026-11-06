@@ -5,6 +5,8 @@
 (function (root) {
   'use strict';
   root.SW.BENCH.shell = {
-    views: ['read', 'book', 'glossary', 'changes', 'search', 'compare', 'genealogy', 'about', 'findings', 'notes', 'paratexts']
+    home: 'book',
+    alias: { read: 'edit' },                               // a link to a line opens Edit (kit/vt-edit.js)
+    views: ['book', 'edit', 'glossary', 'changes', 'search', 'compare', 'genealogy', 'about', 'findings', 'notes', 'paratexts']
   };
 })(this);

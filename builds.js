@@ -73,6 +73,8 @@
   SW.forgetBuilds = function () { textCache = {}; buildCache = {}; };
   SW.current = function () { return SW.state.v ? SW.build(SW.state.v) : Promise.reject(new Error('no version')); };
 
+  // the word for the view a line opens in: Read, or Edit where the bench has it in Read's place
+  SW.lineWord = function () { return ((B.shell || {}).alias || {}).read === 'edit' ? 'Edit' : 'Read'; };
   // Open a version at a line range (or its record when there is none).
   // From another view (a lens's or a finding's link to lines), a step on the trail back (SW.trail).
   SW.openAt = function (vid, a) {

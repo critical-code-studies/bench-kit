@@ -19,6 +19,10 @@
  * while it is open.
  * SW.folder: offered(), open(), again(), close(), reopen(), fromFiles(files), on (true while a folder is open), name,
  * paths() (every file's path in the folder, from its top), has(path), text(path), bytes(path).
+ * writable() (a folder kept by the browser, Chrome and Edge), locate(path) (where the folder holds a path
+ * the bench fetches, or null), write(path, text, { fresh }) (a file at that path from the folder's top, its
+ * folders made as needed; the browser asks leave the first time; fresh: never over a file already there,
+ * a -2 before the extension instead; resolves to the path written).
  * SW.on('folder', fn) is told { name, paths } when a folder is opened or read again, and null when it is
  * closed, so that a bench's reader can find its texts in the folder (a translation laid out by the
  * vector translation method, read in place).
@@ -52,6 +56,29 @@
     return ends[path];
   }
   F.has = function (path) { return find(path) != null; };
+  F.locate = find;
+  F.writable = function () { return !!(F.on && F.handle && F.handle.requestPermission); };
+  F.write = function (path, text, o) {
+    if (!F.writable()) return Promise.reject(new Error('This browser cannot write to the folder.'));
+    var parts = String(path).replace(/^\.?\//, '').split('/'), name = parts.pop(), h = F.handle;
+    return h.requestPermission({ mode: 'readwrite' }).then(function (p) {
+      if (p !== 'granted') throw new Error('The browser did not allow the folder to be written.');
+      return parts.reduce(function (d, part) { return d.then(function (x) { return x.getDirectoryHandle(part, { create: true }); }); }, Promise.resolve(h));
+    }).then(function (dir) {
+      function free(n, k) {
+        var tryName = k < 2 ? n : n.replace(/(\.[^.]*)?$/, '-' + k + '$1');
+        return dir.getFileHandle(tryName).then(function () { return free(n, k + 1); }, function (e) { if (e.name === 'NotFoundError') return tryName; throw e; });
+      }
+      return (o && o.fresh ? free(name, 1) : Promise.resolve(name)).then(function (nm) {
+        return dir.getFileHandle(nm, { create: true }).then(function (fh) {
+          return fh.createWritable().then(function (w) { return w.write(text).then(function () { return w.close(); }); }).then(function () {
+            var rel = parts.concat(nm).join('/'); idx[rel] = fh; ends = {};
+            return rel;
+          });
+        });
+      });
+    });
+  };
   F.bytes = function (path) {
     var p = find(path);
     if (p == null) return Promise.reject(new Error(path + ' is not in the folder ' + F.name));

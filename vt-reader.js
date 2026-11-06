@@ -289,10 +289,10 @@
   var KINDS = /^(ADDS|DROPS|CHANGES|RULE|POEM)$/;
   VT.changes = function (raw, file, o) {
     o = o || {};
-    var out = [], cur = null, field = null, fenced = false, part = null, problems = false;
+    var out = [], cur = null, field = null, fenced = false, begun = false, part = null, problems = false;
     splitLines(raw).forEach(function (s, i) {
       var n = i + 1, m;
-      if (fenced) { if (/^~~~\s*$/.test(s)) { fenced = false; field = null; } else cur[field] += (cur[field] ? '\n' : '') + s; return; }
+      if (fenced) { if (/^~~~\s*$/.test(s)) { fenced = false; field = null; } else { cur[field] += (begun ? '\n' : '') + s; begun = true; } return; }
       if ((m = /^##\s+(.*)$/.exec(s)) && !/^###/.test(s)) {
         cur = null; part = m[1].trim(); problems = /^Literal problems/i.test(part);
         if (/^Summary/i.test(part)) part = '#summary';
@@ -323,7 +323,7 @@
         if (field === 'origin') { cur.origin = m[2].trim(); field = null; return; }
         cur[field] = m[2]; return;
       }
-      if (/^~~~\s*$/.test(s) && field) { fenced = true; cur[field] = ''; return; }
+      if (/^~~~\s*$/.test(s) && field) { fenced = true; begun = false; cur[field] = ''; return; }
       if (field && field !== 'origin' && s.trim() && !/^###/.test(s)) cur[field] += ' ' + s.trim();
     });
     return out.filter(function (c) { return c.kind === 'PROBLEM' || c.old || c.new; });

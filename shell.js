@@ -5,6 +5,7 @@
  * &join=, &tr= a tracing). Loaded last. The bench's own parts come from SW.BENCH.shell:
  *   views         the views, in the order of the tabs (each has a section #view-<name>)
  *   alias         old view names and the views they became ({ sky: 'graphics' })
+ *   home          the view a link without a tab opens (default read)
  *   redraw        the views drawn again when the theme changes (figures are coloured as drawn)
  *   lang(v)       { text, title } for #vlang beside the picker: the version's language
  *   versionTitle  true: the window's title names the version (else it keeps the bench's name)
@@ -23,6 +24,7 @@
   function H() { return B.shell || {}; }
   // the bench's views, and those a kit module adds to the tab row itself (SW.kitViews: topics.js's),
   // however the bench sets its own list
+  function HOME() { return H().home || 'read'; }
   function ORDER() { var v = H().views || ['read']; (SW.kitViews || []).forEach(function (x) { if (v.indexOf(x) < 0) v = v.concat(x); }); return v; }
   if (B.tagsHint) SW.$('#note-tags').placeholder = B.tagsHint;
   // The version picker (with its reference and language) is in the top bar only for a bench that sets
@@ -68,7 +70,7 @@
   };
   SW.setTab = function (tab) {
     tab = (H().alias || {})[tab] || tab;
-    if (ORDER().indexOf(tab) < 0) tab = 'read';
+    if (ORDER().indexOf(tab) < 0) tab = HOME();
     var prev = SW.state.tab;
     if (prev !== tab && SW.trail) SW.trail.step();   // a jump the reader did not choose from the tab row: a step on the way back
     if (prev !== tab && SW.views[prev] && SW.views[prev].hide) SW.views[prev].hide();
@@ -219,7 +221,7 @@
     if (q.lens && SW.setLens) { SW.setLens(q.lens); if (!q.tab) q.tab = 'analyse'; }   // a lens (kit/lenses.js)
     if (q.g && SW.setGraphic) { SW.setGraphic(q.g); if (!q.tab) q.tab = 'graphics'; }   // a graphic (kit/graphics.js)
     if (H().query) H().query(q);   // the bench's own: a view's settings
-    SW.state.tab = ORDER().indexOf(q.tab) >= 0 ? q.tab : 'read';
+    SW.state.tab = ORDER().indexOf(q.tab) >= 0 ? q.tab : HOME();
     document.body.dataset.tab = SW.state.tab;
     SW.markTabs();
     SW.$$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + SW.state.tab); });
@@ -299,7 +301,7 @@
     if (q.lens && SW.setLens) { SW.setLens(q.lens); if (!q.tab) q.tab = 'analyse'; }
     if (q.g && SW.setGraphic) { SW.setGraphic(q.g); if (!q.tab) q.tab = 'graphics'; }
     if (H().query) H().query(q);
-    var tab = ORDER().indexOf(q.tab) >= 0 ? q.tab : 'read';
+    var tab = ORDER().indexOf(q.tab) >= 0 ? q.tab : HOME();
     SW.forget(tab);
     if (q.v && q.v !== SW.state.v) { SW.state.tab = tab; document.body.dataset.tab = tab; SW.markTabs(); SW.$$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + tab); }); select(q.v, true); }
     else SW.setTab(tab);
