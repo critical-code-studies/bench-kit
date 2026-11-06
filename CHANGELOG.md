@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Further image collections in the Images tab** (David, 2026-11-06, through the translation session: "expandable with additional image file collections"). `images.collections`, each one more part beside Pages and Figures, with its count, its credit on the set and in the box, and links `?tab=images&set=<id>&img=<key>`. A set shows the bench's own copies; a `zoom` copy on another site is asked for with an `<img>` only when the reader zooms past them, and a failure leaves the bench's copy with a small note. `images.js`'s zooming box takes `deep` for this.
+- **The picker no longer flashes on a reload** (David, 2026-11-06, through the translation session). `bench.css` hides `.pick` until `shell.js` marks the bar `.with-pick`, for a bench with `picker: true`, so a bench without it never paints it.
+- The test of a thumbnail that will not load no longer depends on the browser asking for a lazy image (Melville's report: it failed in the browser pane).
 - **`tools/library-move.js`: paratexts into the Library, and back** (David, 2026-11-06, through Spacewar). A plan proposes each entry; each note has to be set by hand, since a description may hold working remarks; each file and alternate goes on the shelf you set. `--back` restores the whole catalogue record and its files. A public file's history is said to stay. The P-code stays as the id: a code in a link or an annotation opens the entry, and Paratexts lists a related item as in the Library.
 - **Transcripts and other forms in the Library** (David, through Spacewar): `alts`, each on its own shelf, opened under the work so a transcript can be read while it plays.
 - **A citation in the Library's box, with Copy** (David, through the translation session), in Harvard form from the record, or `citation` as written. New fields in the record and the form: `contributor`, `in`, `publisher`, `pages`, `doi`, and `extent` in the record.

@@ -112,7 +112,10 @@
         T.eq('in the order chosen', Array.prototype.map.call(v.querySelectorAll('.lib-row .lib-t'), function (x) { return x.textContent; }).join('|'), 'Bare|Cloth|A film|A jacket|A podcast|A talk');
         T.eq('and kept', SW.store.get('library.order', ''), 'title');
         v.querySelector('[data-libview="icons"]').click();
-        return wait(300);
+        // the image is lazy, and this page may never ask for it: its failure, as a browser reports one
+        var bad = v.querySelector('[data-lib="c1"] img.lib-thumb');
+        if (bad) bad.dispatchEvent(new Event('error'));
+        return wait(30);
       }).then(function () {
         var img = v.querySelector('[data-lib="c1"] img.lib-thumb');
         T.eq('a picture that will not load: the drawn cover alone', img, null);

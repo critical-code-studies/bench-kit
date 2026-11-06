@@ -48,6 +48,48 @@
       });
     }).then(restore, function (e) { restore(); throw e; });
   }
+  // a further collection: its part, its count, its credit, a deep copy asked for only on zooming in
+  function collection() {
+    var SW = window.SW, B = SW.BENCH, was = { images: B.images, mod: SW.images, view: SW.views && SW.views.images, kit: SW.kitViews };
+    SW.views = SW.views || {};
+    var sec = document.createElement('section'); sec.id = 'view-images'; sec.className = 'view'; document.body.appendChild(sec);
+    var made = [], Im0 = window.Image, BIG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="4000" height="2000"><rect width="4000" height="2000"/></svg>');
+    B.images = { start: 'pages', map: 'SWNoSuchMap', collections: [{ id: 'notes', label: 'Annotated', intro: 'A set.', credit: 'Held by A Library.', items: [{ key: 'A1', n: 1, page: 3, what: 'a note', thumb: PIXEL, file: BIG, zoom: PIXEL + '#deep', record: 'https://example.org/r' }, { key: 'A2', n: 2, thumb: PIXEL, file: PIXEL, zoom: null }] }] };
+    function restore() {
+      window.Image = Im0; B.images = was.images; SW.images = was.mod; SW.kitViews = was.kit;
+      if (was.view) SW.views.images = was.view; else delete SW.views.images;
+      sec.remove();
+      document.querySelectorAll('dialog.im-pagedlg').forEach(function (d) { if (d.open) d.close(); d.remove(); });
+    }
+    function loadImages() { return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = kit + 'images.js?t=' + Date.now(); s.onload = res; s.onerror = function () { rej(new Error('could not load images.js')); }; document.head.appendChild(s); }); }
+    return loadImages().then(function () { SW.views.images.show(); return wait(50); }).then(function () {
+      var b = sec.querySelector('[data-part="set:notes"]');
+      T.yes('a part beside Pages', b);
+      T.yes('with its count', b && /2/.test(b.textContent));
+      b.click();
+      return wait(40);
+    }).then(function () {
+      T.eq('its images', sec.querySelectorAll('[data-set="notes"]').length, 2);
+      T.yes('its credit on the set', /A Library/.test(sec.querySelector('.im-setcredit').textContent));
+      window.Image = function () { var i = new Im0(); made.push(i); return i; };
+      return SW.images.openItem('notes', 'A1');
+    }).then(function () {
+      // the tests page may not have the bench's stylesheet, and the box needs a height to fit in
+      var zb = document.querySelector('dialog.im-itemdlg .im-zoombox'); zb.style.width = '600px'; zb.style.height = '300px';
+      return wait(80);
+    }).then(function () {
+      var d = document.querySelector('dialog.im-itemdlg');
+      T.yes('its credit in the box', /A Library/.test(d.querySelector('.im-credit').textContent));
+      T.yes('the holder’s record', d.querySelector('a[href="https://example.org/r"]'));
+      var deep = function () { return made.filter(function (i) { return /#deep$/.test(i.src); }).length; };
+      T.eq('the larger copy not asked for at first', deep(), 0);
+      var box = d.querySelector('.im-zoombox');
+      for (var k = 0; k < 6; k++) box.querySelector('[data-z="+"]').click();
+      T.eq('asked for on zooming in', deep(), 1);
+      d.close();
+      restore();
+    }, function (e) { restore(); throw e; });
+  }
   // the bench's own copies: nothing asked of the library
   function heldCopies() {
     var SW = window.SW, B = SW.BENCH, was = { images: B.images, mod: SW.images, view: SW.views && SW.views.images, kit: SW.kitViews, map: window.SWImagesHeld };
@@ -108,5 +150,5 @@
     });
   }
   // one after another: each loads the module with settings of its own
-  T.later('the Images tab', function () { return (T.fetchChain = figureBox().then(heldCopies).then(imageQueue)); });
+  T.later('the Images tab', function () { return (T.fetchChain = figureBox().then(heldCopies).then(imageQueue).then(collection)); });
 })();

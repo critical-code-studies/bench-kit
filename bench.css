@@ -40,7 +40,9 @@ code, .mono { font-family: var(--mono); }
    in the bar's own ink, dimmed: the page's faint grey is drawn for the page, and on a coloured bar
    (paper's blue) it all but vanished */
 header.bar .bench-ver, header.bar .vlang, header.bar #vref { color: color-mix(in srgb, var(--bar-fg) 90%, var(--bar-2)); }
-.pick { display: flex; align-items: center; gap: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; flex: 0 1 auto; min-width: 0; }
+.bar:not(.with-pick) .pick { display: none; }
+.bar.with-pick .pick { display: flex; }
+.pick { align-items: center; gap: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; flex: 0 1 auto; min-width: 0; }
 .pick select { min-width: 12em; }
 .pick { flex-shrink: 0; }
 .pick select {
@@ -456,12 +458,12 @@ dialog.wire-dlg { width: min(560px, 94vw); }
 /* Narrower windows: the top bar gives way (label words, then the tape strip) so its buttons stay on screen */
 @media (max-width: 1240px) {
   /* the bench's name and version give way to the version picker; a bar without one keeps them */
-  .bar:not(.no-pick) .brand-name b, .bar:not(.no-pick) .bench-ver, .pick > span { display: none; }
+  .bar.with-pick .brand-name b, .bar.with-pick .bench-ver, .pick > span { display: none; }
   .bar { gap: 10px; }
   .bar-right { gap: 2px; }
 }
 /* a bar without the picker gives up the name only where its buttons fill it */
-@media (max-width: 380px) { .bar.no-pick .brand-name b, .bar.no-pick .bench-ver { display: none; } }
+@media (max-width: 380px) { .bar:not(.with-pick) .brand-name b, .bar:not(.with-pick) .bench-ver { display: none; } }
 /* the tab row stops where the side panel begins, as the page does */
 @media (min-width: 861px) {
   body.drawer-open .tabs { margin-right: 380px; }
@@ -1093,7 +1095,7 @@ ul.reading a { overflow-wrap: anywhere; }
 @media (max-width: 860px) {
   body { overflow: auto; }
   .bar { flex-wrap: wrap; }
-  .bar:not(.no-pick) .brand-name b { display: none; }
+  .bar.with-pick .brand-name b { display: none; }
   .run { grid-template-columns: 1fr !important; height: auto; }
   body.drawer-open main { margin-right: 0; }
   .drawer { width: 100%; }
@@ -1332,6 +1334,9 @@ ul.reading a { overflow-wrap: anywhere; }
 .im-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
 .im-credit { font-size: 12px; margin-left: auto; }
 .im-intro { color: var(--text-dim); margin: 0 0 10px; max-width: 52em; }
+.im-setintro { margin: 0 0 12px; }
+.im-setintro .im-intro { margin-bottom: 4px; }
+.im-setcredit { margin: 0; }
 .im-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .im-card { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); color: var(--text); cursor: zoom-in; font: 12px var(--sans, system-ui); text-align: left; }
 .im-card:hover { border-color: var(--amber); }
