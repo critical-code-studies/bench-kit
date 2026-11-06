@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.3.0 (2026-11-06)
 
 - ＋ Add a work shows only where GitHub says the reader's token can write to the private repository (David, 2026-11-06). Before, any token showed it, including one out of date or read-only.
 - **Facets in the Library** (David, 2026-11-06: "the library will start getting big"): filters beside the list by kind, decade, author, language and tag, each value with its count, in place of the Every kind menu. Values in one facet widen, facets narrow one another, and the search and the Held, Linked and Annotated buttons combine with them.
