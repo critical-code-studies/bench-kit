@@ -1313,6 +1313,12 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-c-chapter .lib-c-a { color: #4a4436; }
 .lib-c-letter { background: linear-gradient(180deg, #efe7d3, #fbf8f0 60px); }
 .lib-c-letter .lib-c-k { color: #5c5546; }
+/* newsprint */
+.lib-c-news { color: #1c1b18; background: #e7e2d4; }
+.lib-c-news .lib-c-k { color: #1c1b18; padding-bottom: 4px; border-top: 3px solid #1c1b18; border-bottom: 1px solid #1c1b18; padding-top: 4px; }
+.lib-c-news .lib-c-t { font-weight: 700; }
+.lib-c-news::after { content: ''; flex: 1 1 0; min-height: 0; order: 1; background: repeating-linear-gradient(180deg, #bdb7a5 0 1px, transparent 1px 5px); -webkit-mask: linear-gradient(90deg, #000 47%, transparent 47% 53%, #000 53%); mask: linear-gradient(90deg, #000 47%, transparent 47% 53%, #000 53%); }
+.lib-c-news .lib-c-a { order: 2; margin-top: 0; color: #3e3b32; }
 /* sound and film */
 .lib-c-audio, .lib-c-talk { color: #f2f0fa; background: linear-gradient(160deg, #3b2f63, #1c1830); }
 .lib-c-talk { background: linear-gradient(160deg, #6b3a1e, #2b1a10); color: #fbf1e4; }

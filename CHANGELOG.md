@@ -3,6 +3,7 @@
 ## Unreleased
 
 - The Library stretches to the full width of the browser (David, 2026-11-06).
+- More kinds have drawn covers (SHRDLU's request): preprint, conference and proceedings as articles, encyclopedia as a web page, and a newsprint cover of its own for news, newspaper and magazine.
 - `docs/library.md` names the citation-only stub (David's rule, through ELIZA): a work with no link and no file keeps its record and citation.
 
 ## 1.1.0 (2026-11-06)

@@ -67,7 +67,7 @@ Where the page is at the top of the repository, the same tools run as `node kit/
 
 ## Covers and order
 
-A cover is drawn from the entry's `kind`: book, thesis, article, chapter, letter, podcast, talk, documentary or web page, with near synonyms such as monograph, essay, lecture or film. Where `kind` names none of these, the file's type decides, and otherwise a plain cover is drawn. Each book takes one cloth colour from its `id`, so a book keeps its colour between visits.
+A cover is drawn from the entry's `kind`: book, thesis, article, chapter, letter, news, podcast, talk, documentary or web page, with near synonyms such as monograph, essay, preprint, conference, magazine, lecture, film or encyclopedia. Where `kind` names none of these, the file's type decides, and otherwise a plain cover is drawn. Each book takes one cloth colour from its `id`, so a book keeps its colour between visits.
 
 `thumb` gives an entry a picture for its cover, a path from the page or a link:
 

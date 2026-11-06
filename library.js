@@ -319,7 +319,8 @@
   // ---------- covers ----------
   // what a cover is drawn as: a kind's own word first, then what the file is
   var FAMILY = { book: 'book', monograph: 'book', edition: 'book', 'edited volume': 'book', anthology: 'book', 'parallel text': 'book', translation: 'book', thesis: 'thesis', dissertation: 'thesis',
-    article: 'article', paper: 'article', essay: 'article', review: 'article', report: 'article', chapter: 'chapter', letter: 'letter', correspondence: 'letter',
+    article: 'article', paper: 'article', essay: 'article', review: 'article', report: 'article', preprint: 'article', conference: 'article', 'conference paper': 'article', proceedings: 'article',
+    news: 'news', newspaper: 'news', magazine: 'news', encyclopedia: 'web', encyclopaedia: 'web', chapter: 'chapter', letter: 'letter', correspondence: 'letter',
     podcast: 'audio', interview: 'audio', radio: 'audio', recording: 'audio', talk: 'talk', lecture: 'talk', keynote: 'talk', seminar: 'talk',
     documentary: 'film', film: 'film', video: 'film', 'web page': 'web', webpage: 'web', website: 'web', blog: 'web', 'blog post': 'web', site: 'web' };
   L.family = function (e) {
@@ -337,6 +338,7 @@
     audio: '<path d="M9 3h6v11H9zM5 11v3a7 7 0 0 0 14 0v-3M12 21v-3"/>',
     talk: '<path d="M4 4h16v11H9l-5 5z"/>',
     film: '<path d="M3 4h18v16H3zM8 4v16M16 4v16M3 9h5M3 15h5M16 9h5M16 15h5"/>',
+    news: '<path d="M3 5h15v14a2 2 0 0 0 2 2H5a2 2 0 0 1-2-2zM18 9h3v10a1.500 1.500 0 0 1-3 0M6 9h9M6 13h4M6 16h4M12.500 13h2.500v3h-2.500z"/>',
     web: '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
     other: '<path d="M3 7h6l2 2h10v11H3z"/>'
   };
@@ -465,7 +467,7 @@
   function inOf(e) { var s = String(e.in || '').trim(); return /^\(.*\)$/.test(s) ? '' : s; }   // "(monograph)": a note, not a place
   L.citation = function (e) {
     if (e.citation) return { text: String(e.citation), html: esc(e.citation) };
-    var where = inOf(e), fam = L.family(e), part = !!where || fam === 'article' || fam === 'chapter';
+    var where = inOf(e), fam = L.family(e), part = !!where || fam === 'article' || fam === 'chapter' || fam === 'news';
     var plain = [], rich = [];
     function add(t, h) { plain.push(t); rich.push(h == null ? esc(t) : h); }
     function stop(s) { return /[.?!]['’"”]?$/.test(s) ? s : s + '.'; }
