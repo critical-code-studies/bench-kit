@@ -1308,12 +1308,15 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-mini .lib-thumb { width: 100%; height: 100%; object-fit: cover; }
 .lib-glyph { width: 1em; height: 1em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 /* the shelf: covers standing on a line, what is known about each below it */
-.lib-list.lib-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 22px 0; border-top: 0; padding-top: 6px; }
+.lib-shelf { --cw: 130px; --ch: 196px; }
+.lib-shelf.lib-s { --cw: 92px; --ch: 138px; }
+.lib-shelf.lib-l { --cw: 184px; --ch: 276px; }
+.lib-list.lib-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--cw) + 28px), 1fr)); gap: 22px 0; border-top: 0; padding-top: 6px; }
 .lib-shelf > .hint { grid-column: 1 / -1; }
 .lib-tile { display: flex; flex-direction: column; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.lib-stand { position: relative; display: flex; align-items: flex-end; justify-content: center; height: 208px; padding: 0 14px; border-bottom: 3px solid color-mix(in srgb, var(--text) 26%, transparent); }
-.lib-cover, .lib-thumb { box-sizing: border-box; width: 130px; height: 196px; border-radius: 2px 3px 3px 2px; box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.28), 3px 4px 9px rgba(0, 0, 0, 0.18); transition: transform 0.12s ease; }
-.lib-stand .lib-thumb { position: absolute; bottom: 0; left: 50%; margin-left: -65px; object-fit: cover; background: #fff; }
+.lib-stand { position: relative; display: flex; align-items: flex-end; justify-content: center; height: calc(var(--ch) + 12px); padding: 0 14px; border-bottom: 3px solid color-mix(in srgb, var(--text) 26%, transparent); }
+.lib-cover, .lib-thumb { box-sizing: border-box; width: var(--cw); height: var(--ch); border-radius: 2px 3px 3px 2px; box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.28), 3px 4px 9px rgba(0, 0, 0, 0.18); transition: transform 0.12s ease; }
+.lib-stand .lib-thumb { position: absolute; bottom: 0; left: 50%; margin-left: calc(var(--cw) / -2); object-fit: cover; background: #fff; }
 .lib-tile:hover .lib-cover, .lib-tile:hover .lib-thumb, .lib-tile:focus-visible .lib-cover, .lib-tile:focus-visible .lib-thumb { transform: translateY(-5px); }
 .lib-tile:focus-visible { outline: 2px solid var(--beam); outline-offset: 2px; }
 .lib-cap { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px 0; min-width: 0; }
@@ -1365,7 +1368,24 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-c-web .lib-c-a { color: #51606f; }
 .lib-c-other { color: var(--text); background: var(--surface-2); border: 1px solid var(--line); }
 .lib-c-other .lib-c-k { color: var(--text-dim); }
-@media (max-width: 460px) { .lib-list.lib-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lib-cover, .lib-thumb { width: 118px; height: 178px; } .lib-stand { height: 190px; padding: 0 6px; } .lib-stand .lib-thumb { margin-left: -59px; } }
+/* small: the title and little else; large: room to read */
+.lib-s .lib-cover { padding: 7px 6px; gap: 3px; }
+.lib-s .lib-c-t { font-size: 10.5px; -webkit-line-clamp: 5; }
+.lib-s .lib-c-a { font-size: 8.5px; -webkit-line-clamp: 1; }
+.lib-s .lib-c-k { font-size: 7.5px; letter-spacing: 0.5px; }
+.lib-s .lib-c-k .lib-glyph { width: 11px; height: 11px; }
+.lib-s .lib-cover.lib-c-book, .lib-s .lib-cover.lib-c-thesis, .lib-s .lib-cover.lib-c-chapter, .lib-s .lib-cover.lib-c-film { padding-left: 13px; }
+.lib-s .lib-cover.lib-c-film { padding-right: 13px; }
+.lib-s .lib-cap { padding: 5px 6px 0; }
+.lib-s .lib-cap .lib-m { font-size: 11px; }
+.lib-s .lib-cap .lib-h { display: none; }
+.lib-s .lib-stand { padding: 0 6px; }
+.lib-l .lib-cover { padding: 16px 15px; gap: 9px; }
+.lib-l .lib-c-t { font-size: 18px; -webkit-line-clamp: 7; }
+.lib-l .lib-c-a { font-size: 13px; }
+.lib-l .lib-c-k { font-size: 11px; }
+.lib-l .lib-cover.lib-c-book, .lib-l .lib-cover.lib-c-thesis { padding-left: 24px; }
+@media (max-width: 460px) { .lib-shelf { --cw: 118px; --ch: 178px; } .lib-shelf.lib-s { --cw: 84px; --ch: 126px; } .lib-shelf.lib-l { --cw: 150px; --ch: 226px; } .lib-stand { padding: 0 6px; } .lib-list.lib-shelf { grid-template-columns: repeat(auto-fill, minmax(calc(var(--cw) + 14px), 1fr)); } }
 
 /* kit/images.js: the Images tab, the zooming box, a figure and its labels */
 #view-images .im { padding: 12px clamp(12px, 3vw, 28px) 80px; }

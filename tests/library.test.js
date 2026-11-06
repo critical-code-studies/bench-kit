@@ -116,8 +116,15 @@
         T.yes('an article as an article', v.querySelector('[data-lib="c2"] .lib-cover.lib-c-article'));
         T.eq('by author first', v.querySelector('.lib-order select').value, 'author');
         if (SW.guideAdd) { SW.library.help(); var hd = document.querySelector('dialog h3'); T.yes('the guide opens, from the Help menu or the ?', hd && /holds/.test(hd.textContent)); hd.closest('dialog').close(); }
+        v.querySelector('[data-libsize="l"]').click();
+        T.yes('large covers', v.querySelector('.lib-list.lib-shelf.lib-l'));
+        T.eq('the size is kept', SW.store.get('library.size', ''), 'l');
+        v.querySelector('[data-libsize="s"]').click();
+        T.yes('small covers', v.querySelector('.lib-list.lib-s') && !v.querySelector('.lib-list.lib-l'));
+        SW.store.set('library.size', '');
         v.querySelector('[data-libview="list"]').click();
         T.eq('the switch: a list', v.querySelectorAll('.lib-row').length, 6);
+        T.yes('and no sizes to choose', v.querySelector('.lib-sizes').hidden);
         T.eq('which is kept', SW.store.get('library.view', ''), 'list');
         var o = v.querySelector('.lib-order select'); o.value = 'title'; o.dispatchEvent(new Event('change'));
         T.eq('in the order chosen', Array.prototype.map.call(v.querySelectorAll('.lib-row .lib-t'), function (x) { return x.textContent; }).join('|'), 'Bare|Cloth|A film|A jacket|A podcast|A talk');

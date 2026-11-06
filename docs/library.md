@@ -79,7 +79,7 @@ Put a bench's own images in `library/thumbs/`, at about 260 by 390 pixels. A pub
 
 Author order files under the first author's surname: the part before the comma in `Ōtsuka, Hisao`, and otherwise the last word, so write a name whose surname comes first with the comma. Date order reads the first four-figure year in `date`. Entries with no value for the order chosen go last.
 
-`library: { view: 'list', order: 'new' }` in `js/config.js` sets what a reader sees first: `view` is `icons` or `list`, and `order` is `author`, `title`, `new`, `old`, `kind`, `lang` or `listed`. The default is covers by author. A reader's own choice is kept in that browser.
+`library: { view: 'list', order: 'new', size: 's' }` in `js/config.js` sets what a reader sees first: `view` is `icons` or `list`, `order` is `author`, `title`, `new`, `old`, `kind`, `lang` or `listed`, and `size`, of the covers, is `s`, `m` or `l`. The default is medium covers by author. A reader's own choice is kept in that browser.
 
 `README.md` lists an entry's fields. An `id` does not change once published, since links (`?tab=library&lib=<id>`) point at it.
 

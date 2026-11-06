@@ -12,11 +12,11 @@
  * manifest is public, so everyone sees every entry's record, and a private entry's shelf and file path
  * are in it; without a token the entry shows its record and its link out.
  * SW.BENCH.library: true (the manifest at library/library.json), or
- *   { url, label, intro, items, load, private, view, order }: url the manifest (from the page); items the entries given here
+ *   { url, label, intro, items, load, private, view, order, size }: url the manifest (from the page); items the entries given here
  *   instead; load() a promise of the manifest (a bench that makes it from another list, such as a
- *   translation's corpus/SOURCES.md); label the tab's name (Library); intro HTML above the list; view and
- *   order what a reader sees first ('icons' or 'list'; 'author', 'title', 'new', 'old', 'kind', 'lang' or
- *   'listed'), author and icons unless set. A reader's own choice is kept in the browser.
+ *   translation's corpus/SOURCES.md); label the tab's name (Library); intro HTML above the list; view, order and
+ *   size what a reader sees first ('icons' or 'list'; 'author', 'title', 'new', 'old', 'kind', 'lang' or
+ *   'listed'; 's', 'm' or 'l'), medium covers by author unless set. A reader's own choice is kept in the browser.
  * The manifest: { title, intro, items: [entry] }. An entry:
  *   id        its code, unchanging: links (?tab=library&lib=<id>) and the group's copies point at it
  *   title, author, date, kind (book, article, chapter, letter, edition, parallel text…; a filter), lang, note
@@ -68,7 +68,7 @@
   var L = SW.library = {};
   if (!C || (SW.menuOff && SW.menuOff('library')) || !SW.views) return;
   var esc = SW.esc, URL0 = C.url || 'library/library.json';
-  var man = null, loading = null, addRead = false, F = { q: '', show: 'all', facets: {}, more: {}, view: SW.store.get('library.view', '') || C.view || 'icons', order: SW.store.get('library.order', '') || C.order || 'author' };
+  var man = null, loading = null, addRead = false, F = { q: '', show: 'all', facets: {}, more: {}, view: SW.store.get('library.view', '') || C.view || 'icons', order: SW.store.get('library.order', '') || C.order || 'author', size: SW.store.get('library.size', '') || C.size || 'm' };
   var Q0 = SW.readQuery ? SW.readQuery() : {};
 
   L.load = function () {
@@ -448,6 +448,7 @@
   }
   function drawNotes(view, box) {
     box.classList.remove('lib-shelf');
+    var zs0 = SW.$('.lib-sizes', view); if (zs0) zs0.hidden = true;
     var N = itemNotes();
     if (!N) { box.innerHTML = '<p class="hint pad">This bench has no annotation group.</p>'; return; }
     box.innerHTML = '<p class="hint pad">Reading the notes…</p>';
@@ -478,6 +479,8 @@
     if (fb) fb.innerHTML = facetHTML();
     var rs = L.sorted(rows(), F.order), icons = F.view !== 'list';
     box.classList.toggle('lib-shelf', icons);
+    ['s', 'm', 'l'].forEach(function (z) { box.classList.toggle('lib-' + z, icons && F.size === z); });
+    var zs = SW.$('.lib-sizes', view); if (zs) zs.hidden = !icons;
     box.innerHTML = rs.length ? rs.map(icons ? tile : row).join('') : '<p class="hint pad">Nothing in the library answers the search.</p>';
     var n = SW.$('.lib-n', view); if (n) n.textContent = rs.length + ' of ' + L.items().length;
     paintCounts(view);
@@ -492,6 +495,7 @@
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
+        '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span></div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
@@ -515,6 +519,7 @@
           var no = ev.target.closest('[data-noteopen]'); if (no) { SW.notes.openItem(no.dataset.noteopen); return; }
           var ng = ev.target.closest('[data-at]'), sec = ev.target.closest('[data-code]');
           if (ng && sec) { var nq = ng.dataset.at === 'q' ? ng.textContent : '', nat = ng.dataset.at; SW.notes.openItem(sec.dataset.code).then(function () { setTimeout(function () { var ds = SW.$$('dialog[open]'); SW.notes.itemGo(nat, nq, ds[ds.length - 1]); }, 800); }); return; }
+          var zb = ev.target.closest('[data-libsize]'); if (zb) { setting('size', 'size', zb.dataset.libsize); SW.$$('[data-libsize]', view).forEach(function (b) { b.classList.toggle('on', b === zb); }); list(view); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
           var s = ev.target.closest('[data-show]'); if (s) { F.show = s.dataset.show; SW.$$('[data-show]', view).forEach(function (b) { b.classList.toggle('on', b === s); }); list(view); return; }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
@@ -533,8 +538,8 @@
     SW.guideAdd('library', [C.label || 'The Library', [
       ['What it holds', '<p>The secondary literature on the project: the books, articles, talks, podcasts and documentaries the group reads and cites. Each entry has a record. Some have a file held here, some a file the group keeps privately, and some a link to where the work is published.</p>'],
       ['Finding a work', ul([
-        '<b>▦</b> shows covers on a shelf, and <b>☰</b> a list. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
-        '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view and order is kept in this browser.',
+        '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), and <b>☰</b> a list. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
+        '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view, size and order is kept in this browser.',
         'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
         '<b>Filters</b> beside the list narrow by kind, decade, author, language and tag, each value with its count. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
       ['Opening a work', ul([

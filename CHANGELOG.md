@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Small, medium and large covers in the Library** (David, 2026-11-06), beside the list, with `library.size` for a bench's first view; a reader's choice is kept.
+
 ## 1.3.0 (2026-11-06)
 
 - ＋ Add a work shows only where GitHub says the reader's token can write to the private repository (David, 2026-11-06). Before, any token showed it, including one out of date or read-only.
