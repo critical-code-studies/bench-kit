@@ -45,6 +45,9 @@
  *   changes(raw, file)              [{ file, n, target, page, kind, old, new, src, why, origin, part }]
  *   applied(ch, texts)              'applied' | 'pending' | 'both' | 'gone': NEW and OLD looked for in
  *                                     the target version's current text, paragraph by paragraph
+ *   figureLines(t)                  the figures set in a text: [{ n, src, num, capNum, noOverlays, caption, key }]
+ *   figures(o)                      the method's figures.csv checked against the texts and the labels, and
+ *                                     made into the Images tab's records (tools/vt-figures.js)
  *   ocr(raw, split)                 [{ img, text }]
  *   fold(s)                         a Japanese string with old character forms made new (kyūjitai →
  *                                     shinjitai), for search and lookup
@@ -354,6 +357,113 @@
     for (var k = 0; k < probe.length; k++)
       for (var i = 0; i < t.lines.length; i++) { var c0 = t.lines[i].raw.indexOf(probe[k]); if (c0 >= 0) return { n: i + 1, c: c0 }; }
     return null;
+  };
+
+  // ---------- the figures ----------
+  // A path as written, with ./ and ../ worked out
+  function tidy(p) {
+    var out = [];
+    String(p || '').split('/').forEach(function (x) { if (x === '..') out.pop(); else if (x && x !== '.') out.push(x); });
+    return out.join('/');
+  }
+  function baseOf(p) { return String(p || '').split('/').pop(); }
+  // The figures set in a text: each image line, with the caption line after it, the caption's key
+  // (from Key: or Labels:, the word kept) apart, and whether the line says {overlays="no"}
+  VT.figureLines = function (t) {
+    var out = [];
+    t.lines.forEach(function (L, i) {
+      if (L.kind !== 'fig') return;
+      var alt = /^!\[([^\]]*)\]/.exec(L.raw), num = alt && /^Figure (\d+)/.exec(alt[1]), j = i + 1;
+      while (j < t.lines.length && t.lines[j].kind === 'blank') j++;
+      var C = t.lines[j] && t.lines[j].kind === 'caption' ? t.lines[j].raw : '', cn = /^\*\*Figure (\d+)\.\*\*\s*/.exec(C);
+      var body = cn ? C.slice(cn[0].length) : C, k = /(^|\s)(Key|Labels):\s/.exec(body);
+      var plain = function (x) { return x.replace(/\[\^[^\]]+\]/g, '').replace(/\*\*?([^*]+)\*\*?/g, '$1').trim(); };
+      out.push({ n: L.n, src: L.src, num: num ? +num[1] : null, capNum: cn ? +cn[1] : null, noOverlays: /\{[^}]*overlays="no"[^}]*\}/.test(L.raw),
+        caption: plain(k ? body.slice(0, k.index) : body), key: k ? plain(body.slice(k.index + k[1].length)) : '' });
+    });
+    return out;
+  };
+  var FIGCOLS = ['n', 'file', 'original', 'page', 'image', 'region', 'overlays', 'placement', 'labels_note'];
+  // The method's figure list (figures.csv) checked against the texts and the labels, and made into the
+  // Images tab's records (kit/images.js). o: { csv, texts: [{ path, t }] (each read by VT.read, its
+  // path from the translation's root), overlays: { name: [label] }, exists(path) (optional), images
+  // (an image map's entries, optional) }. Gives { items, copies: [{ from, to }], problems, notes };
+  // anything in problems is a figure in one place and not another, or a value that cannot be right.
+  // A file named in the list is matched to an image line by its path from the root, or from the
+  // text's own folder. The flag is the list's: overlays no shows no labels, whatever the labels file
+  // holds, and a figure the text marks {overlays="no"} must say no.
+  VT.figures = function (o) {
+    var problems = [], notes = [], items = [], copies = [];
+    var rows = csvRows(String(o.csv || '').replace(/^\ufeff/, '')), head = (rows.shift() || []).map(function (h) { return h.trim(); });
+    FIGCOLS.forEach(function (c) { if (head.indexOf(c) < 0) problems.push('figures.csv has no column ' + c); });
+    head.forEach(function (c) { if (c && FIGCOLS.indexOf(c) < 0) notes.push('figures.csv: column ' + c + ' is not read'); });
+    if (problems.length) return { items: items, copies: copies, problems: problems, notes: notes };
+    var lines = [];   // every image line, with the paths it can be read as
+    (o.texts || []).forEach(function (x) {
+      var dir = String(x.path).split('/').slice(0, -1).join('/');
+      VT.figureLines(x.t).forEach(function (f) { f.text = x.path; f.paths = [tidy(f.src), tidy((dir ? dir + '/' : '') + f.src)]; f.used = 0; lines.push(f); });
+    });
+    var nums = {}, names = {}, labels = o.overlays || {}, images = o.images || null;
+    rows.forEach(function (r, i) {
+      if (!r.join('').trim()) return;
+      var at = 'figures.csv line ' + (i + 2), g = function (c) { return String(r[head.indexOf(c)] == null ? '' : r[head.indexOf(c)]).trim(); };
+      var n = g('n'), file = tidy(g('file')), orig = tidy(g('original')), name = baseOf(file), who = 'Figure ' + n, flag = g('overlays').toLowerCase();
+      if (!/^\d+$/.test(n)) { problems.push(at + ': n is “' + n + '”, not a number'); return; }
+      if (nums[n]) problems.push(who + ': on two lines of figures.csv'); nums[n] = 1;
+      if (!file) { problems.push(who + ': no file'); return; }
+      if (names[name]) problems.push(who + ': the file name ' + name + ' is also Figure ' + names[name] + '’s'); names[name] = n;
+      if (flag !== 'yes' && flag !== 'no') problems.push(who + ': overlays is “' + g('overlays') + '”, not yes or no');
+      if (o.exists && !o.exists(file)) problems.push(who + ': no file ' + file);
+      if (orig && o.exists && !o.exists(orig)) problems.push(who + ': no original ' + orig);
+      var line = lines.filter(function (l) { return l.paths.indexOf(file) >= 0; })[0];
+      if (!line) {
+        var near = lines.filter(function (l) { return baseOf(l.src) === name; })[0];
+        problems.push(who + ': ' + (near ? 'the list has ' + file + ', the text (' + near.text + ':' + near.n + ') ' + near.src : file + ' is not an image line in the translation'));
+        line = near || null;
+      }
+      if (line) {
+        line.used++;
+        if (line.num != null && line.num !== +n) problems.push(who + ': the image line (' + line.text + ':' + line.n + ') says Figure ' + line.num);
+        if (line.capNum != null && line.capNum !== +n) problems.push(who + ': the caption (after ' + line.text + ':' + line.n + ') says Figure ' + line.capNum);
+        if (line.capNum == null) notes.push(who + ': no caption line after the image (' + line.text + ':' + line.n + ')');
+        if (line.noOverlays && flag === 'yes') problems.push(who + ': overlays yes in the list, {overlays="no"} in the text');
+      }
+      var ls = labels[name] || [];
+      if (flag === 'yes' && !ls.length) problems.push(who + ': overlays yes, and no labels for ' + name + ' in overlays.json');
+      if (flag === 'no' && ls.length && !(line && line.noOverlays)) problems.push(who + ': overlays no, and ' + ls.length + ' label' + (ls.length > 1 ? 's' : '') + ' for ' + name + ' in overlays.json, and the text does not say {overlays="no"}, so the book would draw them');
+      ls.forEach(function (l, k) {
+        if (typeof l.x !== 'number' || typeof l.y !== 'number' || l.x < 0 || l.x > 1 || l.y < 0 || l.y > 1) problems.push(who + ': label ' + (k + 1) + ' has x, y outside the image');
+        if (!l.en) problems.push(who + ': label ' + (k + 1) + ' has no English');
+      });
+      var reg = g('region'), img = g('image'), m = /^(\d+),(\d+),(\d+),(\d+)$/.exec(reg);
+      if (reg && !m) problems.push(who + ': region is “' + reg + '”, not x,y,w,h in pixels');
+      if (reg && !img) problems.push(who + ': a region, and no image for it');
+      if (images && img) {
+        var x = images[img];
+        if (!x) problems.push(who + ': no image ' + img + ' in the bench’s image map');
+        else if (m && x.w && x.h && (+m[1] + +m[3] > x.w || +m[2] + +m[4] > x.h)) problems.push(who + ': region ' + reg + ' runs outside image ' + img + ' (' + x.w + ' by ' + x.h + ')');
+      }
+      var page = g('page'), it = { id: 'fig-' + (n.length < 2 ? '0' : '') + n, n: +n, file: 'figures/' + name };
+      if (orig) it.original = 'figures/raw/' + baseOf(orig);
+      if (page) it.page = /^\d+$/.test(page) ? +page : page;
+      if (img) it.image = img;
+      if (reg) it.region = reg;
+      it.overlays = flag === 'yes';
+      if (line && line.caption) it.caption = line.caption;
+      if (line && line.key) it.key = line.key;
+      if (g('placement')) it.placement = g('placement');
+      if (g('labels_note')) it.labelsNote = g('labels_note').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      items.push(it);
+      copies.push({ from: file, to: it.file });
+      if (orig) copies.push({ from: orig, to: it.original });
+    });
+    lines.forEach(function (l) {
+      if (!l.used) problems.push(l.text + ':' + l.n + ': the image ' + l.src + ' has no line in figures.csv');
+      if (l.used > 1) problems.push(l.text + ':' + l.n + ': the image ' + l.src + ' is on ' + l.used + ' lines of figures.csv');
+    });
+    Object.keys(labels).forEach(function (name) { if (!names[name] && (labels[name] || []).length) problems.push('overlays.json has labels for ' + name + ', which is no figure in figures.csv'); });
+    items.sort(function (a, b) { return a.n - b.n; });
+    return { items: items, copies: copies, problems: problems, notes: notes };
   };
 
   // ---------- the source ----------

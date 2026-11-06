@@ -24,6 +24,8 @@
       glossary: { path: 'glossary.csv', kind: 'csv' },     // or { path: 'Translation.md', kind: 'md', heading: 'Glossary' }
       changes: ['checks/changes-1.md'],                    // the change lists, each path
       ocr: { path: 'source/ocr.txt', split: '^=== PAGE (\\d+)' },
+      // where kit/tools/vt-figures.js finds the figure list and labels, from the translation's root (these are the method's)
+      figures: { list: 'figures/figures.csv', overlays: 'figures/overlays.json' },
       // the half of the image a page is on, where the library's images are spreads (vertical Japanese:
       // the odd page on the right); null where each image is one page
       side: function (page) { return page % 2 ? 'right' : 'left'; }

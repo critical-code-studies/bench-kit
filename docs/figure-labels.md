@@ -2,6 +2,8 @@
 
 A bench with the Images tab (`images.js`) draws a figure's labels in English over the author's figure from data, as kit-built books (vector-book) draw them in print. The same entries serve both, so a label sits in the same place on the screen and on the page.
 
+A translation bench takes both files from its translation with `tools/vt-figures.js`, which checks them against the figure list and the text.
+
 ## The format
 
 The labels file (`SW.BENCH.images.figures.overlays`) is keyed by the print file's name:

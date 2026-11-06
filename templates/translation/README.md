@@ -25,6 +25,16 @@ This is the template, with an invented example. Every value marked `EDIT` in `js
 
 `SW.BENCH.translation` says where the translation departs from the method's layout: the versions' ids, the page and image markers, where the apparatus begins, the glossary, the change lists, the OCR, and which half of a spread a page is on. `kit/vt-reader.js` lists every field.
 
+## Figures
+
+The translation's figures are listed in its `figures/figures.csv` (the method's: `n,file,original,page,image,region,overlays,placement,labels_note`), with their labels in `figures/overlays.json` and their captions after the image lines in the text. To bring them into the bench, or refresh them when the list changes:
+
+```bash
+node kit/tools/vt-figures.js <the translation's folder>
+```
+
+It checks the list, the image lines, the labels and the files against one another. If all agree it copies the print files to `figures/` and the originals to `figures/raw/`, and writes `figures/figures.json` and `figures/overlays.json`; if any disagree it says which, writes nothing and exits 1 (`--check` checks only). Then turn the figures on in `js/config.js`: `images: { figures: { url: 'figures/figures.json', overlays: 'figures/overlays.json' } }`. `kit/docs/figure-labels.md` gives the labels' format.
+
 ## Working copy
 
 File ▾ ▸ Open a folder… reads a working copy of the translation's repository on this computer in place of the published files, work not yet committed included, without a token.

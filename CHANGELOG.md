@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The kit's README now lists what 0.98.0 added and left out of it: `library.js`, `images.js`, `folder.js`, `vt-reader.js`, `vt-views.js`; the settings `library`, `images`, `folder`, `translation`, `textLang`, `tokenise`, `paratexts.words`, a dictionary's `lang` and `forms`; Book's `doc.beside`, `imageSide`, `imagesFirst`; `tools/iiif-map.js`, `tools/new-bench.js`; the guides and templates.
+- **`tools/vt-figures.js`** (David, 2026-11-05: a translation bench gets its figures without code of its own). Reads the method's `figures/figures.csv`, `overlays.json` and the captions after the translation's image lines, and checks them against one another: every image line has a row and every row an image line, file names agree, files exist, the flag agrees with the text (the list's `overlays no` shows no labels whatever the labels file holds; a figure the text marks `{overlays="no"}` must say no; a `no` with labels and no such mark is a mismatch, since the book would draw them), and image and region against the bench's image map where it has one (no IIIF service assumed). If all agree it copies the files and writes `figures/figures.json` and `figures/overlays.json`; if not it lists every mismatch, writes nothing and exits 1. `--check` checks only. `SW.BENCH.translation.figures: { list, overlays }`. `SWVT.figures`, `figureLines`. Tried on Kuki's list (22 figures). `tests/vt.test.js`: 14 more checks.
 - CI: the kuki-bench translation bench (vector-humanities/kuki-bench, the first made from `templates/translation/`) added to the benches tested with each push.
 
 ## 0.98.0 (2026-11-05)

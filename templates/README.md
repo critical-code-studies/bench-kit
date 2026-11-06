@@ -20,8 +20,9 @@ Then:
 1. Replace the example texts with the bench's own (for a translation: `text/`, `glossary.csv`, `checks/`, `source/`), and list them in `js/versions.js`.
 2. Fill `js/config.js`: the descriptor (`translation`), the Hypothesis group, the paratexts repository, the About box.
 3. For page images: `node kit/tools/iiif-map.js <manifest> --out js/images.js`, and load `js/images.js` after `js/config.js` in `index.html`.
-4. Run the tests (`node kit/tools/test.js --dir .`) and every view (`node kit/tools/views.js --kit kit --dir .`).
-5. Make the repository on GitHub, push, turn on Pages, and add the bench to bench-kit's CI matrix.
+4. For a translation's figures: `node kit/tools/vt-figures.js <the translation's folder>`, and again whenever its `figures/figures.csv` changes (`translation/README.md`).
+5. Run the tests (`node kit/tools/test.js --dir .`) and every view (`node kit/tools/views.js --kit kit --dir .`).
+6. Make the repository on GitHub, push, turn on Pages, and add the bench to bench-kit's CI matrix.
 
 ## Keeping a template
 

@@ -10,6 +10,7 @@
  *            has no labels, the key from its caption beside it; On the page (its region of the page
  *            image, outlined, in the zooming box); the page in Book; and a labelled copy exported as PNG
  *            or SVG (made then, never stored)
+ * A translation bench makes both files with kit/tools/vt-figures.js.
  * SW.BENCH.images: true, or { label, map, figures: { url, overlays }, intro, credit, labelsNote }:
  *   labelsNote, HTML folded under a figure's key ("About the labels"), with a figure's own labelsNote
  *   before it: why some of the source's writing has no label of its own (a word written a character
