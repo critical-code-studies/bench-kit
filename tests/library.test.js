@@ -23,6 +23,27 @@
     var was = { lib: B.library, mod: SW.library, view: SW.views && SW.views.library, kit: SW.kitViews, px: SW.paratexts, token: SW.store.get('gh.token', ''), fetch: window.fetch };
     var hadTab = !!document.querySelector('[data-tab="library"]'), hadView = !!document.getElementById('view-library');
     SW.views = SW.views || {};
+    function shelfChecks(L) {
+      T.eq('a year, as a catalogue writes it', ['2001', 'c. 1935', '1935-40', '20 Nov 2019', '', null, 'n.d.'].map(L.year), [2001, 1935, 1935, 2019, null, null, null]);
+      T.eq('a surname', ['A. Scholar', 'Scholar, A.', 'Ōtsuka, Hisao', 'A. One and B. Two', 'A. One; B. Two', 'Plato', ''].map(L.surname), ['Scholar', 'Scholar', 'Ōtsuka', 'One', 'One', 'Plato', '']);
+      var es = [
+        { id: 'a', title: 'The Zebra', author: 'B. Young', date: '1990', kind: 'book' },
+        { id: 'b', title: 'Apples', author: 'Ōtsuka, Hisao', date: '2010', kind: 'article', lang: 'ja' },
+        { id: 'c', title: 'A Middle', date: 'n.d.', kind: 'talk' },
+        { id: 'd', title: 'Early', author: 'B. Oak', date: 'c. 1935', kind: 'article', lang: 'en' }
+      ];
+      function ids(o) { return L.sorted(es, o).map(function (e) { return e.id; }).join(''); }
+      T.eq('by author, surnames, those without last', ids('author'), 'dbac');
+      T.eq('by title, without the opening article', ids('title'), 'bdca');
+      T.eq('newest first, those without a date last', ids('new'), 'badc');
+      T.eq('oldest first, those without a date last', ids('old'), 'dabc');
+      T.eq('by kind', ids('kind'), 'bdac');
+      T.eq('by language, those without last', ids('lang'), 'dbca');
+      T.eq('as listed', ids('listed'), 'abcd');
+      T.eq('the entries themselves left in their order', es[0].id, 'a');
+      T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
+      T.eq('or from the file', [{ file: 'a.mp3' }, { file: 'a.webm' }, { file: 'a.pdf' }, { url: 'https://example.org' }].map(L.family), ['audio', 'film', 'article', 'web']);
+    }
     var PUB = [
       { id: 'a1', title: 'A talk', file: 'library/files/talk.mp3' },
       { id: 'v1', title: 'A film', file: 'library/files/film.mp4' },
@@ -58,7 +79,40 @@
       document.querySelectorAll('dialog.lib-dlg, dialog.lib-form').forEach(function (d) { if (d.open) d.close(); d.remove(); });
     }
     SW.store.set('gh.token', '');
-    return load().then(function () { return SW.library.open('a1'); }).then(function () {
+    return load().then(function () {
+      shelfChecks(SW.library);
+      // the tab, in a section of its own for the checks
+      T.group('Library: the shelf');
+      var hadV = document.getElementById('view-library'), v = hadV || document.body.appendChild(Object.assign(document.createElement('section'), { id: 'view-library', className: 'view' }));
+      var keepV = SW.store.get('library.view', ''), keepO = SW.store.get('library.order', '');
+      SW.store.set('library.view', ''); SW.store.set('library.order', '');
+      var was0 = B.library;
+      B.library = { items: PUB.concat([{ id: 'c1', title: 'A jacket', kind: 'book', thumb: 'library/thumbs/none.jpg' }, { id: 'c2', title: 'Bare', kind: 'article' }, { id: 'c3', title: 'Cloth', kind: 'book', thumb: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }]), private: { org: 'group', repo: 'archive' } };
+      return load().then(function () { SW.views.library.show(); return wait(60); }).then(function () {
+        T.eq('covers first', v.querySelectorAll('.lib-tile').length, 6);
+        T.eq('none as a list', v.querySelectorAll('.lib-row').length, 0);
+        T.yes('a book drawn as a book, until its picture loads', v.querySelector('[data-lib="c3"] .lib-cover.lib-c-book'));
+        T.yes('its picture over it', v.querySelector('[data-lib="c3"] img.lib-thumb'));
+        T.yes('an article as an article', v.querySelector('[data-lib="c2"] .lib-cover.lib-c-article'));
+        T.eq('by author first', v.querySelector('.lib-order select').value, 'author');
+        v.querySelector('[data-libview="list"]').click();
+        T.eq('the switch: a list', v.querySelectorAll('.lib-row').length, 6);
+        T.eq('which is kept', SW.store.get('library.view', ''), 'list');
+        var o = v.querySelector('.lib-order select'); o.value = 'title'; o.dispatchEvent(new Event('change'));
+        T.eq('in the order chosen', Array.prototype.map.call(v.querySelectorAll('.lib-row .lib-t'), function (x) { return x.textContent; }).join('|'), 'Bare|Cloth|A film|A jacket|A podcast|A talk');
+        T.eq('and kept', SW.store.get('library.order', ''), 'title');
+        v.querySelector('[data-libview="icons"]').click();
+        return wait(300);
+      }).then(function () {
+        var img = v.querySelector('[data-lib="c1"] img.lib-thumb');
+        T.eq('a picture that will not load: the drawn cover alone', img, null);
+        SW.store.set('library.view', keepV); SW.store.set('library.order', keepO);
+        if (!hadV) v.remove(); else v.innerHTML = '';
+        B.library = was0;
+        T.group('Library: audio and video');
+        return load();
+      });
+    }).then(function () { return SW.library.open('a1'); }).then(function () {
       T.group('Library: audio and video');
       var a = box().querySelector('audio.lib-audio');
       T.yes('an audio file gets a player', a);

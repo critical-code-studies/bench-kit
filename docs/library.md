@@ -1,6 +1,6 @@
 # The Library: a guide for a bench
 
-The Library tab (`library.js`) lists the secondary literature on a project: books, articles, chapters, talks, podcasts and documentaries. Each entry opens in a box over the bench, with its record, the file where one is held, and a link to where the work is published.
+The Library tab (`library.js`) shows the secondary literature on a project as covers on a shelf: books, articles, chapters, talks, podcasts and documentaries. A reader can switch to a list, and order either by author, title, date, kind or language, or as the manifest lists them. Each entry opens in a box over the bench, with its record, the file where one is held, and a link to where the work is published.
 
 ## What belongs where
 
@@ -62,6 +62,22 @@ node research/kit/tools/sitemap.js
 ```
 
 Where the page is at the top of the repository, the same tools run as `node kit/tools/test.js --dir .`, `node kit/tools/views.js --kit kit --dir .` and `node kit/tools/sitemap.js --dir .`.
+
+## Covers and order
+
+A cover is drawn from the entry's `kind`: book, thesis, article, chapter, letter, podcast, talk, documentary or web page, with near synonyms such as monograph, essay, lecture or film. Where `kind` names none of these, the file's type decides, and otherwise a plain cover is drawn. Each book takes one cloth colour from its `id`, so a book keeps its colour between visits.
+
+`thumb` gives an entry a picture for its cover, a path from the page or a link:
+
+```json
+{ "id": "L-004", "title": "A book with a jacket", "kind": "book", "thumb": "library/thumbs/L-004.jpg" }
+```
+
+Put a bench's own images in `library/thumbs/`, at about 260 by 390 pixels. A public image file is its own cover without a `thumb`. A picture that will not load leaves the drawn cover. The kit makes no thumbnails from PDFs or videos. Everything in `library/thumbs/` is public, so the person running the bench decides whether a cover or a first page may be shown, as for a file. A link in `thumb` makes each reader's browser ask that site for the picture.
+
+Author order files under the first author's surname: the part before the comma in `Ōtsuka, Hisao`, and otherwise the last word, so write a name whose surname comes first with the comma. Date order reads the first four-figure year in `date`. Entries with no value for the order chosen go last.
+
+`library: { view: 'list', order: 'new' }` in `js/config.js` sets what a reader sees first: `view` is `icons` or `list`, and `order` is `author`, `title`, `new`, `old`, `kind`, `lang` or `listed`. The default is covers by author. A reader's own choice is kept in that browser.
 
 `README.md` lists an entry's fields. An `id` does not change once published, since links (`?tab=library&lib=<id>`) point at it.
 

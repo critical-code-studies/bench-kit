@@ -12,9 +12,11 @@
  * manifest is public, so everyone sees every entry's record, and a private entry's shelf and file path
  * are in it; without a token the entry shows its record and its link out.
  * SW.BENCH.library: true (the manifest at library/library.json), or
- *   { url, label, intro, items, load, private }: url the manifest (from the page); items the entries given here
+ *   { url, label, intro, items, load, private, view, order }: url the manifest (from the page); items the entries given here
  *   instead; load() a promise of the manifest (a bench that makes it from another list, such as a
- *   translation's corpus/SOURCES.md); label the tab's name (Library); intro HTML above the list.
+ *   translation's corpus/SOURCES.md); label the tab's name (Library); intro HTML above the list; view and
+ *   order what a reader sees first ('icons' or 'list'; 'author', 'title', 'new', 'old', 'kind', 'lang' or
+ *   'listed'), author and icons unless set. A reader's own choice is kept in the browser.
  * The manifest: { title, intro, items: [entry] }. An entry:
  *   id        its code, unchanging: links (?tab=library&lib=<id>) and the group's copies point at it
  *   title, author, date, kind (book, article, chapter, letter, edition, parallel text…; a filter), lang, note
@@ -27,8 +29,11 @@
  *             read whole before it plays, and GitHub holds none over 100 MB)
  *   url       the work where it is published (for an entry without a file, the only way to it)
  *   source    where the copy held was found, and when
+ *   thumb     an image for its cover: a path from the page, or a link. Without one, a public image file
+ *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter
- * The tab lists the entries with a search and filters (held here, links out, by kind); an entry opens
+ * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search
+ * and filters (held here, links out, by kind); an entry opens
  * in a box over the bench: its record, the file shown (a PDF in the browser's own viewer), Open in a
  * new tab, Download, the link out, and a link to the entry.
  * The group's own copy: where the reader has a paratexts token (kit/paratexts.js), the paratexts that
@@ -42,7 +47,7 @@
  * and may correct or remove them there; nobody else sees them. tools/library-publish.js brings them into
  * the public manifest, when the person running the bench chooses.
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), size(), add(record, file),
- * update(id, record), remove(id), form(entry).
+ * update(id, record), remove(id), form(entry), family(entry), year(date), surname(author), sorted(items, order).
  * docs/library.md is the guide for a bench.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -53,7 +58,7 @@
   var L = SW.library = {};
   if (!C || (SW.menuOff && SW.menuOff('library')) || !SW.views) return;
   var esc = SW.esc, URL0 = C.url || 'library/library.json';
-  var man = null, loading = null, addRead = false, F = { q: '', show: 'all', kind: '' };
+  var man = null, loading = null, addRead = false, F = { q: '', show: 'all', kind: '', view: SW.store.get('library.view', '') || C.view || 'icons', order: SW.store.get('library.order', '') || C.order || 'author' };
   var Q0 = SW.readQuery ? SW.readQuery() : {};
 
   L.load = function () {
@@ -147,11 +152,12 @@
   // only the fields of an entry, and a link only to a web address
   function cleaned(r) {
     var o = {};
-    ['title', 'author', 'date', 'kind', 'lang', 'note', 'licence', 'url', 'source'].forEach(function (k) { var v = String(r[k] == null ? '' : r[k]).trim(); if (v) o[k] = v; });
+    ['title', 'author', 'date', 'kind', 'lang', 'note', 'licence', 'url', 'source', 'thumb'].forEach(function (k) { var v = String(r[k] == null ? '' : r[k]).trim(); if (v) o[k] = v; });
     var tags = (r.tags || []).map(function (t) { return String(t).trim(); }).filter(Boolean);
     if (tags.length) o.tags = tags;
     if (!o.title) throw new Error('Give it a title');
     if (o.url && !/^https?:\/\//i.test(o.url)) throw new Error('The link must begin http:// or https://');
+    if (o.thumb && !/^https?:\/\//i.test(o.thumb)) throw new Error('The cover image’s link must begin http:// or https://');
     return o;
   }
   L.add = function (record, file) {
@@ -212,6 +218,7 @@
       '<p class="hint">It goes in the group’s private repository. Members see it at once. It joins the public list when the person running the bench publishes it; a copy stays private.</p>' +
       '<div class="lib-fields">' + field('title', 'Title') + field('author', 'Author') + field('date', 'Date') + field('kind', 'Kind', ' list="lib-kinds"') + field('lang', 'Language') +
       field('url', 'Where it is published (a link)', ' type="url" placeholder="https://"') + field('licence', 'Licence') + field('source', 'Where the copy came from') +
+      field('thumb', 'A cover image (a link, optional)', ' type="url" placeholder="https://"') +
       '<label><span>Tags, with commas</span><input name="tags" value="' + esc((v.tags || []).join(', ')) + '"></label>' +
       '<label class="lib-wide"><span>Note</span><textarea name="note" rows="3">' + esc(v.note || '') + '</textarea></label>' +
       (e ? '' : '<label class="lib-wide"><span>A copy, if the group holds one (40 MB at most)</span><input name="file" type="file"></label>') +
@@ -268,6 +275,89 @@
   SW.kitViews = (SW.kitViews || []).concat('library');
 
   function meta(e) { return [e.author, e.date, e.kind].filter(Boolean).map(esc).join(' · '); }
+  function heldAs(e) {
+    return (isPrivate(e) ? 'For the group' + (L.member() ? '' : e.url ? ' · link out ↗' : ' · record') : e.file ? 'Held here' : e.url ? 'Link out ↗' : 'Record only') +
+      (e.file && (!isPrivate(e) || L.member()) && kindOfFile(e.file) !== 'file' ? ' · ' + kindOfFile(e.file).toUpperCase() : '') + (isAdded(e) ? ' · Added, not yet public' : '');
+  }
+  function heldClass(e) { return isPrivate(e) ? 'group' : e.file ? 'held' : 'out'; }
+
+  // ---------- the order ----------
+  // the year in a date as a catalogue writes it (2001, c. 1935, 1935-40, 20 Nov 2019), or null
+  L.year = function (d) { var m = /(?:^|\D)(\d{4})(?!\d)/.exec(String(d == null ? '' : d)); return m ? +m[1] : null; };
+  // the name a first author is filed under: before the comma of "Surname, First", or the last word
+  L.surname = function (a) {
+    var first = String(a == null ? '' : a).split(/\s*(?:;|&|\band\b|\bwith\b)\s*/)[0].trim();
+    if (first.indexOf(',') > 0) return first.split(',')[0].trim();
+    var w = first.split(/\s+/);
+    return w[w.length - 1] || '';
+  };
+  // the title as filed: without an opening article or quotation mark
+  function titleKey(t) { return String(t == null ? '' : t).replace(/^[\s"'“‘«(\[]+/, '').replace(/^(the|an?|le|la|les|der|die|das)\s+/i, ''); }
+  var AZ = root.Intl && Intl.Collator ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare : function (a, b) { return a < b ? -1 : a > b ? 1 : 0; };
+  L.sorted = function (items, order) {
+    var byTitle = function (a, b) { return AZ(titleKey(a.title), titleKey(b.title)); };
+    // what has no value for this order goes after what has
+    function by(key, then) { return function (a, b) { var x = key(a), y = key(b); if (!x !== !y) return x ? -1 : 1; return (x && AZ(x, y)) || then(a, b); }; }
+    function byYear(sign) { return function (a, b) { var x = L.year(a.date), y = L.year(b.date); if ((x == null) !== (y == null)) return x == null ? 1 : -1; return (x == null ? 0 : sign * (x - y)) || byTitle(a, b); }; }
+    var fn = order === 'title' ? byTitle : order === 'new' ? byYear(-1) : order === 'old' ? byYear(1) :
+      order === 'kind' ? by(function (e) { return e.kind; }, byTitle) : order === 'lang' ? by(function (e) { return e.lang; }, byTitle) :
+      order === 'author' ? by(function (e) { return L.surname(e.author); }, byYear(1)) : null;
+    return fn ? items.slice().sort(fn) : items.slice();
+  };
+  var ORDERS = [['author', 'Author'], ['title', 'Title'], ['new', 'Date, newest first'], ['old', 'Date, oldest first'], ['kind', 'Kind'], ['lang', 'Language'], ['listed', 'As listed']];
+
+  // ---------- covers ----------
+  // what a cover is drawn as: a kind's own word first, then what the file is
+  var FAMILY = { book: 'book', monograph: 'book', edition: 'book', 'edited volume': 'book', anthology: 'book', 'parallel text': 'book', translation: 'book', thesis: 'thesis', dissertation: 'thesis',
+    article: 'article', paper: 'article', essay: 'article', review: 'article', report: 'article', chapter: 'chapter', letter: 'letter', correspondence: 'letter',
+    podcast: 'audio', interview: 'audio', radio: 'audio', recording: 'audio', talk: 'talk', lecture: 'talk', keynote: 'talk', seminar: 'talk',
+    documentary: 'film', film: 'film', video: 'film', 'web page': 'web', webpage: 'web', website: 'web', blog: 'web', 'blog post': 'web', site: 'web' };
+  L.family = function (e) {
+    var f = FAMILY[String(e.kind || '').trim().toLowerCase()];
+    if (f) return f;
+    var k = e.file ? kindOfFile(e.file) : '';
+    return k === 'audio' ? 'audio' : k === 'video' ? 'film' : k === 'pdf' || k === 'text' || k === 'md' ? 'article' : k === 'html' ? 'web' : !e.file && e.url && !e.kind ? 'web' : 'other';
+  };
+  var GLYPH = {
+    book: '<path d="M6 3h11a2 2 0 0 1 2 2v14H8a2 2 0 0 0-2 2zM6 21a2 2 0 0 1 0-4h13"/>',
+    thesis: '<path d="M2 9l10-5 10 5-10 5zM6 11.5V16c2 2 10 2 12 0v-4.5M22 9v6"/>',
+    article: '<path d="M6 2h9l4 4v16H6zM15 2v4h4M9 11h7M9 14h7M9 17h5"/>',
+    chapter: '<path d="M12 6c-2-2-5-2-9-2v15c4 0 7 0 9 2 2-2 5-2 9-2V4c-4 0-7 0-9 2zM12 6v15"/>',
+    letter: '<path d="M3 5h18v14H3zM3 6l9 7 9-7"/>',
+    audio: '<path d="M9 3h6v11H9zM5 11v3a7 7 0 0 0 14 0v-3M12 21v-3"/>',
+    talk: '<path d="M4 4h16v11H9l-5 5z"/>',
+    film: '<path d="M3 4h18v16H3zM8 4v16M16 4v16M3 9h5M3 15h5M16 9h5M16 15h5"/>',
+    web: '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+    other: '<path d="M3 7h6l2 2h10v11H3z"/>'
+  };
+  function glyph(f) { return '<svg class="lib-glyph" viewBox="0 0 24 24" aria-hidden="true">' + (GLYPH[f] || GLYPH.other) + '</svg>'; }
+  // the entry's own picture, where it has one a reader may be shown
+  function thumbOf(e) { return e.thumb || (e.file && !isPrivate(e) && kindOfFile(e.file) === 'image' ? e.file : ''); }
+  var CLOTH = ['#1f3a5f', '#6b1e2b', '#23493a', '#4a3b6b', '#3d4a52', '#7a4a12', '#0f5e63', '#2c2c2c'];
+  function cloth(id) { var h = 0; String(id).split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return CLOTH[h % CLOTH.length]; }
+  function host(u) { var m = /^https?:\/\/(?:www\.)?([^/]+)/i.exec(u || ''); return m ? m[1] : ''; }
+  function coverOf(e) {
+    var f = L.family(e), who = e.author ? '<span class="lib-c-a">' + esc(e.author) + '</span>' : '';
+    var word = f === 'book' ? '' : '<span class="lib-c-k">' + glyph(f) + esc(e.kind || (f === 'web' ? 'web page' : f === 'audio' ? 'audio' : f === 'film' ? 'film' : '')) + '</span>';
+    return '<span class="lib-cover lib-c-' + f + '" aria-hidden="true"' + (f === 'book' || f === 'thesis' ? ' style="--cloth:' + (f === 'thesis' ? '#22262b' : cloth(e.id)) + '"' : '') + '>' +
+      (f === 'web' ? '<span class="lib-c-chrome"><i></i><i></i><i></i></span>' : '') + word +
+      '<span class="lib-c-t">' + esc(e.title) + '</span>' + (f === 'web' && !e.author && host(e.url) ? '<span class="lib-c-a">' + esc(host(e.url)) + '</span>' : who) + '</span>';
+  }
+  // a picture that will not load leaves the drawn cover under it
+  function tile(e) {
+    var pic = thumbOf(e), said = [e.title, e.author, e.date, e.kind].filter(Boolean).join(', ');
+    return '<button class="lib-tile" data-lib="' + esc(e.id) + '" title="' + esc(said) + '" aria-label="' + esc(said + '. ' + heldAs(e)) + '">' +
+      '<span class="lib-stand">' + coverOf(e) + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + '</span>' +
+      '<span class="lib-cap">' + (pic ? '<span class="lib-t">' + esc(e.title) + '</span>' : '') +
+      '<span class="lib-m">' + [e.author, L.year(e.date) || e.date].filter(Boolean).map(esc).join(', ') + '</span>' +
+      '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></span></button>';
+  }
+  function row(e) {
+    var pic = thumbOf(e);
+    return '<button class="lib-row" data-lib="' + esc(e.id) + '"><span class="lib-mini lib-c-' + L.family(e) + '">' + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : glyph(L.family(e))) + '</span>' +
+      '<span class="lib-t">' + esc(e.title) + '</span><span class="lib-m">' + meta(e) + '</span>' +
+      '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></button>';
+  }
   function rows() {
     var q = F.q.toLowerCase();
     return L.items().filter(function (e) {
@@ -280,14 +370,12 @@
       return true;
     });
   }
+  function setting(key, name, v) { F[key] = v; SW.store.set('library.' + name, v); }
   function list(view) {
     var box = SW.$('.lib-list', view); if (!box) return;
-    var rs = rows();
-    box.innerHTML = rs.length ? rs.map(function (e) {
-      return '<button class="lib-row" data-lib="' + esc(e.id) + '"><span class="lib-t">' + esc(e.title) + '</span><span class="lib-m">' + meta(e) + '</span>' +
-        '<span class="lib-h ' + (isPrivate(e) ? 'group' : e.file ? 'held' : 'out') + '">' + (isPrivate(e) ? 'For the group' + (L.member() ? '' : e.url ? ' · link out ↗' : ' · record') : e.file ? 'Held here' : 'Link out ↗') +
-        (e.file && (!isPrivate(e) || L.member()) && kindOfFile(e.file) !== 'file' ? ' · ' + kindOfFile(e.file).toUpperCase() : '') + (isAdded(e) ? ' · Added, not yet public' : '') + '</span></button>';
-    }).join('') : '<p class="hint pad">Nothing in the library answers the search.</p>';
+    var rs = L.sorted(rows(), F.order), icons = F.view !== 'list';
+    box.classList.toggle('lib-shelf', icons);
+    box.innerHTML = rs.length ? rs.map(icons ? tile : row).join('') : '<p class="hint pad">Nothing in the library answers the search.</p>';
     var n = SW.$('.lib-n', view); if (n) n.textContent = rs.length + ' of ' + L.items().length;
   }
   function draw() {
@@ -300,6 +388,8 @@
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held here']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Links out']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
         (kinds.length > 1 ? '<select class="lib-kind" aria-label="Kind"><option value="">Every kind</option>' + kinds.sort().map(function (k) { return '<option' + (k === F.kind ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>' : '') +
+        '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+        '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button></span>' +
         '<span class="lib-n faint"></span>' + (L.member() ? '<button class="btn lib-add">＋ Add a work</button>' : '') + '</div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
         '<p class="hint lib-size" hidden></p><div class="lib-list"></div></div>';
@@ -316,11 +406,15 @@
         view.libFor = L;
         view.addEventListener('click', function (ev) {
           if (ev.target.closest('.lib-add')) { L.form(); return; }
+          var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
           var s = ev.target.closest('[data-show]'); if (s) { F.show = s.dataset.show; SW.$$('[data-show]', view).forEach(function (b) { b.classList.toggle('on', b === s); }); list(view); return; }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
         });
       }
       var k = SW.$('.lib-kind', view); if (k) k.addEventListener('change', function () { F.kind = k.value; list(view); });
+      var o = SW.$('.lib-order select', view); o.addEventListener('change', function () { setting('order', 'order', o.value); list(view); });
+      // a picture that will not load: the drawn cover under it, or the row's mark
+      SW.$('.lib-list', view).addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-thumb')) ev.target.remove(); }, true);
       if (Q0.lib) { var id = Q0.lib; Q0.lib = null; L.open(id); }
     }, function (e) { view.innerHTML = '<p class="pad badge err">' + esc(e.message) + '</p>'; });
   }
