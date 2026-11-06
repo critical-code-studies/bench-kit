@@ -62,9 +62,6 @@ button.badge.err { cursor: pointer; font: inherit; }
 .legend span[title] { cursor: help; }
 
 /* ---------- top bar ---------- */
-.brand-name { display: inline-flex; flex-direction: column; gap: 3px; }
-
-.brand-name b { margin-left: 0; }
 .bar-right { margin-left: auto; }
 
 /* ---------- the language, beside the picker ---------- */
