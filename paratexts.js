@@ -33,11 +33,15 @@
     if (body) h['Content-Type'] = 'application/json';
     return fetch(API + path, { method: method, headers: h, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }).then(function (r) {
       if (r.ok) return accept === 'application/vnd.github.raw' ? r.blob() : r.status === 204 ? null : r.json();
+      function fail(said) {
       var why = r.status === 401 ? 'The GitHub token was refused: make a new one (Help ▸ Joining the annotation group, the GitHub steps).' :
         r.status === 403 ? 'GitHub refused: the token can read but not write. In the token’s settings on GitHub, Repository permissions ▸ Contents must be Read and write (or the rate limit is reached).' :
         r.status === 404 ? 'The token cannot reach ' + REPO + '. Check, in order: the invitation to ' + ORG + ' accepted; the token’s resource owner is ' + ORG + '; ' + RNAME + ' chosen under Only select repositories' + (BP.approval ? '; the token approved by a project lead' : '') + '. Help ▸ Joining the annotation group has each step.' :
+        /too large/i.test(said) ? 'GitHub refused this file as too large to take through its API. It can go in through git, up to 100 MB.' :
         r.status === 409 || r.status === 422 ? 'conflict' : 'GitHub: ' + r.status;
       var e = new Error(why); e.status = r.status; throw e;
+      }
+      return r.status === 422 ? r.text().then(fail) : fail('');
     });
   }
   function b64utf8(s) { var b = new TextEncoder().encode(s), t = ''; for (var i = 0; i < b.length; i += 0x8000) t += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(t); }
@@ -1766,7 +1770,7 @@
     var into = coll(F.c);
     d.innerHTML = '<div class="tray-bighead"><b>Add an item</b><span class="refhelp-acts"><button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>' +
       '<div class="px-seg px-addmode"><button class="on" data-mode="file">A file</button><button data-mode="link">A link</button><button data-mode="missing" title="Something known to have existed that the archive holds no copy of and no link to">Missing</button></div>' +
-      '<label class="px-drop"><input type="file" class="px-file"><span>Choose a file, or drop one here: a scan, photograph, PDF, text, audio or video (up to 50 MB).</span></label>' +
+      '<label class="px-drop"><input type="file" class="px-file"><span>Choose a file, or drop one here: a scan, photograph, PDF, text, audio or video (up to 40 MB).</span></label>' +
       '<div class="px-linkin" hidden><label><span>Link</span><input class="px-url" type="url" placeholder="https://… a YouTube, Vimeo or Internet Archive recording, an audio or video file, or a page"></label>' +
       '<label><span>Shows as</span><select class="px-lkind" title="How the bench shows it from where it is held"><option value="">— choose —</option><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option><option value="pdf">PDF</option><option value="text">Text file</option><option value="software">Code</option><option value="link">Web page or document</option><option value="other">Other</option></select></label>' +
       '<p class="hint">Catalogued with nothing copied: it plays or shows here from where it is held.</p></div>' +
@@ -1848,7 +1852,7 @@
         return;
       }
       if (!file) { msg.textContent = 'Choose a file first.'; return; }
-      if (file.size > 50e6) { msg.textContent = 'Too large for the repository (50 MB at most).'; return; }
+      if (file.size > 40e6) { msg.textContent = 'Too large to add from here (40 MB at most). It can go in through git, up to 100 MB.'; return; }
       if (!o.title) { msg.textContent = 'Give it a title.'; return; }
       var dupF = (cat ? cat.items : []).filter(function (x) { return !x.withdrawn && x.size === file.size && (x.name || '').toLowerCase() === file.name.toLowerCase(); })[0];
       if (dupF && !a.dataset.again) { a.dataset.again = 1; msg.textContent = 'A file of this name and size is held as ' + dupF.code + ' (' + dupF.title + '). Upload again to add it anyway.'; return; }

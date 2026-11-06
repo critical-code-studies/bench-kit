@@ -24,6 +24,8 @@ What making and keeping the Spacewar!, SHRDLU, ELIZA, Melville and CCSbench benc
 
 ## Public and private
 
+- **GitHub's limits are measured, not read off.** It publishes no figure for what its contents API takes. On 2026-11-06 it took 41.5 MB and refused 42 MB, so the kit's 50 MB, in Paratexts since the start, was wrong for anything between. A stand-in for GitHub accepts whatever a test gives it: the limit, GitHub's 409 to commits made together, and the lag in its size figure were found only on real GitHub. `docs/library.md` has the figures.
+
 - **No private URLs or repository names in public repositories**, READMEs and examples included. The mallette README once named the benches' private repositories, and the repository had to be deleted and made again. (mallette, 2026-11.)
 - **Secondary literature in the Library, evidence in Paratexts.** Evidence is the material from or about the subject that the group studies. A work is public in the Library only if it is under a CC licence or freely distributable. A work the group holds otherwise is on the private shelf, with a public record that says so; a work not held is a record with a link out. `docs/library.md` is the guide. (Spacewar, 2026-11-06.)
 - **A copy kept as a paratext is found from the private side.** The paratext names the entry, so the public list does not name the paratext. (Melville, 2026-11-05.)

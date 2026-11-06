@@ -101,7 +101,7 @@
         var big = new File(['x'], 'big.mp4'); Object.defineProperty(big, 'size', { value: 6e7 });
         return refused(L.add({ title: 'Too big' }, big));
       }).then(function (m) {
-        T.yes('over 50 MB: refused', /50 MB/.test(m || ''));
+        T.yes('over 40 MB: refused', /40 MB/.test(m || ''));
         T.eq('and none of these wrote anything', puts, []);
         return L.add({ title: ' A stub ', url: 'https://example.org/stub', tags: ['one', ' ', 'two'], stray: 'dropped' });
       }).then(function (id) {
@@ -121,6 +121,27 @@
         conflicts = 1;
         var before = addsIn().length;
         return L.add({ title: 'Someone saved in between' }).then(function () { T.eq('a conflict: made again on the newest copy', addsIn().length, before + 1); return id; });
+      }).then(function (id) {
+        // GitHub's 409 to a commit made while another goes through, on the file as well as the record
+        conflicts = 1; puts.length = 0;
+        return L.add({ title: 'Someone committing' }, new File(['pdf'], 'a.pdf')).then(function (id2) {
+          T.yes('a 409 on the file: sent again', puts.length === 3 && puts[0] === puts[1] && !!repo['library/' + id2 + '.pdf']);
+          return id;
+        });
+      }).then(function (id) {
+        // GitHub's words for a file over its limit, with no upload to take back and nothing retried
+        var f1 = window.fetch, tried = 0;
+        window.fetch = function (u, o) {
+          if (o && o.method === 'PUT' && /\.bin$/.test(String(u))) { tried++; return json({ message: 'Sorry, the file is too large to be processed.' }, 422); }
+          return f1.apply(window, arguments);
+        };
+        return refused(L.add({ title: 'Near the limit' }, new File(['x'], 'near.bin'))).then(function (m) {
+          window.fetch = f1;
+          T.yes('too large for GitHub: said so, not a conflict', /too large/.test(m || '') && !/conflict/.test(m));
+          T.eq('and not sent again', tried, 1);
+          T.eq('and no record', addsIn().some(function (x) { return x.title === 'Near the limit'; }), false);
+          return id;
+        });
       }).then(function (id) {
         // a record that cannot be saved takes its upload back
         var saved = repo['library/additions.json']; repo['library/additions.json'] = saved;

@@ -69,11 +69,11 @@ Where the page is at the top of the repository, the same tools run as `node kit/
 
 A box shows PDF, text, Markdown, HTML, images, audio and video; any other file can be downloaded. A private file is read whole through GitHub before it opens, and GitHub holds no file over 100 MB. GitHub Pages limits a published site to 1 GB, so check the size of `library/files/` before pushing.
 
-Members see the private repository's size above the list, with a warning above 800 MB. Moving or deleting a file within the repository does not reduce that size, since the history keeps the file. Reducing it means rewriting the history or starting a new repository, which is a decision for the person running the bench.
+Members see the private repository's size above the list, with a warning above 800 MB. The figure is GitHub's and can lag: in a trial on 2026-11-06 it read 0 for a repository that had taken about 1 GB in the half-hour before. Moving or deleting a file within the repository does not reduce that size, since the history keeps the file. Reducing it means rewriting the history or starting a new repository, which is a decision for the person running the bench.
 
 ## Adding from the bench
 
-A member with a token has **＋ Add a work** on the Library tab: a record, with a copy of the work or without. A member's token reaches the private repository only, so the entry goes in `library/additions.json` there, and a copy beside it as `library/<id>.<ext>`. Members see additions in the list at once, marked as not yet public, and can correct or remove them. Nobody else sees them. The token needs Contents read and write, as Paratexts asks. A copy added from the bench is limited to 50 MB; a larger one goes in through git, up to GitHub's 100 MB.
+A member with a token has **＋ Add a work** on the Library tab: a record, with a copy of the work or without. A member's token reaches the private repository only, so the entry goes in `library/additions.json` there, and a copy beside it as `library/<id>.<ext>`. Members see additions in the list at once, marked as not yet public, and can correct or remove them. Nobody else sees them. The token needs Contents read and write, as Paratexts asks. A copy added from the bench is limited to 40 MB, since GitHub's API took 41.5 MB and refused 42 MB in a trial on 2026-11-06; a larger one goes in through git, up to GitHub's 100 MB. GitHub also answered 502 to one of 31 uploads near 40 MB in that trial, and left nothing behind; the member is told to try again. Five members saving at the same moment all got through; of ten, three were told to try again and nothing was lost.
 
 The person running the bench publishes additions to the public list, from a clone of the private repository:
 

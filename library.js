@@ -38,7 +38,7 @@
  * Members see the private repository's size above the list (GitHub works badly above about 1 GB).
  * Additions: a member adds a work from the tab (＋ Add a work), with a copy of it or without. A member's
  * token reaches the private repository only, so the entry goes in its library/additions.json ({ items })
- * and any copy beside it (library/<id>.<ext>, 50 MB at most). Members see additions in the list at once,
+ * and any copy beside it (library/<id>.<ext>, 40 MB at most). Members see additions in the list at once,
  * and may correct or remove them there; nobody else sees them. tools/library-publish.js brings them into
  * the public manifest, when the person running the bench chooses.
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), size(), add(record, file),
@@ -84,14 +84,28 @@
       .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { return j && j.size != null ? j.size * 1024 : null; }, function () { return null; }));
   };
   // ---------- additions, in the private repository, with the member's token ----------
-  var ADD = 'library/additions.json', MAXUP = 50e6;
+  // GitHub's API took 41.5 MB and refused 42 MB in a trial on 2026-11-06; it publishes no figure
+  var ADD = 'library/additions.json', MAXUP = 40e6, TRIES = 6, BUSY = 'Others were saving to the private repository at the same moment. Try again';
   function gh(method, path, body) {
     var h = { Authorization: 'Bearer ' + tokenOf(), Accept: 'application/vnd.github+json' };
     if (body) h['Content-Type'] = 'application/json';
     return fetch('https://api.github.com/repos/' + L.privateRepo() + '/contents/' + String(path).split('/').map(encodeURIComponent).join('/'), { method: method, headers: h, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }).then(function (r) {
       if (r.ok) return r.json();
-      var e = new Error(r.status === 401 ? 'GitHub refused your token; make it again (⚙ Settings)' : r.status === 403 ? 'GitHub refused: your token can read the private repository but not write to it' : r.status === 404 ? 'your token cannot reach the private repository, or it does not hold this' : r.status === 409 || r.status === 422 ? 'conflict' : 'GitHub answered ' + r.status);
-      e.status = r.status; throw e;
+      function fail(said) {
+        var e = new Error(r.status === 401 ? 'GitHub refused your token; make it again (⚙ Settings)' : r.status === 403 ? 'GitHub refused: your token can read the private repository but not write to it' : r.status === 404 ? 'your token cannot reach the private repository, or it does not hold this' : /too large/i.test(said) ? 'GitHub refused this file as too large to take through its API. It can go in through git, up to 100 MB' : r.status === 409 || r.status === 422 ? 'conflict' : r.status >= 500 ? 'GitHub did not finish this (it answered ' + r.status + '). Try again' : 'GitHub answered ' + r.status);
+        e.status = r.status; throw e;
+      }
+      return r.status === 422 ? r.text().then(fail) : fail('');
+    });
+  }
+  // GitHub answers 409 to a commit made while another is going through: wait a moment, longer each time, at a different moment from the others
+  function pause(tries) { return new Promise(function (ok) { setTimeout(ok, (tries + Math.random()) * 400); }); }
+  function write(method, path, body, tries) {
+    tries = tries || 0;
+    return gh(method, path, body).catch(function (e) {
+      if (e.status !== 409) throw e;
+      if (tries + 1 >= TRIES) throw new Error(BUSY);
+      return pause(tries + 1).then(function () { return write(method, path, body, tries + 1); });
     });
   }
   function b64utf8(s) { var b = new TextEncoder().encode(s), t = ''; for (var i = 0; i < b.length; i += 0x8000) t += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(t); }
@@ -118,8 +132,9 @@
       if (c.sha) body.sha = c.sha;
       return gh('PUT', ADD, body).then(function () { return setAdds(c.items); });
     }).catch(function (e) {
-      if (e.message === 'conflict' && tries < 3) return saveAdds(message, change, tries + 1);
-      throw e;
+      if (e.message !== 'conflict') throw e;
+      if (tries + 1 >= TRIES) throw new Error(BUSY);
+      return pause(tries + 1).then(function () { return saveAdds(message, change, tries + 1); });
     });
   }
   function isAdded(e) { return !!man && (man.adds || []).indexOf(e) >= 0; }
@@ -142,7 +157,7 @@
   L.add = function (record, file) {
     return new Promise(function (ok) { ok(cleaned(record)); }).then(function (o) {
       if (!L.member()) throw new Error('Adding to the library needs a GitHub token (⚙ Settings)');
-      if (file && file.size > MAXUP) throw new Error('Too large to add from here (50 MB at most)');
+      if (file && file.size > MAXUP) throw new Error('Too large to add from here (40 MB at most)');
       return L.load().then(function () {
         var id = newId(), x = file ? (String(file.name).match(/\.[A-Za-z0-9]+$/) || [''])[0].toLowerCase() : '', path = 'library/' + id + x;
         var entry = Object.assign({ id: id }, o, file ? { shelf: 'private', file: path } : {}, { added: Object.assign(who() === '?' ? {} : { by: who() }, { date: new Date().toISOString().slice(0, 10) }) });
@@ -151,11 +166,11 @@
           return saveAdds(message, function (items) { items.push(entry); }).then(function () { return id; }, function (err) {
             if (!fileSha) throw err;
             // the record could not be saved: the file just uploaded is taken out again
-            return gh('DELETE', path, { message: 'Library ' + id + ': upload taken back, its record not saved', sha: fileSha }).then(function () { throw err; }, function () { throw new Error(err.message + '; the file ' + path + ' stays in the private repository without a record'); });
+            return write('DELETE', path, { message: 'Library ' + id + ': upload taken back, its record not saved', sha: fileSha }).then(function () { throw err; }, function () { throw new Error(err.message + '; the file ' + path + ' stays in the private repository without a record'); });
           });
         }
         if (!file) return record2(null);
-        return fileB64(file).then(function (b64) { return gh('PUT', path, { message: message, content: b64 }); }).then(function (r) { return record2(r && r.content && r.content.sha); });
+        return fileB64(file).then(function (b64) { return write('PUT', path, { message: message, content: b64 }); }).then(function (r) { return record2(r && r.content && r.content.sha); });
       });
     });
   };
@@ -180,7 +195,7 @@
         for (var i = items.length - 1; i >= 0; i--) if (items[i].id === id) items.splice(i, 1);
       }).then(function () {
         if (!file) return id;
-        return gh('GET', file).then(function (r) { return gh('DELETE', file, { message: 'Library ' + id + ': its copy removed by ' + who(), sha: r.sha }); }).then(function () { return id; }, function (err) {
+        return gh('GET', file).then(function (r) { return write('DELETE', file, { message: 'Library ' + id + ': its copy removed by ' + who(), sha: r.sha }); }).then(function () { return id; }, function (err) {
           throw new Error('The entry is removed, but its file ' + file + ' stays in the private repository: ' + err.message);
         });
       });
@@ -199,7 +214,7 @@
       field('url', 'Where it is published (a link)', ' type="url" placeholder="https://"') + field('licence', 'Licence') + field('source', 'Where the copy came from') +
       '<label><span>Tags, with commas</span><input name="tags" value="' + esc((v.tags || []).join(', ')) + '"></label>' +
       '<label class="lib-wide"><span>Note</span><textarea name="note" rows="3">' + esc(v.note || '') + '</textarea></label>' +
-      (e ? '' : '<label class="lib-wide"><span>A copy, if the group holds one (50 MB at most)</span><input name="file" type="file"></label>') +
+      (e ? '' : '<label class="lib-wide"><span>A copy, if the group holds one (40 MB at most)</span><input name="file" type="file"></label>') +
       '</div><datalist id="lib-kinds">' + kinds.sort().map(function (k) { return '<option value="' + esc(k) + '">'; }).join('') + '</datalist>' +
       '<div class="lib-acts"><button class="btn" data-a="save">' + (e ? 'Save' : 'Add') + '</button><span class="lib-msg hint" role="status"></span></div>';
     document.body.appendChild(d);
