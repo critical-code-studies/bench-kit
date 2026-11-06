@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.99.0 (2026-11-06)
 
 - Help ▾ now says **Getting set up**, as the guide it opens has since 0.97.0 (SHRDLU's report), and so do the messages that point to it.
 - **Genealogy is off unless a bench sets `genealogy: { on: true }`** (David, 2026-11-06: it "needs fine tuning for each bench", and Spacewar is where it works). A bench moving to this version loses Genealogy from Versions ▾ unless it adds `on: true`. Collate is unchanged, and a link to `tab=genealogy` still opens the view, so a tour's stop or a cited link does not break.
