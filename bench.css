@@ -1231,7 +1231,7 @@ ul.reading a { overflow-wrap: anywhere; }
 .folder-chip:hover { background: var(--surface); }
 
 /* kit/library.js: the Library, and an entry in a box over the bench */
-#view-library .lib { padding: 16px clamp(12px, 3vw, 32px) 80px; max-width: 72em; }
+#view-library .lib { padding: 16px clamp(12px, 3vw, 32px) 80px; }
 #view-library .lib h2 { margin: 0 0 6px; }
 .lib-intro { color: var(--text-dim); margin: 0 0 12px; max-width: 48em; }
 .lib-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }

@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- The Library stretches to the full width of the browser (David, 2026-11-06).
+- `docs/library.md` names the citation-only stub (David's rule, through ELIZA): a work with no link and no file keeps its record and citation.
+
 ## 1.1.0 (2026-11-06)
 
 - **A linked work plays in the Library's box** (David, 2026-11-06, through Spacewar: "youtube links can be embedded"). YouTube, Vimeo and the Internet Archive, through the function Paratexts used, now `SW.embedPlayer` in `base.js`. Where a file opens, the file comes first and ▶ Play from… opens the player beside it.

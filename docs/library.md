@@ -19,6 +19,8 @@ Where a work could be either, the person running the bench decides. Whether a wo
 
 `url`, where the work is published, is optional on all three. An entry needs only `id` and `title`.
 
+A work with no link and no file is a stub: its record and its citation, tagged **Record only**. A published work the group holds only in its private archive can be listed this way, without its paratext code or archive details.
+
 A member with a token opens a private file in the same box. The manifest is public, so a private entry's record, shelf and file path can be read by anyone, and the list shows that the group holds the work. File names on the private shelf are public for that reason.
 
 ## Two folders called library
