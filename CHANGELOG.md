@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.0.0 (2026-11-06)
 
 - **Edit's Beside: Image, Literal, Off** (David, 2026-11-06). Off gives the text alone, at a reading width; the choice is kept (`edit.beside`). The image and the text stay side by side down to phone width. Fixed: switching Beside after scrolling lost the page's image.
 - **Book's images button** (David, 2026-11-06): an eye, crossed when the images are hidden, in place of the word Off, which read the same in both states. Images show whenever a page opens, unless a link says otherwise; the last click is no longer remembered (`book.imgon` is no longer read).
