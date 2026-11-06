@@ -99,7 +99,7 @@
     },
     compare: { comment: '', normalised: false, reading: 'Reading', modes: ['text'] },
     comparePrefix: 'Example Translation: ',
-    genealogy: { set: ['literal', 'translation'], line: 'main', lineNames: { main: 'Source, literal, translation' } },
+    genealogy: { set: ['literal', 'translation'], line: 'main', lineNames: { main: 'Source, literal, translation' } },   // on: true puts it in Versions ▾; its readings need tuning for each bench
     // the group's one private repository: the Library's private shelf (its library/ folder), and Paratexts
     // (documents about the work: reviews, letters, photographs, archival records), off until wanted
     paratexts: { org: 'vector-humanities', repo: 'example_paratexts', cache: 'example-paratexts' },   // EDIT: the private repository

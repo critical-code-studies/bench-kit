@@ -14,8 +14,9 @@ For a session asked to start a new bench. Settle these with the person who wants
 
 6. **Public or private, and under which organisation?** critical-code-studies, vector-humanities, or the project's own. A public bench names no private repository anywhere in it.
 7. **Who is in the group?** The Hypothesis group for annotations; for paratexts, a private repository in the organisation, and whether the organisation approves new tokens (`paratexts.approval`).
-8. **What goes in the Library, and what in Paratexts?** Secondary literature in the Library, evidence in Paratexts. In the Library, a work under a CC licence or freely distributable is public; one the group holds otherwise is on the private shelf with a public record; one not held is a record with a link out. `docs/library.md` is the guide.
-9. **Licence and citation.** The bench's own licence (the kit is GPL-3.0), `CITATION.cff` with each author's ORCID, a Zenodo record.
+8. **Does the bench need Genealogy?** It is off unless `genealogy.on` is set. Its readings of descent need tuning for each bench's versions and language, and a bench that turns it on checks what it shows.
+9. **What goes in the Library, and what in Paratexts?** Secondary literature in the Library, evidence in Paratexts. In the Library, a work under a CC licence or freely distributable is public; one the group holds otherwise is on the private shelf with a public record; one not held is a record with a link out. `docs/library.md` is the guide.
+10. **Licence and citation.** The bench's own licence (the kit is GPL-3.0), `CITATION.cff` with each author's ORCID, a Zenodo record.
 
 ## The first release
 

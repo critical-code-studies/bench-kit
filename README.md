@@ -190,7 +190,7 @@ SW.BENCH = {
 | `compare` | `compare.js` | `comment` (the comment mark, for the hover), `normalised` (offer the normalised text), `supplied` ([label, hover] of the supplied-files option), `reading` (the word for building versions), `modes` (the modes offered, of `text`, `constants`, `routines` and `functions`; all by default), `comments: false` (no comment filter; also where `comment` is `false` or `[]`). |
 | `words` | `themes.js`, `settings.js`, `read.js` | The words for the bench's text where it is not code: `text` (the size toast, "Code text"), `font` (Settings, "Code font"), `source` (Read's column heading, "Source"), `collate` (Collate's line in Versions ▾; by default it names the modes the bench offers). |
 | `comparePrefix` | `compare.js` | Before an export's title. |
-| `genealogy` | `compare.js` | `set` (the versions first shown), `line` (the line of descent first shown), `lineNames`. |
+| `genealogy` | `compare.js`, `menus.js` | `on: true` puts Genealogy in Versions ▾; it is off unless a bench sets this, since its readings need tuning for each bench. `set` (the versions first shown), `line` (the line of descent first shown), `lineNames`. With it off, a link to `tab=genealogy` still opens it. |
 | `compareDefs` | `compare.js` | Collate's second mode (hooks, below). |
 | `stemma` | `stemma.js` | `root` (the first version, lost or not), `lostBetween`, `skip`, `lostOnTrunk`. |
 | `edition` | `edition.js` | The reading edition (hooks, below). |

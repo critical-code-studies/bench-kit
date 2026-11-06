@@ -39,13 +39,14 @@
  * tab ('file', 'topics', 'paratexts'), 'menu:pick' one item of a menu ('help:sitemap', 'file:backup',
  * 'text:6' for lens 6 in Text ▾). A submenu or group left empty goes with its items. A view left out
  * of the tab row can still be opened by a link to it. SW.menuOff(which, pick) says whether one is off.
+ * Genealogy is off unless the bench sets genealogy.on.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
   'use strict';
   var SW = root.SW, B = SW.BENCH;
   function H() { return B.menus || {}; }
-  function OFF() { return (B.menusOff || []).map(String); }
+  function OFF() { return (B.menusOff || []).map(String).concat(B.genealogy && B.genealogy.on ? [] : ['versions:genealogy']); }
   SW.menuOff = function (which, pick) { return OFF().indexOf(pick == null ? String(which) : which + ':' + pick) >= 0; };
   function kept(which) { return function (h) { return !SW.menuOff(which, h[0]); }; }
   // the menus and tabs left out of the tab row

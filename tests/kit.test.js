@@ -74,6 +74,16 @@
   });
   eq('octal', [SW.oct(8), SW.oct(8, 2), SW.oct(null), SW.oct(-1, 6)], ['000010', '10', '', '37777777777']);
 
+  T.group('Genealogy');
+  if (window.SW && SW.menuOff) {
+    var genWas = SW.BENCH.genealogy;
+    SW.BENCH.genealogy = { set: [] };
+    T.eq('off unless the bench asks', SW.menuOff('versions', 'genealogy'), true);
+    SW.BENCH.genealogy = { on: true, set: [] };
+    T.eq('on where it does', SW.menuOff('versions', 'genealogy'), false);
+    SW.BENCH.genealogy = genWas;
+  }
+
   T.group('Help menu');
   var keep = SW.BENCH.menus;
   function picks(G) { return G.map(function (g) { return [g[0], g[1].map(function (h) { return h[0]; })]; }); }

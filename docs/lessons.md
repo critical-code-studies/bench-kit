@@ -17,6 +17,8 @@ What making and keeping the Spacewar!, SHRDLU, ELIZA, Melville and CCSbench benc
 
 ## Releasing
 
+- **Genealogy is off until a bench asks for it** (David, 2026-11-06). It reads well on Spacewar, where it was tuned, and less well elsewhere, so a new bench or a kit upgrade does not show it unless `genealogy.on` is set.
+
 - **A feature reaches a bench with guidance.** When the kit ships one, each bench it concerns is told what it is for, what belongs in it, and what to do to adopt it, and the kit's `docs/` holds the same. Spacewar learnt how the Library works, and where it stops, by reading `library.js`. (Spacewar, 2026-11-06.)
 - **Before a release**: the bench's own tests and the kit's (`tools/test.js`), every view (`tools/views.js`), `release.js --check`, and the site map made again. (Every release since 0.80.)
 - **The browser keeps old scripts.** Scripts load with `?v=`, and a page that seems to run old code is usually being served an old copy; fetch the script again before looking for a bug. (Every bench.)

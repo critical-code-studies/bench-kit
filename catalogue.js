@@ -99,7 +99,7 @@
       (C.title ? '<h2>' + C.title + '</h2>' : '') +
       (C.intro ? '<div class="hint flow">' + (typeof C.intro === 'function' ? C.intro(api) : C.intro) + '</div>' : '') +
       (SUBS.length > 1 ? '<div class="cat-subset"><label>Subset <select id="cat-sub">' + SUBS.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === subId ? ' selected' : '') + '>' + esc(x.label) + '</option>'; }).join('') + '</select></label>' +
-        (sub.note ? '<span class="hint flow">' + esc(sub.note) + (sub.line ? ' Versions › Genealogy › Flow follows it.' : '') + '</span>' : '') + '</div>' : '') +
+        (sub.note ? '<span class="hint flow">' + esc(sub.note) + (sub.line && !(SW.menuOff && SW.menuOff('versions', 'genealogy')) ? ' Versions › Genealogy › Flow follows it.' : '') + '</span>' : '') + '</div>' : '') +
       '<div class="cat-filters">' +
         '<input type="search" id="cat-q" placeholder="Find a ' + esc(NOUN) + ', a word, a year" value="' + esc(f.q) + '" aria-label="Find a ' + esc(NOUN) + '">' +
         facetHTML + srcHTML +
