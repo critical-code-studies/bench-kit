@@ -527,12 +527,12 @@ The Library tab shows a project's secondary literature as covers on a shelf, or 
 }
 ```
 
-- **L-001** has a record and a link out, and its cover is drawn from its `kind`.
+- **L-001** has a record and a link, and its cover is drawn from its `kind`.
 - **L-002** shows the image in `thumb` as its cover.
 - **L-003** is held in the bench's `library/files/`, and anyone can open it.
-- **L-004** is held in the private repository's `library/`. A member with a token plays it in the bench; anyone else sees the record and the link out.
+- **L-004** is held in the private repository's `library/`. A member with a token plays it in the bench; anyone else sees the record and the link.
 
-A reader orders either view by author, title, date, kind or language, or as the manifest lists them. `library: { view: 'list', order: 'new' }` sets what a reader sees first. An entry needs only `id` and `title`.
+A `url` on YouTube, Vimeo or the Internet Archive plays in the entry's box. The filters and tags call an entry **Held** (a file here), **For the group** (a file in the private repository) or **Linked** (where it is published). A reader orders either view by author, title, date, kind or language, or as the manifest lists them. `library: { view: 'list', order: 'new' }` sets what a reader sees first. An entry needs only `id` and `title`.
 
 [`docs/library.md`](docs/library.md) is the guide for a bench: what belongs in the Library and what in Paratexts, the three kinds of entry, how to adopt it, covers and order, and how members add to it. Help ▸ The Library is the guide for its readers. `tools/library-move.js` moves paratexts into the Library and back. `tools/library-publish.js` brings what members have added into the public manifest:
 

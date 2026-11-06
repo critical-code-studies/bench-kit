@@ -29,7 +29,9 @@
  *             private one a path in the private repository (library/…); PDF, text (.txt), Markdown
  *             (.md), HTML, an image, audio or video, shown in a box over the bench (a private file is
  *             read whole before it plays, and GitHub holds none over 100 MB)
- *   url       the work where it is published (for an entry without a file, the only way to it)
+ *   url       the work where it is published (for an entry without a file, the only way to it). A YouTube,
+ *             Vimeo or Internet Archive address plays in the box: at once where the entry has no file the
+ *             reader can open, and otherwise on a button below the file
  *   source    where the copy held was found, and when
  *   alts      [{ label, lang, file, shelf }]: other forms of the work (a transcript, a translation), each on
  *             its own shelf, opened below the work in its box; a private one for members only
@@ -273,7 +275,7 @@
   // ---------- the tab ----------
   var tabs = SW.$('#tabs');
   if (tabs && !SW.$('[data-tab="library"]', tabs)) {
-    var btn = SW.el('button', { 'data-tab': 'library', title: 'The secondary literature on the project: held here, or linked to where it is published' }, esc(C.label || 'Library'));
+    var btn = SW.el('button', { 'data-tab': 'library', title: 'The secondary literature on the project: held, or linked to where it is published' }, esc(C.label || 'Library'));
     var after = SW.$('[data-tab="paratexts"], [data-menu="paratexts"]', tabs);
     var before = after ? after.nextSibling : SW.$('[data-menu="versions"], [data-menu="help"]', tabs);
     tabs.insertBefore(btn, before || null);
@@ -343,6 +345,7 @@
   function thumbOf(e) { return e.thumb || (e.file && !isPrivate(e) && kindOfFile(e.file) === 'image' ? e.file : ''); }
   var CLOTH = ['#1f3a5f', '#6b1e2b', '#23493a', '#4a3b6b', '#3d4a52', '#7a4a12', '#0f5e63', '#2c2c2c'];
   function cloth(id) { var h = 0; String(id).split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return CLOTH[h % CLOTH.length]; }
+  function hostName(u) { return /youtu\.?be/i.test(u) ? 'YouTube' : /vimeo/i.test(u) ? 'Vimeo' : /archive\.org/i.test(u) ? 'the Internet Archive' : host(u); }
   function host(u) { var m = /^https?:\/\/(?:www\.)?([^/]+)/i.exec(u || ''); return m ? m[1] : ''; }
   function coverOf(e) {
     var f = L.family(e), who = e.author ? '<span class="lib-c-a">' + esc(e.author) + '</span>' : '';
@@ -444,6 +447,7 @@
         'Click a cover or a row: the record opens in a box over the bench, with its citation (<b>Copy</b> copies it), the file where you can read it, and a link to where it is published.',
         'A work may have other forms, such as a transcript: a button below it opens one under the work, so you can read it while a recording plays.',
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
+        'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
       ['Adding a work', ul([
@@ -501,6 +505,7 @@
       var priv = isPrivate(e), canOpen = !!e.file && (!priv || L.member());
       var k = canOpen ? kindOfFile(e.file) : null, d = SW.el('dialog', { class: 'tray-big lib-dlg' });
       var alts = (e.alts || []).filter(function (a) { return a && a.file && (!isPrivate(a) || L.member()); });
+      var fam = L.family(e), player = e.url && SW.embedPlayer ? SW.embedPlayer(e.url, e.title, fam, 'lib-embed') : null;
       var cite = L.citation(e);
       var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', e.lang], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
@@ -515,19 +520,29 @@
         '<div class="lib-cite"><span class="lib-cite-t">' + cite.html + '</span> <button class="btn ghost" data-a="cite" title="Copy this citation">Copy</button></div>' +
         (rec ? '<dl class="lib-rec">' + rec + '</dl>' : '') +
         (canOpen ? '<div class="lib-file" data-k="' + k + '"><p class="hint">Opening the file…</p></div>' :
-          priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' :
-          '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>') +
-        (alts.length ? '<div class="lib-alts">' + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '');
+          priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' + (player || '') :
+          player || '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>') +
+        (alts.length || (canOpen && player) ? '<div class="lib-alts">' + (canOpen && player ? '<button class="btn ghost" data-play>▶ Play from ' + esc(hostName(e.url)) + '</button>' : '') + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '');
       document.body.appendChild(d);
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
         if (ev.target.closest('[data-a="link"]')) { SW.copyText(SW.permalink({ tab: 'library', lib: e.id }), 'the link'); return; }
         if (ev.target.closest('[data-a="cite"]')) { SW.copyText(cite.text, 'the citation'); return; }
+        var pl = ev.target.closest('[data-play]');
+        if (pl) {
+          var was0 = pl.classList.contains('on');
+          SW.$$('[data-alt], [data-play]', d).forEach(function (b) { b.classList.remove('on'); });
+          // a held recording stops while the other plays
+          SW.$$('.lib-file audio, .lib-file video', d).forEach(function (m) { m.pause(); });
+          SW.$('.lib-alt', d).innerHTML = was0 ? '' : player;
+          if (!was0) pl.classList.add('on');
+          return;
+        }
         var alt = ev.target.closest('[data-alt]');
         if (alt) {
           var a = alts[+alt.dataset.alt], at = SW.$('.lib-alt', d), was = alt.classList.contains('on');
-          SW.$$('[data-alt]', d).forEach(function (b) { b.classList.remove('on'); });
+          SW.$$('[data-alt], [data-play]', d).forEach(function (b) { b.classList.remove('on'); });
           if (was) { at.innerHTML = ''; return; }
           alt.classList.add('on');
           at.innerHTML = '<p class="hint">Opening…</p>';

@@ -52,6 +52,13 @@
       T.eq('a date cited by its year', cite({ title: 'A Talk', kind: 'talk', date: '2020-11-21' }), '(2020) A Talk.');
       T.eq('as written, where it is', cite({ title: 'x', citation: 'By hand.' }), 'By hand.');
       T.yes('and escaped in the page', !/<script/.test(L.citation({ title: '<script>', kind: 'book' }).html));
+      var play = function (u, k) { return SW.embedPlayer(u, 'A title', k, 'lib-embed'); };
+      T.yes('YouTube plays, without its cookies, from its start', /youtube-nocookie\.com\/embed\/abcdefghijk\?start=211/.test(play('https://www.youtube.com/watch?v=abcdefghijk&t=211') || ''));
+      T.yes('a short address too', /embed\/abcdefghijk"/.test(play('https://youtu.be/abcdefghijk') || ''));
+      T.yes('Vimeo', /player\.vimeo\.com\/video\/123/.test(play('https://vimeo.com/123') || ''));
+      T.yes('the Internet Archive', /archive\.org\/embed\/x1/.test(play('https://archive.org/details/x1') || ''));
+      T.eq('any other address does not', play('https://example.org/a'), null);
+      T.yes('in the frame class it is given', /class="lib-embed"/.test(play('https://vimeo.com/123') || ''));
       T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
       T.eq('or from the file', [{ file: 'a.mp3' }, { file: 'a.webm' }, { file: 'a.pdf' }, { url: 'https://example.org' }].map(L.family), ['audio', 'film', 'article', 'web']);
     }
@@ -132,7 +139,8 @@
       T.group('Library: the box');
       var was1 = B.library, Lm = null;
       B.library = { items: [{ id: 'P-AAAAA', title: 'A talk', author: 'A. Speaker', contributor: 'B. Host', date: '2020', kind: 'talk', file: 'library/files/t.mp3', url: 'https://example.org/t',
-        alts: [{ label: 'Open', lang: 'en', file: 'data:text/plain,hello.txt' }, { label: 'Held back', file: 'library/t1.md', shelf: 'private' }] }], private: { org: 'group', repo: 'archive' } };
+        alts: [{ label: 'Open', lang: 'en', file: 'data:text/plain,hello.txt' }, { label: 'Held back', file: 'library/t1.md', shelf: 'private' }] },
+        { id: 'P-LINK1', title: 'A linked film', kind: 'film', url: 'https://vimeo.com/123' }, { id: 'P-BOTH1', title: 'Both', kind: 'talk', file: 'library/files/b.mp3', url: 'https://vimeo.com/456' }], private: { org: 'group', repo: 'archive' } };
       return load().then(function () { Lm = SW.library; return Lm.load(); }).then(function () {
         T.yes('it has the code', Lm.has('P-AAAAA'));
         T.eq('and no other', Lm.has('P-BBBBB'), false);
@@ -143,6 +151,25 @@
         T.yes('with Copy', d.querySelector('[data-a="cite"]'));
         T.yes('a contributor in the record', /B\. Host/.test(d.querySelector('.lib-rec').textContent));
         T.eq('without a token, only the public form', Array.prototype.map.call(d.querySelectorAll('[data-alt]'), function (b) { return b.textContent; }), ['Open']);
+        T.eq('a link that does not play: no player', d.querySelectorAll('iframe.lib-embed').length, 0);
+        d.close();
+        return Lm.open('P-LINK1');
+      }).then(function () { return wait(30); }).then(function () {
+        var d = box();
+        T.yes('a linked work plays at once', d.querySelector('iframe.lib-embed'));
+        T.yes('with its link still there', d.querySelector('a[href^="https://vimeo.com/"]'));
+        d.close();
+        return Lm.open('P-BOTH1');
+      }).then(function () { return wait(30); }).then(function () {
+        var d = box();
+        T.eq('a held file first, no player yet', d.querySelectorAll('iframe.lib-embed').length, 0);
+        T.yes('the file plays', d.querySelector('.lib-file audio'));
+        var p = d.querySelector('[data-play]');
+        T.yes('a button for the player', p && /Vimeo/.test(p.textContent));
+        p.click();
+        T.yes('which opens it below the file', d.querySelector('.lib-alt iframe.lib-embed'));
+        p.click();
+        T.eq('and closes it', d.querySelectorAll('iframe.lib-embed').length, 0);
         d.close();
         B.library = was1;
         T.group('Library: audio and video');

@@ -82,6 +82,19 @@
   SW.today = function () { return new Date().toISOString().slice(0, 10); };
   SW.slug = function (s) { return String(s).toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/g, ''); };
 
+  // A link played where it lives, in its own player: YouTube (without its cookies), Vimeo and the Internet
+  // Archive. The player's HTML, or null for any other address. cls: the class of the frame.
+  SW.embedPlayer = function (url, title, kind, cls) {
+    var esc = SW.esc, m;
+    url = String(url || '');
+    if ((m = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/.exec(url))) {
+      var t = /[?&]t=(\d+)/.exec(url);
+      return '<iframe class="' + cls + '" src="https://www.youtube-nocookie.com/embed/' + m[1] + (t ? '?start=' + t[1] : '') + '" title="' + esc(title) + '" allow="fullscreen; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+    }
+    if ((m = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url))) return '<iframe class="' + cls + '" src="https://player.vimeo.com/video/' + m[1] + '" title="' + esc(title) + '" allow="fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+    if ((m = /archive\.org\/(?:details|embed)\/([^/?#]+)/.exec(url))) return '<iframe class="' + cls + (kind === 'audio' ? ' ' + cls + '-audio' : '') + '" src="https://archive.org/embed/' + esc(m[1]) + '" title="' + esc(title) + '" allow="fullscreen" allowfullscreen loading="lazy"></iframe>';
+    return null;
+  };
   // ---------- storage (always guarded), under the bench's prefix (SW.BENCH.store) ----------
   function pre() { return BEN().store || 'bench.'; }
   SW.store = {

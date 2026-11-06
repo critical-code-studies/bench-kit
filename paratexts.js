@@ -993,13 +993,8 @@
   // A linked item played or shown where it lives: YouTube, Vimeo and the Internet Archive in their own
   // players; a direct audio or video file in the browser's; anything else as a link to it.
   function embedHTML(url, kind, title) {
-    var esc = SW.esc, m;
-    if ((m = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/.exec(url))) {
-      var t = /[?&]t=(\d+)/.exec(url);
-      return '<iframe class="px-embed" src="https://www.youtube-nocookie.com/embed/' + m[1] + (t ? '?start=' + t[1] : '') + '" title="' + esc(title) + '" allow="fullscreen; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>';
-    }
-    if ((m = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url))) return '<iframe class="px-embed" src="https://player.vimeo.com/video/' + m[1] + '" title="' + esc(title) + '" allow="fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
-    if ((m = /archive\.org\/(?:details|embed)\/([^/?#]+)/.exec(url))) return '<iframe class="px-embed' + (kind === 'audio' ? ' px-embed-audio' : '') + '" src="https://archive.org/embed/' + m[1] + '" title="' + esc(title) + '" allow="fullscreen" allowfullscreen loading="lazy"></iframe>';
+    var esc = SW.esc;
+    var played = SW.embedPlayer(url, title, kind, 'px-embed'); if (played) return played;
     if (/\.(mp3|m4a|wav|ogg|oga|flac|aac)(\?|$)/i.test(url) || kind === 'audio' && /\.(mp4|webm)(\?|$)/i.test(url)) return '<audio class="px-audio" controls preload="metadata" src="' + esc(url) + '"></audio>';
     if (/\.(mp4|webm|mov|m4v|ogv)(\?|$)/i.test(url)) return '<video class="px-video" controls preload="metadata" src="' + esc(url) + '"></video>';
     if (kind === 'image') return '<img class="px-linkimg" alt="' + esc(title) + '" src="' + esc(url) + '">';

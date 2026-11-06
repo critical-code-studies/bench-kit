@@ -14,8 +14,8 @@ Where a work could be either, the person running the bench decides. Whether a wo
 | The work | The entry | What a reader without a token sees |
 |---|---|---|
 | Under a CC licence, or freely distributable | `file` in the bench's `library/files/`, `licence` saying which | The file |
-| Held by the group, and neither of those | `shelf: 'private'`, `file` under `library/` in the private repository | The record, a line saying the group keeps a copy, and the link out if there is a `url` |
-| Not held | no `file` | The record, and the link out if there is a `url` |
+| Held by the group, and neither of those | `shelf: 'private'`, `file` under `library/` in the private repository | The record, a line saying the group keeps a copy, and the link if there is a `url` |
+| Not held | no `file` | The record, and the link if there is a `url` |
 
 `url`, where the work is published, is optional on all three. An entry needs only `id` and `title`.
 
@@ -80,6 +80,14 @@ Author order files under the first author's surname: the part before the comma i
 `library: { view: 'list', order: 'new' }` in `js/config.js` sets what a reader sees first: `view` is `icons` or `list`, and `order` is `author`, `title`, `new`, `old`, `kind`, `lang` or `listed`. The default is covers by author. A reader's own choice is kept in that browser.
 
 `README.md` lists an entry's fields. An `id` does not change once published, since links (`?tab=library&lib=<id>`) point at it.
+
+## Terms
+
+The tab calls an entry **Held** where the bench holds its file, **For the group** where the private repository does, and **Linked** where it is only at its `url`.
+
+## Playing a link
+
+A `url` on YouTube (through youtube-nocookie.com, with any `t=` as its start), Vimeo or the Internet Archive plays in the entry's box. Where the reader cannot open a file, the player shows at once. Where a file opens, the file comes first and **▶ Play from…** opens the player below it, and a held recording pauses. The player loads only when it is shown, and it is that site's own: it asks that site for the work, and shows that site's error if the uploader has turned embedding off, with the link still above it.
 
 ## Files and size
 
