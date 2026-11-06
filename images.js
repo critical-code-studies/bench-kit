@@ -13,8 +13,13 @@
  *            gold, as what the bench adds to the author's figure: one gold for every theme (#8f6c00,
  *            4.9:1 on white), since a figure's ground stays white whatever the bench's colours.
  *   Figures come first where the bench has them; images.start: 'pages' for Pages first.
+ * Where the rights allow, a bench holds its own copies (images.held: { thumb, full }, paths with {key} or
+ * {key3}: 'img/full/{key3}.webp'): the thumbnails and the zooming box then come from its files and no
+ * request goes to the library, the box zooming on the one full-size file; a region is still in its pixels.
+ * Otherwise a library's service is asked through a queue (I.makeQueue): a few requests at a time, backing
+ * off and asking again on a failure (a 429), what is on the screen kept, no broken image left.
  * A translation bench makes both files with kit/tools/vt-figures.js.
- * SW.BENCH.images: true, or { label, map, figures: { url, overlays }, intro, credit, labelsNote, start }:
+ * SW.BENCH.images: true, or { label, map, held, figures: { url, overlays } (or { items, labels }, given here), intro, credit, labelsNote, start }:
  *   labelsNote, HTML folded under a figure's key ("About the labels"), with a figure's own labelsNote
  *   before it: why some of the source's writing has no label of its own (a word written a character
  *   at a time along a line has one label). figures.url gives
@@ -35,10 +40,60 @@
   var SW = root.SW, B = SW.BENCH || {};
   var C = B.images === true ? {} : B.images || null;
   var I = SW.images = {};
+  // A library's image service answers too many requests at once with 429. Its images are asked for
+  // through one queue: a few at a time, what the reader has just asked for first. A failure stops the
+  // queue for a while, longer each time, and the request is made again; after o.tries it is given up
+  // (t.fail). A request whose image has left the page is dropped. A task: { start(ok, err), live(), fail(), low }.
+  I.makeQueue = function (o) {
+    o = o || {};
+    var max = o.max || 4, tries = o.tries || 4, wait0 = o.wait || 1500, waitMax = o.waitMax || 30000;
+    var q = [], running = 0, until = 0, strikes = 0, timer = null;
+    function pump() {
+      clearTimeout(timer); timer = null;
+      var now = Date.now();
+      if (now < until) { if (q.length) timer = setTimeout(pump, until - now); return; }
+      while (running < max && q.length && Date.now() >= until) {
+        var t = q.shift();
+        if (!t.live || t.live()) run(t);
+      }
+      if (q.length && !timer && Date.now() < until) timer = setTimeout(pump, until - Date.now());
+    }
+    function run(t) {
+      var settled = false;
+      running++;
+      t.start(function () {
+        if (settled) return; settled = true; running--; strikes = 0; pump();
+      }, function () {
+        if (settled) return; settled = true; running--; strikes++; t.n = (t.n || 0) + 1;
+        until = Date.now() + Math.min(waitMax, wait0 * Math.pow(2, strikes - 1));
+        if (t.n >= tries) { if (t.fail) t.fail(); } else q.unshift(t);
+        pump();
+      });
+    }
+    return { add: function (t) { if (t.low) q.push(t); else q.unshift(t); pump(); }, size: function () { return q.length + running; } };
+  };
+  var Q = I.queue = I.makeQueue();
+  // an image's file asked for through the queue; on failure it has no src, so no broken-image mark
+  function loadInto(img, url, o) {
+    o = o || {};
+    Q.add({ low: o.low, fail: o.fail, live: function () { return img.isConnected && (!o.live || o.live()); }, start: function (ok, err) {
+      img.onload = function () { img.onload = img.onerror = null; ok(); };
+      img.onerror = function () { img.onload = img.onerror = null; img.removeAttribute('src'); if (o.again) o.again(); err(); };
+      img.src = url;
+    } });
+  }
   if (!C || (SW.menuOff && SW.menuOff('images')) || !SW.views) return;
   var esc = SW.esc, FG = C.figures || B.figures || null;
   var Q0 = SW.readQuery ? SW.readQuery() : {};
   function map() { var m = root[C.map || 'SWImages']; return m && m.images ? m : { images: {} }; }
+  // the bench's own copy of an image (images.held), or null: { thumb, full }, from {key} and {key3} (the key
+  // in three figures), or a function (key, entry)
+  function heldOf(key, x) {
+    var h = C.held; if (!h) return null;
+    if (typeof h === 'function') return h(key, x) || null;
+    var k3 = String(key).padStart(3, '0'), f = function (t) { return t ? String(t).split('{key3}').join(k3).split('{key}').join(key) : null; };
+    return { thumb: f(h.thumb), full: f(h.full) };
+  }
 
   // ---------- the tab ----------
   var tabs = SW.$('#tabs');
@@ -55,6 +110,7 @@
   var figs = null;
   I.figures = function () {
     if (figs) return figs;
+    if (FG && FG.items) { FG.items.forEach(function (f) { f.labels = f.overlays === false ? [] : (FG.labels || {})[String(f.file).split('/').pop()] || []; }); return (figs = Promise.resolve(FG.items)); }
     if (!FG || !FG.url) return (figs = Promise.resolve([]));
     var get = function (u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(u + ': ' + r.status); return r.json(); }); };
     figs = Promise.all([get(FG.url), FG.overlays ? get(FG.overlays).catch(function () { return {}; }) : {}]).then(function (r) {
@@ -92,9 +148,10 @@
     if (part === 'pages') {
       var m = map(), keys = Object.keys(m.images);
       box.innerHTML = keys.length ? '<div class="im-grid">' + keys.map(function (k) {
-        var x = m.images[k], u = SW.iiifImage(x, { width: 160 });
-        return '<button class="im-card" data-img="' + esc(k) + '"><img loading="lazy" src="' + esc(u.src) + '" alt=""><span>' + esc(k) + (x.label && x.label !== k ? ' · ' + esc(x.label) : '') + '</span></button>';
+        var x = m.images[k], h = heldOf(k, x), u = h ? (h.thumb || h.full) : x.service ? SW.iiifImage(x, { width: 160 }).src : '';
+        return '<button class="im-card" data-img="' + esc(k) + '"><img ' + (h ? 'loading="lazy" src' : 'data-src') + '="' + esc(u) + '" alt=""><span>' + esc(k) + (x.label && x.label !== k ? ' · ' + esc(x.label) : '') + '</span></button>';
       }).join('') + '</div>' : '<p class="hint pad">The bench has no image map yet (kit/tools/iiif-map.js).</p>';
+      thumbs(box);
       return;
     }
     box.innerHTML = '<p class="hint pad">Reading the figures…</p>';
@@ -103,6 +160,21 @@
         return '<button class="im-card" data-fig="' + esc(f.id) + '"><img loading="lazy" src="' + esc(f.file) + '" alt=""><span><b>Figure ' + esc(f.n != null ? f.n : f.id) + '</b>' + (f.page != null ? ' · p. ' + esc(f.page) : '') + '</span></button>';
       }).join('') + '</div>' : '<p class="hint pad">No figures.</p>';
     }, function (e) { box.innerHTML = '<p class="pad badge err">' + esc(e.message) + '</p>'; });
+  }
+  // Pages' thumbnails: the service's asked for through the queue as they come into view; one that cannot
+  // be had shows its card without a broken image
+  function thumbs(box) {
+    // a held file that cannot be read; one through the queue is asked for again first (it has its own onerror)
+    box.addEventListener('error', function (e) { if (e.target.onerror) return; var c = e.target.closest && e.target.closest('.im-card'); if (c) c.classList.add('im-fail'); }, true);
+    var ask = function (img) {
+      var u = img.dataset.src; if (!u) return;
+      delete img.dataset.src;
+      loadInto(img, u, { low: true, fail: function () { var c = img.closest('.im-card'); if (c) c.classList.add('im-fail'); } });
+    };
+    var imgs = SW.$$('img[data-src]', box);
+    if (!root.IntersectionObserver) { imgs.forEach(ask); return; }
+    var io = new root.IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { io.unobserve(e.target); ask(e.target); } }); }, { rootMargin: '200px' });
+    imgs.forEach(function (img) { io.observe(img); });
   }
   SW.views.images = { show: function () { if (!drawn) { drawn = true; draw(); } } };
 
@@ -117,14 +189,16 @@
     return d;
   }
 
-  // ---------- zooming through a IIIF service's tiles ----------
+  // ---------- zooming: the bench's own copy, or through a IIIF service's tiles ----------
   // el: the box to draw in; x: an image map's entry ({ service, w, h }) or a service's URL; o.region:
-  // x,y,w,h to open at and outline. The whole image first, at a size the service has ready; the tiles
-  // of the scale that suits the zoom, those in view only, over it. Wheel, pinch, drag, + − and 0.
+  // x,y,w,h to open at and outline, in the pixels of the full-size image. o.src: the bench's own full-size
+  // file (o.thumb shown until it comes), and nothing is asked of any service. Otherwise the whole image
+  // first, at a size the service has ready; the tiles of the scale that suits the zoom, those in view only,
+  // over it, through the queue. Wheel, pinch, drag, + − and 0.
   I.zoom = function (el, x, o) {
     o = o || {};
     if (typeof x === 'string') x = { service: x };
-    var svc = String(x.service).replace(/\/$/, ''), W = x.w, H = x.h, tiles = null, s = 1, tx = 0, ty = 0, alive = true;
+    var svc = x.service ? String(x.service).replace(/\/$/, '') : null, W = x.w, H = x.h, tiles = null, s = 1, tx = 0, ty = 0, alive = true;
     el.classList.add('im-zoom');
     el.innerHTML = '<div class="im-plane"><img class="im-base" alt=""><div class="im-tiles"></div><div class="im-roi" hidden></div></div>' +
       '<div class="im-zbtns"><button class="btn ghost" data-z="+" title="Zoom in (+)">+</button><button class="btn ghost" data-z="-" title="Zoom out (−)">−</button><button class="btn ghost" data-z="0" title="The whole image (0)">⤢</button></div>';
@@ -155,12 +229,16 @@
         for (var j = y0; j <= y1; j++) for (var i = x0; i <= x1; i++) {
           var k = sf + '/' + i + '/' + j; keep[k] = 1;
           var rx = i * ts, ry = j * ts, rw = Math.min(ts, W - rx), rh = Math.min(ts, H - ry), t = have[k];
-          if (!t) { t = have[k] = SW.el('img', { alt: '', draggable: 'false' }); t.src = svc + '/' + rx + ',' + ry + ',' + rw + ',' + rh + '/' + Math.ceil(rw / sf) + ',/0/default.jpg'; layer.appendChild(t); }
+          if (!t) { t = have[k] = SW.el('img', { alt: '', draggable: 'false' }); layer.appendChild(t); askTile(t, k, svc + '/' + rx + ',' + ry + ',' + rw + ',' + rh + '/' + Math.ceil(rw / sf) + ',/0/default.jpg'); }
           t.style.left = rx * s + 'px'; t.style.top = ry * s + 'px'; t.style.width = rw * s + 'px'; t.style.height = rh * s + 'px';
         }
         Object.keys(have).forEach(function (k) { if (!keep[k]) { have[k].remove(); delete have[k]; } });
       }, 60);
     }
+    // a tile that cannot be had leaves the image under it showing, and is asked for again when the view next moves
+    function askTile(t, k, url) { loadInto(t, url, { live: function () { return alive && have[k] === t; }, fail: function () { if (have[k] === t) { t.remove(); delete have[k]; } } }); }
+    function say(msg) { var m = SW.$('.im-zmsg', el) || el.appendChild(SW.el('p', { class: 'hint im-zmsg' })); m.textContent = msg; }
+    function busy() { say('The library’s image service is busy: asking again…'); }
     function zoomAt(f, cx, cy) { var ns = Math.max(0.02, Math.min(4, s * f)); tx = cx - (cx - tx) * ns / s; ty = cy - (cy - ty) * ns / s; s = ns; place(); }
     el.addEventListener('wheel', function (e) { e.preventDefault(); var r = el.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY / 400), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
     var drag = null;
@@ -174,19 +252,42 @@
     });
     el.tabIndex = 0;
     el.addEventListener('keydown', function (e) { var r = el.getBoundingClientRect(); if (e.key === '+' || e.key === '=') zoomAt(1.5, r.width / 2, r.height / 2); else if (e.key === '-') zoomAt(1 / 1.5, r.width / 2, r.height / 2); else if (e.key === '0') { fit(); place(); } });
+    function layout() { if (o.region) toRegion(o.region); else fit(); place(); }
     function start() {
-      base.src = svc + '/full/' + Math.min(1200, W) + ',/0/default.jpg';
-      if (o.region) toRegion(o.region); else fit();
-      place();
+      layout();
+      loadInto(base, svc + '/full/' + Math.min(1200, W) + ',/0/default.jpg', { live: function () { return alive; }, again: busy, fail: function () { say('The library’s image service is not answering at the moment: try again in a minute.'); } });
     }
+    base.addEventListener('load', function () { var m = SW.$('.im-zmsg', el); if (m) m.remove(); tile(); });
+    var stop = { stop: function () { alive = false; } };
+    // the bench's own copy: the thumbnail at once, the full size over it, no service asked
+    if (o.src) {
+      if (W && H) { if (o.thumb) base.src = o.thumb; layout(); }
+      var full = new Image();
+      full.onload = function () {
+        if (!alive) return;
+        // the file's own size: a region is in its pixels, and a manifest's canvas may differ from it a little
+        if (W !== full.naturalWidth || H !== full.naturalHeight) { W = full.naturalWidth; H = full.naturalHeight; layout(); }
+        base.src = o.src; place();
+      };
+      full.onerror = function () { say(o.thumb && W && H ? 'The full-size image could not be read: this is the small one.' : 'The image could not be read.'); };
+      full.src = o.src;
+      return stop;
+    }
+    if (!svc) { say('The bench holds no copy of this image, and names no service for it.'); return stop; }
     // the service's own account of the image: its size and its tiles; without one, the image map's size and no tiles
-    fetch(svc + '/info.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (info) {
-      W = info.width || W; H = info.height || H;
-      var t = (info.tiles || [])[0]; if (t) tiles = { width: t.width, scaleFactors: (t.scaleFactors || [1]).slice().sort(function (a, b) { return a - b; }) };
-      start();
-    }, function () { if (W && H) start(); else el.innerHTML = '<p class="hint pad">The image service did not answer.</p>'; });
-    base.addEventListener('load', tile);
-    return { stop: function () { alive = false; } };
+    Q.add({
+      live: function () { return alive; },
+      start: function (ok, err) {
+        fetch(svc + '/info.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (info) {
+          ok();
+          W = info.width || W; H = info.height || H;
+          var t = (info.tiles || [])[0]; if (t) tiles = { width: t.width, scaleFactors: (t.scaleFactors || [1]).slice().sort(function (a, b) { return a - b; }) };
+          start();
+        }, function () { busy(); err(); });
+      },
+      fail: function () { if (W && H) start(); else say('The library’s image service is not answering at the moment: try again in a minute.'); }
+    });
+    return stop;
   };
 
   // ---------- a page image ----------
@@ -194,11 +295,14 @@
     var x = map().images[key];
     if (!x) { SW.toast('No image ' + key + ' in the bench’s image map.', 3000); return; }
     var g = region ? String(region).split(',').map(Number) : null;
+    var h = heldOf(key, x), lib = x.service ? String(x.service).replace(/\/$/, '') + '/full/' + (x.v === 3 ? 'max' : 'full') + '/0/default.jpg' : null, fullAt = h && h.full ? h.full : lib;
     var d = dialog('<b>Image ' + esc(key) + '</b>' + (x.label && x.label !== key ? ' <span class="faint">' + esc(x.label) + '</span>' : '') +
-      '<span class="refhelp-acts"><a class="btn ghost" href="' + esc(String(x.service).replace(/\/$/, '') + '/full/' + (x.v === 3 ? 'max' : 'full') + '/0/default.jpg') + '" target="_blank" rel="noopener">Full size ↗</a><button class="btn ghost" data-a="link">🔗 Link</button></span>', 'im-pagedlg');
+      '<span class="refhelp-acts">' + (fullAt ? '<a class="btn ghost" href="' + esc(fullAt) + '" target="_blank" rel="noopener">Full size ↗</a>' : '') +
+      (h && lib ? '<a class="btn ghost" href="' + esc(lib) + '" target="_blank" rel="noopener noreferrer">The library’s copy ↗</a>' : '') +
+      '<button class="btn ghost" data-a="link">🔗 Link</button></span>', 'im-pagedlg');
     var z = SW.el('div', { class: 'im-zoombox' }); d.appendChild(z);
     if (map().credit || C.credit) d.appendChild(SW.el('p', { class: 'hint im-credit' }, C.credit || esc(map().credit)));
-    d._zoom = I.zoom(z, x, { region: g && g.length === 4 && g.every(function (n) { return !isNaN(n); }) ? g : null });
+    d._zoom = I.zoom(z, x, { region: g && g.length === 4 && g.every(function (n) { return !isNaN(n); }) ? g : null, src: h && h.full || null, thumb: h && h.thumb || null });
     d.addEventListener('click', function (e) { if (e.target.closest('[data-a="link"]')) SW.copyText(SW.permalink({ tab: 'images', img: key }), 'the link'); });
   };
 

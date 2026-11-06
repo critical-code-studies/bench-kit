@@ -7,7 +7,7 @@ For a session asked to start a new bench. Settle these with the person who wants
 1. **What is the work, and in what versions?** A program in its releases, a text in its witnesses or stages, a translation beside its source. This decides the type (`docs/bench-types.md` §5).
 2. **What is a line?** A line of code, of a transcription, a sentence or segment, a paragraph. Every reference, annotation and model will point at it, so it must stay the same as the texts are revised.
 3. **Where are the texts, and at what commit?** Each source repository and the commit the bench reads it at. Texts the bench cannot hold (copyright, a library's terms) are named, not copied.
-4. **What are the page images, and on what terms?** A library's IIIF manifest (`tools/iiif-map.js`), or the bench's own files. Whether copies may be held in the bench, at what size, with what credit, needs the holder's permission in writing (Melville: the Houghton Library, 30 October 2026).
+4. **What are the page images, and on what terms?** A library's IIIF manifest (`tools/iiif-map.js`), or the bench's own files. Whether copies may be held in the bench, at what size, with what credit, is for the holder's terms, and for the person the bench belongs to to decide; Melville has the Houghton Library's permission in writing (30 October 2026). A bench that holds copies does not depend on the library's image service, which may refuse many requests at once (`docs/lessons.md`).
 5. **What languages and scripts?** For a dictionary (`dictionary.js`, with its `lang`), a word breaker (`SW.BENCH.textLang`, `tokenise`), fonts.
 
 ## The repository
