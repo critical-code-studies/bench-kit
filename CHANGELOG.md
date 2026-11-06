@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book's images button** (David, 2026-11-06): an eye, crossed when the images are hidden, in place of the word Off, which read the same in both states. Images show whenever a page opens, unless a link says otherwise; the last click is no longer remembered (`book.imgon` is no longer read).
+- **The Library's labels** (David, 2026-11-06): Held and Linked, in place of Held here and Links out.
+
 ## 0.99.0 (2026-11-06)
 
 - Help ▾ now says **Getting set up**, as the guide it opens has since 0.97.0 (SHRDLU's report), and so do the messages that point to it.
