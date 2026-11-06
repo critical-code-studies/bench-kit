@@ -41,7 +41,7 @@ File ▾ ▸ Open a folder… reads a working copy of the translation's reposito
 
 ## Edit
 
-The Edit tab shows a page's image beside its text as the file has it, with undo and redo kept across reloads. A save writes a change list in the method's form: to `translation.edit.dir` (default `checks/`) in a working copy opened in Chrome or Edge, or as a download. The bench does not change the master file; `tools/vt_apply.py` applies the list, and Edit offers the command. Until then the list's changes show in Edit and count as pending in Changes. A version's first file only, so far.
+The Edit tab shows a page's image beside its text as the file has it, with undo and redo kept across reloads. It opens locked, on a page load and each time the tab is opened again, and the padlock in its toolbar unlocks the text. A save writes a change list in the method's form: to `translation.edit.dir` (default `checks/`) in a working copy opened in Chrome or Edge, or as a download. The bench does not change the master file; `tools/vt_apply.py` applies the list, and Edit offers the command. Until then the list's changes show in Edit and count as pending in Changes. A version's first file only, so far.
 
 ## Licence
 

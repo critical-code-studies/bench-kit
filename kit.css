@@ -246,6 +246,9 @@ dialog.ov-dlg { width: min(96vw, 980px); }
 .vte-back, .vte-in { grid-area: 1 / 1; margin: 0; padding: 14px 16px; border: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 15px/1.6 var(--serif, Georgia, serif); letter-spacing: normal; tab-size: 4; box-sizing: border-box; width: 100%; }
 .vte-back { color: var(--text); pointer-events: none; }
 .vte-in { color: transparent; caret-color: var(--text); background: transparent; resize: none; overflow: hidden; outline: none; }
+.vte-locked .vte-in { cursor: default; caret-color: transparent; }
+.vte-locked .vte-back { color: var(--text-dim); }
+.vte-lock { white-space: nowrap; }
 .vte-in::selection { background: color-mix(in srgb, var(--amber) 28%, transparent); color: transparent; }
 .vte-mk { color: var(--text-faint); }
 .vte-hd { color: var(--text-dim); }

@@ -39,7 +39,7 @@ Shared modules for the critical code studies research benches: the [SHRDLU](http
 | `folder.js` | File ▾ ▸ Open a folder (`SW.folder`), for a bench that sets `folder`: a working copy on this computer read in place of the published files, without a token. |
 | `vt-reader.js` | A translation laid out by the vector translation method (`SWVT`; node and the browser): lines, page and image markers, sections, notes, Book's document, the glossary, change lists, figures, OCR. |
 | `vt-views.js` | A translation bench's Glossary, Changes and Search views (`SW.vt`), on `vt-reader.js`. |
-| `vt-edit.js` | Edit, a translation bench's working view in Read's place: the page's image beside the text, undo and redo kept, a save a change list for `vt_apply` |
+| `vt-edit.js` | Edit, a translation bench's working view in Read's place: the page's image beside the text, locked until its padlock is clicked, undo and redo kept, a save a change list for `vt_apply` |
 | `export.js` | Word (.docx), Markdown and file downloads (`root.SWExport`). |
 | `tray.js` | My notes: notes, figures and excerpts gathered for writing, shared to Findings, exported; backup and restore of the bench. |
 | `figures.js` | Figures of code and of the screen, as SVG and PNG; `SW.beam(s)`, a display intensity as an opacity (a bench may set its own). |

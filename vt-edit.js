@@ -5,6 +5,10 @@
  * translation method's form, which tools/vt_apply.py applies to the master file; the bench never
  * writes the master itself.
  *
+ * The padlock: Edit opens locked, on a page load and each time the tab is opened again. While locked the
+ * text cannot change, by typing, pasting, dropping, undo or redo; it can be read, selected, copied, scrolled
+ * and saved. A save leaves the lock as it is.
+ *
  * What a save does:
  *   a folder open in Chrome or Edge (kit/folder.js)   writes the list into translation.edit.dir, a new file
  *                                                     each save; the browser asks leave to write the first time
@@ -314,7 +318,7 @@
   var D = VT.layout(B.translation), esc = SW.esc, VERS = root.SWVersions;
   var CFG = Object.assign({ dir: 'checks/', tool: 'tools/vt_apply.py' }, D.edit || {});
   var TARGETS = ['translation', 'literal'];
-  var S = { target: 'translation', key: null, beside: 'image', docs: {}, cur: null };
+  var S = { target: 'translation', key: null, beside: 'image', docs: {}, cur: null, locked: true };
 
   // ---------- kept in this browser: drafts, and lists saved where the folder cannot be written ----------
   var DB = 'bench-kit-edit';
@@ -375,6 +379,7 @@
       '<div class="toolbar vte-bar">' +
         '<span class="im-seg">' + TARGETS.map(function (t) { return '<button class="btn" data-target="' + t + '">' + (t === 'literal' ? 'Literal' : 'Translation') + '</button>'; }).join('') + '</span>' +
         '<span class="vte-nav"><button class="btn ghost" data-go="-1" title="The page before (Alt+←)" aria-label="The page before">◀</button><select class="vte-win" aria-label="The page"></select><button class="btn ghost" data-go="1" title="The page after (Alt+→)" aria-label="The page after">▶</button></span>' +
+        '<button class="btn vte-lock" data-do="lock"></button>' +
         '<span class="vte-do"><button class="btn ghost" data-do="undo" title="Undo (⌘Z)">↶ Undo</button><button class="btn ghost" data-do="redo" title="Redo (⇧⌘Z)">↷ Redo</button></span>' +
         '<button class="btn" data-do="save" title="Write what has changed as a change list (⌘S)">Save</button>' +
         '<span class="vte-beside"><span class="faint">Beside</span> <span class="im-seg"><button class="btn" data-beside="image">Image</button><button class="btn" data-beside="other"></button></span></span>' +
@@ -385,6 +390,7 @@
     ta = SW.$('.vte-in', view); back = SW.$('.vte-back', view); pane = SW.$('.vte-pane', view); status = SW.$('.vte-status', view); winSel = SW.$('.vte-win', view);
     ta.lang = 'en';
     wire();
+    lockShown();
   }
   function marks(s, doc, w) {
     // what has changed since the last save, the markers and the headings, coloured under the text. A
@@ -415,8 +421,8 @@
     var doc = S.cur; if (!doc || !view) return;
     SW.$$('[data-target]', view).forEach(function (b) { b.classList.toggle('on', b.dataset.target === S.target); });
     SW.$$('[data-beside]', view).forEach(function (b) { b.classList.toggle('on', b.dataset.beside === S.beside); if (b.dataset.beside === 'other') b.textContent = S.target === 'literal' ? 'Translation' : 'Literal'; });
-    SW.$('[data-do="undo"]', view).disabled = !doc.hist.ops.length;
-    SW.$('[data-do="redo"]', view).disabled = !doc.hist.undone.length;
+    SW.$('[data-do="undo"]', view).disabled = S.locked || !doc.hist.ops.length;
+    SW.$('[data-do="redo"]', view).disabled = S.locked || !doc.hist.undone.length;
     var n = TARGETS.reduce(function (k, t) { var d = S.docs[t]; return k + (d && d.edits ? d.edits.length : 0); }, 0), sv = SW.$('[data-do="save"]', view);
     sv.disabled = !n; sv.textContent = n ? 'Save ' + n + ' change' + (n === 1 ? '' : 's') : 'Saved';
     say(doc);
@@ -426,7 +432,7 @@
     var where = writable() ? 'Editing the folder <b>' + esc(SW.folder.name) + '</b>. A save writes a change list to <span class="mono">' + esc(realDir()) + '</span>.' :
       SW.folder && SW.folder.on ? 'Editing the folder <b>' + esc(SW.folder.name) + '</b>. This browser cannot write to it: a save downloads the change list.' :
       'Editing the published text in this browser. A save downloads a change list. File ▾ ▸ Open a folder… edits a working copy.';
-    var extra = '';
+    var extra = S.locked ? ' <b>Locked:</b> the padlock unlocks the text for editing.' : '';
     if (doc.pending) extra += ' <b>' + doc.pending + '</b> saved change' + (doc.pending === 1 ? ' is' : 's are') + ' shown here and not yet in the file. <button class="vt-chip" data-do="cmd">Copy the vt_apply command</button>';
     if (doc.stuck && doc.stuck.length) extra += ' <span class="vt-warn">⚠ ' + doc.stuck.length + ' saved change' + (doc.stuck.length === 1 ? '' : 's') + ' no longer match' + (doc.stuck.length === 1 ? 'es' : '') + ' the file: see Changes.</span>';
     if (doc.note) extra += ' <span class="vt-warn">⚠ ' + esc(doc.note) + '</span>';
@@ -595,6 +601,7 @@
   function took() {
     var doc = S.cur, w = doc && doc.win; if (!w || composing) return;
     var next = ta.value; if (next === last.value) return;
+    if (S.locked) { ta.value = last.value; ta.setSelectionRange(last.s, last.e); return; }
     var op = E.diffOp(last.value, next, w.a);
     op.selBefore = [w.a + last.s, w.a + last.e];
     op.selAfter = [w.a + ta.selectionStart, w.a + ta.selectionEnd];
@@ -606,6 +613,7 @@
   // undo or redo: the window it happened in, the selection as it was
   function step(dir) {
     var doc = S.cur; if (!doc) return;
+    if (S.locked) { nudge(); return; }
     took();
     var op = dir < 0 ? doc.hist.undo() : doc.hist.redo();
     if (!op) return;
@@ -620,13 +628,45 @@
     } else show(doc, winAt(doc, sel[0]), sel);
     keep(doc);
   }
+  // ---------- the padlock ----------
+  // readOnly stops the person and leaves ta.value to the code that fills the box as it scrolls
+  function lockShown() {
+    if (!view || !ta) return;
+    ta.readOnly = S.locked;
+    view.classList.toggle('vte-locked', S.locked);
+    var b = SW.$('.vte-lock', view);
+    b.textContent = S.locked ? '🔒 Locked' : '🔓 Unlocked';
+    b.classList.toggle('on', !S.locked);
+    b.title = S.locked ? 'The text is locked. Click to unlock it for editing.' : 'The text can be edited. Click to lock it.';
+    b.setAttribute('aria-pressed', S.locked ? 'true' : 'false');
+    buttons();
+  }
+  function setLock(on) {
+    if (on === S.locked) return;
+    // what is being typed is taken in first, a word still being composed as well
+    if (on) { if (composing) ta.blur(); took(); }
+    S.locked = on;
+    lockShown();
+    if (!on && S.cur && S.cur.win) ta.focus({ preventScroll: true });
+  }
+  var nudged = 0;
+  function nudge() {
+    if (Date.now() - nudged < 4000) return;
+    nudged = Date.now();
+    SW.toast('The text is locked. The padlock in the toolbar unlocks it.', 3000);
+  }
   function wire() {
+    ta.addEventListener('keydown', function (e) {
+      if (S.locked && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete')) nudge();
+    });
+    ['paste', 'cut', 'drop'].forEach(function (ev) { ta.addEventListener(ev, function (e) { if (S.locked) { e.preventDefault(); nudge(); } }); });
     ta.addEventListener('input', function (e) { if (e.isComposing) { back.textContent = ta.value + '\n'; return; } took(); });
     ta.addEventListener('compositionstart', function () { composing = true; });
     ta.addEventListener('compositionend', function () { composing = false; took(); });
     ['keyup', 'mouseup', 'select'].forEach(function (ev) { ta.addEventListener(ev, function () { if (ta.value === last.value) { last.s = ta.selectionStart; last.e = ta.selectionEnd; } }); });
     // the browser's own Edit ▸ Undo comes here too: its history of this box stops at the last window drawn
     ta.addEventListener('beforeinput', function (e) {
+      if (S.locked) { e.preventDefault(); return; }
       if (e.inputType === 'historyUndo') { e.preventDefault(); step(-1); }
       else if (e.inputType === 'historyRedo') { e.preventDefault(); step(1); }
     });
@@ -635,7 +675,8 @@
       var g = e.target.closest('[data-go]'); if (g) { took(); move(+g.dataset.go); return; }
       var b = e.target.closest('[data-beside]'); if (b) { S.beside = b.dataset.beside; buttons(); if (S.cur && S.cur.win) drawPane(S.cur, S.cur.win); return; }
       var d = e.target.closest('[data-do]'); if (!d) return;
-      if (d.dataset.do === 'undo') step(-1);
+      if (d.dataset.do === 'lock') setLock(!S.locked);
+      else if (d.dataset.do === 'undo') step(-1);
       else if (d.dataset.do === 'redo') step(1);
       else if (d.dataset.do === 'save') saveBox();
       else if (d.dataset.do === 'cmd') copyCommand();
@@ -738,7 +779,7 @@
   }
   SW.views.edit = {
     show: function () { if (!drawn) { draw(); drawn = true; place(); } else if (SW.state.sel) goLine(SW.state.v, SW.state.sel.n0); },
-    enter: function () { if (SW.state.sel) goLine(SW.state.v, SW.state.sel.n0); }
+    enter: function () { setLock(true); if (SW.state.sel) goLine(SW.state.v, SW.state.sel.n0); }
   };
   if (SW.on) {
     SW.on('goto', function (g) { if (SW.state.tab === 'edit' && drawn) goLine(SW.state.v, g.n); });
