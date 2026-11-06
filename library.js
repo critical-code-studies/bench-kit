@@ -8,8 +8,9 @@
  * Two shelves. The public shelf: files the bench may hold (public domain, an open licence), in its own
  * repository, read by anyone. The private shelf (shelf: 'private'): files in the group's private
  * repository (the one Paratexts keeps, or SW.BENCH.library.private: { org, repo }), under its library/
- * folder, which Paratexts does not list; a member opens them with the token Paratexts uses. Everyone
- * sees every entry's record; without a token a private entry shows its record and its link out.
+ * folder, which Paratexts does not list; a member opens them with the token Paratexts uses. The
+ * manifest is public, so everyone sees every entry's record, and a private entry's shelf and file path
+ * are in it; without a token the entry shows its record and its link out.
  * SW.BENCH.library: true (the manifest at library/library.json), or
  *   { url, label, intro, items, load, private }: url the manifest (from the page); items the entries given here
  *   instead; load() a promise of the manifest (a bench that makes it from another list, such as a
@@ -22,7 +23,8 @@
  *   shelf     'public' (the default) or 'private'
  *   file      the file held: on the public shelf a path from the page (library/files/…), on the
  *             private one a path in the private repository (library/…); PDF, text (.txt), Markdown
- *             (.md), HTML or an image, shown in a box over the bench
+ *             (.md), HTML, an image, audio or video, shown in a box over the bench (a private file is
+ *             read whole before it plays, and GitHub holds none over 100 MB)
  *   url       the text where it is published (for an entry without a file, the only way to it)
  *   source    where the copy held was found, and when
  *   tags      [word], for the filter
@@ -32,7 +34,7 @@
  * The group's own copy: where the reader has a paratexts token (kit/paratexts.js), the paratexts that
  * name an entry (a record's library: [id], or a tag library:<id>) are offered in its box as well, and
  * open as a paratext does (SW.paratexts.peek). Without a token nothing is looked up or shown, and the
- * public manifest says nothing of the private copies.
+ * public manifest does not name these paratexts.
  * Members see the private repository's size above the list (GitHub works badly above about 1 GB).
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), size().
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -77,7 +79,7 @@
   function ext(f) { var m = /\.([a-z0-9]+)(?:[?#].*)?$/i.exec(f || ''); return m ? m[1].toLowerCase() : ''; }
   function kindOfFile(f) {
     var x = ext(f);
-    return x === 'pdf' ? 'pdf' : /^(txt|text)$/.test(x) ? 'text' : /^(md|markdown)$/.test(x) ? 'md' : /^(html?|xhtml)$/.test(x) ? 'html' : /^(png|jpe?g|gif|webp|svg|avif)$/.test(x) ? 'image' : 'file';
+    return x === 'pdf' ? 'pdf' : /^(txt|text)$/.test(x) ? 'text' : /^(md|markdown)$/.test(x) ? 'md' : /^(html?|xhtml)$/.test(x) ? 'html' : /^(png|jpe?g|gif|webp|svg|avif)$/.test(x) ? 'image' : /^(mp3|m4a|wav|ogg|oga|flac|aac|opus)$/.test(x) ? 'audio' : /^(mp4|webm|mov|m4v|ogv)$/.test(x) ? 'video' : 'file';
   }
 
   // ---------- the group's copies, from the private paratexts, only with a token ----------
@@ -196,6 +198,8 @@
   };
   // the file in the box: a public file from its path, a private one through GitHub as a blob
   var TYPE = { pdf: 'application/pdf', html: 'text/html', image: '' };
+  // GitHub's answer does not name a media type, and some browsers will not play a file without one
+  var MEDIA = { mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav', ogg: 'audio/ogg', oga: 'audio/ogg', flac: 'audio/flac', aac: 'audio/aac', opus: 'audio/ogg', mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', m4v: 'video/mp4', ogv: 'video/ogg' };
   function show(box, e, k, priv) {
     function fail(err) { box.innerHTML = '<p class="badge err">The file could not be read: ' + esc(String(err.message || err)) + '.</p>'; }
     function text(t) { box.innerHTML = k === 'md' && SW.md ? '<div class="lib-md"' + (e.lang ? ' lang="' + esc(e.lang) + '"' : '') + '>' + SW.md(t) + '</div>' : '<pre class="lib-text"' + (e.lang ? ' lang="' + esc(e.lang) + '"' : '') + '>' + esc(t) + '</pre>'; }
@@ -203,12 +207,15 @@
       if (k === 'pdf') box.innerHTML = '<iframe class="lib-frame" src="' + esc(u) + '#view=FitH" title="' + esc(e.title) + '"></iframe>';
       else if (k === 'image') box.innerHTML = '<img class="lib-img" src="' + esc(u) + '" alt="' + esc(e.title) + '">';
       else if (k === 'html') box.innerHTML = '<iframe class="lib-frame" sandbox="" src="' + esc(u) + '" title="' + esc(e.title) + '"></iframe>';
+      else if (k === 'audio') box.innerHTML = '<audio class="lib-audio" controls preload="metadata" src="' + esc(u) + '"></audio>';
+      else if (k === 'video') box.innerHTML = '<video class="lib-video" controls preload="metadata" src="' + esc(u) + '"></video>';
       else box.innerHTML = '<p class="hint">This file is not shown here: Download it' + (priv ? '' : ', or open it in a new tab') + '.</p>';
     }
     if (priv) {
       privateFile(e.file).then(function (blob) {
         if (k === 'text' || k === 'md') return blob.text().then(text);
-        at(URL.createObjectURL(TYPE[k] ? new Blob([blob], { type: TYPE[k] }) : blob));
+        var type = TYPE[k] || MEDIA[ext(e.file)];
+        at(URL.createObjectURL(type ? new Blob([blob], { type: type }) : blob));
       }).catch(fail);
       return;
     }

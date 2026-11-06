@@ -108,5 +108,5 @@
     });
   }
   // one after another: each loads the module with settings of its own
-  T.later('the Images tab', function () { return figureBox().then(heldCopies).then(imageQueue); });
+  T.later('the Images tab', function () { return (T.fetchChain = figureBox().then(heldCopies).then(imageQueue)); });
 })();
