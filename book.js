@@ -69,7 +69,7 @@
  * dragged on a page there, or the bench's (SW.BENCH.doc.trim: { l, t, r, b }, each a share of the
  * page's width or height, or a function (pb) giving each page its own, or null); beside the text and in
  * the enlarged page, the boxes and bands with them.
- * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
+ * Images: a slider for their size, and an eye to fold them away (a ▣ at each page break opens one),
  * for every column, kept for this browser and in the address as img (off, or a width).
  * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the texts beside, by commas),
  * img, l (the place), hz, pz and zm (a shared link's box, page and zoom). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
@@ -155,13 +155,17 @@
   if (Q0.all === '1') st.all = true;
   // deletions struck in red at the stage, not taken out (Strike deletions): kept for this browser, and in a link as del=strike
   st.strike = Q0.del === 'strike' || (Q0.del == null && SW.store.get('book.del', '') === 'strike');
-  // the pages' images: a width (a slider), and on or off (Off folds them away, leaving a ▣ at each
+  // the pages' images: a width (a slider), and on or off (the eye folds them away, leaving a ▣ at each
   // page break, and On brings them back at the width they had); kept for this browser, and in a link
   // that asks for it (img=off, or img=a width)
   var IMGW = [100, 560], IMGW0 = 320;
   function imgw(x) { x = Math.round(+x); return x >= IMGW[0] && x <= IMGW[1] ? x : null; }
   st.imgW = imgw(SW.store.get('book.imgw', IMGW0)) || IMGW0;
-  st.imgOn = SW.store.get('book.imgon', true) !== false;
+  st.imgOn = true;   // shown when a page opens, unless a link says otherwise
+  // the button that folds the images away: an open eye while they show, a crossed one when they do not
+  var EYE = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYEOFF = EYE.replace('</svg>', '<path d="M3 3l18 18"/></svg>');
+  function imgBtn(b) { b.innerHTML = st.imgOn ? EYE : EYEOFF; b.title = st.imgOn ? 'Hide the images' : 'Show the images'; b.setAttribute('aria-label', b.title); }
   if (Q0.img === 'off') st.imgOn = false;
   else if (Q0.img === 'small') { st.imgOn = true; st.imgW = 150; }   // a link from 0.72
   else if (imgw(Q0.img)) { st.imgOn = true; st.imgW = imgw(Q0.img); }
@@ -938,9 +942,9 @@
           others.filter(function (t) { return t === cur || st.beside.indexOf(t) < 0; }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === cur ? ' selected' : '') + '>with ' + esc(textLabel(t)) + '</option>'; }).join('') + '</select>';
       }).join(' ') + '</span>';
     tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
-      '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; Off folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
+      '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; the eye folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
-        '<button class="btn' + (st.imgOn ? '' : ' on') + '" id="bk-imgoff" aria-pressed="' + !st.imgOn + '" title="' + (st.imgOn ? 'Fold the images away' : 'Show the images again') + '">Off</button></span><span class="sep"></span>' +
+        '<button class="btn bk-eye" id="bk-imgoff" title="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '" aria-label="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '">' + (st.imgOn ? EYE : EYEOFF) + '</button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="' + SW.lineWord() + ' at the place shown here, line by line">≡ ' + SW.lineWord() + ' here</button>' +
       '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share</button>' +
       '<select id="bk-marks" class="bk-marks" title="The ' + esc(PAGE) + 's you have bookmarked in this text: choose one to go to it"><option value="">🔖 Bookmarks</option></select>' +
@@ -955,8 +959,8 @@
       // controls are found by their own ids and attributes, within the toolbar only
       var b0 = e.target.closest('button, input'); if (!b0 || !tb.contains(b0)) return;
       if (b0.id === 'bk-imgoff') {
-        st.imgOn = !st.imgOn; SW.store.set('book.imgon', st.imgOn); showImages();
-        b0.classList.toggle('on', !st.imgOn); b0.setAttribute('aria-pressed', String(!st.imgOn)); b0.title = st.imgOn ? 'Fold the images away' : 'Show the images again';
+        st.imgOn = !st.imgOn; showImages();
+        imgBtn(b0);
         var r0 = SW.$('#bk-imgw', tb); if (r0) r0.disabled = !st.imgOn;
         writeQ(); return;
       }
