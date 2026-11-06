@@ -353,6 +353,8 @@
       '<span class="lib-m">' + [e.author, L.year(e.date) || e.date].filter(Boolean).map(esc).join(', ') + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></span></button>';
   }
+  // a DOI in a record's text, as a link to it
+  function doiLinks(html) { return html.replace(/\b10\.\d{4,9}\/[^\s;,<&]+[^\s;,<&.)]/g, function (d) { return '<a href="https://doi.org/' + d + '" target="_blank" rel="noopener noreferrer">' + d + ' ↗</a>'; }); }
   function row(e) {
     var pic = thumbOf(e);
     return '<button class="lib-row" data-lib="' + esc(e.id) + '"><span class="lib-mini lib-c-' + L.family(e) + '">' + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : glyph(L.family(e))) + '</span>' +
@@ -452,9 +454,9 @@
       if (!e) { SW.toast('No entry ' + id + ' in the library.', 3000); return; }
       var priv = isPrivate(e), canOpen = !!e.file && (!priv || L.member());
       var k = canOpen ? kindOfFile(e.file) : null, d = SW.el('dialog', { class: 'tray-big lib-dlg' });
-      var rec = [['Author', e.author], ['Date', e.date], ['Kind', e.kind], ['Language', e.lang], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var rec = [['Author', e.author], ['Date', e.date], ['Kind', e.kind], ['Language', e.lang], ['DOI', e.doi], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
-        .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
+        .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
         (canOpen && priv ? '<button class="btn ghost" data-a="dl">⤓ Download</button>' : '') +
         (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Open where it is published ↗') + '</a>' : '') +
