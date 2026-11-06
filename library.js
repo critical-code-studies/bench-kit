@@ -435,7 +435,7 @@
         'Click a cover or a row: the record opens in a box over the bench, with the file where you can read it, and a link to where it is published.',
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
-        '<b>🔗 Link</b> copies a link to the entry.'])],
+        '<b>🔗 Copy link</b> copies a link to the entry.'])],
       ['Adding a work', ul([
         'A member with a token has <b>＋ Add a work</b>: a record, with a copy of up to 40 MB or without one, and a link to a cover image if you have one.',
         'It goes in the group’s private repository. Members see it at once, marked <b>Added, not yet public</b>, and can correct or remove it from its box. Nobody else sees it.',
@@ -457,8 +457,8 @@
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
         (canOpen && priv ? '<button class="btn ghost" data-a="dl">⤓ Download</button>' : '') +
-        (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Go to it where it is published ↗') + '</a>' : '') +
-        '<button class="btn ghost" data-a="link" title="A link that opens this entry">🔗 Link</button>' +
+        (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Open where it is published ↗') + '</a>' : '') +
+        '<button class="btn ghost" data-a="link" title="Copies a link to this entry">🔗 Copy link</button>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
         '<div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +

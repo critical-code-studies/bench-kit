@@ -299,7 +299,7 @@
     var d = dialog('<b>Image ' + esc(key) + '</b>' + (x.label && x.label !== key ? ' <span class="faint">' + esc(x.label) + '</span>' : '') +
       '<span class="refhelp-acts">' + (fullAt ? '<a class="btn ghost" href="' + esc(fullAt) + '" target="_blank" rel="noopener">Full size ↗</a>' : '') +
       (h && lib ? '<a class="btn ghost" href="' + esc(lib) + '" target="_blank" rel="noopener noreferrer">The library’s copy ↗</a>' : '') +
-      '<button class="btn ghost" data-a="link">🔗 Link</button></span>', 'im-pagedlg');
+      '<button class="btn ghost" data-a="link">🔗 Copy link</button></span>', 'im-pagedlg');
     var z = SW.el('div', { class: 'im-zoombox' }); d.appendChild(z);
     if (map().credit || C.credit) d.appendChild(SW.el('p', { class: 'hint im-credit' }, C.credit || esc(map().credit)));
     d._zoom = I.zoom(z, x, { region: g && g.length === 4 && g.every(function (n) { return !isNaN(n); }) ? g : null, src: h && h.full || null, thumb: h && h.thumb || null });
@@ -324,7 +324,7 @@
         '<details class="im-exp"><summary class="btn ghost">⤓ Export</summary><div>' +
         (hasLabels ? '<span class="im-seg" title="The colour of the labels in the file"><button class="btn" data-ink="gold">Gold</button><button class="btn" data-ink="black">Black</button></span>' : '') +
         '<button class="btn ghost" data-exp="png">PNG</button><button class="btn ghost" data-exp="svg">SVG</button></div></details>' +
-        '<button class="btn ghost" data-a="link">🔗 Link</button></span>', 'im-figdlg');
+        '<button class="btn ghost" data-a="link">🔗 Copy link</button></span>', 'im-figdlg');
       var wrap = SW.el('div', { class: 'im-figwrap' });
       wrap.innerHTML = '<div class="im-stage"><img class="im-figimg" alt="Figure ' + esc(f.n) + '"><div class="im-labels"' + (B.textLang ? ' lang="en"' : '') + '></div></div>' +
         '<div class="im-figtext">' + (f.caption ? '<p class="im-cap"><b>Figure ' + esc(f.n) + '.</b> ' + esc(f.caption) + '</p>' : '') +

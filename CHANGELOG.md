@@ -4,6 +4,7 @@
 
 - **Book's images button** (David, 2026-11-06): an eye, crossed when the images are hidden, in place of the word Off, which read the same in both states. Images show whenever a page opens, unless a link says otherwise; the last click is no longer remembered (`book.imgon` is no longer read).
 - **The Library's labels** (David, 2026-11-06): Held and Linked, in place of Held here and Links out.
+- **Copy link** (David, 2026-11-06): the button in the Library's and the Images tab's boxes that read Link and copied one. A record with no copy held opens with Open where it is published ↗ as its main button.
 
 ## 0.99.0 (2026-11-06)
 
