@@ -451,8 +451,15 @@
     if (x && typeof x === 'string') x = { src: x };
     if (!x || !x.src) { pane.innerHTML = '<p class="hint pad">' + (w.page != null ? 'No image of this page.' : 'No page image for this part of the text.') + '</p>'; return; }
     pane.innerHTML = '<img class="vte-img" alt="' + esc(w.label) + '" src="' + esc(x.large || x.src) + '" title="Click to enlarge">' + (B.doc.imageCreditShort ? '<div class="faint vte-credit">' + esc(B.doc.imageCreditShort) + '</div>' : '');
-    var im = SW.$('.vte-img', pane);
-    im.addEventListener('click', function () { var big = im.classList.toggle('big'); if (big && x.sharp) im.src = x.sharp; });
+    var im = SW.$('.vte-img', pane), K = SW.book, T = K && K.trim ? K.trim({ pb: { facs: String(w.page), img: w.img } }) : null;
+    // the page's edges trimmed as Book trims them (doc.trim); enlarged, the whole image
+    function crop() { if (T && K.cropIn && im.naturalWidth) K.cropIn(im, T, im.naturalWidth / im.naturalHeight); }
+    im.addEventListener('load', function () { if (!im.classList.contains('big')) crop(); });
+    if (im.complete) crop();
+    im.addEventListener('click', function () {
+      var big = im.classList.toggle('big');
+      if (big) { if (T && K.cropOut) K.cropOut(im); if (x.sharp) im.src = x.sharp; } else crop();
+    });
   }
   // ---------- the text in the box ----------
   // The box holds a stretch of the text (doc.win: { a, b }, offsets in the text), never the whole, which a

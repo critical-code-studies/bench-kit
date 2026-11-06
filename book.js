@@ -418,11 +418,13 @@
     img.style.left = (-100 * T.l / w) + '%'; img.style.top = (-100 * T.t / h) + '%';
     return cr;
   }
+  K.cropIn = cropIn;
   function cropOut(img) {
     var cr = img.parentNode; if (!cr.classList.contains('bk-crop')) return;
     cr.parentNode.insertBefore(img, cr); cr.remove();
     img.classList.remove('bk-cropped'); ['width', 'height', 'left', 'top'].forEach(function (k) { img.style[k] = ''; });
   }
+  K.cropOut = cropOut;
   // the pictures beside the text trimmed as now set; a layer of boxes is made again when next wanted
   function trimFigs() {
     cols.forEach(function (c) {
