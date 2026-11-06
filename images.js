@@ -10,8 +10,8 @@
  *            has no labels, the key from its caption beside it; On the page (its region of the page
  *            image, outlined, in the zooming box); the page in Book; and a labelled copy exported as PNG
  *            or SVG (made then, never stored), its labels gold or black. The labels are in kintsugi
- *            gold, as what the bench adds to the author's figure: one gold for every theme (#8f6c00,
- *            4.9:1 on white), since a figure's ground stays white whatever the bench's colours.
+ *            gold, as what the bench adds to the author's figure: one gold for every theme (#7a5c00,
+ *            6.25:1 on white), since a figure's ground stays white whatever the bench's colours.
  *   Figures come first where the bench has them; images.start: 'pages' for Pages first.
  * Where the rights allow, a bench holds its own copies (images.held: { thumb, full }, paths with {key} or
  * {key3}: 'img/full/{key3}.webp'): the thumbnails and the zooming box then come from its files and no
@@ -309,7 +309,7 @@
   // ---------- a figure ----------
   var FS = { form: 'print', labels: true, ink: 'gold' };
   // the labels' colours in an export: gold (as on the screen) or black, for print
-  var INK = { gold: '#8f6c00', black: '#1a1a1a' };
+  var INK = { gold: '#7a5c00', black: '#1a1a1a' };
   I.openFigure = function (id) {
     return I.figures().then(function (fs) {
       var f = fs.filter(function (x) { return x.id === id; })[0];
