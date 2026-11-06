@@ -103,8 +103,57 @@ That lists what is waiting and changes nothing. With `--write` it moves the entr
 
 An item that stays in Paratexts can name a Library entry, with `library: [id]` in its record or a tag `library:<id>`. A member then sees it in that entry's box. The public manifest does not name the paratext.
 
+## Moving items out of Paratexts
+
+`tools/library-move.js` moves catalogue items into the Library and back. It works on a clone of the private repository and the bench's folder, and commits nothing. Run it from the bench's repository.
+
+1. Make a plan, which writes the entry each item would become:
+
+```bash
+node research/kit/tools/library-move.js ../my-paratexts --plan P-AAAAA,P-BBBBB --out plan.json
+```
+
+2. Correct `plan.json`. Each `note` starts as `null` and has to be set, a string or `""`, because a catalogue's description may hold the group's working remarks; the description is beside it as `_description` and is not copied. Each `shelf`, on the entry and on each of its `alts`, starts as `private`; set `public` for a file the person running the bench has decided may be public. `url` starts as the first web address in the record. Files named in a description are listed as `_namedInDescription` and stay where they are, unless you add them to `alts`.
+
+3. See what it would do, then do it:
+
+```bash
+node research/kit/tools/library-move.js ../my-paratexts --apply plan.json
+```
+
+```bash
+node research/kit/tools/library-move.js ../my-paratexts --apply plan.json --write
+```
+
+4. Commit and push the bench and the private repository.
+
+The Library's `id` is the item's P-code, so links and citations to the code still work: `?code=P-AAAAA` and a code in an annotation open the entry in the Library, and a paratext related to it lists it as in the Library. The `Type` of the record becomes `kind`, its creator `author`, its contributors the one line `contributor`.
+
+`library/moved.json` in the private repository keeps each whole catalogue record, including the fields the Library does not use, its comments and its collections. To move items back:
+
+```bash
+node research/kit/tools/library-move.js ../my-paratexts --back P-AAAAA,P-BBBBB --write
+```
+
+That restores the record at its old place, and its files, and takes the entry out of `library.json`. Changes made to the entry since it moved are not carried back, and the tool says when there are any. A file on the public shelf, once pushed, stays in the public repository's history: moving it back does not remove it from there, and the tool says so when it moves a file to the public shelf or back.
+
+Moving does not reduce the size of the private repository (see Files and size).
+
+## Transcripts and other forms
+
+`alts` gives a work other forms, each on its own shelf:
+
+```json
+{ "id": "P-AAAAA", "title": "A recorded talk", "kind": "talk", "file": "library/files/talk.m4a",
+  "alts": [{ "label": "Transcript", "lang": "en", "file": "library/talk-t1.md", "shelf": "private" }] }
+```
+
+A button below the work opens each one under it, so a transcript can be read while the recording plays. A private one shows for members only; its path is in the public manifest, as a private file's is.
+
+## Citations
+
+An entry's box shows a citation with a Copy button, in Harvard form, built from `author`, `date`, `title`, `in`, `publisher`, `pages` and `doi` or `url`. The author is used as written. `in` holding only a note in brackets, such as `(monograph)`, is left out. Where the built form is wrong, `citation` gives the citation as written.
+
 ## Not in the kit yet
 
 - **Comments.** Paratexts has them; the Library has none.
-- **Moving an item out of Paratexts.** There is no tool for this. Leave existing items where they are, and ask the bench-kit session.
-- **Transcripts.** An entry has no field for a recording's transcript.

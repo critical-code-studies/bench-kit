@@ -30,7 +30,10 @@
   // The version picker (with its reference and language) is in the top bar only for a bench that sets
   // picker: true; otherwise the versions are chosen from File ▾ ▸ Open a version… (⌘O), or Versions ▾
   // where the bench has no File ▾, and Book's own row of texts
-  if (B.picker !== true) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); var hb = SW.$('header.bar'); if (hb) hb.classList.add('no-pick'); }   // .no-pick: the name stays, bench.css
+  // .with-pick shows it (bench.css hides it until then, so that a bench without it never paints it)
+  var hb = SW.$('header.bar');
+  if (B.picker !== true) { var pk = SW.$('header.bar .pick'); if (pk) pk.remove(); if (hb) hb.classList.add('no-pick'); }
+  else if (hb) hb.classList.add('with-pick');
 
   // the picker's groups (SW.BENCH.forks), and the samples opened from CCS Workbench (kit/projectfile.js,
   // fork 'samples') in one of their own, kept out of the bench's own versions

@@ -13,6 +13,13 @@
  *            gold, as what the bench adds to the author's figure: one gold for every theme (#7a5c00,
  *            6.25:1 on white), since a figure's ground stays white whatever the bench's colours.
  *   Figures come first where the bench has them; images.start: 'pages' for Pages first.
+ *   Collections  further sets of images (images.collections: [{ url } or the object itself]), each one more
+ *            part beside Pages and Figures, with its count. { id, label, intro, credit, items: [{ key, n,
+ *            page, what, thumb, file, zoom, record }] }: thumb for the grid; file the bench's own copy,
+ *            what the box shows; zoom a larger copy on another site or null, asked for with an <img> only
+ *            when the reader zooms past the bench's copy, and if it fails the bench's copy stays, with a
+ *            small note; record the holder's page; page a page of the book. intro and credit are plain
+ *            text, and credit shows on the set and in the box. Links: ?tab=images&set=<id>&img=<key>.
  * Where the rights allow, a bench holds its own copies (images.held: { thumb, full }, paths with {key} or
  * {key3}: 'img/full/{key3}.webp'): the thumbnails and the zooming box then come from its files and no
  * request goes to the library, the box zooming on the one full-size file; a region is still in its pixels.
@@ -32,7 +39,7 @@
  *   centre at x, y; angle, degrees clockwise about that point. docs/figure-labels.md gives the rules
  *   for placing them.
  * Links: ?tab=images&img=<key> and ?tab=images&fig=<id>. SW.images: openPage(key, region), openFigure(id),
- * figures(), zoom(el, x, o) (the zooming box's engine, for other views).
+ * figures(), collections(), openItem(set, key), zoom(el, x, o) (the zooming box's engine, for other views).
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
@@ -124,7 +131,16 @@
 
   // ---------- the view ----------
   // the part shown first: Figures where the bench has them (images.start: 'pages' for Pages), Pages for a link to one
-  var part = Q0.img ? 'pages' : Q0.fig || (FG && C.start !== 'pages') ? 'figures' : 'pages', drawn = false;
+  var part = Q0.set ? 'set:' + Q0.set : Q0.img ? 'pages' : Q0.fig || (FG && C.start !== 'pages') ? 'figures' : 'pages', drawn = false;
+  // ---------- further collections of images ----------
+  var setsP = null;
+  I.collections = function () {
+    return setsP || (setsP = Promise.all((C.collections || []).map(function (c) {
+      if (!c.url) return Promise.resolve(c);
+      return fetch(c.url, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) { return Object.assign({}, j, c); }).catch(function (e) { return { id: c.id || c.url, label: c.label || c.url, items: [], err: 'could not be read (' + e.message + ')' }; });
+    })).then(function (ss) { return ss.filter(function (s) { return s && s.id; }); }));
+  };
+  function setOf(ss, id) { return ss.filter(function (s) { return s.id === id; })[0] || null; }
   function draw() {
     var view = SW.$('#view-images'); if (!view) return;
     var keys = Object.keys(map().images);
@@ -132,19 +148,46 @@
       '<button class="btn' + (part === 'pages' ? ' on' : '') + '" data-part="pages">Pages <span class="faint">' + keys.length + '</span></button>' +
       (FG ? '<button class="btn' + (part === 'figures' ? ' on' : '') + '" data-part="figures">Figures <span class="faint im-nf"></span></button>' : '') +
       '</span>' + (C.credit || map().credit ? '<span class="faint im-credit">' + (C.credit || esc(map().credit)) + '</span>' : '') + '</div>' +
-      (C.intro ? '<div class="im-intro">' + C.intro + '</div>' : '') + '<div class="im-body"></div></div>';
+      (C.intro ? '<div class="im-intro">' + C.intro + '</div>' : '') + '<div class="im-setintro" hidden></div><div class="im-body"></div></div>';
     if (FG) I.figures().then(function (fs) { var n = SW.$('.im-nf', view); if (n) n.textContent = fs.length; });
+    I.collections().then(function (ss) {
+      var parts = SW.$('.im-parts', view); if (!parts) return;
+      ss.forEach(function (s) {
+        var key = 'set:' + s.id;
+        parts.appendChild(SW.el('button', { class: 'btn' + (part === key ? ' on' : ''), 'data-part': key }, esc(s.label || s.id) + ' <span class="faint">' + (s.items || []).length + '</span>'));
+      });
+      if (/^set:/.test(part) && !setOf(ss, part.slice(4))) { part = FG && C.start !== 'pages' ? 'figures' : 'pages'; SW.$$('[data-part]', view).forEach(function (b) { b.classList.toggle('on', b.dataset.part === part); }); body(view); }
+    });
     body(view);
     view.addEventListener('click', function (e) {
       var p = e.target.closest('[data-part]'); if (p) { part = p.dataset.part; SW.$$('[data-part]', view).forEach(function (b) { b.classList.toggle('on', b === p); }); body(view); return; }
+      var it = e.target.closest('[data-set]'); if (it) { I.openItem(it.dataset.set, it.dataset.key); return; }
       var k = e.target.closest('[data-img]'); if (k) { I.openPage(k.dataset.img); return; }
       var f = e.target.closest('[data-fig]'); if (f) I.openFigure(f.dataset.fig);
     });
+    if (Q0.set && Q0.img) { var s0 = Q0.set, i0 = Q0.img; Q0.img = null; I.openItem(s0, i0); }
     if (Q0.img) { var k0 = Q0.img; Q0.img = null; I.openPage(k0); }
     if (Q0.fig) { var f0 = Q0.fig; Q0.fig = null; I.openFigure(f0); }
   }
   function body(view) {
-    var box = SW.$('.im-body', view);
+    var box = SW.$('.im-body', view), cr = SW.$('.im-bar .im-credit', view), si = SW.$('.im-setintro', view), general = SW.$('.im-intro', view);
+    var isSet = /^set:/.test(part);
+    if (si) si.hidden = !isSet;
+    if (general) general.hidden = isSet;
+    if (cr) cr.hidden = isSet;
+    if (isSet) {
+      box.innerHTML = '<p class="hint pad">Reading the collection…</p>';
+      I.collections().then(function (ss) {
+        var s = setOf(ss, part.slice(4)); if (!s) return;
+        if (s.err) { box.innerHTML = '<p class="pad badge err">' + esc(s.label || s.id) + ' ' + esc(s.err) + '.</p>'; return; }
+        si.innerHTML = (s.intro ? '<div class="im-intro">' + esc(s.intro) + '</div>' : '') + (s.credit ? '<p class="hint im-setcredit">' + esc(s.credit) + '</p>' : '');
+        box.innerHTML = (s.items || []).length ? '<div class="im-grid">' + s.items.map(function (x) {
+          return '<button class="im-card" data-set="' + esc(s.id) + '" data-key="' + esc(x.key) + '"><img loading="lazy" src="' + esc(x.thumb || x.file) + '" alt=""><span><b>' + esc(x.n != null ? x.n : x.key) + '</b>' + (x.page != null ? ' · p. ' + esc(x.page) : '') + (x.what ? ' · ' + esc(x.what) : '') + '</span></button>';
+        }).join('') + '</div>' : '<p class="hint pad">Nothing in this collection.</p>';
+        box.addEventListener('error', function (e) { var c = e.target.closest && e.target.closest('.im-card'); if (c) c.classList.add('im-fail'); }, true);
+      });
+      return;
+    }
     if (part === 'pages') {
       var m = map(), keys = Object.keys(m.images);
       box.innerHTML = keys.length ? '<div class="im-grid">' + keys.map(function (k) {
@@ -203,13 +246,27 @@
     el.innerHTML = '<div class="im-plane"><img class="im-base" alt=""><div class="im-tiles"></div><div class="im-roi" hidden></div></div>' +
       '<div class="im-zbtns"><button class="btn ghost" data-z="+" title="Zoom in (+)">+</button><button class="btn ghost" data-z="-" title="Zoom out (−)">−</button><button class="btn ghost" data-z="0" title="The whole image (0)">⤢</button></div>';
     var plane = SW.$('.im-plane', el), base = SW.$('.im-base', el), layer = SW.$('.im-tiles', el), roi = SW.$('.im-roi', el), have = {};
-    function fit() { var r = el.getBoundingClientRect(); s = Math.min(r.width / W, r.height / H); tx = (r.width - W * s) / 2; ty = (r.height - H * s) / 2; }
+    var fitS = 0;
+    function fit() { var r = el.getBoundingClientRect(); s = fitS = Math.min(r.width / W, r.height / H); tx = (r.width - W * s) / 2; ty = (r.height - H * s) / 2; }
     function toRegion(g) { var r = el.getBoundingClientRect(); s = Math.min(r.width / g[2], r.height / g[3]) * 0.8; tx = r.width / 2 - (g[0] + g[2] / 2) * s; ty = r.height / 2 - (g[1] + g[3] / 2) * s; }
     function place() {
       plane.style.transform = 'translate(' + tx + 'px,' + ty + 'px)';
       base.style.width = W * s + 'px'; base.style.height = H * s + 'px';
+      deepen();
       if (o.region) { var g = o.region; roi.hidden = false; roi.style.left = g[0] * s + 'px'; roi.style.top = g[1] * s + 'px'; roi.style.width = g[2] * s + 'px'; roi.style.height = g[3] * s + 'px'; }
       tile();
+    }
+    // o.deep: a larger copy elsewhere, asked for once the reader has zoomed in past the detail of the file
+    // shown, with an <img> only (another site may refuse fetch and canvas). If it fails, the file shown stays,
+    // and it is asked for again a minute later if the reader is still zooming.
+    var deepAt = 0, deepDone = false;
+    function deepen() {
+      if (!o.deep || deepDone || !alive || !fitS || s <= fitS * 1.01 || s * (root.devicePixelRatio || 1) <= 1.05 || Date.now() - deepAt < 60000) return;
+      deepAt = Date.now();
+      var im = new Image();
+      im.onload = function () { if (!alive) return; deepDone = true; base.src = o.deep; };
+      im.onerror = function () { if (alive) say('The larger copy is not answering: this is the bench’s copy.'); };
+      im.src = o.deep;
     }
     // the tiles in view, at the scale that suits the zoom (no finer than the screen needs)
     var timer = null;
@@ -304,6 +361,27 @@
     if (map().credit || C.credit) d.appendChild(SW.el('p', { class: 'hint im-credit' }, C.credit || esc(map().credit)));
     d._zoom = I.zoom(z, x, { region: g && g.length === 4 && g.every(function (n) { return !isNaN(n); }) ? g : null, src: h && h.full || null, thumb: h && h.thumb || null });
     d.addEventListener('click', function (e) { if (e.target.closest('[data-a="link"]')) SW.copyText(SW.permalink({ tab: 'images', img: key }), 'the link'); });
+  };
+
+  // ---------- an image of a further collection ----------
+  I.openItem = function (id, key) {
+    return I.collections().then(function (ss) {
+      var s = setOf(ss, id), x = s && (s.items || []).filter(function (y) { return y.key === key; })[0];
+      if (!x) { SW.toast('No image ' + key + ' in that collection.', 3000); return; }
+      var d = dialog('<b>' + esc(s.label || s.id) + ' ' + esc(x.n != null ? x.n : x.key) + '</b>' + (x.what ? ' <span class="faint">' + esc(x.what) + '</span>' : '') +
+        '<span class="refhelp-acts">' + (x.page != null && SW.views.book ? '<button class="btn ghost" data-a="book" title="The page in Book">Page ' + esc(x.page) + ' ↗</button>' : '') +
+        (x.record ? '<a class="btn ghost" href="' + esc(x.record) + '" target="_blank" rel="noopener noreferrer">The holder’s record ↗</a>' : '') +
+        (x.zoom ? '<a class="btn ghost" href="' + esc(x.zoom) + '" target="_blank" rel="noopener noreferrer">Full size ↗</a>' : '') +
+        '<button class="btn ghost" data-a="link">🔗 Link</button></span>', 'im-pagedlg im-itemdlg');
+      var z = SW.el('div', { class: 'im-zoombox' }); d.appendChild(z);
+      if (s.credit) d.appendChild(SW.el('p', { class: 'hint im-credit' }, esc(s.credit)));
+      d._zoom = I.zoom(z, {}, { src: x.file, thumb: x.thumb || null, deep: x.zoom || null });
+      d.addEventListener('click', function (e) {
+        var a = e.target.closest('[data-a]'); if (!a) return;
+        if (a.dataset.a === 'link') SW.copyText(SW.permalink({ tab: 'images', set: id, img: key }), 'the link');
+        if (a.dataset.a === 'book') { d.close(); toBook(x.page); }
+      });
+    });
   };
 
   // ---------- a figure ----------

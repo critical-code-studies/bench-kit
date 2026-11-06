@@ -1424,11 +1424,17 @@
   // written both ways; a code not in the catalogue is skipped.
   function relOf(it) { return (it.related || []).filter(function (c) { return c !== it.code && byCode(c); }); }
   function relatedHTML(it) {
-    var esc = SW.esc, r = relOf(it);
-    return '<h4 class="fd-rh">Related <span class="faint">' + (r.length || '') + '</span> <button class="btn ghost px-reladd" data-a="addrel" title="Link another item to this one (both ways)">＋ Add…</button></h4>' +
+    var esc = SW.esc, r = relOf(it), Lib = SW.library;
+    // a related item moved to the Library
+    var moved = (it.related || []).filter(function (c) { return !byCode(c) && Lib && Lib.has && Lib.has(c); });
+    return '<h4 class="fd-rh">Related <span class="faint">' + ((r.length + moved.length) || '') + '</span> <button class="btn ghost px-reladd" data-a="addrel" title="Link another item to this one (both ways)">＋ Add…</button></h4>' +
       (r.length ? '<ul class="px-citelist">' + r.map(function (c) {
         var x = byCode(c);
         return '<li class="px-relrow"><button class="px-cite" data-relgo="' + esc(c) + '" title="Open it"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(x.title) + '</b>' + homeChip(x) + (x.kind === 'missing' ? ' <span class="px-s px-misschip">Not available or missing</span>' : '') + (x.date ? ' · <span class="faint">' + esc(x.date) + '</span>' : '') + '</button><button class="icon-btn px-relx" data-unrel="' + esc(c) + '" title="Unlink (both ways)">×</button></li>';
+      }).join('') + '</ul>' : '') +
+      (moved.length ? '<ul class="px-citelist">' + moved.map(function (c) {
+        var x = Lib.items().filter(function (e) { return e.id === c; })[0];
+        return '<li class="px-relrow"><button class="px-cite" data-libgo="' + esc(c) + '" title="Open it in the Library"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(x.title) + '</b> <span class="faint">in the Library</span></button></li>';
       }).join('') + '</ul>' : '');
   }
   // The sequence editor: a box to make or change a sequence (its name, its note, its members in
@@ -1574,6 +1580,7 @@
     function seqs0() { it = byCode(code); var b = SW.$('.px-seqs', d); if (b) b.innerHTML = seqsHTML(it); var sb = SW.$('.px-stepbars', d); if (sb) sb.innerHTML = stepBars(it, ctx); }
     function seqSave(label, change) { return save(SW.px('One') + ' ' + code + ': ' + label + ', by ' + me(), function (c) { c.sequences = c.sequences || []; change(c.sequences); }).then(seqs0, function (err) { SW.toast(err.message, 5000); }); }
     function rel0() { it = byCode(code); var b = SW.$('.px-related', d); if (b) b.innerHTML = relatedHTML(it); }
+    if (SW.library && SW.library.has && (it.related || []).some(function (c) { return !byCode(c); })) SW.library.load().then(rel0, function () {});
     function relSave(label, other, add) {
       return save(SW.px('Many') + ' ' + code + ', ' + other + ': ' + label + ', by ' + me(), function (c) {
         c.items.forEach(function (x) {
@@ -1609,6 +1616,7 @@
     d.addEventListener('click', function (e) {
       if (e.target === d || e.target.closest('[data-x]')) { d.__leave(); return; }
       var stp = e.target.closest('[data-step]'); if (stp) { step(stp.dataset.step); return; }
+      var lg = e.target.closest('[data-libgo]'); if (lg) { SW.library.open(lg.dataset.libgo); return; }
       var rg = e.target.closest('[data-relgo]'); if (rg) { var to0 = rg.dataset.relgo; d.__leave(function () { openItem(to0, ctx); }); return; }
       var ur = e.target.closest('[data-unrel]'); if (ur) { relSave('unlinked', ur.dataset.unrel, false); return; }
       if (e.target.closest('[data-a="addrel"]')) {
@@ -1882,7 +1890,13 @@
 
   // A paratext read where you are (a link in an annotation, note or finding, a code, ?code=): the file
   // and its record, read-only, in a box that closes back to what you were doing. Paratexts has the rest.
+  // an item moved to the Library (tools/library-move.js) keeps its code there, and a link to it opens there
   P.peek = function (code) {
+    var Lib = SW.library;
+    if (!Lib || !Lib.has) { peekHere(code); return; }
+    Lib.load().then(function () { if (Lib.has(code)) Lib.open(code); else peekHere(code); }, function () { peekHere(code); });
+  };
+  function peekHere(code) {
     if (SW.state.tab === 'paratexts' && cat) { openItem(code); return; }
     var esc = SW.esc, d = SW.el('dialog', { class: 'tray-big px-dlg px-peek' });
     function head(title, acts) { return '<div class="tray-bighead"><span class="px-code mono" data-copy="' + esc(code) + '" title="Its code: click to copy">' + esc(code) + '</span> <b>' + esc(title) + '</b><span class="refhelp-acts">' + (acts || '') + '<button class="icon-btn" data-x title="Close (Esc)">✕</button></span></div>'; }
@@ -1918,7 +1932,7 @@
       showFile(it, SW.$('.px-view', d), SW.$('[data-a="dl"]', d));
     citedIn(code, SW.$('.px-cited', d));
     }, function (e) { d.innerHTML = head('Could not open') + '<p class="badge err">' + esc(e.message) + '</p>'; });
-  };
+  }
   document.addEventListener('click', function (e) {
     var sb = e.target.closest && e.target.closest('dialog [data-share^="P-"]'); if (!sb) return;
     var it = byCode(sb.dataset.share);

@@ -20,6 +20,8 @@
  * The manifest: { title, intro, items: [entry] }. An entry:
  *   id        its code, unchanging: links (?tab=library&lib=<id>) and the group's copies point at it
  *   title, author, date, kind (book, article, chapter, letter, edition, parallel text…; a filter), lang, note
+ *   contributor  others who made the work, as one line; in, publisher, pages, doi, extent: where it appeared,
+ *             for its record and its citation; citation: the citation as written, in place of the one built
  *   licence   the licence under which the file is held (public domain, CC BY 4.0…), or under which the
  *             text is published elsewhere
  *   shelf     'public' (the default) or 'private'
@@ -29,11 +31,13 @@
  *             read whole before it plays, and GitHub holds none over 100 MB)
  *   url       the work where it is published (for an entry without a file, the only way to it)
  *   source    where the copy held was found, and when
+ *   alts      [{ label, lang, file, shelf }]: other forms of the work (a transcript, a translation), each on
+ *             its own shelf, opened below the work in its box; a private one for members only
  *   thumb     an image for its cover: a path from the page, or a link. Without one, a public image file
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter
  * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search
- * and filters (held here, links out, by kind); an entry opens
+ * and filters (held, linked, by kind); an entry opens
  * in a box over the bench: its record, the file shown (a PDF in the browser's own viewer), Open in a
  * new tab, Download, the link out, and a link to the entry.
  * The group's own copy: where the reader has a paratexts token (kit/paratexts.js), the paratexts that
@@ -48,6 +52,7 @@
  * the public manifest, when the person running the bench chooses.
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), size(), add(record, file),
  * update(id, record), remove(id), form(entry), family(entry), year(date), surname(author), sorted(items, order),
+ * has(id), citation(entry) { text, html },
  * help(), the guide for readers (Help ▸ The Library, ?help=library).
  * docs/library.md is the guide for a bench.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -153,7 +158,7 @@
   // only the fields of an entry, and a link only to a web address
   function cleaned(r) {
     var o = {};
-    ['title', 'author', 'date', 'kind', 'lang', 'note', 'licence', 'url', 'source', 'thumb'].forEach(function (k) { var v = String(r[k] == null ? '' : r[k]).trim(); if (v) o[k] = v; });
+    ['title', 'author', 'contributor', 'date', 'kind', 'lang', 'in', 'publisher', 'pages', 'doi', 'note', 'licence', 'url', 'source', 'thumb'].forEach(function (k) { var v = String(r[k] == null ? '' : r[k]).trim(); if (v) o[k] = v; });
     var tags = (r.tags || []).map(function (t) { return String(t).trim(); }).filter(Boolean);
     if (tags.length) o.tags = tags;
     if (!o.title) throw new Error('Give it a title');
@@ -217,7 +222,8 @@
     var d = SW.el('dialog', { class: 'tray-big lib-form' });
     d.innerHTML = '<div class="tray-bighead"><b>' + (e ? 'Correct ' + esc(e.id) : 'Add a work to the library') + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
       '<p class="hint">It goes in the group’s private repository. Members see it at once. It joins the public list when the person running the bench publishes it; a copy stays private.</p>' +
-      '<div class="lib-fields">' + field('title', 'Title') + field('author', 'Author') + field('date', 'Date') + field('kind', 'Kind', ' list="lib-kinds"') + field('lang', 'Language') +
+      '<div class="lib-fields">' + field('title', 'Title') + field('author', 'Author') + field('contributor', 'With (others who made it)') + field('date', 'Date') + field('kind', 'Kind', ' list="lib-kinds"') + field('lang', 'Language') +
+      field('in', 'In (a journal, or a book for a chapter)') + field('publisher', 'Publisher') + field('pages', 'Pages') + field('doi', 'DOI') +
       field('url', 'Where it is published (a link)', ' type="url" placeholder="https://"') + field('licence', 'Licence') + field('source', 'Where the copy came from') +
       field('thumb', 'A cover image (a link, optional)', ' type="url" placeholder="https://"') +
       '<label><span>Tags, with commas</span><input name="tags" value="' + esc((v.tags || []).join(', ')) + '"></label>' +
@@ -243,6 +249,7 @@
     return d;
   };
   function byId(id) { return L.items().filter(function (e) { return e.id === id; })[0] || null; }
+  L.has = function (id) { return !!byId(id); };
   function ext(f) { var m = /\.([a-z0-9]+)(?:[?#].*)?$/i.exec(f || ''); return m ? m[1].toLowerCase() : ''; }
   function kindOfFile(f) {
     var x = ext(f);
@@ -339,7 +346,7 @@
   function host(u) { var m = /^https?:\/\/(?:www\.)?([^/]+)/i.exec(u || ''); return m ? m[1] : ''; }
   function coverOf(e) {
     var f = L.family(e), who = e.author ? '<span class="lib-c-a">' + esc(e.author) + '</span>' : '';
-    var word = f === 'book' ? '' : '<span class="lib-c-k">' + glyph(f) + esc(e.kind || (f === 'web' ? 'web page' : f === 'audio' ? 'audio' : f === 'film' ? 'film' : '')) + '</span>';
+    var word = f === 'book' && /^(book|monograph|)$/i.test(String(e.kind || '').trim()) ? '' : '<span class="lib-c-k">' + glyph(f) + esc(e.kind || (f === 'web' ? 'web page' : f === 'audio' ? 'audio' : f === 'film' ? 'film' : '')) + '</span>';
     return '<span class="lib-cover lib-c-' + f + '" aria-hidden="true"' + (f === 'book' || f === 'thesis' ? ' style="--cloth:' + (f === 'thesis' ? '#22262b' : cloth(e.id)) + '"' : '') + '>' +
       (f === 'web' ? '<span class="lib-c-chrome"><i></i><i></i><i></i></span>' : '') + word +
       '<span class="lib-c-t">' + esc(e.title) + '</span>' + (f === 'web' && !e.author && host(e.url) ? '<span class="lib-c-a">' + esc(host(e.url)) + '</span>' : who) + '</span>';
@@ -369,7 +376,7 @@
       if (F.show === 'out' && (e.file || !e.url)) return false;
       if (F.show === 'added' && !isAdded(e)) return false;
       if (F.kind && e.kind !== F.kind) return false;
-      if (q && [e.id, e.title, e.author, e.date, e.kind, e.note, e.licence, e.source, (e.tags || []).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
+      if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, (e.tags || []).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
   }
@@ -434,7 +441,8 @@
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view and order is kept in this browser.',
         'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only, and <b>Every kind</b> narrows to one kind.'])],
       ['Opening a work', ul([
-        'Click a cover or a row: the record opens in a box over the bench, with the file where you can read it, and a link to where it is published.',
+        'Click a cover or a row: the record opens in a box over the bench, with its citation (<b>Copy</b> copies it), the file where you can read it, and a link to where it is published.',
+        'A work may have other forms, such as a transcript: a button below it opens one under the work, so you can read it while a recording plays.',
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
@@ -447,6 +455,44 @@
   };
   SW.views.library = { show: function () { if (!drawn) { drawn = true; draw(); } } };
 
+  // ---------- a citation ----------
+  // Harvard, from what the record has: the author as written; the title quoted where it appeared in
+  // something else, in italics where it stands alone. e.citation, written by hand, is used as it is.
+  function inOf(e) { var s = String(e.in || '').trim(); return /^\(.*\)$/.test(s) ? '' : s; }   // "(monograph)": a note, not a place
+  L.citation = function (e) {
+    if (e.citation) return { text: String(e.citation), html: esc(e.citation) };
+    var where = inOf(e), fam = L.family(e), part = !!where || fam === 'article' || fam === 'chapter';
+    var plain = [], rich = [];
+    function add(t, h) { plain.push(t); rich.push(h == null ? esc(t) : h); }
+    function stop(s) { return /[.?!]['’"”]?$/.test(s) ? s : s + '.'; }
+    var head = (e.author ? String(e.author).trim() + ' ' : '') + '(' + (L.year(e.date) || e.date || 'n.d.') + ')';
+    add(head);
+    var t = String(e.title || '').trim();
+    var pub = fam === 'article' && where ? '' : String(e.publisher || '').trim(), pages = String(e.pages || '').trim();
+    var pp = where && /\d/.test(pages) ? (/^(pp?\.)/i.test(pages) ? pages : (/[-–]/.test(pages) ? 'pp. ' : 'p. ') + pages) : '';
+    // an article's pages follow its journal; a chapter's follow the book's publisher
+    var after = fam === 'article' && pp ? ', ' + pp : '';
+    if (part) {
+      var q = '‘' + t + '’';
+      if (where) {
+        var lead = fam === 'chapter' ? ', in ' : ', ';
+        add(q + lead + where + after, esc(q + lead) + '<i>' + esc(where) + '</i>' + esc(after));
+      } else add(q);
+    } else add(t, '<i>' + esc(t) + '</i>');
+    var tail = [];
+    if (pub) tail.push(pub);
+    if (pp && !after) tail.push(pp);
+    var doi = String(e.doi || '').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
+    var link = doi ? 'https://doi.org/' + doi : String(e.url || '').trim();
+    function join(xs) {
+      var s = xs[0] + ' ' + stop(xs[1]);
+      return tail.length ? s + ' ' + stop(tail.join(', ')) : s;
+    }
+    var text = join(plain), html = esc(plain[0]) + ' ' + rich[1] + (/[.?!]['’"”]?$/.test(plain[1]) ? '' : '.') + (tail.length ? ' ' + esc(stop(tail.join(', '))) : '');
+    if (link) { text += ' ' + link; html += ' ' + esc(link); }
+    return { text: text, html: html };
+  };
+
   // ---------- an entry, in a box over the bench ----------
   L.open = function (id) {
     return L.load().then(function () {
@@ -454,7 +500,9 @@
       if (!e) { SW.toast('No entry ' + id + ' in the library.', 3000); return; }
       var priv = isPrivate(e), canOpen = !!e.file && (!priv || L.member());
       var k = canOpen ? kindOfFile(e.file) : null, d = SW.el('dialog', { class: 'tray-big lib-dlg' });
-      var rec = [['Author', e.author], ['Date', e.date], ['Kind', e.kind], ['Language', e.lang], ['DOI', e.doi], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var alts = (e.alts || []).filter(function (a) { return a && a.file && (!isPrivate(a) || L.member()); });
+      var cite = L.citation(e);
+      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', e.lang], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
@@ -464,15 +512,28 @@
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
         '<div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
+        '<div class="lib-cite"><span class="lib-cite-t">' + cite.html + '</span> <button class="btn ghost" data-a="cite" title="Copy this citation">Copy</button></div>' +
         (rec ? '<dl class="lib-rec">' + rec + '</dl>' : '') +
         (canOpen ? '<div class="lib-file" data-k="' + k + '"><p class="hint">Opening the file…</p></div>' :
           priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' :
-          '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>');
+          '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>') +
+        (alts.length ? '<div class="lib-alts">' + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '');
       document.body.appendChild(d);
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
         if (ev.target.closest('[data-a="link"]')) { SW.copyText(SW.permalink({ tab: 'library', lib: e.id }), 'the link'); return; }
+        if (ev.target.closest('[data-a="cite"]')) { SW.copyText(cite.text, 'the citation'); return; }
+        var alt = ev.target.closest('[data-alt]');
+        if (alt) {
+          var a = alts[+alt.dataset.alt], at = SW.$('.lib-alt', d), was = alt.classList.contains('on');
+          SW.$$('[data-alt]', d).forEach(function (b) { b.classList.remove('on'); });
+          if (was) { at.innerHTML = ''; return; }
+          alt.classList.add('on');
+          at.innerHTML = '<p class="hint">Opening…</p>';
+          show(at, { file: a.file, lang: a.lang || e.lang, title: a.label || e.title }, kindOfFile(a.file), isPrivate(a));
+          return;
+        }
         if (ev.target.closest('[data-a="edit"]')) { d.close(); L.form(e); return; }
         var rm = ev.target.closest('[data-a="rm"]');
         if (rm) {
