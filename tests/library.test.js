@@ -333,5 +333,69 @@
     }).then(restore, function (e) { restore(); throw e; });
   }
   // after the Images tab's checks, which also put their own window.fetch in place
-  T.later('the Library', function () { return (T.fetchChain || Promise.resolve()).then(run); });
+  // notes on an item, against a stand-in for Hypothesis
+  function itemNotes() {
+    var SW = window.SW, B = SW.BENCH, N = SW.notes;
+    if (!N || !N.itemPanel) return Promise.resolve();
+    T.group('Notes on items');
+    T.eq('a time', [N.parseAt('12:46'), N.parseAt('1:02:03'), N.parseAt('p. 12'), N.parseAt('12'), N.parseAt('soon')], ['t:766', 't:3723', 'p:12', 'p:12', null]);
+    T.eq('as read', [N.atLabel('t:766'), N.atLabel('t:3723'), N.atLabel('p:12')], ['12:46', '1:02:03', 'p. 12']);
+    var was = { fetch: window.fetch, token: SW.store.get('token', ''), group: SW.store.get('group', ''), lib: B.library, mod: SW.library, ini: SW.store.get('initials', ''), view: SW.views.library, kit: SW.kitViews, px: SW.paratexts, drafts: SW.store.get('drafts', []) };
+    var rows = [], posted = [], nid = 0;
+    function ok(o) { return Promise.resolve(new Response(JSON.stringify(o), { status: 200, headers: { 'Content-Type': 'application/json' } })); }
+    window.fetch = function (u, o) {
+      u = String(u);
+      if (!/api\.hypothes\.is/.test(u)) return was.fetch.apply(window, arguments);
+      var m = (o && o.method) || 'GET';
+      if (/\/profile/.test(u)) return ok({ userid: 'acct:tester@hypothes.is', groups: [{ id: 'grp', name: 'G' }] });
+      if (m === 'POST') { var b = JSON.parse(o.body); posted.push(b); var r = Object.assign({ id: 'h' + (++nid), created: new Date().toISOString(), user: 'acct:tester@hypothes.is', references: b.references }, b); rows.push(r); return ok(r); }
+      if (/offset=[1-9]/.test(u)) return ok({ rows: [] });
+      var um = /[?&]uri=([^&]+)/.exec(u), want = um && decodeURIComponent(um[1]);
+      return ok({ rows: rows.filter(function (a) { return !want || a.uri === want; }) });
+    };
+    SW.store.set('token', 'x'); SW.store.set('group', 'grp'); SW.store.set('initials', 'TT'); N.forget();
+    var el = document.createElement('div'), host = document.createElement('div');
+    host.innerHTML = '<audio></audio><p>Words in it</p>';
+    document.body.appendChild(host); document.body.appendChild(el);
+    function restore() {
+      window.fetch = was.fetch; SW.store.set('token', was.token); SW.store.set('group', was.group); SW.store.set('initials', was.ini); SW.store.set('drafts', was.drafts);
+      B.library = was.lib; SW.library = was.mod; SW.kitViews = was.kit; SW.paratexts = was.px; if (was.view) SW.views.library = was.view; else delete SW.views.library; N.forget(); N.invalidate('item:P-AAAAA'); el.remove(); host.remove();
+      var v = document.getElementById('view-library'); if (v && !was.view) v.remove();
+    }
+    return N.itemPanel(el, 'P-AAAAA', { host: host }).then(function () {
+      T.yes('the panel draws, open for a member', el.querySelector('details[open] textarea'));
+      el.querySelector('textarea').value = 'At this moment.';
+      el.querySelector('.in-at').value = '12:46';
+      el.querySelector('[data-in="save"]').click();
+      return wait(40);
+    }).then(function () {
+      var b = posted[0];
+      T.yes('the note goes to the group', b && b.group === 'grp' && b.permissions.read[0] === 'group:grp');
+      T.yes('tagged with the item, the kind and the time', b.tags.indexOf('bk:v:item:P-AAAAA') >= 0 && b.tags.indexOf('bk:kind:item') >= 0 && b.tags.indexOf('bk:at:t:766') >= 0);
+      return wait(60);
+    }).then(function () {
+      var chip = el.querySelector('.note-at');
+      T.eq('it shows with its pin', chip && chip.textContent, '12:46');
+      chip.click();
+      T.eq('and the pin moves the player', host.querySelector('audio').currentTime >= 0, true);
+      T.eq('the count', el.querySelector('.in-n').textContent, '1');
+      T.eq('no My notes button on it', el.querySelectorAll('[data-act="keep"]').length, 0);
+      return N.itemCounts();
+    }).then(function (c) {
+      T.eq('counted by code', c, { 'P-AAAAA': 1 });
+      return N.listAll({ reactions: true });
+    }).then(function (all) {
+      T.eq('left out of what reads versions', all.filter(function (n) { return N.isItem(n.vid); }).length, 0);
+      T.yes('its link opens the item', /code=P-AAAAA/.test(N.linkOf({ vid: 'item:P-AAAAA' })));
+      T.yes('its label names the item', /P-AAAAA/.test(N.labelOf({ vid: 'item:P-AAAAA', by: 'TT' })));
+      // the reply goes to the same item
+      el.querySelector('[data-act="reply"]').click();
+      var box = el.querySelector('.reply-box'); box.querySelector('textarea').value = 'And a reply.'; box.querySelector('[data-r="save"]').click();
+      return wait(60);
+    }).then(function () {
+      T.yes('a reply on the same item', posted[1] && posted[1].uri === posted[0].uri && posted[1].references[0] === 'h1');
+      restore();
+    }, function (e) { restore(); throw e; });
+  }
+  T.later('the Library', function () { return (T.fetchChain || Promise.resolve()).then(run).then(itemNotes); });
 })();

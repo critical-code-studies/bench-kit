@@ -648,6 +648,14 @@
     };
   }
   function byCode(c) { return (cat ? cat.items : []).filter(function (it) { return it.code === c; })[0] || null; }
+  P.titleOf = function (c) { var x = byCode(c); return x ? x.title : ''; };
+  var NCOUNT = {}, ncAsked = false;
+  function askCounts() {
+    if (ncAsked || !SW.notes || !SW.notes.itemCounts) return;
+    ncAsked = true;
+    SW.notes.itemCounts().then(function (c) { NCOUNT = c; if (Object.keys(c).length) refresh(); }, function () {});
+  }
+  if (SW.on) SW.on('notes', function (v) { if (SW.notes && SW.notes.isItem && SW.notes.isItem(v) && ncAsked) { ncAsked = false; askCounts(); } });
 
   // ---------- one paratext ----------
   // ---------- what an item is: its type, beside its file's kind ----------
@@ -1524,11 +1532,12 @@
       '<div class="px-acts"><button class="btn" data-a="save">Save changes</button> <span class="hint px-msg"></span>' + exportMenu('data-xp') + (it.withdrawn ? '<button class="btn ghost px-wd" data-a="restore" title="Back into the list">Bring back</button>' : moreMenu('<button data-a="withdraw">Withdraw from the list…</button>')) + '</div>' +
       (it.withdrawn ? '<p class="badge px-wdnote">Withdrawn ' + esc(SW.fmtDate(it.withdrawn)) + (it.withdrawnBy ? ' by ' + esc(it.withdrawnBy) : '') + (it.withdrawnWhy ? ': ' + esc(it.withdrawnWhy) : '') + '</p>' : '') +
       '<div class="px-linkline">Use the code <span class="mono">' + esc(it.code) + '</span> in an annotation to link it. <button class="btn ghost" data-copy="' + esc(it.code) + '">Copy the code</button></div>' +
-      '<div class="px-talk">' + talkHTML(it) + '</div><div class="px-related">' + relatedHTML(it) + '</div><div class="px-cited"></div></div></div>';
+      '<div class="px-notes"></div><div class="px-talk">' + talkHTML(it) + '</div><div class="px-related">' + relatedHTML(it) + '</div><div class="px-cited"></div></div></div>';
     document.body.appendChild(d);
     d.addEventListener('close', function () { d.remove(); });
     d.showModal();
     showFile(it, SW.$('.px-pv', d), SW.$('[data-a="dl"]', d));
+    if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.px-notes', d), it.code, { host: SW.$('.px-pv', d) });
     setTimeout(function () {   // fetching ahead: N either side (⚙ Settings ▸ Paratexts; 1 by default) in the list and each sequence, nearest first, and small alternates
       if (!d.isConnected) return;
       var n = +SW.store.get('px.ahead', 1); if (!(n >= 0)) n = 1; n = Math.min(n, 10);
@@ -1733,7 +1742,7 @@
   }
   // after a save: the list and the open panel from the catalogue, with any rating still waiting
   function settle() { applyWanted(); if (!rateTimer) refresh(); Object.keys(pendingRates).length ? Object.keys(pendingRates).forEach(showRating) : redrawTalk(); }
-  function summary(it) { return gapChips(it) + summary0(it); }
+  function summary(it) { askCounts(); return gapChips(it) + (NCOUNT[it.code] ? '<span class="px-s lib-nb" title="' + NCOUNT[it.code] + ' in the group’s notes">✎ ' + NCOUNT[it.code] + '</span> ' : '') + summary0(it); }
   function gapChips(it) {
     var gn = gapCount(it), q = (F.q || '').toLowerCase();
     var inFill = q && gapHay(it, true).toLowerCase().indexOf(q) >= 0 && [it.code, it.title, it.description, gapHay(it)].join(' ').toLowerCase().indexOf(q) < 0;
@@ -1922,9 +1931,10 @@
         '<dl class="px-ro">' + rows.map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + (r[0] === 'Description' ? SW.md(r[1]) : r[0] === 'Archive link' && okURL(r[1]) ? '<a href="' + esc(r[1].trim()) + '" target="_blank" rel="noopener">' + esc(r[1]) + ' ↗</a>' : esc(r[1])) + '</dd>'; }).join('') + '</dl>' +
         '<div class="px-tags">' + summary(it) + '</div>' +
         (nc ? '<details class="px-cfold"><summary class="fd-rh">Comments <span class="faint">' + nc + '</span></summary>' + it.comments.map(function (c) { return '<div class="fd-reply"><div class="fd-rhead"><b>' + esc(c.by) + '</b> <span class="faint">' + esc(SW.fmtDate(c.date)) + '</span></div><div class="note-md">' + SW.md(c.text) + '</div></div>'; }).join('') + '</details>' : '') +
-        '<div class="px-cited"></div></div></div>' +
+        '<div class="px-notes"></div><div class="px-cited"></div></div></div>' +
         '<div class="px-peekfoot"><a href="?tab=paratexts&code=' + esc(code) + '" data-px="full" title="In ' + SW.px('Many') + ', where it can be edited, rated and commented on">Go to ' + esc(code) + ' in ' + SW.px('Many') + ' →</a></div>';
       showFile(it, SW.$('.px-view', d), SW.$('[data-a="dl"]', d));
+      if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.px-notes', d), code, { host: SW.$('.px-view', d) });
     citedIn(code, SW.$('.px-cited', d));
     }, function (e) { d.innerHTML = head('Could not open') + '<p class="badge err">' + esc(e.message) + '</p>'; });
   }

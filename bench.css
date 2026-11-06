@@ -1264,6 +1264,23 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-text { white-space: pre-wrap; font: 15px/1.6 var(--serif, Georgia, serif); max-height: 72vh; overflow: auto; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); }
 .lib-md { max-height: 72vh; overflow: auto; padding: 4px 12px; border: 1px solid var(--line); border-radius: 4px; }
 @media (max-width: 760px) { .lib-row { grid-template-columns: 30px minmax(0, 1fr); } .lib-row .lib-h { grid-column: 2; grid-row: auto; } .lib-frame { height: 64vh; } }
+.lib-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1000px) { .lib-cols { grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); } }
+.lib-side { min-width: 0; }
+.lib-nb { display: inline-block; font: 11px var(--mono); padding: 0 5px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-dim); }
+.lib-stand .lib-nb { position: absolute; top: 4px; right: 18px; background: var(--surface); }
+.lib-t .lib-nb { margin-left: 8px; font-weight: 400; }
+.lib-nwork { margin: 0 0 18px; }
+.lib-nhead { display: block; width: 100%; text-align: left; padding: 6px 0; margin-bottom: 6px; border: 0; border-bottom: 1px solid var(--line); background: none; color: inherit; font: inherit; cursor: pointer; }
+.item-notes .in-fold > summary { cursor: pointer; }
+.in-new { margin-top: 8px; }
+.in-new textarea { width: 100%; box-sizing: border-box; font: inherit; }
+.in-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.in-foot [data-in="save"] { margin-left: auto; }
+.in-quote { display: flex; gap: 6px; align-items: flex-start; padding: 4px 8px; margin-bottom: 4px; border-left: 3px solid var(--line); font: italic 13px/1.4 var(--serif, Georgia, serif); }
+.in-quote span { flex: 1; min-width: 0; }
+.note-at { display: inline-block; margin-bottom: 2px; padding: 0 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); color: inherit; font: 11px var(--mono); cursor: pointer; }
+.note-quote { margin: 2px 0 4px; padding: 2px 8px; border-left: 3px solid var(--line); color: var(--text-dim); font: italic 13.5px/1.4 var(--serif, Georgia, serif); cursor: pointer; }
 .lib-cite { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 12px; padding: 8px 10px; border-left: 3px solid var(--line); background: var(--surface-2); font: 14px/1.45 var(--serif, Georgia, serif); }
 .lib-cite-t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .lib-cite .btn { flex: none; font-family: inherit; }

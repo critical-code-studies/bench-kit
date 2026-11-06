@@ -176,6 +176,15 @@ A button below the work opens each one under it, so a transcript can be read whi
 
 An entry's box shows a citation with a Copy button, in Harvard form, built from `author`, `date`, `title`, `in`, `publisher`, `pages` and `doi` or `url`. The author is used as written. `in` holding only a note in brackets, such as `(monograph)`, is left out. Where the built form is wrong, `citation` gives the citation as written.
 
+## Notes on a work
+
+The panel in an entry's box, and in a paratext's, holds notes in the bench's Hypothesis group, with replies and reactions as on a text, so they need that group's token and are visible to the group only. Without one, a note stays a draft in that browser. A note is an annotation with `item:<code>` in place of a version, tagged `bk:kind:item`, and pinned if wanted by `bk:at:t:<seconds>`, `bk:at:p:<page>` or `bk:at:q` with the quoted words. The code stays when an item moves from Paratexts to the Library, so its notes go with it.
+
+A cover shows a count, **Annotated** filters to those, and ✎ lists all the notes across the Library and Paratexts. Paratexts' cards show the count too. Paratexts' own comments and ratings remain as they were, kept in its catalogue and separate from these notes.
+
+A pin goes back to its place on a held recording, on YouTube and Vimeo by restarting their player there, and on a PDF in the browser's viewer. A paratext's PDF, drawn page by page, does not yet go to a pinned page.
+
 ## Not in the kit yet
 
-- **Comments.** Paratexts has them; the Library has none.
+- **Comments on Library entries as in Paratexts' catalogue.** The Library has notes in the group instead.
+- **A note pinned to a region of an image.**

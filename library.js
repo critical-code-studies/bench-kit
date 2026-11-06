@@ -51,6 +51,8 @@
  * and any copy beside it (library/<id>.<ext>, 40 MB at most). Members see additions in the list at once,
  * and may correct or remove them there; nobody else sees them. tools/library-publish.js brings them into
  * the public manifest, when the person running the bench chooses.
+ * Notes on an entry are annotations in the group (kit/notes.js, N.itemPanel): a panel in its box, a count
+ * on its cover, an Annotated filter, and a Notes view of them all.
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), add(record, file),
  * update(id, record), remove(id), form(entry), family(entry), year(date), surname(author), sorted(items, order),
  * has(id), citation(entry) { text, html },
@@ -373,18 +375,65 @@
       if (F.show === 'group' && !isPrivate(e)) return false;
       if (F.show === 'out' && (e.file || !e.url)) return false;
       if (F.show === 'added' && !isAdded(e)) return false;
+      if (F.show === 'noted' && !NC[e.id]) return false;
       if (F.kind && e.kind !== F.kind) return false;
       if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, (e.tags || []).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
   }
+  // ---------- notes on the entries ----------
+  var NC = {};
+  function itemNotes() { return SW.notes && SW.notes.itemNotes ? SW.notes : null; }
+  function paintCounts(view) {
+    var N = itemNotes(); if (!N) return;
+    N.itemCounts().then(function (c) {
+      NC = c;
+      var show = SW.$('.lib-show', view), box = SW.$('.lib-list', view); if (!box) return;
+      var any = Object.keys(c).length, btn = SW.$('[data-show="noted"]', view);
+      if (any && !btn && show) show.appendChild(SW.el('button', { class: 'btn' + (F.show === 'noted' ? ' on' : ''), 'data-show': 'noted', title: 'The entries with notes on them' }, 'Annotated'));
+      SW.$$('[data-lib]', box).forEach(function (r) {
+        var n = c[r.dataset.lib], at = SW.$('.lib-stand', r) || SW.$('.lib-t', r), old = SW.$('.lib-nb', r);
+        if (old) old.remove();
+        if (n && at) at.appendChild(SW.el('span', { class: 'lib-nb', title: n + (n === 1 ? ' note' : ' notes') }, '✎ ' + n));
+      });
+    }, function () {});
+  }
+  function titleOf(code) {
+    var e = byId(code), P = SW.paratexts;
+    return (e && e.title) || (P && P.titleOf && P.titleOf(code)) || code;
+  }
+  function drawNotes(view, box) {
+    box.classList.remove('lib-shelf');
+    var N = itemNotes();
+    if (!N) { box.innerHTML = '<p class="hint pad">This bench has no annotation group.</p>'; return; }
+    box.innerHTML = '<p class="hint pad">Reading the notes…</p>';
+    N.itemNotes().then(function (all) {
+      if (F.view !== 'notes') return;
+      var by = {}, q = F.q.toLowerCase();
+      all.forEach(function (n) { var c = N.itemCode(n.vid); (by[c] = by[c] || []).push(n); });
+      function latest(c) { return by[c].reduce(function (m, n) { return String(n.date) > m ? String(n.date) : m; }, ''); }
+      var codes = Object.keys(by).filter(function (c) {
+        return !q || (c + ' ' + titleOf(c)).toLowerCase().indexOf(q) >= 0 || by[c].some(function (n) { return (String(n.text) + ' ' + n.by + ' ' + (n.quote || '')).toLowerCase().indexOf(q) >= 0; });
+      }).sort(function (a, b) { return latest(a) < latest(b) ? 1 : -1; });
+      var th = 0;
+      box.innerHTML = codes.length ? codes.map(function (c) {
+        var ts = N.threads(by[c]).reverse(); th += ts.length;
+        return '<section class="lib-nwork" data-code="' + esc(c) + '"><button class="lib-nhead" data-noteopen="' + esc(c) + '"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(titleOf(c)) + '</b></button>' +
+          ts.map(function (t) { return N.renderThread(t); }).join('') + '</section>';
+      }).join('') : '<p class="hint pad">' + (N.configured() ? 'No notes' + (q ? ' answer the search' : ' yet') + '. A note is added in an entry’s box.' : 'Notes are kept in the annotation group (Help ▸ Getting set up).') + '</p>';
+      N.wire(box, null, all);
+      var n = SW.$('.lib-n', view); if (n) n.textContent = th + (th === 1 ? ' note' : ' notes') + ' on ' + codes.length;
+    }, function (e) { box.innerHTML = '<p class="pad badge err">' + esc(e.message) + '</p>'; });
+  }
   function setting(key, name, v) { F[key] = v; SW.store.set('library.' + name, v); }
   function list(view) {
     var box = SW.$('.lib-list', view); if (!box) return;
+    if (F.view === 'notes') { drawNotes(view, box); paintCounts(view); return; }
     var rs = L.sorted(rows(), F.order), icons = F.view !== 'list';
     box.classList.toggle('lib-shelf', icons);
     box.innerHTML = rs.length ? rs.map(icons ? tile : row).join('') : '<p class="hint pad">Nothing in the library answers the search.</p>';
     var n = SW.$('.lib-n', view); if (n) n.textContent = rs.length + ' of ' + L.items().length;
+    paintCounts(view);
   }
   function draw() {
     var view = SW.$('#view-library'); if (!view) return;
@@ -397,7 +446,7 @@
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
         (kinds.length > 1 ? '<select class="lib-kind" aria-label="Kind"><option value="">Every kind</option>' + kinds.sort().map(function (k) { return '<option' + (k === F.kind ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>' : '') +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
-        '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button></span>' +
+        '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span>' + (L.member() ? '<button class="btn lib-add">＋ Add a work</button>' : '') + '</div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
@@ -410,6 +459,9 @@
         view.addEventListener('click', function (ev) {
           if (ev.target.closest('.lib-add')) { L.form(); return; }
           if (ev.target.closest('.lib-help')) { L.help(); return; }
+          var no = ev.target.closest('[data-noteopen]'); if (no) { SW.notes.openItem(no.dataset.noteopen); return; }
+          var ng = ev.target.closest('[data-at]'), sec = ev.target.closest('[data-code]');
+          if (ng && sec) { var nq = ng.dataset.at === 'q' ? ng.textContent : '', nat = ng.dataset.at; SW.notes.openItem(sec.dataset.code).then(function () { setTimeout(function () { var ds = SW.$$('dialog[open]'); SW.notes.itemGo(nat, nq, ds[ds.length - 1]); }, 800); }); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
           var s = ev.target.closest('[data-show]'); if (s) { F.show = s.dataset.show; SW.$$('[data-show]', view).forEach(function (b) { b.classList.toggle('on', b === s); }); list(view); return; }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
@@ -439,6 +491,11 @@
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
+      ['Notes on a work', ul([
+        'The panel beside a work holds the group’s notes on it, with replies and reactions as on a text. They are visible to the annotation group only (Help ▸ Getting set up).',
+        'A note can be pinned: <b>⏱ Now</b> takes the time a held recording is at, <b>At</b> takes a typed time or page, and words selected in a transcript or text are quoted. Clicking the pin goes back there.',
+        'A count on a cover shows a work has notes. <b>Annotated</b> shows those works, and <b>✎</b> lists all the notes, newest work first; the search reads them too.',
+        'A note made on a paratext stays with its code if the item moves to the Library.'])],
       ['Adding a work', ul([
         'A member with a token has <b>＋ Add a work</b>: a record, with a copy of up to 40 MB or without one, and a link to a cover image if you have one.',
         'It goes in the group’s private repository. Members see it at once, marked <b>Added, not yet public</b>, and can correct or remove it from its box. Nobody else sees it.',
@@ -448,6 +505,10 @@
     SW.guide('library');
   };
   SW.views.library = { show: function () { if (!drawn) { drawn = true; draw(); } } };
+  if (SW.on) SW.on('notes', function (vid) {
+    if (!drawn || !SW.notes || !SW.notes.isItem || !SW.notes.isItem(vid)) return;
+    var v = SW.$('#view-library'); if (v && SW.$('.lib-list', v)) list(v);
+  });
 
   // ---------- a citation ----------
   // Harvard, from what the record has: the author as written; the title quoted where it appeared in
@@ -506,13 +567,14 @@
         '<button class="btn ghost" data-a="link" title="Copies a link to this entry">🔗 Copy link</button>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
-        '<div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
+        '<div class="lib-cols"><div class="lib-main"><div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
         '<div class="lib-cite"><span class="lib-cite-t">' + cite.html + '</span> <button class="btn ghost" data-a="cite" title="Copy this citation">Copy</button></div>' +
         (rec ? '<dl class="lib-rec">' + rec + '</dl>' : '') +
         (canOpen ? '<div class="lib-file" data-k="' + k + '"><p class="hint">Opening the file…</p></div>' :
           priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' + (player || '') :
           player || '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>') +
-        (alts.length || (canOpen && player) ? '<div class="lib-alts">' + (canOpen && player ? '<button class="btn ghost" data-play>▶ Play from ' + esc(hostName(e.url)) + '</button>' : '') + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '');
+        (alts.length || (canOpen && player) ? '<div class="lib-alts">' + (canOpen && player ? '<button class="btn ghost" data-play>▶ Play from ' + esc(hostName(e.url)) + '</button>' : '') + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '') +
+        '</div><div class="lib-side"></div></div>';
       document.body.appendChild(d);
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('click', function (ev) {
@@ -552,6 +614,7 @@
       });
       d.showModal();
       if (canOpen) show(SW.$('.lib-file', d), e, k, priv);
+      if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.lib-side', d), e.id, { host: SW.$('.lib-main', d) });
       L.copies(e.id).then(function (cs) {
         var box = SW.$('.lib-copies', d); if (!box || !cs.length) return;
         box.innerHTML = '<span class="faint">The group’s copy:</span> ' + cs.map(function (c) { return '<button class="btn ghost" data-px="' + esc(c.code) + '" title="' + esc(c.title || '') + '">' + esc(c.code) + ' in ' + SW.px('Many') + '</button>'; }).join(' ');

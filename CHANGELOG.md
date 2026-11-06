@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Notes on Library and Paratexts items** (David, 2026-11-06, for Mark Marino: "so we can record our thoughts on these artefacts"). Annotations in the bench's Hypothesis group: a panel in an item's box, with replies and reactions; a pin to a time, a page or quoted words; a count on covers and cards; an Annotated filter and a ✎ view of all of them in the Library; What's new takes them in. A note stays with an item's code when it moves from Paratexts to the Library. `N.itemPanel`, `N.itemNotes`, `N.itemCounts`, `N.itemGo` in `notes.js`; no new script for a bench to load.
 - The Library stretches to the full width of the browser (David, 2026-11-06).
 - The Library no longer shows the private repository's size or a warning about it above the list (David, 2026-11-06). Its Help says a copy stays in the repository's history, and `docs/library.md` says how to read the size. `SW.library.size()` is gone.
 - The tests ask again for a module that did not load (`T.script`). A test run failed twice in about 25 with "could not load images.js" on a busy machine; the cause is not established.

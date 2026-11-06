@@ -12,6 +12,12 @@
  * Until a group and token are configured, notes are kept as drafts in this
  * browser and can be published later. The automatic build log for each
  * version (versions.js) is shown alongside, marked as such.
+ *
+ * A note on a Library or Paratexts item is the same kind of annotation, with item:<code> where a note on
+ * a text has its version, and may be pinned with at: t:<seconds>, p:<page> or q (a quoted passage). The code
+ * stays when an item moves from Paratexts to the Library, so its notes go with it. N.itemPanel(el, code, o)
+ * is the panel in an item's box; N.itemNotes() every such note; N.itemCounts() { code: threads }.
+ * N.listAll leaves them out unless opts.items, since the other views read a version from each note.
  */
 (function (root) {
   'use strict';
@@ -58,6 +64,15 @@
   var API = 'https://api.hypothes.is/api';
   var N = SW.notes = {};
   N.types = types; N.typeOf = typeOf; N.typeName = typeName;
+  function isItem(vid) { return /^item:/.test(String(vid || '')); }
+  N.isItem = isItem;
+  N.itemCode = function (vid) { return String(vid).slice(5); };
+  // an item's name, from whichever shelf has it
+  function itemName(vid) {
+    var c = N.itemCode(vid), L = SW.library, P = SW.paratexts, e = L && L.items ? L.items().filter(function (x) { return x.id === c; })[0] : null;
+    var t = (e && e.title) || (P && P.titleOf && P.titleOf(c)) || '';
+    return c + (t ? ', ' + t : '');
+  }
   var cache = {};
   // Notes just saved to the group, shown until the group's search returns them
   // (Hypothesis takes a moment to index a new annotation).
@@ -165,7 +180,7 @@
       date: a.created, updated: a.updated, parent: (a.references || []).slice(-1)[0] || null,
       tags: tags.filter(function (t) { return !ours(t); }), source: 'hypothesis', user: a.user || '', rawTags: tags,
       binned: has(tags, 'deleted'), dev: has(tags, 'dev'), binnedAt: tv(tags, 'deleted-at:'), from: tv(tags, 'from:') || null,
-      link: a.links && (a.links.incontext || a.links.html), quote: qsel ? qsel.exact : ''
+      link: a.links && (a.links.incontext || a.links.html), quote: qsel ? qsel.exact : '', at: tv(tags, 'at:') || null
     };
   }
 
@@ -277,11 +292,11 @@
                     name: bn.who, date: bn.date, parent: null, tags: ['build log'], source: 'buildlog' });
       });
     });
-    var local = drafts().filter(function (d) { return !isBinned(d); });
+    var local = drafts().filter(function (d) { return !isBinned(d) && (opts.items || !isItem(d.vid)); });
     function page(offset, acc) {
       return hx('GET', '/search?limit=200&sort=created&order=asc&offset=' + offset + '&group=' + encodeURIComponent(cfg().group))
         .then(function (r) {
-          var rows = (r.rows || []).map(fromH).filter(function (n) { return n.vid && !deleted[n.id] && !isBinned(n); });
+          var rows = (r.rows || []).map(fromH).filter(function (n) { return n.vid && (opts.items || !isItem(n.vid)) && !deleted[n.id] && !isBinned(n); });
           acc = acc.concat(rows);
           return (r.rows || []).length === 200 && offset < 5000 ? page(offset + 200, acc) : acc;
         });
@@ -301,7 +316,7 @@
   N.news = function () {
     if (!N.configured()) { newsItems = []; paintNews(); return Promise.resolve([]); }
     var since = newsSince();
-    return N.whoami().catch(function () {}).then(function () { return N.listAll({ reactions: true }); }).then(function (all) {
+    return N.whoami().catch(function () {}).then(function () { return N.listAll({ reactions: true, items: true }); }).then(function (all) {
       newsAll = all;
       var me = SW.me().initials;
       var byId = {}; all.forEach(function (n) { byId[n.id] = n; });
@@ -330,12 +345,13 @@
     // a page rated in Book (a reaction ★1..★3 that answers no annotation, tagged page:<facs>)
     var pageOf = !n.parent && N.isReaction(n) && (n.tags || []).filter(function (g) { return /^page:/.test(g); })[0];
     var what = N.isReaction(n) && (OPEN[n.text] || DONE[n.text]) ? (DONE[n.text] ? 'resolved ' : OPEN[n.text] === 'help' ? 'asked for help on ' : 'marked open ') + (par ? par.by + '’s annotation' : 'an annotation') : N.isReaction(n) ? n.text + ' on ' + (par ? par.by + '’s annotation' : 'an annotation') : n.parent ? 'reply to ' + (par ? par.by : 'an annotation') : n.anchor ? 'annotation' : 'annotation on the version';
+    if (isItem(n.vid) && !N.isReaction(n)) what = n.parent ? 'reply on a note on' : 'note on';
     if (pageOf) what = 'rated ' + pageOf.slice(5) + ' ' + String(n.text).split(/\s/)[0];
     var toYou = !N.isReaction(n) && N.mentions(n, SW.me().initials), mine = toMine(n, byId);
     if (mine) what = (N.isReaction(n) ? n.text + ' on' : n.parent === mine.id ? 'replies to' : 'replies under') + ' your ' + (isFinding(mine) ? 'finding' : 'annotation') + ' ' + N.code(mine).replace(/^A-/, isFinding(mine) ? 'C-' : 'A-');
     var root0 = par; while (root0 && root0.parent && byId[root0.parent]) root0 = byId[root0.parent];
     var anchor = n.anchor || (root0 && root0.anchor) || (par && par.anchor);
-    var where = (v ? short(v.label) : n.vid) + ' ' + (anchor ? SW.refText(n.vid, anchor.p, anchor.n0, anchor.n1, SW.nparts(n.vid)) : SW.refText(n.vid));
+    var where = isItem(n.vid) ? itemName(n.vid) : (v ? short(v.label) : n.vid) + ' ' + (anchor ? SW.refText(n.vid, anchor.p, anchor.n0, anchor.n1, SW.nparts(n.vid)) : SW.refText(n.vid));
     return { n: n, anchor: anchor, mine: mine, html: '<div class="news-item' + (mine ? ' news-mine' : '') + '" data-id="' + SW.esc(n.id) + '"><div class="news-meta"><b>' + SW.esc(n.by) + '</b> · ' + (toYou ? '<b class="mention-you">mentions you</b> in ' : '') + (mine ? '<b class="mention-you">' + SW.esc(what) + '</b>' : SW.esc(what)) +
       ' · <span class="mono">' + SW.esc(where) + '</span> · <span class="faint">' + SW.esc(SW.fmtDate(n.date)) + '</span></div>' +
       (N.isReaction(n) ? '' : '<div class="news-text">' + SW.esc(SW.mdPlain(SW.figpack.split(n.text).text).slice(0, 280)) + (SW.mdPlain(SW.figpack.split(n.text).text).length > 280 ? '…' : '') + '</div>') + '</div>' };
@@ -364,6 +380,7 @@
         var l = lines.filter(function (x) { return x.n.id === it.dataset.id; })[0];
         if (!l) return;
         if (l.mine && isFinding(l.mine)) { SW.findings.openRef('C-' + N.code(l.mine).slice(2)); return; }   // a reply to one's finding: the finding, with its replies
+        if (isItem(l.n.vid)) { N.openItem(N.itemCode(l.n.vid)); return; }
         SW.openAt(l.n.vid, l.anchor);
       });
       body.appendChild(list);
@@ -377,7 +394,7 @@
     setInterval(N.news, 5 * 60 * 1000);
   };
 
-  N.invalidate = function (vid) { delete cache[vid]; SW.emit('notes', vid); };
+  N.invalidate = function (vid) { delete cache[vid]; if (isItem(vid)) itemsP = null; SW.emit('notes', vid); };
 
   // note: {vid, kind, anchor, quote, text, tags, parent}
   N.create = function (note) {
@@ -393,13 +410,14 @@
       .concat(note.anchor && note.anchor.c0 != null ? [(TAG + 'chars:') + note.anchor.c0 + '-' + note.anchor.c1] : [])
       .concat(note.dev ? [(TAG + 'dev')] : [])
       .concat(note.from ? [(TAG + 'from:') + note.from] : [])   // kept from a ghost: the original's id
+      .concat(note.at ? [(TAG + 'at:') + note.at] : [])   // where in an item: t:<seconds>, p:<page>, q
       .concat(note.tags || []);
     if (!N.configured()) {
       var d = drafts();
       d.push({ id: 'draft-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), vid: note.vid, kind: note.kind || 'line', anchor: note.anchor,
                quote: note.quote || '', text: note.text, by: by, name: me.name,
                date: new Date().toISOString(), parent: note.parent || null, tags: note.tags || [],
-               source: 'draft', hTags: tags, dev: !!note.dev, from: note.from || null });
+               source: 'draft', hTags: tags, dev: !!note.dev, from: note.from || null, at: note.at || null });
       saveDrafts(d);
       N.invalidate(note.vid);
       if (!note.quiet) SW.toast('Saved as a draft in this browser (no Hypothesis group set).');
@@ -810,7 +828,7 @@
       (r.rows || []).map(fromH).filter(function (n) { return n.vid && !deleted[n.id] && !isBinned(n) && !N.isReaction(n) && re.test(n.text || ''); }).forEach(function (n) {
         var fnd = !n.parent && (n.tags || []).some(function (g) { return /^findings?$/i.test(g); });
         out.push({ code: fnd ? 'C-' + N.code(n).slice(2) : N.code(n), what: fnd ? 'finding' : n.parent ? 'reply' : 'annotation', by: n.by, date: n.date,
-                   where: n.anchor ? SW.refOf(n.vid, n.anchor.p, n.anchor.n0, n.anchor.n1, SW.nparts ? SW.nparts(n.vid) : 1) : SW.refOf(n.vid), text: cut(n.text) });
+                   where: isItem(n.vid) ? itemName(n.vid) : n.anchor ? SW.refOf(n.vid, n.anchor.p, n.anchor.n0, n.anchor.n1, SW.nparts ? SW.nparts(n.vid) : 1) : SW.refOf(n.vid), text: cut(n.text) });
       });
       return out;
     }, function () { return out; });
@@ -818,6 +836,8 @@
   N.renderNote = function (n, isReply, reactions) {
     var who = n.source === 'buildlog' ? 'build log' : (n.name || '');
     return '<div class="note' + (isReply ? ' reply' : '') + (n.source === 'buildlog' ? ' buildlog' : '') + '" data-id="' + SW.esc(n.id) + '">' +
+      (n.at && n.at.indexOf('q') !== 0 ? '<button class="note-at" data-at="' + SW.esc(n.at) + '" title="Go there">' + SW.esc(N.atLabel(n.at)) + '</button>' : '') +
+      (isItem(n.vid) && n.quote && !isReply ? '<blockquote class="note-quote" data-at="q" title="Find it">' + SW.esc(n.quote) + '</blockquote>' : '') +
       '<div class="by">' + (!isReply && N.isOpen(N.statusOf(reactions).state) ? statusChip(N.statusOf(reactions)) + ' ' : '') + (N.code(n) ? '<span class="ncode mono" data-copy="' + N.code(n) + '" title="Its code, which does not change: click to copy">' + N.code(n) + '</span> ' : '') + '<b>' + SW.esc(n.by) + '</b> · ' + SW.esc(SW.fmtDate(n.date)) +
       (who ? ' · ' + SW.esc(who) : '') + (n.source === 'draft' ? ' · <i>draft</i>' : '') + (n.dev ? ' · <span class="dev-badge" title="Developer only: hidden on the bench unless Developer mode is on (⚙)">dev</span>' : '') +
       ((n.updated && String(n.updated).slice(0, 16) !== String(n.date).slice(0, 16)) || SW.noteHistory.list(n.text).length ? ' · ' + (SW.noteHistory.list(n.text).length
@@ -839,7 +859,7 @@
       // on the right: link, keep, edit, delete
       '<span class="acts-right">' +
       (n.source !== 'buildlog' ? '<button data-act="link" class="ico" title="Copy a link to this annotation, to paste into another (or use ↪ in the editor)' + (n.source === 'draft' ? '. A draft: the link is updated when it is shared' : '') + '">↪</button>' : '') +
-      (n.source !== 'buildlog' ? '<button data-act="keep" title="Save to My notes: the annotation with its code, citation and replies, kept privately">＋ My notes</button>' : '') +
+      (n.source !== 'buildlog' && !isItem(n.vid) ? '<button data-act="keep" title="Save to My notes: the annotation with its code, citation and replies, kept privately">＋ My notes</button>' : '') +
       (N.mine(n) ? '<button data-act="edit">Edit</button>' : '') +
       (N.mine(n) ? '<button data-act="delete" class="del-note">' + (n.source === 'draft' ? 'Delete draft' : 'Delete') + '</button>' : '') +
       '</span></div></div>';
@@ -901,12 +921,12 @@
         var emoji = btn.dataset.emoji;
         var mineR = all.filter(function (x) { return N.isReaction(x) && x.parent === note.id && x.text === emoji && myReaction(x); })[0];
         btn.disabled = true;
-        (mineR ? N.remove(mineR, true) : N.create({ vid: vid, parent: note.id, kind: 'reaction', anchor: note.anchor, text: emoji, tags: [], quiet: true, dev: note.dev }))
+        (mineR ? N.remove(mineR, true) : N.create({ vid: note.vid || vid, parent: note.id, kind: 'reaction', anchor: note.anchor, text: emoji, tags: [], quiet: true, dev: note.dev }))
           .catch(function (err) { btn.disabled = false; if (err.message !== 'no initials') SW.toast(err.message, 5000); });
         return;
       }
       if (btn.dataset.act === 'reply') {
-        inlineReply(btn.closest('.note'), vid, note);
+        inlineReply(btn.closest('.note'), note.vid || vid, note);
       } else if (btn.dataset.act === 'delete') {
         // Into the bin, so no confirmation: it can be restored.
         N.bin(note).then(function () {
@@ -965,9 +985,13 @@
   N.backlinks = function (id) { return (idx.back[id] || []).map(function (x) { return idx.byId[x]; }).filter(Boolean); };
 
   function lineParam(a) { return a ? a.p + ':' + a.n0 + (a.n1 !== a.n0 ? '-' + a.n1 : '') : null; }
-  N.linkOf = function (n) { return SW.permalink({ v: n.vid, l: lineParam(n.anchor), a: n.id }); };
+  N.linkOf = function (n) {
+    if (isItem(n.vid)) { var c = N.itemCode(n.vid), L = SW.library; return SW.permalink(L && L.has && L.has(c) ? { tab: 'library', lib: c } : { code: c }); }
+    return SW.permalink({ v: n.vid, l: lineParam(n.anchor), a: n.id });
+  };
   N.labelOf = function (n) {
     var a = n.anchor;
+    if (isItem(n.vid)) return (n.by || '?') + (n.parent ? ' (reply)' : '') + ', ' + itemName(n.vid);
     return (n.by || '?') + (n.parent ? ' (reply)' : '') + ', ' +
       (a ? SW.refOf(n.vid, a.p, a.n0, a.n1, SW.nparts(n.vid)) : SW.refOf(n.vid) + ', the version');
   };
@@ -1345,6 +1369,108 @@
     d.addEventListener('close', function () { d.remove(); });
   };
 
+  // ---------- notes on an item of the Library or Paratexts ----------
+  var itemsP = null;
+  N.itemNotes = function () {
+    return itemsP || (itemsP = N.whoami().catch(function () {}).then(function () { return N.listAll({ reactions: true, items: true }); }).then(function (all) {
+      return all.filter(function (n) { return isItem(n.vid); });
+    }));
+  };
+  N.itemCounts = function () {
+    return N.itemNotes().then(function (all) {
+      var c = {};
+      all.forEach(function (n) { if (!n.parent && !N.isReaction(n)) { var k = N.itemCode(n.vid); c[k] = (c[k] || 0) + 1; } });
+      return c;
+    });
+  };
+  // the item's box, wherever it is kept
+  N.openItem = function (code) {
+    var L = SW.library;
+    return Promise.resolve(L && L.load ? L.load().catch(function () {}) : null).then(function () {
+      if (L && L.has && L.has(code)) return L.open(code);
+      if (SW.paratexts && SW.paratexts.peek) SW.paratexts.peek(code);
+    });
+  };
+  N.atLabel = function (at) {
+    var m = /^t:(\d+)$/.exec(at);
+    if (m) { var s = +m[1], h = Math.floor(s / 3600), mn = Math.floor(s / 60) % 60, p2 = function (x) { return (x < 10 ? '0' : '') + x; }; return (h ? h + ':' + p2(mn) : mn) + ':' + p2(s % 60); }
+    m = /^p:(\d+)$/.exec(at);
+    return m ? 'p. ' + m[1] : '';
+  };
+  // 12:46 or 1:02:03 a time, 12 or p. 12 a page; null for anything else
+  N.parseAt = function (s) {
+    s = String(s || '').trim();
+    var m = /^(?:(\d+):)?(\d{1,2}):(\d{2})$/.exec(s);
+    if (m) return 't:' + ((+m[1] || 0) * 3600 + m[2] * 60 + +m[3]);
+    m = /^(?:pp?\.?\s*)?(\d+)$/i.exec(s);
+    return m ? 'p:' + m[1] : null;
+  };
+  // to a note's place in the box: a held player, a video's own player started there, a PDF's page, the words
+  N.itemGo = function (at, quote, host) {
+    if (!host) return;
+    var m = /^t:(\d+)$/.exec(at || ''), media = host.querySelector('audio, video'), frame = host.querySelector('iframe');
+    if (m && media) { media.currentTime = +m[1]; var pl = media.play(); if (pl && pl.catch) pl.catch(function () {}); return; }
+    if (m && frame && /youtube|vimeo/.test(frame.src)) {
+      frame.src = /vimeo/.test(frame.src) ? frame.src.split('#')[0] + '#t=' + m[1] + 's' : frame.src.split('?')[0] + '?start=' + m[1] + '&autoplay=1';
+      return;
+    }
+    m = /^p:(\d+)$/.exec(at || '');
+    if (m && frame) { frame.src = frame.src.split('#')[0] + '#page=' + m[1]; return; }
+    if (quote && root.find) { try { root.getSelection().removeAllRanges(); root.find(String(quote).slice(0, 200)); } catch (e) {} }
+  };
+  // o.host: the element that shows the work, whose player and selected words a note can take
+  N.itemPanel = function (el, code, o) {
+    o = o || {};
+    var vid = 'item:' + code, host = o.host || null, sel = '', me = SW.me(), ts = types();
+    el.classList.add('item-notes');
+    el.innerHTML = '<details class="in-fold"' + (N.configured() ? ' open' : '') + '><summary class="fd-rh">Notes <span class="faint in-n"></span></summary>' +
+      (N.configured() ? '' : '<p class="hint">Notes are kept in the annotation group (Help ▸ Getting set up). Until you have joined, one stays a draft in this browser.</p>') +
+      '<div class="in-list"></div><div class="in-new"><div class="in-quote" hidden><span></span> <button type="button" class="icon-btn" data-in="unquote" title="Without the words">✕</button></div>' +
+      '<textarea rows="3" placeholder="A note on this work. Select words in it to quote them."></textarea>' +
+      '<div class="in-foot"><label class="faint">At <input class="in-at" size="8" placeholder="12:46, p. 12"></label> <button type="button" class="btn ghost" data-in="now" hidden title="The time the recording is at">⏱ Now</button>' +
+      (ts.length ? ' <select class="in-type" aria-label="Type"><option value="">No type</option>' + ts.map(function (t) { return '<option value="' + SW.esc(t[0]) + '">' + SW.esc(t[1]) + '</option>'; }).join('') + '</select>' : '') +
+      ' <button type="button" class="btn" data-in="save">Add note</button></div></div></details>';
+    var list = SW.$('.in-list', el), ta = SW.$('textarea', el), atIn = SW.$('.in-at', el), now = SW.$('[data-in="now"]', el), qBox = SW.$('.in-quote', el);
+    if (SW.mdTools) SW.mdTools(ta);
+    function draw() {
+      if (!el.isConnected && list.childNodes.length) return;
+      return N.list(vid).then(function (all) {
+        all = all.filter(function (n) { return n.source !== 'buildlog'; });
+        var th = N.threads(all).reverse();
+        SW.$('.in-n', el).textContent = th.length || '';
+        list.innerHTML = th.map(function (t) { return N.renderThread(t); }).join('');
+        N.wire(list, vid, all);
+      });
+    }
+    function media() { return host && host.querySelector('audio, video'); }
+    function showNow() { now.hidden = !media(); }
+    function setQuote(t) { sel = t; qBox.hidden = !t; SW.$('span', qBox).textContent = t ? '“' + (t.length > 160 ? t.slice(0, 159) + '…' : t) + '”' : ''; }
+    if (host) host.addEventListener('mouseup', function () {
+      var s = root.getSelection && root.getSelection(), t = s && !s.isCollapsed ? String(s).trim() : '';
+      if (t && t.length < 1200) setQuote(t);
+    });
+    el.addEventListener('focusin', showNow);
+    el.addEventListener('click', function (e) {
+      var go = e.target.closest('[data-at]');
+      if (go) { var nt = e.target.closest('.note'), q = go.dataset.at === 'q' ? go.textContent : ''; N.itemGo(go.dataset.at, q, host); if (nt) return; return; }
+      var b = e.target.closest('[data-in]'); if (!b) return;
+      if (b.dataset.in === 'unquote') { setQuote(''); return; }
+      if (b.dataset.in === 'now') { var m = media(); if (m) atIn.value = N.atLabel('t:' + Math.floor(m.currentTime)); return; }
+      var text = ta.value.trim(), at = atIn.value.trim() ? N.parseAt(atIn.value) : null;
+      if (!text) { ta.focus(); return; }
+      if (atIn.value.trim() && !at) { SW.toast('A time as 12:46, or a page as p. 12.', 4000); atIn.focus(); return; }
+      var ty = SW.$('.in-type', el);
+      b.disabled = true;
+      N.create({ vid: vid, kind: 'item', at: at || (sel ? 'q' : null), quote: sel, text: text, tags: ty && ty.value ? ['type:' + ty.value] : [] }).then(function () {
+        b.disabled = false; ta.value = ''; atIn.value = ''; setQuote('');
+      }, function (err) { b.disabled = false; if (err.message !== 'no initials') SW.toast(err.message, 5000); });
+    });
+    if (SW.on) SW.on('notes', function (v) { if (v === vid && el.isConnected) draw(); });
+    showNow();
+    setTimeout(showNow, 1500);
+    return draw();
+  };
+
   // ---------- copying and downloading a single note ----------
   function rootOf(note, all) {
     var byId = {}, n = note, guard = 0;
@@ -1366,7 +1492,7 @@
   // Copy: the annotation as a quotation with its reference, ready for a book or
   // chapter: 'Code:' and the code as it stands, then “Text of the annotation”
   // (DMB, annotation on SW3.1L, 1.32–34, 30 Sep 2026); replies after.
-  function refOfNote(n) { var a = n.anchor; return a ? SW.refOf(n.vid, a.p, a.n0, a.n1, SW.nparts(n.vid)) : SW.refOf(n.vid); }
+  function refOfNote(n) { if (isItem(n.vid)) return itemName(n.vid) + (n.at && n.at !== 'q' ? ', ' + N.atLabel(n.at) : ''); var a = n.anchor; return a ? SW.refOf(n.vid, a.p, a.n0, a.n1, SW.nparts(n.vid)) : SW.refOf(n.vid); }
   function plainOf(n) { return SW.mdPlain(N.linksAsNames(SW.figpack.split(n.text).text)).replace(/\s*\n\s*/g, ' ').trim(); }
   // the code as it stands: its lines kept, tabs as spaces (to eight-column stops) so
   // the layout survives pasting
@@ -1383,7 +1509,7 @@
     var t = threadOf(note, all), r = t.note, lines = [], code = codeOf(r);
     function who(n) { return n.by || n.name; }   // initials
     function one(n, what) { return '“' + plainOf(n) + '” (' + who(n) + ', ' + what + ' on ' + refOfNote(r) + ', ' + SW.fmtDate(n.date) + ')'; }
-    if (code) lines.push('Code:', code);
+    if (code) lines.push(isItem(r.vid) ? 'Passage:' : 'Code:', code);
     lines.push(one(note, note.parent ? 'reply' : 'annotation'));
     if (note.id === r.id) (function walk(rs) { rs.forEach(function (x) { lines.push('Reply: ' + one(x.note, 'reply')); walk(x.replies); }); })(t.replies);
     return lines.join('\n');
@@ -1415,7 +1541,7 @@
   // Download: the same text as Copy, as a plain text file
   function downloadNote(note, all) {
     var r = threadOf(note, all).note;
-    root.SWExport.download(B.slug + '-' + r.vid + '-note-' + (note.by || 'x') + '-' + String(note.date).slice(0, 10) + '.txt', copyText(note, all) + '\n', 'text/plain;charset=utf-8');
+    root.SWExport.download(B.slug + '-' + String(r.vid).replace(/:/g, '-') + '-note-' + (note.by || 'x') + '-' + String(note.date).slice(0, 10) + '.txt', copyText(note, all) + '\n', 'text/plain;charset=utf-8');
   }
   function keepNote(note, all) {
     if (!SW.tray || !SW.tray.addDoc) return;
