@@ -4,8 +4,8 @@ The Library tab (`library.js`) lists the secondary literature on a project: book
 
 ## What belongs where
 
-- **The Library:** secondary literature, the writing and recording about the project's subject.
-- **Paratexts:** evidence, the material the group's findings rest on. It stays private and reads with a member's token.
+- **Paratexts:** evidence, the material from or about the subject that the group studies. How a subject has been told is evidence where the group studies that. It stays private and reads with a member's token.
+- **The Library:** secondary literature, the work on the subject that the group reads and cites.
 
 Where a work could be either, the person running the bench decides. Whether a work may be public is also that person's decision: a session on a bench asks and does not settle it from its own reading of a licence.
 
@@ -14,16 +14,23 @@ Where a work could be either, the person running the bench decides. Whether a wo
 | The work | The entry | What a reader without a token sees |
 |---|---|---|
 | Under a CC licence, or freely distributable | `file` in the bench's `library/files/`, `licence` saying which | The file |
-| Held by the group, and neither of those | `shelf: 'private'`, `file` under `library/` in the private repository, `url` where it is published | The record, the link out, and a line saying the group keeps a copy |
-| Not held | no `file`, `url` where it is published | The record and the link out |
+| Held by the group, and neither of those | `shelf: 'private'`, `file` under `library/` in the private repository | The record, a line saying the group keeps a copy, and the link out if there is a `url` |
+| Not held | no `file` | The record, and the link out if there is a `url` |
+
+`url`, where the work is published, is optional on all three. An entry needs only `id` and `title`.
 
 A member with a token opens a private file in the same box. The manifest is public, so a private entry's record, shelf and file path can be read by anyone, and the list shows that the group holds the work. File names on the private shelf are public for that reason.
+
+## Two folders called library
+
+- **The bench's `library/`** sits beside its `index.html`: `library/` where the page is at the top of the repository, `research/library/` where the page is in `research/`. It holds `library.json` and `files/`. Paths in the manifest are from the page, so they are `library/files/…` in both cases.
+- **The private repository's `library/`** is at the top of the repository that Paratexts keeps. A private entry's `file` is a path from there, `library/…`. Paratexts does not list that folder.
 
 ## Adopting it
 
 1. In `js/config.js`, set `library: true`. The private shelf uses the repository in `paratexts`, or `library: { private: { org, repo } }`.
 2. In `index.html`, load `kit/library.js` after `kit/paratexts.js` (where the bench has it) and `kit/md.js`, and before `kit/shell.js`.
-3. Write `library/library.json`:
+3. Write the manifest, `library.json` in the bench's `library/`:
 
 ```json
 {
@@ -39,14 +46,30 @@ A member with a token opens a private file in the same box. The manifest is publ
 }
 ```
 
-4. Put public files in the bench's `library/files/`, and private files under `library/` in the private repository. Paratexts does not list that folder.
-5. Run the bench's tests and every view (`tools/test.js`, `tools/views.js`).
+4. Put public files in the bench's `library/files/`, and private files in the private repository's `library/`.
+5. Run the tests and every view, make the site map again where the bench has one, and release the bench as usual (`tools/release.js`). Where the page is in `research/`:
+
+```bash
+node research/kit/tools/test.js
+```
+
+```bash
+node research/kit/tools/views.js --kit research/kit
+```
+
+```bash
+node research/kit/tools/sitemap.js
+```
+
+Where the page is at the top of the repository, the same tools run as `node kit/tools/test.js --dir .`, `node kit/tools/views.js --kit kit --dir .` and `node kit/tools/sitemap.js --dir .`.
 
 `README.md` lists an entry's fields. An `id` does not change once published, since links (`?tab=library&lib=<id>`) point at it.
 
-## Files
+## Files and size
 
-A box shows PDF, text, Markdown, HTML, images, audio and video; any other file can be downloaded. A private file is read whole through GitHub before it opens, and GitHub holds no file over 100 MB. Members see the private repository's size above the list, with a warning above 800 MB. GitHub Pages limits a published site to 1 GB, so check the size of `library/files/` before pushing.
+A box shows PDF, text, Markdown, HTML, images, audio and video; any other file can be downloaded. A private file is read whole through GitHub before it opens, and GitHub holds no file over 100 MB. GitHub Pages limits a published site to 1 GB, so check the size of `library/files/` before pushing.
+
+Members see the private repository's size above the list, with a warning above 800 MB. Moving or deleting a file within the repository does not reduce that size, since the history keeps the file. Reducing it means rewriting the history or starting a new repository, which is a decision for the person running the bench.
 
 ## A copy kept as a paratext
 
@@ -54,5 +77,7 @@ An item that stays in Paratexts can name a Library entry, with `library: [id]` i
 
 ## Not in the kit yet
 
+- **Adding an entry from the bench.** The Library writes nothing. An entry means editing `library.json` in the bench's repository, which needs write access there, and a private file means adding it to the private repository through git or GitHub.
+- **Comments.** Paratexts has them; the Library has none.
 - **Moving an item out of Paratexts.** There is no tool for this. Leave existing items where they are, and ask the bench-kit session.
 - **Transcripts.** An entry has no field for a recording's transcript.

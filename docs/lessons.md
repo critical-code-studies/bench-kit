@@ -25,7 +25,7 @@ What making and keeping the Spacewar!, SHRDLU, ELIZA, Melville and CCSbench benc
 ## Public and private
 
 - **No private URLs or repository names in public repositories**, READMEs and examples included. The mallette README once named the benches' private repositories, and the repository had to be deleted and made again. (mallette, 2026-11.)
-- **Secondary literature in the Library, evidence in Paratexts.** A work is public in the Library only if it is under a CC licence or freely distributable. A work the group holds otherwise is on the private shelf, with a public record that says so; a work not held is a record with a link out. `docs/library.md` is the guide. (Spacewar, 2026-11-06.)
+- **Secondary literature in the Library, evidence in Paratexts.** Evidence is the material from or about the subject that the group studies. A work is public in the Library only if it is under a CC licence or freely distributable. A work the group holds otherwise is on the private shelf, with a public record that says so; a work not held is a record with a link out. `docs/library.md` is the guide. (Spacewar, 2026-11-06.)
 - **A copy kept as a paratext is found from the private side.** The paratext names the entry, so the public list does not name the paratext. (Melville, 2026-11-05.)
 
 ## The group

@@ -1,5 +1,5 @@
 /*
- * library.js - the Library: texts for wider reading on the project, public, held in the bench's own
+ * library.js - the Library: the secondary literature on the project, public, held in the bench's own
  * repository (its library/ folder) or, where the bench cannot hold them, as a record with a link out.
  * Beside Paratexts, which is the group's private collection and needs a token; the Library needs none.
  * For a bench that sets SW.BENCH.library; loaded after kit/paratexts.js (where the bench has it) and
@@ -25,7 +25,7 @@
  *             private one a path in the private repository (library/…); PDF, text (.txt), Markdown
  *             (.md), HTML, an image, audio or video, shown in a box over the bench (a private file is
  *             read whole before it plays, and GitHub holds none over 100 MB)
- *   url       the text where it is published (for an entry without a file, the only way to it)
+ *   url       the work where it is published (for an entry without a file, the only way to it)
  *   source    where the copy held was found, and when
  *   tags      [word], for the filter
  * The tab lists the entries with a search and filters (held here, links out, by kind); an entry opens
@@ -100,7 +100,7 @@
   // ---------- the tab ----------
   var tabs = SW.$('#tabs');
   if (tabs && !SW.$('[data-tab="library"]', tabs)) {
-    var btn = SW.el('button', { 'data-tab': 'library', title: 'Texts for wider reading on the project: held here, or linked to where they are published' }, esc(C.label || 'Library'));
+    var btn = SW.el('button', { 'data-tab': 'library', title: 'The secondary literature on the project: held here, or linked to where it is published' }, esc(C.label || 'Library'));
     var after = SW.$('[data-tab="paratexts"], [data-menu="paratexts"]', tabs);
     var before = after ? after.nextSibling : SW.$('[data-menu="versions"], [data-menu="help"]', tabs);
     tabs.insertBefore(btn, before || null);
@@ -173,14 +173,14 @@
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
         (canOpen && priv ? '<button class="btn ghost" data-a="dl">⤓ Download</button>' : '') +
-        (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Read it where it is published ↗') + '</a>' : '') +
+        (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Go to it where it is published ↗') + '</a>' : '') +
         '<button class="btn ghost" data-a="link" title="A link that opens this entry">🔗 Link</button>';
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
         '<div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
         (rec ? '<dl class="lib-rec">' + rec + '</dl>' : '') +
         (canOpen ? '<div class="lib-file" data-k="' + k + '"><p class="hint">Opening the file…</p></div>' :
-          priv && e.file ? '<p class="hint">The group keeps a copy of this text in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' :
-          '<p class="hint">The library holds no copy of this text' + (e.url ? '; the link above goes to it.' : '.') + '</p>');
+          priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' :
+          '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>');
       document.body.appendChild(d);
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('click', function (ev) {
