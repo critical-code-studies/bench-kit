@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 0.98.1 (2026-11-06)
 
 - **The Images tab: Figures first, labels in gold** (David, 2026-11-06). Figures come first where a bench has them (`images.start: 'pages'` for Pages). The added English labels are in kintsugi gold, so that they read as added to the author's figure: one gold in every theme (`#8f6c00`, 4.9:1 on white), since a figure's ground stays white whatever the bench's colours. Export offers the labels in gold or black.
 - **`theme.start`**: the theme on a first visit, in place of the bench's own dark one; a reader's choice is kept. The translation template starts on a light theme (Listing paper).
