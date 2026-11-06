@@ -453,12 +453,20 @@
     pane.innerHTML = '<img class="vte-img" alt="' + esc(w.label) + '" src="' + esc(x.large || x.src) + '" title="Click to enlarge">' + (B.doc.imageCreditShort ? '<div class="faint vte-credit">' + esc(B.doc.imageCreditShort) + '</div>' : '');
     var im = SW.$('.vte-img', pane), K = SW.book, T = K && K.trim ? K.trim({ pb: { facs: String(w.page), img: w.img } }) : null;
     // the page's edges trimmed as Book trims them (doc.trim); enlarged, the whole image
-    function crop() { if (T && K.cropIn && im.naturalWidth) K.cropIn(im, T, im.naturalWidth / im.naturalHeight); }
+    function crop() {
+      if (!im.naturalWidth) return;
+      var ar = im.naturalWidth / im.naturalHeight;
+      if (T && K.cropIn) {
+        var cr = K.cropIn(im, T, ar);
+        // the whole page in the pane's height
+        cr.style.maxWidth = Math.floor((pane.clientHeight - 28) * parseFloat(cr.style.aspectRatio)) + 'px'; cr.style.margin = '0 auto';
+      } else im.style.maxWidth = Math.floor((pane.clientHeight - 28) * ar) + 'px';
+    }
     im.addEventListener('load', function () { if (!im.classList.contains('big')) crop(); });
     if (im.complete) crop();
     im.addEventListener('click', function () {
       var big = im.classList.toggle('big');
-      if (big) { if (T && K.cropOut) K.cropOut(im); if (x.sharp) im.src = x.sharp; } else crop();
+      if (big) { if (T && K.cropOut) K.cropOut(im); im.style.maxWidth = ''; if (x.sharp) im.src = x.sharp; } else crop();
     });
   }
   // ---------- the text in the box ----------
@@ -538,6 +546,9 @@
     winSel.value = String(w.i);
     refreshEdits(doc); paint(); buttons(); drawPane(doc, w);
     SW.store.set('edit.place', { target: S.target, key: w.key });
+    // enough text after it to scroll to the place asked for
+    last = { value: ta.value, s: 0, e: 0 };
+    var guard = 0; while (box().scrollHeight < box().clientHeight * 2 && guard++ < 30 && extend(doc, 1)) {}
     if (sel) { ta.focus({ preventScroll: true }); ta.setSelectionRange(sel[0] - w.a, sel[1] - w.a); scrollToOffset(sel[0] - w.a); }
     else {
       // a page may begin inside a paragraph: to its marker
