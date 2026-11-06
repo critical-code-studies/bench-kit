@@ -17,6 +17,8 @@
  * a text has its version, and may be pinned with at: t:<seconds>, p:<page> or q (a quoted passage). The code
  * stays when an item moves from Paratexts to the Library, so its notes go with it. N.itemPanel(el, code, o)
  * is the panel in an item's box; N.itemNotes() every such note; N.itemCounts() { code: threads }.
+ * With o.rate, the panel also takes a rating of one to three stars and emoji reactions on the item, each a
+ * reaction with no parent: the text ★1 to ★3, or the emoji. N.itemRatings() { code: { avg, n } }.
  * N.listAll leaves them out unless opts.items, since the other views read a version from each note.
  */
 (function (root) {
@@ -347,6 +349,7 @@
     var what = N.isReaction(n) && (OPEN[n.text] || DONE[n.text]) ? (DONE[n.text] ? 'resolved ' : OPEN[n.text] === 'help' ? 'asked for help on ' : 'marked open ') + (par ? par.by + '’s annotation' : 'an annotation') : N.isReaction(n) ? n.text + ' on ' + (par ? par.by + '’s annotation' : 'an annotation') : n.parent ? 'reply to ' + (par ? par.by : 'an annotation') : n.anchor ? 'annotation' : 'annotation on the version';
     if (isItem(n.vid) && !N.isReaction(n)) what = n.parent ? 'reply on a note on' : 'note on';
     if (pageOf) what = 'rated ' + pageOf.slice(5) + ' ' + String(n.text).split(/\s/)[0];
+    if (isItem(n.vid) && N.isReaction(n) && !n.parent) what = (/^★/.test(n.text) ? 'rated ' : 'reacted ') + n.text + ' on';
     var toYou = !N.isReaction(n) && N.mentions(n, SW.me().initials), mine = toMine(n, byId);
     if (mine) what = (N.isReaction(n) ? n.text + ' on' : n.parent === mine.id ? 'replies to' : 'replies under') + ' your ' + (isFinding(mine) ? 'finding' : 'annotation') + ' ' + N.code(mine).replace(/^A-/, isFinding(mine) ? 'C-' : 'A-');
     var root0 = par; while (root0 && root0.parent && byId[root0.parent]) root0 = byId[root0.parent];
@@ -1383,6 +1386,22 @@
       return c;
     });
   };
+  function isStar(t) { return /^★[123]$/.test(t); }
+  // the latest rating from each person
+  function starsOf(rs) {
+    var by = {};
+    rs.filter(function (r) { return !r.parent && isStar(r.text); }).sort(function (a, b) { return String(a.date) < String(b.date) ? -1 : 1; }).forEach(function (r) { by[r.by] = +r.text.slice(1); });
+    var who = Object.keys(by), sum = who.reduce(function (s, w) { return s + by[w]; }, 0);
+    return who.length ? { avg: sum / who.length, n: who.length, who: who.map(function (w) { return w + ' ' + by[w]; }) } : null;
+  }
+  N.itemRatings = function () {
+    return N.itemNotes().then(function (all) {
+      var g = {}, out = {};
+      all.forEach(function (n) { if (N.isReaction(n) && !n.parent) (g[N.itemCode(n.vid)] = g[N.itemCode(n.vid)] || []).push(n); });
+      Object.keys(g).forEach(function (c) { var s = starsOf(g[c]); if (s) out[c] = s; });
+      return out;
+    });
+  };
   // the item's box, wherever it is kept
   N.openItem = function (code) {
     var L = SW.library;
@@ -1423,7 +1442,7 @@
     o = o || {};
     var vid = 'item:' + code, host = o.host || null, sel = '', me = SW.me(), ts = types();
     el.classList.add('item-notes');
-    el.innerHTML = '<details class="in-fold"' + (N.configured() ? ' open' : '') + '><summary class="fd-rh">Notes <span class="faint in-n"></span></summary>' +
+    el.innerHTML = (o.rate && N.configured() ? '<div class="fd-rxbar in-rate"></div>' : '') + '<details class="in-fold"' + (N.configured() ? ' open' : '') + '><summary class="fd-rh">Notes <span class="faint in-n"></span></summary>' +
       (N.configured() ? '' : '<p class="hint">Notes are kept in the annotation group (Help ▸ Getting set up). Until you have joined, one stays a draft in this browser.</p>') +
       '<div class="in-list"></div><div class="in-new"><div class="in-quote" hidden><span></span> <button type="button" class="icon-btn" data-in="unquote" title="Without the words">✕</button></div>' +
       '<textarea rows="3" placeholder="A note on this work. Select words in it to quote them."></textarea>' +
@@ -1436,11 +1455,38 @@
       if (!el.isConnected && list.childNodes.length) return;
       return N.list(vid).then(function (all) {
         all = all.filter(function (n) { return n.source !== 'buildlog'; });
+        rated(all);
         var th = N.threads(all).reverse();
         SW.$('.in-n', el).textContent = th.length || '';
         list.innerHTML = th.map(function (t) { return N.renderThread(t); }).join('');
         N.wire(list, vid, all);
       });
+    }
+    var roots = [];
+    function rated(all) {
+      var bar = SW.$('.in-rate', el); if (!bar) return;
+      roots = all.filter(function (n) { return N.isReaction(n) && !n.parent; });
+      var mineStar = roots.filter(function (r) { return isStar(r.text) && myReaction(r); }).pop(), have = mineStar ? +mineStar.text.slice(1) : 0, s = starsOf(roots);
+      bar.innerHTML = '<span class="fd-rate" title="Your rating, one to three stars (again to take it back)">' + [1, 2, 3].map(function (k) { return '<button type="button" data-star="' + k + '" class="' + (have >= k ? 'on' : '') + '" aria-label="' + k + (k > 1 ? ' stars' : ' star') + '">★</button>'; }).join('') + '</span>' +
+        (s ? '<span class="hint" title="' + SW.esc(s.who.join('; ')) + '">' + (Math.round(s.avg * 10) / 10) + ' from ' + s.n + '</span>' : '') +
+        N.EMOJI.map(function (e) {
+          var rs = roots.filter(function (r) { return r.text === e; }), mine = rs.some(myReaction);
+          return '<button type="button" data-rx="' + SW.esc(e) + '" class="' + (mine ? 'on' : '') + '" title="' + SW.esc(rs.map(function (r) { return r.by; }).join(', ') || 'React') + '">' + SW.esc(e) + (rs.length ? '<sup>' + rs.length + '</sup>' : '') + '</button>';
+        }).join('');
+    }
+    function react(text) { return N.create({ vid: vid, kind: 'reaction', text: text, tags: [], quiet: true }); }
+    function rateClick(e) {
+      var st = e.target.closest('[data-star]'), rx = e.target.closest('[data-rx]');
+      if (!st && !rx) return false;
+      var fail = function (err) { if (err.message !== 'no initials') SW.toast(err.message, 5000); };
+      if (rx) {
+        var mineR = roots.filter(function (r) { return r.text === rx.dataset.rx && myReaction(r); })[0];
+        (mineR ? N.remove(mineR, true) : react(rx.dataset.rx)).catch(fail);
+        return true;
+      }
+      var k = +st.dataset.star, olds = roots.filter(function (r) { return isStar(r.text) && myReaction(r); }), same = olds.some(function (r) { return r.text === '★' + k; });
+      Promise.all(olds.map(function (r) { return N.remove(r, true); })).then(function () { if (!same) return react('★' + k); }).catch(fail);
+      return true;
     }
     function media() { return host && host.querySelector('audio, video'); }
     function showNow() { now.hidden = !media(); }
@@ -1451,6 +1497,7 @@
     });
     el.addEventListener('focusin', showNow);
     el.addEventListener('click', function (e) {
+      if (rateClick(e)) return;
       var go = e.target.closest('[data-at]');
       if (go) { var nt = e.target.closest('.note'), q = go.dataset.at === 'q' ? go.textContent : ''; N.itemGo(go.dataset.at, q, host); if (nt) return; return; }
       var b = e.target.closest('[data-in]'); if (!b) return;

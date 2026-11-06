@@ -392,6 +392,7 @@
       if (!/api\.hypothes\.is/.test(u)) return was.fetch.apply(window, arguments);
       var m = (o && o.method) || 'GET';
       if (/\/profile/.test(u)) return ok({ userid: 'acct:tester@hypothes.is', groups: [{ id: 'grp', name: 'G' }] });
+      if (m === 'DELETE') { var did = u.split('/').pop(); rows = rows.filter(function (a) { return a.id !== did; }); return ok({ deleted: true }); }
       if (m === 'POST') { var b = JSON.parse(o.body); posted.push(b); var r = Object.assign({ id: 'h' + (++nid), created: new Date().toISOString(), user: 'acct:tester@hypothes.is', references: b.references }, b); rows.push(r); return ok(r); }
       if (/offset=[1-9]/.test(u)) return ok({ rows: [] });
       var um = /[?&]uri=([^&]+)/.exec(u), want = um && decodeURIComponent(um[1]);
@@ -406,7 +407,7 @@
       B.library = was.lib; SW.library = was.mod; SW.kitViews = was.kit; SW.paratexts = was.px; if (was.view) SW.views.library = was.view; else delete SW.views.library; N.forget(); N.invalidate('item:P-AAAAA'); el.remove(); host.remove();
       var v = document.getElementById('view-library'); if (v && !was.view) v.remove();
     }
-    return N.itemPanel(el, 'P-AAAAA', { host: host }).then(function () {
+    return N.itemPanel(el, 'P-AAAAA', { host: host, rate: true }).then(function () {
       T.yes('the panel draws, open for a member', el.querySelector('details[open] textarea'));
       el.querySelector('textarea').value = 'At this moment.';
       el.querySelector('.in-at').value = '12:46';
@@ -438,6 +439,30 @@
       return wait(60);
     }).then(function () {
       T.yes('a reply on the same item', posted[1] && posted[1].uri === posted[0].uri && posted[1].references[0] === 'h1');
+      el.querySelector('[data-star="2"]').click();
+      return wait(80);
+    }).then(function () {
+      var r = rows.filter(function (a) { return a.text === '★2'; })[0];
+      T.yes('a rating, on the item and answering nothing', r && r.tags.indexOf('bk:kind:reaction') >= 0 && !(r.references || []).length);
+      T.eq('it shows as yours', el.querySelectorAll('.in-rate [data-star].on').length, 2);
+      el.querySelector('[data-star="3"]').click();
+      return wait(80);
+    }).then(function () {
+      T.eq('a new rating replaces yours', rows.filter(function (a) { return /^★/.test(a.text); }).map(function (a) { return a.text; }), ['★3']);
+      return N.itemRatings();
+    }).then(function (rt) {
+      T.eq('the average, by code', rt['P-AAAAA'] && [rt['P-AAAAA'].avg, rt['P-AAAAA'].n], [3, 1]);
+      el.querySelector('[data-rx="👍"]').click();
+      return wait(80);
+    }).then(function () {
+      T.eq('an emoji', rows.filter(function (a) { return a.text === '👍'; }).length, 1);
+      el.querySelector('[data-rx="👍"]').click();
+      return wait(80);
+    }).then(function () {
+      T.eq('again takes it back', rows.filter(function (a) { return a.text === '👍'; }).length, 0);
+      return N.itemCounts();
+    }).then(function (c2) {
+      T.eq('ratings are not counted as notes', c2['P-AAAAA'], 1);
       restore();
     }, function (e) { restore(); throw e; });
   }

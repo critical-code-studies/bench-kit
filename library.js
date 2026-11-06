@@ -317,10 +317,11 @@
     function byYear(sign) { return function (a, b) { var x = L.year(a.date), y = L.year(b.date); if ((x == null) !== (y == null)) return x == null ? 1 : -1; return (x == null ? 0 : sign * (x - y)) || byTitle(a, b); }; }
     var fn = order === 'title' ? byTitle : order === 'new' ? byYear(-1) : order === 'old' ? byYear(1) :
       order === 'kind' ? by(function (e) { return e.kind; }, byTitle) : order === 'lang' ? by(function (e) { return e.lang; }, byTitle) :
-      order === 'author' ? by(function (e) { return L.surname(e.author); }, byYear(1)) : null;
+      order === 'author' ? by(function (e) { return L.surname(e.author); }, byYear(1)) :
+      order === 'rating' ? function (a, b) { var x = NR[a.id] ? NR[a.id].avg : 0, y = NR[b.id] ? NR[b.id].avg : 0; return (y - x) || byTitle(a, b); } : null;
     return fn ? items.slice().sort(fn) : items.slice();
   };
-  var ORDERS = [['author', 'Author'], ['title', 'Title'], ['new', 'Date, newest first'], ['old', 'Date, oldest first'], ['kind', 'Kind'], ['lang', 'Language'], ['listed', 'As listed']];
+  var ORDERS = [['author', 'Author'], ['title', 'Title'], ['new', 'Date, newest first'], ['old', 'Date, oldest first'], ['kind', 'Kind'], ['lang', 'Language'], ['rating', 'Rating'], ['listed', 'As listed']];
 
   // ---------- covers ----------
   // what a cover is drawn as: a kind's own word first, then what the file is
@@ -426,10 +427,19 @@
     });
   }
   // ---------- notes on the entries ----------
-  var NC = {};
+  var NC = {}, NR = {};
   function itemNotes() { return SW.notes && SW.notes.itemNotes ? SW.notes : null; }
   function paintCounts(view) {
     var N = itemNotes(); if (!N) return;
+    if (N.itemRatings) N.itemRatings().then(function (r) {
+      NR = r;
+      var box0 = SW.$('.lib-list', view); if (!box0) return;
+      SW.$$('[data-lib]', box0).forEach(function (x) {
+        var s = r[x.dataset.lib], at = SW.$('.lib-cap .lib-m', x) || SW.$('.lib-m', x), old = SW.$('.lib-rt', x);
+        if (old) old.remove();
+        if (s && at) at.appendChild(SW.el('span', { class: 'lib-rt', title: s.who.join('; ') }, ' ★ ' + (Math.round(s.avg * 10) / 10)));
+      });
+    }, function () {});
     N.itemCounts().then(function (c) {
       NC = c;
       var show = SW.$('.lib-show', view), box = SW.$('.lib-list', view); if (!box) return;
@@ -550,6 +560,7 @@
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
       ['Notes on a work', ul([
+        'Above them, members of the group give a work one to three stars, and an emoji. The average shows on its cover, and <b>Order</b> can sort by it.',
         'The panel beside a work holds the group’s notes on it, with replies and reactions as on a text. They are visible to the annotation group only (Help ▸ Getting set up).',
         'A note can be pinned: <b>⏱ Now</b> takes the time a held recording is at, <b>At</b> takes a typed time or page, and words selected in a transcript or text are quoted. Clicking the pin goes back there.',
         'A count on a cover shows a work has notes. <b>Annotated</b> shows those works, and <b>✎</b> lists all the notes, newest work first; the search reads them too.',
@@ -672,7 +683,7 @@
       });
       d.showModal();
       if (canOpen) show(SW.$('.lib-file', d), e, k, priv);
-      if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.lib-side', d), e.id, { host: SW.$('.lib-main', d) });
+      if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.lib-side', d), e.id, { host: SW.$('.lib-main', d), rate: true });
       L.copies(e.id).then(function (cs) {
         var box = SW.$('.lib-copies', d); if (!box || !cs.length) return;
         box.innerHTML = '<span class="faint">The group’s copy:</span> ' + cs.map(function (c) { return '<button class="btn ghost" data-px="' + esc(c.code) + '" title="' + esc(c.title || '') + '">' + esc(c.code) + ' in ' + SW.px('Many') + '</button>'; }).join(' ');

@@ -1280,6 +1280,8 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 1000px) { .lib-cols { grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); } }
 .lib-side { min-width: 0; }
+.in-rate { margin: 0 0 8px; }
+.lib-rt { white-space: nowrap; color: var(--text-dim); }
 .lib-nb { display: inline-block; font: 11px var(--mono); padding: 0 5px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-dim); }
 .lib-stand .lib-nb { position: absolute; top: 4px; right: 18px; background: var(--surface); }
 .lib-t .lib-nb { margin-left: 8px; font-weight: 400; }
