@@ -17,6 +17,7 @@ What making and keeping the Spacewar!, SHRDLU, ELIZA, Melville and CCSbench benc
 
 ## Releasing
 
+- **A new push cancels the Pages deploy still running.** Three rapid pushes kept kuki-bench's live site on an old version. A repository with about 1,000 images takes 2 to 11 minutes to deploy, and can reach GitHub's time limit, so push a bench once and wait for the deploy.
 - **Genealogy is off until a bench asks for it** (David, 2026-11-06). It reads well on Spacewar, where it was tuned, and less well elsewhere, so a new bench or a kit upgrade does not show it unless `genealogy.on` is set.
 
 - **A feature reaches a bench with guidance.** When the kit ships one, each bench it concerns is told what it is for, what belongs in it, and what to do to adopt it, and the kit's `docs/` holds the same. Spacewar learnt how the Library works, and where it stops, by reading `library.js`. (Spacewar, 2026-11-06.)
