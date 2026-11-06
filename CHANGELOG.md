@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Help ▾ now says **Getting set up**, as the guide it opens has since 0.97.0 (SHRDLU's report), and so do the messages that point to it.
 - **Genealogy is off unless a bench sets `genealogy: { on: true }`** (David, 2026-11-06: it "needs fine tuning for each bench", and Spacewar is where it works). A bench moving to this version loses Genealogy from Versions ▾ unless it adds `on: true`. Collate is unchanged, and a link to `tab=genealogy` still opens the view, so a tour's stop or a cited link does not break.
 - **The Library is a shelf of covers** (David, 2026-11-06: "looks like a library rather than a database list"). Covers are the first view, with a switch to the list. Each is drawn from the entry's kind (a cloth book, a paper article, a chapter, a thesis, a letter, a podcast, a talk, a film, a web page), or shows the new field `thumb`, a path or a link; a public image file is its own cover. The order menu takes author, title, newest or oldest first, kind, language, or as listed. `library.view` and `library.order` set a bench's first view; a reader's choice is kept in the browser. `docs/library.md` has "Covers and order".
 - **Help ▸ The Library** (and `?help=library`, and ? on the tab): a guide for its readers. The README now shows the tab with a worked example of a manifest, and lists `thumb`, `view` and `order`, and the settings `readFiles`, `columns` and `marks`, which it had left out.

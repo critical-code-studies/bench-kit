@@ -55,7 +55,7 @@
   // arriving by a link (?tr=)
   function gzTraceArrive() {
     var id = SW.state.trace; if (!id) return; SW.state.trace = null;
-    if (!SW.notes.configured()) { SW.toast('Tracings are shared through the annotation group: join it to open this one (Help ▸ Joining the annotation group).', 7000); return; }
+    if (!SW.notes.configured()) { SW.toast('Tracings are shared through the annotation group: join it to open this one (Help ▸ Getting set up).', 7000); return; }
     SW.notes.tracings.list().then(function (l) { var t = l.filter(function (x) { return x.id === id; })[0]; if (t) gzTraceOpen(t); else SW.toast('That tracing is not in your group, or was deleted.', 5000); });
   }
   function gzTraceWire(bar, vids, info) {
@@ -73,7 +73,7 @@
       var r = tb.getBoundingClientRect(), esc = SW.esc;
       var nN = vids.reduce(function (t, v) { return t + Object.keys(((SW.store.get(NS + 'names', {}) || {})[v]) || {}).length; }, 0), nM = vids.reduce(function (t, v) { return t + Object.keys(((SW.store.get(NS + 'marks', {}) || {})[v]) || {}).length; }, 0);
       SW.pop(Math.max(8, r.left - 120), r.bottom + 6, '<div class="gz-trpop"><h4>Share your tracing</h4>' +
-        (!SW.notes.configured() ? '<p class="hint">Tracings are shared through the annotation group: join it first (Help ▸ Joining the annotation group).</p>' :
+        (!SW.notes.configured() ? '<p class="hint">Tracings are shared through the annotation group: join it first (Help ▸ Getting set up).</p>' :
           nN + nM ? '<p class="hint">Your ' + nN + ' name' + (nN === 1 ? '' : 's') + ' and ' + nM + ' mark' + (nM === 1 ? '' : 's') + ' on ' + esc(vids.map(function (v) { return SW.refOf(v); }).join(' and ')) + ', for the crew to open.</p><input class="gz-trt" maxlength="80" placeholder="A title"><input class="gz-trn" maxlength="400" placeholder="A note (optional)"><button class="btn" data-trs>Share with the crew</button>'
             : '<p class="hint">' + esc(o.hint || 'Name or mark some first (click one; ⇧-click to mark).') + '</p>') +
         '<h4>The crew’s</h4><div class="gz-trlist"><p class="hint">' + (SW.notes.configured() ? 'Reading…' : 'None without the group.') + '</p></div></div>');

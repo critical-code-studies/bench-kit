@@ -24,7 +24,7 @@
         'Accept the invitation to the <b>' + BP.org + '</b> organisation that GitHub emails you. Until that is accepted the token form will not offer the owner.',
         'Open the token form: its name, owner, a year’s expiry and the permission it needs (Contents, read and write) are filled in. ' + tokenBtn(),
         'On the form, under <b>Repository access</b>, choose <b>Only select repositories</b> and then <b>' + BP.repo + '</b>. GitHub will not take the repository from a link, so this step is by hand.',
-        '<b>Generate token</b>, copy it, and paste it into the bench: ⚙ Settings, ' + SW.px('Many') + ', then <b>Save and test</b>. Help ▸ Joining the annotation group, step 5, has the same box.',
+        '<b>Generate token</b>, copy it, and paste it into the bench: ⚙ Settings, ' + SW.px('Many') + ', then <b>Save and test</b>. Help ▸ Getting set up, step 5, has the same box.',
         'The token stays in this browser, and is sent to nobody but GitHub. On another computer, paste it there too. Each browser keeps its own, and Safari clears what a site has stored after seven days without a visit; a token that is lost, or has expired, is replaced by making a new one from the same form (Only select repositories, the ' + SW.px('many') + ' repository) and pasting it in. The old one can be deleted on GitHub under Settings ▸ Developer settings ▸ Fine-grained tokens.'])],
       ['Inviting someone', '<p>Send them the four steps above with the link, which is what the button below copies. Two things to know before you do.</p>' + ul([
         'They must be a member of the <b>' + BP.org + '</b> organisation first, so invite them there before sending the steps.',
@@ -93,7 +93,7 @@
       ['Sharing', ul([
         B.topShare ? SW.SHARE_ICON + ' in the top bar shares what you are looking at: the version, view, lines or comparison.' : null,
         '<b>Share</b> on a ' + SW.px('one') + ' sends a link to it. Where the browser has a share sheet (Safari, phones), it opens it: Mail, Messages and the rest. Elsewhere the link is copied, to paste.',
-        'Help ▸ Joining the annotation group, <b>Share an invitation</b>: a link that sets up the annotation group for whoever opens it. Send it only to the crew: anyone with it can join.'])],
+        'Help ▸ Getting set up, <b>Share an invitation</b>: a link that sets up the annotation group for whoever opens it. Send it only to the crew: anyone with it can join.'])],
       ['Findings and My notes', ul([
         'A note in My notes can be shared to Findings, where the crew can reply, rate it and react; it moves to the <b>Shared</b> box in My notes. Recalling it brings it back, with its replies.',
         'A finding’s status comes from reactions: 🔓 marks it open, 💡 asks for help, ✅ resolves it. Findings filters by status and by category.',

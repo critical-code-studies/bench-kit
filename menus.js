@@ -117,7 +117,7 @@
                                 .concat(B.topics && !SW.menuOff('topics') ? [['topics', 'Topic models', 'The Topics tab: the models, their topics, and how far to trust them']] : [])
                                 .concat([['marks', 'Marks and conventions', 'Losses, restorations and doubtful readings: the marks, and their Leiden forms']])
                                 .concat(B.sitemap ? [['sitemap', 'Site map', 'Every view and version as a plain link']] : [])],
-            ['Annotating and sharing', [['join', 'Joining the annotation group', 'An invitation, a Hypothesis account and your tokens, step by step'],
+            ['Annotating and sharing', [['join', 'Getting set up', 'An invitation, a Hypothesis account and your tokens, step by step'],
                                         ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
                                         ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
                                         ['paratexts', SW.px('Many'), 'Scans and documents: collections, views, metadata, links']]

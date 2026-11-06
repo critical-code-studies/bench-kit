@@ -787,7 +787,7 @@
     },
     save: function (t) {
       var me = SW.me(); if (!me.initials) return SW.askInitials('A tracing is signed with your initials, and none are set.').then(function (ini) { return ini ? N.tracings.save(t) : Promise.reject(new Error('no initials')); });
-      if (!N.configured()) return Promise.reject(new Error('Tracings are shared through the annotation group: join it first (Help ▸ Joining the annotation group).'));
+      if (!N.configured()) return Promise.reject(new Error('Tracings are shared through the annotation group: join it first (Help ▸ Getting set up).'));
       var uri = SW.BASE_URI + '?tracings';
       var text = '**Tracing: ' + t.title + '**' + (t.note ? '\n\n' + t.note : '') + '\n\n' + (t.where || 'Dynamic Profile') + ', ' + t.vids.map(function (v) { return SW.refOf(v); }).join(' against ') + ('.\n\n<!-- ' + TAG + 'tracing ') + b64e(t) + ' -->';
       return hx('POST', '/annotations', { uri: uri, group: cfg().group, text: text, tags: [(TAG + 'tracing'), (TAG + 'by:') + me.initials], permissions: { read: ['group:' + cfg().group] }, document: { title: [B.name + ' research bench: tracings'] }, target: [{ source: uri }] })
@@ -1090,7 +1090,7 @@
     d.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
   };
 
-  // ---------- Help ▸ Joining the annotation group ----------
+  // ---------- Help ▸ Getting set up ----------
   // A Hypothesis account, the group, the API token, and the bench's Settings, step by
   // step; every Hypothesis page named opens in a new tab.
   // Joining: a guide that is also the form. An invitation link (join.html#ID, which the project sends
@@ -1109,7 +1109,7 @@
     var gl = g !== '(the group’s ID)' ? 'https://hypothes.is/groups/' + g : 'the group’s link from the project leads';
     return 'Annotations in the ' + (B.name || 'research') + ' bench: joining\n\n' +
       '1. Join the group: open ' + gl + ', sign up or log in there, and click Join.\n' +
-      '2. Your token: open https://hypothes.is/account/developer (logged in as the account that joined), generate your API token, and paste it into the bench: Help ▸ Joining the annotation group (' + SW.BASE_URI + '?help=join), then Save and test.\n\n' +
+      '2. Your token: open https://hypothes.is/account/developer (logged in as the account that joined), generate your API token, and paste it into the bench: Help ▸ Getting set up (' + SW.BASE_URI + '?help=join), then Save and test.\n\n' +
       'The token stays in your browser; keep it to yourself. Without it, annotations are kept as drafts here and can be published later.';
   };
   // ---------- getting set up: a checklist, and the guide ----------
