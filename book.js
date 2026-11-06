@@ -418,11 +418,13 @@
     img.style.left = (-100 * T.l / w) + '%'; img.style.top = (-100 * T.t / h) + '%';
     return cr;
   }
+  K.cropIn = cropIn;
   function cropOut(img) {
     var cr = img.parentNode; if (!cr.classList.contains('bk-crop')) return;
     cr.parentNode.insertBefore(img, cr); cr.remove();
     img.classList.remove('bk-cropped'); ['width', 'height', 'left', 'top'].forEach(function (k) { img.style[k] = ''; });
   }
+  K.cropOut = cropOut;
   // the pictures beside the text trimmed as now set; a layer of boxes is made again when next wanted
   function trimFigs() {
     cols.forEach(function (c) {
@@ -939,7 +941,7 @@
       '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; Off folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
         '<button class="btn' + (st.imgOn ? '' : ' on') + '" id="bk-imgoff" aria-pressed="' + !st.imgOn + '" title="' + (st.imgOn ? 'Fold the images away' : 'Show the images again') + '">Off</button></span><span class="sep"></span>' +
-      '<button class="btn ghost" id="bk-read" title="Read at the place shown here, line by line">≡ Read here</button>' +
+      '<button class="btn ghost" id="bk-read" title="' + SW.lineWord() + ' at the place shown here, line by line">≡ ' + SW.lineWord() + ' here</button>' +
       '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share</button>' +
       '<select id="bk-marks" class="bk-marks" title="The ' + esc(PAGE) + 's you have bookmarked in this text: choose one to go to it"><option value="">🔖 Bookmarks</option></select>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
@@ -1210,7 +1212,7 @@
     var cite = SW.cite(b, s.p, s.n0, s.n1), a = { p: s.p, n0: s.n0, n1: s.n1 };
     var pop = SW.pop(x, y, '<div class="bk-selpop"><span class="selref">' + SW.refTag(b.v.id, s.p, s.n0, s.n1, b.parts.length) + '</span>' +
       (N ? '<button class="btn" data-a="note">✎ Annotate</button>' : '') + '<button class="btn" data-a="cite">❝ Copy citation</button>' +
-      '<button class="btn" data-a="link">🔗 Copy link</button><button class="btn" data-a="read">≡ Read</button>' +
+      '<button class="btn" data-a="link">🔗 Copy link</button><button class="btn" data-a="read">≡ ' + SW.lineWord() + '</button>' +
       (SW.dict && SW.dict.list && SW.dict.list().length ? '<button class="btn" data-a="dict" title="The words selected, in the bench’s dictionaries">📕 Look up</button>' : '') +
       (SW.topics && SW.topics.selActs && SW.topics.selActs().length ? '<button class="btn" data-a="topics" title="The passage’s topics, by the topic model in use">🧩 Topics</button>' : '') + '</div>');
     pop.addEventListener('click', function (e) {

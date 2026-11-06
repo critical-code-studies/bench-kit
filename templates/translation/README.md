@@ -12,7 +12,7 @@ This is the template, with an invented example. Every value marked `EDIT` in `js
 | `js/config.js` | the bench's settings (`SW.BENCH`), the translation's descriptor among them |
 | `js/versions.js` | the texts held: the translation, the literal, the source's OCR, and their files |
 | `js/core.js` | how a file is read: bench-kit's `vt-reader.js`, the lines and Book's document |
-| `js/main.js`, `js/read.js`, `js/tour.js` | the views in tab order, Read's settings, the tour |
+| `js/main.js`, `js/read.js`, `js/tour.js` | the views in tab order (`home`, the first; `alias`, a link to a line opens Edit), Read's settings, the tour |
 | `js/images.js` | the source's images and their IIIF services (`kit/tools/iiif-map.js`) |
 | `text/translation/`, `text/literal/` | the translation and the literal, a snapshot of their repository at a commit |
 | `glossary.csv`, `checks/` | the glossary and the change lists |
@@ -38,6 +38,10 @@ It checks the list, the image lines, the labels and the files against one anothe
 ## Working copy
 
 File ▾ ▸ Open a folder… reads a working copy of the translation's repository on this computer in place of the published files, work not yet committed included, without a token.
+
+## Edit
+
+The Edit tab shows a page's image beside its text as the file has it, with undo and redo kept across reloads. It opens locked, on a page load and each time the tab is opened again, and the padlock in its toolbar unlocks the text. A save writes a change list in the method's form: to `translation.edit.dir` (default `checks/`) in a working copy opened in Chrome or Edge, or as a download. The bench does not change the master file; `tools/vt_apply.py` applies the list, and Edit offers the command. Until then the list's changes show in Edit and count as pending in Changes. A version's first file only, so far.
 
 ## Licence
 

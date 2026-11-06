@@ -15,7 +15,10 @@
  *             translation's old name, is read as translation)
  *   glossary  { path, kind, heading }; changes [paths]; ocr { path, split }  (paths as the versions'
  *             files are fetched, so a folder opened (kit/folder.js) is read too)
- * SW.vt: ids(), texts(), glossary(), changes(), ocr(), states() (each change with its state).
+ *   edit      { dir, tool }: where Edit (kit/vt-edit.js) saves its change lists; those found there, or kept in
+ *             this browser, are read with the lists named in changes
+ * SW.vt: ids(), texts(), glossary(), changes(), ocr(), states() (each change with its state), editLists(),
+ * editDir(), keepList(name, raw), refresh().
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {
@@ -43,8 +46,33 @@
   RAW.changes = function () {
     var ps = [].concat(D.changes || []).filter(function (p) { return !/\*/.test(p); });
     return Promise.all(ps.map(function (p) { return SW.fetchText(p).then(function (raw) { return VT.changes(raw, p); }, function () { return []; }); }))
-      .then(function (ls) { return [].concat.apply([], ls); });
+      .then(function (ls) { return V.editLists().then(function (es) { return [].concat.apply([], ls.concat(es.map(function (L) { return VT.changes(L.raw, L.name); }))); }); });
   };
+  // ---------- the lists Edit saves ----------
+  function editCfg() { return (D.edit && D.edit.dir) || 'checks/'; }
+  // the folder for the lists, from the top of the folder open (the bench's path for it, moved as the bench's
+  // path for the literal is moved: a bench's translation/x.md may be a working copy's x.md)
+  V.editDir = function () {
+    var dir = editCfg().replace(/\/?$/, '/'), F = SW.folder, id = V.ids().literal, v = root.SWVersions.byId(id);
+    if (!F || !F.on || !v || !v.build || !v.build[0]) return dir;
+    var p = v.build[0].src, q = F.locate(p);
+    if (!q || p === q) return dir;
+    if (p.slice(-q.length - 1) === '/' + q) { var strip = p.slice(0, p.length - q.length); return dir.indexOf(strip) === 0 ? dir.slice(strip.length) : dir; }
+    if (q.slice(-p.length - 1) === '/' + p) return q.slice(0, q.length - p.length) + dir;
+    return dir;
+  };
+  // each list's name and text: those in the folder for the lists, then those kept in this browser
+  // (saved where the folder could not be written) that the folder does not hold
+  V.editLists = function () {
+    var kept = SW.store.get('edit.lists', []), F = SW.folder;
+    if (!F || !F.on) return Promise.resolve(kept);
+    var dir = V.editDir(), mine = F.paths().filter(function (p) { return p.indexOf(dir) === 0 && /(^|\/)edit-[^/]*\.md$/.test(p); });
+    return Promise.all(mine.map(function (p) { return F.text(p).then(function (raw) { return { name: p, raw: raw }; }); })).then(function (ls) {
+      var names = {}; ls.forEach(function (L) { names[L.name.split('/').pop()] = 1; });
+      return ls.concat(kept.filter(function (L) { return !names[L.name]; }));
+    });
+  };
+  V.keepList = function (name, raw) { var k = SW.store.get('edit.lists', []); k.push({ name: name, raw: raw }); SW.store.set('edit.lists', k); return Promise.resolve(); };
   RAW.ocr = function () {
     var o = D.ocr; if (!o || !o.path) return Promise.resolve([]);
     return SW.fetchText(o.path).then(function (raw) { return VT.ocr(raw, o.split); });
@@ -100,7 +128,7 @@
         });
         return order.map(function (s) { return [s, out[s]]; });
       }
-      view.innerHTML = '<div class="vt-pad"><h2>Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the translation, section by section (a count opens Read at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
+      view.innerHTML = '<div class="vt-pad"><h2>Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the translation, section by section (a count opens the text at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
         '<div class="toolbar"><input type="search" class="vt-q" placeholder="Filter: a source term, a reading or an English word" aria-label="Filter the glossary"><span class="faint vt-n"></span></div>' +
         '<table class="vt-table vt-gloss"><thead><tr><th>Source</th><th>Reading</th><th>English</th><th>Where, in the translation</th></tr></thead><tbody>' +
         gl.map(function (g, i) {
@@ -220,6 +248,8 @@
   var drawn = {};
   function view(name, draw) { SW.views[name] = { show: function () { if (!drawn[name]) { drawn[name] = true; draw(); } }, reset: function () { drawn[name] = false; } }; }
   view('glossary', drawGlossary); view('changes', drawChanges); view('search', drawSearch);
+  // the views drawn afresh from the files and lists as they are now
+  V.refresh = function () { wrap(); drawn = {}; ['glossary', 'changes', 'search'].forEach(function (t) { if (SW.forget) SW.forget(t); }); };
   // a folder opened or closed (kit/folder.js): everything read again
   if (SW.on) SW.on('folder', function () { wrap(); drawn = {}; });
 })(typeof window !== 'undefined' ? window : globalThis);

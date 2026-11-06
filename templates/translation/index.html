@@ -41,8 +41,8 @@
   </header>
 
   <nav class="tabs" id="tabs" aria-label="Views">
-    <button data-tab="read" class="on" title="Read a text line by line">Read</button>
-    <button data-tab="book" title="The pages: the source’s image beside the translation (and the literal, one switch away), held at the same page">Pages</button>
+    <button data-tab="book" class="on" title="The pages: the source’s image beside the translation (and the literal, one switch away), held at the same page">Pages</button>
+    <button data-tab="edit" title="Edit the text beside the page’s image, with undo and redo; a save writes a change list">Edit</button>
     <button data-tab="glossary" title="Each source term, its renderings, and where they fall">Glossary</button>
     <button data-tab="changes" title="The change lists: every change, its origin, and whether it is in the text now">Changes</button>
     <button data-tab="search" title="A source word in the source’s OCR and in the translations">Search</button>
@@ -56,8 +56,8 @@
   <noscript><div class="noscript">The research bench runs in JavaScript, which is turned off in this browser.</div></noscript>
 
   <main id="main">
-    <section class="view on" id="view-read"></section>
-    <section class="view" id="view-book"></section>
+    <section class="view on" id="view-book"></section>
+    <section class="view" id="view-edit"></section>
     <section class="view" id="view-glossary"></section>
     <section class="view" id="view-changes"></section>
     <section class="view" id="view-search"></section>
@@ -109,6 +109,7 @@
   <script src="kit/library.js?v=0.1.0"></script>
   <script src="kit/images.js?v=0.1.0"></script>
   <script src="kit/vt-views.js?v=0.1.0"></script>
+  <script src="kit/vt-edit.js?v=0.1.0"></script>
   <script src="kit/guides.js?v=0.1.0"></script>
   <script src="kit/helppages.js?v=0.1.0"></script>
   <script src="kit/about.js?v=0.1.0"></script>
