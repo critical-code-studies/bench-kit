@@ -325,7 +325,8 @@
 
   // ---------- a text being edited ----------
   // file: the file as read; base: the file with its lists applied, what a save compares against;
-  // hist.text: the text now. Only a text of one file per version is opened whole; each file is its own doc.
+  // hist.text: the text now. A version's first file only, so far: a translation laid out in several files
+  // (the method's text/translation/*.md) cannot yet be edited past its first.
   function open(target) {
     var id = SW.vt.ids()[target], v = VERS.byId(id);
     if (!v || !v.build || !v.build.length) return Promise.reject(new Error('The bench has no ' + target + ' version.'));
@@ -333,7 +334,7 @@
     if (memo && memo.path === path && memo.key === keyOf(path)) return Promise.resolve(memo);
     return Promise.all([SW.fetchText(path), SW.vt.editLists()]).then(function (r) {
       if (/\r/.test(r[0])) throw new Error(path + ' has carriage returns (Windows line endings): a change list could not match it. Convert it first.');
-      var w = E.working(r[0], r[1], target), doc = { target: target, path: path, key: keyOf(path), file: r[0], base: w.text, pending: w.pending.length, stuck: w.stuck, lists: r[1] };
+      var w = E.working(r[0], r[1], target), doc = { target: target, path: path, key: keyOf(path), file: r[0], base: w.text, pending: w.pending.length, pendingIn: w.pending.map(function (c) { return c.file; }), stuck: w.stuck };
       return idb('readonly', function (st) { return st.get(doc.key); }).catch(function () { return null; }).then(function (kept) {
         var text = w.text, note = '';
         if (kept && kept.entries && kept.entries.length) {
@@ -596,11 +597,12 @@
     var toFolder = writable();
     return files.reduce(function (p, f) {
       return p.then(function () {
+        f.path = f.name;
         if (!toFolder) { download(f.name, f.raw); return SW.vt.keepList(f.name, f.raw); }
-        return SW.folder.write(realDir().replace(/\/?$/, '/') + f.name, f.raw, { fresh: true });
+        return SW.folder.write(realDir().replace(/\/?$/, '/') + f.name, f.raw, { fresh: true }).then(function (at) { f.path = at; });
       });
     }, Promise.resolve()).then(function () {
-      files.forEach(function (f) { f.doc.base = f.doc.hist.text; f.doc.pending += VT.changes(f.raw, f.name).length; f.doc.savedAs = (f.doc.savedAs || []).concat(f.name); keepNow(f.doc); refreshEdits(f.doc); });
+      files.forEach(function (f) { f.doc.base = f.doc.hist.text; f.doc.pending += VT.changes(f.raw, f.path).length; f.doc.pendingIn.push(f.path); keepNow(f.doc); refreshEdits(f.doc); });
       SW.vt.refresh();
       paint(); buttons();
       SW.toast(files.length === 1 ? (toFolder ? 'Written: ' : 'Downloaded: ') + files[0].name : files.length + ' lists ' + (toFolder ? 'written.' : 'downloaded.'), 5000);
@@ -608,10 +610,15 @@
   }
   function keepNow(doc) { idb('readwrite', function (st) { return st.put({ hash: hash(doc.base), entries: [], ops: doc.hist.ops, undone: doc.hist.undone }, doc.key); }).catch(function () {}); }
   function download(name, raw) { var a = SW.el('a', { href: URL.createObjectURL(new Blob([raw], { type: 'text/markdown' })), download: name }); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+  // the lists not yet in their files, and each text's file, from the top of the working copy
   function copyCommand() {
-    var doc = S.cur, here = SW.folder && SW.folder.on ? SW.folder.locate(doc.path) || doc.path : doc.path, dir = realDir().replace(/\/?$/, '/');
-    var cmd = 'python3 ' + CFG.tool + ' ' + dir + 'edit-*.md --target ' + doc.target + '=' + here;
-    SW.copyText(cmd, 'the command (a dry run; add --write to apply)');
+    var lists = {}, targets = [];
+    TARGETS.forEach(function (t) {
+      var d = S.docs[t]; if (!d) return;
+      d.pendingIn.forEach(function (p) { lists[p] = 1; });
+      targets.push('--target ' + t + '=' + (SW.folder && SW.folder.on ? SW.folder.locate(d.path) || d.path : d.path));
+    });
+    SW.copyText(['python3', CFG.tool].concat(Object.keys(lists), targets).join(' '), 'the command (a dry run; add --write to apply)');
   }
 
   // ---------- the view, to the shell ----------

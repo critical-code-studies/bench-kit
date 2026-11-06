@@ -249,8 +249,10 @@ dialog.ov-dlg { width: min(96vw, 980px); }
 .vte-in::selection { background: color-mix(in srgb, var(--amber) 28%, transparent); color: transparent; }
 .vte-mk { color: var(--text-faint); }
 .vte-new { background: color-mix(in srgb, #8f6c00 22%, transparent); border-radius: 2px; }
-.vte-save { width: min(760px, 94vw); max-height: 86vh; }
-.vte-save form { display: flex; flex-direction: column; gap: 10px; }
+.vte-save { width: min(760px, 94vw); max-height: 86vh; padding: 0; }
+.vte-save form { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; }
+.vte-save h3 { margin: 0; }
+.vte-save .vt-ch { margin-bottom: 12px; }
 .vte-allwhy { display: flex; gap: 8px; align-items: center; }
 .vte-allwhy input { flex: 1; }
 .vte-list { overflow: auto; max-height: 52vh; }
