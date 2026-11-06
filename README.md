@@ -502,7 +502,11 @@ node tools/new-bench.js translation ../my-bench --name "My Text" --org my-org --
 
 ## The Library
 
-[`docs/library.md`](docs/library.md) is the guide for a bench: what belongs in the Library and what in Paratexts, the three kinds of entry, and how to adopt it.
+[`docs/library.md`](docs/library.md) is the guide for a bench: what belongs in the Library and what in Paratexts, the three kinds of entry, how to adopt it, and how members add to it. `tools/library-publish.js` brings what members have added into the public manifest:
+
+```bash
+node research/kit/tools/library-publish.js ../my-paratexts --write
+```
 
 ## Topic models
 

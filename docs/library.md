@@ -71,13 +71,24 @@ A box shows PDF, text, Markdown, HTML, images, audio and video; any other file c
 
 Members see the private repository's size above the list, with a warning above 800 MB. Moving or deleting a file within the repository does not reduce that size, since the history keeps the file. Reducing it means rewriting the history or starting a new repository, which is a decision for the person running the bench.
 
+## Adding from the bench
+
+A member with a token has **＋ Add a work** on the Library tab: a record, with a copy of the work or without. A member's token reaches the private repository only, so the entry goes in `library/additions.json` there, and a copy beside it as `library/<id>.<ext>`. Members see additions in the list at once, marked as not yet public, and can correct or remove them. Nobody else sees them. The token needs Contents read and write, as Paratexts asks. A copy added from the bench is limited to 50 MB; a larger one goes in through git, up to GitHub's 100 MB.
+
+The person running the bench publishes additions to the public list, from a clone of the private repository:
+
+```bash
+node research/kit/tools/library-publish.js ../my-paratexts
+```
+
+That lists what is waiting and changes nothing. With `--write` it moves the entries into the bench's `library.json`, takes them out of `additions.json` and removes the name of who added them; `--only L-ABC12,L-DEF34` takes some and leaves the rest. It commits nothing: commit and push each repository. An entry published with a copy stays on the private shelf, with the record and file path public. To make the file itself public, once its licence allows it, move it to the bench's `library/files/` and change its `file` and `shelf` in `library.json`.
+
 ## A copy kept as a paratext
 
 An item that stays in Paratexts can name a Library entry, with `library: [id]` in its record or a tag `library:<id>`. A member then sees it in that entry's box. The public manifest does not name the paratext.
 
 ## Not in the kit yet
 
-- **Adding an entry from the bench.** The Library writes nothing. An entry means editing `library.json` in the bench's repository, which needs write access there, and a private file means adding it to the private repository through git or GitHub.
 - **Comments.** Paratexts has them; the Library has none.
 - **Moving an item out of Paratexts.** There is no tool for this. Leave existing items where they are, and ask the bench-kit session.
 - **Transcripts.** An entry has no field for a recording's transcript.
