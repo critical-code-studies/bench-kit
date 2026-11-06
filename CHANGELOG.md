@@ -1,5 +1,13 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **`tools/library-move.js`: paratexts into the Library, and back** (David, 2026-11-06, through Spacewar). A plan proposes each entry; each note has to be set by hand, since a description may hold working remarks; each file and alternate goes on the shelf you set. `--back` restores the whole catalogue record and its files. A public file's history is said to stay. The P-code stays as the id: a code in a link or an annotation opens the entry, and Paratexts lists a related item as in the Library.
+- **Transcripts and other forms in the Library** (David, through Spacewar): `alts`, each on its own shelf, opened under the work so a transcript can be read while it plays.
+- **A citation in the Library's box, with Copy** (David, through the translation session), in Harvard form from the record, or `citation` as written. New fields in the record and the form: `contributor`, `in`, `publisher`, `pages`, `doi`, and `extent` in the record.
+- A book's cover names its kind where the kind is not simply book: edition, translation, parallel text (the translation session's request).
+- The Library's filters and tags say **Held** and **Linked**, for Held here and Links out (David, through the translation session).
+
 ## 0.99.0 (2026-11-06)
 
 - Help ▾ now says **Getting set up**, as the guide it opens has since 0.97.0 (SHRDLU's report), and so do the messages that point to it.

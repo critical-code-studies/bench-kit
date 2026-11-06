@@ -41,6 +41,15 @@
       T.eq('by language, those without last', ids('lang'), 'dbca');
       T.eq('as listed', ids('listed'), 'abcd');
       T.eq('the entries themselves left in their order', es[0].id, 'a');
+      function cite(e) { return L.citation(e).text; }
+      T.eq('a citation: an article', cite({ title: 'On Time', author: 'Marc Peeters', date: '2017', kind: 'article', in: 'A Journal 2', publisher: 'A Press', pages: '145–157', url: 'https://example.org/a' }), 'Marc Peeters (2017) ‘On Time’, A Journal 2, pp. 145–157. https://example.org/a');
+      T.eq('a book: in italics in the page, with its publisher, a note in brackets left out', cite({ title: 'A Book', author: 'A. Scholar', date: '1966', kind: 'book', in: '(monograph)', publisher: 'A Press', pages: 'ix, 198 p.' }), 'A. Scholar (1966) A Book. A Press.');
+      T.yes('its title in italics', /<i>A Book<\/i>/.test(L.citation({ title: 'A Book', kind: 'book' }).html));
+      T.eq('a chapter', cite({ title: 'A Part', author: 'E. Editor', date: '1999', kind: 'chapter', in: 'A Whole', publisher: 'A Press', pages: '5–9', doi: 'https://doi.org/10.1/x' }), 'E. Editor (1999) ‘A Part’, in A Whole. A Press, pp. 5–9. https://doi.org/10.1/x');
+      T.eq('no author, no date', cite({ title: 'What Is It?', kind: 'book' }), '(n.d.) What Is It?');
+      T.eq('a date cited by its year', cite({ title: 'A Talk', kind: 'talk', date: '2020-11-21' }), '(2020) A Talk.');
+      T.eq('as written, where it is', cite({ title: 'x', citation: 'By hand.' }), 'By hand.');
+      T.yes('and escaped in the page', !/<script/.test(L.citation({ title: '<script>', kind: 'book' }).html));
       T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
       T.eq('or from the file', [{ file: 'a.mp3' }, { file: 'a.webm' }, { file: 'a.pdf' }, { url: 'https://example.org' }].map(L.family), ['audio', 'film', 'article', 'web']);
     }
@@ -110,6 +119,27 @@
         SW.store.set('library.view', keepV); SW.store.set('library.order', keepO);
         if (!hadV) v.remove(); else v.innerHTML = '';
         B.library = was0;
+        T.group('Library: audio and video');
+        return load();
+      });
+    }).then(function () {
+      // a transcript on each shelf, a citation, and a code that has moved here
+      T.group('Library: the box');
+      var was1 = B.library, Lm = null;
+      B.library = { items: [{ id: 'P-AAAAA', title: 'A talk', author: 'A. Speaker', contributor: 'B. Host', date: '2020', kind: 'talk', file: 'library/files/t.mp3', url: 'https://example.org/t',
+        alts: [{ label: 'Open', lang: 'en', file: 'data:text/plain,hello.txt' }, { label: 'Held back', file: 'library/t1.md', shelf: 'private' }] }], private: { org: 'group', repo: 'archive' } };
+      return load().then(function () { Lm = SW.library; return Lm.load(); }).then(function () {
+        T.yes('it has the code', Lm.has('P-AAAAA'));
+        T.eq('and no other', Lm.has('P-BBBBB'), false);
+        return Lm.open('P-AAAAA');
+      }).then(function () { return wait(30); }).then(function () {
+        var d = box();
+        T.yes('the citation is near the top', /A\. Speaker \(2020\)/.test(d.querySelector('.lib-cite-t').textContent));
+        T.yes('with Copy', d.querySelector('[data-a="cite"]'));
+        T.yes('a contributor in the record', /B\. Host/.test(d.querySelector('.lib-rec').textContent));
+        T.eq('without a token, only the public form', Array.prototype.map.call(d.querySelectorAll('[data-alt]'), function (b) { return b.textContent; }), ['Open']);
+        d.close();
+        B.library = was1;
         T.group('Library: audio and video');
         return load();
       });
