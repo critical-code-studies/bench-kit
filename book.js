@@ -69,7 +69,7 @@
  * dragged on a page there, or the bench's (SW.BENCH.doc.trim: { l, t, r, b }, each a share of the
  * page's width or height, or a function (pb) giving each page its own, or null); beside the text and in
  * the enlarged page, the boxes and bands with them.
- * Images: a slider for their size, and Off to fold them away (a ▣ at each page break opens one),
+ * Images: a slider for their size, and Hide and Show to fold them away (a ▣ at each page break opens one),
  * for every column, kept for this browser and in the address as img (off, or a width).
  * The state rides in the address: v, tab=book, stage (an id, or 0), all=1, del=strike, bb (the texts beside, by commas),
  * img, l (the place), hz, pz and zm (a shared link's box, page and zoom). A selection maps back to the version's lines (p, n0, n1, and c0, c1 within
@@ -155,7 +155,7 @@
   if (Q0.all === '1') st.all = true;
   // deletions struck in red at the stage, not taken out (Strike deletions): kept for this browser, and in a link as del=strike
   st.strike = Q0.del === 'strike' || (Q0.del == null && SW.store.get('book.del', '') === 'strike');
-  // the pages' images: a width (a slider), and on or off (Off folds them away, leaving a ▣ at each
+  // the pages' images: a width (a slider), and on or off (Hide folds them away, leaving a ▣ at each
   // page break, and On brings them back at the width they had); kept for this browser, and in a link
   // that asks for it (img=off, or img=a width)
   var IMGW = [100, 560], IMGW0 = 320;
@@ -938,9 +938,9 @@
           others.filter(function (t) { return t === cur || st.beside.indexOf(t) < 0; }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === cur ? ' selected' : '') + '>with ' + esc(textLabel(t)) + '</option>'; }).join('') + '</select>';
       }).join(' ') + '</span>';
     tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
-      '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; Off folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
+      '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; Hide folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
-        '<button class="btn' + (st.imgOn ? '' : ' on') + '" id="bk-imgoff" aria-pressed="' + !st.imgOn + '" title="' + (st.imgOn ? 'Fold the images away' : 'Show the images again') + '">Off</button></span><span class="sep"></span>' +
+        '<button class="btn" id="bk-imgoff" title="' + (st.imgOn ? 'Fold the images away' : 'Show the images again') + '">' + (st.imgOn ? 'Hide' : 'Show') + '</button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="' + SW.lineWord() + ' at the place shown here, line by line">≡ ' + SW.lineWord() + ' here</button>' +
       '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share</button>' +
       '<select id="bk-marks" class="bk-marks" title="The ' + esc(PAGE) + 's you have bookmarked in this text: choose one to go to it"><option value="">🔖 Bookmarks</option></select>' +
@@ -956,7 +956,7 @@
       var b0 = e.target.closest('button, input'); if (!b0 || !tb.contains(b0)) return;
       if (b0.id === 'bk-imgoff') {
         st.imgOn = !st.imgOn; SW.store.set('book.imgon', st.imgOn); showImages();
-        b0.classList.toggle('on', !st.imgOn); b0.setAttribute('aria-pressed', String(!st.imgOn)); b0.title = st.imgOn ? 'Fold the images away' : 'Show the images again';
+        b0.textContent = st.imgOn ? 'Hide' : 'Show'; b0.title = st.imgOn ? 'Fold the images away' : 'Show the images again';
         var r0 = SW.$('#bk-imgw', tb); if (r0) r0.disabled = !st.imgOn;
         writeQ(); return;
       }
