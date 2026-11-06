@@ -461,13 +461,13 @@
   var MAXCHARS = 60000, NEAR = 1200;
   function box() { return SW.$('.vte-text', view); }
   function setRange(doc, a, b) { doc.win.a = a; doc.win.b = b; ta.value = doc.hist.text.slice(a, b); back.innerHTML = marks(ta.value, doc, doc.win); }
-  function scrollToOffset(off) {
+  function scrollToOffset(off, margin) {
     var w = document.createTreeWalker(back, NodeFilter.SHOW_TEXT), n, at = 0;
     while ((n = w.nextNode())) {
       if (at + n.length >= off) {
         var r = document.createRange(); r.setStart(n, Math.min(off - at, n.length)); r.collapse(true);
         var rect = r.getClientRects()[0] || r.getBoundingClientRect(), bx = box();
-        bx.scrollTop += rect.top - bx.getBoundingClientRect().top - 90;
+        bx.scrollTop += rect.top - bx.getBoundingClientRect().top - (margin == null ? 90 : margin);
         return;
       }
       at += n.length;
@@ -531,7 +531,13 @@
     winSel.value = String(w.i);
     refreshEdits(doc); paint(); buttons(); drawPane(doc, w);
     SW.store.set('edit.place', { target: S.target, key: w.key });
-    if (sel) { ta.focus({ preventScroll: true }); ta.setSelectionRange(sel[0] - w.a, sel[1] - w.a); scrollToOffset(sel[0] - w.a); } else box().scrollTop = 0;
+    if (sel) { ta.focus({ preventScroll: true }); ta.setSelectionRange(sel[0] - w.a, sel[1] - w.a); scrollToOffset(sel[0] - w.a); }
+    else {
+      // a page may begin inside a paragraph: to its marker
+      box().scrollTop = 0;
+      var mk = w.page != null ? ta.value.indexOf('[p. ' + w.page + ']') : -1;
+      if (mk > 0) scrollToOffset(mk, 8);
+    }
     last = { value: ta.value, s: ta.selectionStart, e: ta.selectionEnd };
     pump();
   }
