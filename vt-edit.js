@@ -1,7 +1,7 @@
 /*
  * vt-edit.js - Edit, a translation bench's working view (templates/translation), in place of Read: the
  * page's image beside its text, the text editable as the file has it (markers, notes and italics as
- * written), with undo and redo kept across reloads. A save writes a change list in the vector
+ * written), scrolling through the whole text, with undo and redo kept across reloads. A save writes a change list in the vector
  * translation method's form, which tools/vt_apply.py applies to the master file; the bench never
  * writes the master itself.
  *
@@ -387,17 +387,21 @@
     wire();
   }
   function marks(s, doc, w) {
-    // what has changed since the last save, and the markers, coloured under the text
-    var spots = [], R = /\[p\. \d+\]|\[コマ [^\]]*\]|\[\^[^\]]+\]/g, m;
-    while ((m = R.exec(s))) spots.push({ a: m.index, b: m.index + m[0].length, c: 'vte-mk' });
+    // what has changed since the last save, the markers and the headings, coloured under the text. A
+    // page's marker and a heading carry their place, for the page in view (track())
+    var spots = [], R = /\[p\. (\d+)\]|\[コマ [^\]]*\]|\[\^[^\]]+\]|^#{1,6} [^\n]*/gm, m;
+    while ((m = R.exec(s))) {
+      var head = m[0][0] === '#';
+      spots.push({ a: m.index, b: m.index + m[0].length, c: head ? 'vte-hd' : 'vte-mk', at: m[1] ? ' data-p="' + m[1] + '"' : head ? ' data-at="' + m.index + '"' : '' });
+    }
     doc.edits.forEach(function (c) {
       var a = c.b0 - w.a, b = a + c.ins.length;
       if (b <= 0 || a >= s.length) return;
-      if (b > a) spots.push({ a: Math.max(0, a), b: Math.min(s.length, b), c: 'vte-new' });
+      if (b > a) spots.push({ a: Math.max(0, a), b: Math.min(s.length, b), c: 'vte-new', at: '' });
     });
     spots.sort(function (x, y) { return x.a - y.a || y.b - x.b; });
     var out = '', at = 0;
-    spots.forEach(function (p) { if (p.a < at) return; out += esc(s.slice(at, p.a)) + '<span class="' + p.c + '">' + esc(s.slice(p.a, p.b)) + '</span>'; at = p.b; });
+    spots.forEach(function (p) { if (p.a < at) return; out += esc(s.slice(at, p.a)) + '<span class="' + p.c + '"' + p.at + '>' + esc(s.slice(p.a, p.b)) + '</span>'; at = p.b; });
     return out + esc(s.slice(at)) + '\n';
   }
   function refreshEdits(doc) { try { doc.edits = E.changes(doc.base, doc.hist.text); } catch (e) { doc.edits = []; } }
@@ -437,7 +441,7 @@
       var other = S.target === 'literal' ? 'translation' : 'literal';
       pane.innerHTML = '<p class="hint pad">Reading the ' + other + '…</p>';
       open(other).then(function (o) {
-        if (S.cur !== doc || doc.win !== w) return;
+        if (S.cur !== doc || doc.page !== w) return;
         var match = allWins(o).filter(function (x) { return x.key === w.key; })[0];
         pane.innerHTML = match ? '<pre class="vte-other" lang="en">' + esc(o.hist.text.slice(match.a, match.b)) + '</pre>' : '<p class="hint pad">The ' + other + ' has no ' + esc(w.label) + '.</p>';
       }, function (e) { pane.innerHTML = '<p class="pad badge err">' + esc(e.message) + '</p>'; });
@@ -450,15 +454,86 @@
     var im = SW.$('.vte-img', pane);
     im.addEventListener('click', function () { var big = im.classList.toggle('big'); if (big && x.sharp) im.src = x.sharp; });
   }
-  // a window of the text in the box. sel: the selection to set (offsets in the file's text), or null for the top
+  // ---------- the text in the box ----------
+  // The box holds a stretch of the text (doc.win: { a, b }, offsets in the text), never the whole, which a
+  // text box would be slow to type in: pages are added as it scrolls near an end, and those far behind let
+  // go, so that the whole text scrolls as one. doc.page is the window in view.
+  var MAXCHARS = 60000, NEAR = 1200;
+  function box() { return SW.$('.vte-text', view); }
+  function setRange(doc, a, b) { doc.win.a = a; doc.win.b = b; ta.value = doc.hist.text.slice(a, b); back.innerHTML = marks(ta.value, doc, doc.win); }
+  function scrollToOffset(off) {
+    var w = document.createTreeWalker(back, NodeFilter.SHOW_TEXT), n, at = 0;
+    while ((n = w.nextNode())) {
+      if (at + n.length >= off) {
+        var r = document.createRange(); r.setStart(n, Math.min(off - at, n.length)); r.collapse(true);
+        var rect = r.getClientRects()[0] || r.getBoundingClientRect(), bx = box();
+        bx.scrollTop += rect.top - bx.getBoundingClientRect().top - 90;
+        return;
+      }
+      at += n.length;
+    }
+  }
+  // a window more at one end; false at the end of the text. What is on the screen stays where it is
+  function extend(doc, dir) {
+    var wins = allWins(doc), r = doc.win, bx = box(), s0 = r.a + ta.selectionStart, e0 = r.a + ta.selectionEnd, a = r.a, b = r.b, i, h;
+    if (dir > 0) { for (i = 0; i < wins.length && wins[i].b <= b; i++) {} if (i === wins.length) return false; b = wins[i].b; }
+    else { for (i = wins.length - 1; i >= 0 && wins[i].a >= a; i--) {} if (i < 0) return false; a = wins[i].a; }
+    if (dir > 0) {
+      setRange(doc, a, b);
+      if (b - a > MAXCHARS) {
+        for (i = 0; i < wins.length && (wins[i].a <= a || b - wins[i].a > MAXCHARS); i++) {}
+        if (i < wins.length) { h = back.offsetHeight; setRange(doc, wins[i].a, b); bx.scrollTop -= h - back.offsetHeight; }
+      }
+    } else {
+      h = back.offsetHeight; setRange(doc, a, b); bx.scrollTop += back.offsetHeight - h;
+      if (b - a > MAXCHARS) {
+        for (i = wins.length - 1; i >= 0 && (wins[i].b >= b || wins[i].b - a > MAXCHARS); i--) {}
+        if (i >= 0) setRange(doc, a, wins[i].b);
+      }
+    }
+    // the caret, where it is still in the box; a box typed into must never hold it somewhere else
+    if (s0 < r.a || e0 > r.b) { if (document.activeElement === ta) ta.blur(); ta.setSelectionRange(0, 0); }
+    else ta.setSelectionRange(s0 - r.a, e0 - r.a);
+    last = { value: ta.value, s: ta.selectionStart, e: ta.selectionEnd };
+    return true;
+  }
+  // the page in view: the last marker or heading above the top of the box
+  var paneTimer = null;
+  function track(doc) {
+    var spots = SW.$$('[data-p],[data-at]', back), top = box().getBoundingClientRect().top + 30, lo = 0, hi = spots.length - 1, best = null;
+    while (lo <= hi) { var mid = (lo + hi) >> 1; if (spots[mid].getBoundingClientRect().top <= top) { best = spots[mid]; lo = mid + 1; } else hi = mid - 1; }
+    if (!best) return;
+    var wins = allWins(doc), w = best.dataset.p != null ? wins.filter(function (x) { return x.key === 'p' + best.dataset.p; })[0] : winAt(doc, doc.win.a + +best.dataset.at);
+    if (!w || w.key === S.key) return;
+    S.key = w.key; doc.page = w; winSel.value = String(w.i);
+    SW.store.set('edit.place', { target: S.target, key: w.key });
+    clearTimeout(paneTimer); paneTimer = setTimeout(function () { if (doc.page === w) drawPane(doc, w); }, 120);
+  }
+  var pumping = false;
+  function pump() {
+    if (pumping) return;
+    pumping = true;
+    requestAnimationFrame(function () {
+      pumping = false;
+      var doc = S.cur, bx = view && box(); if (!doc || !doc.win || composing || !bx) return;
+      took();
+      var more = false;
+      if (bx.scrollTop + bx.clientHeight > bx.scrollHeight - NEAR) more = extend(doc, 1);
+      else if (bx.scrollTop < NEAR) more = extend(doc, -1);
+      track(doc);
+      if (more) pump();
+    });
+  }
+  // a window of the text in the box. sel: the selection to set (offsets in the text), or null for the top
   function show(doc, w, sel) {
-    doc.win = w; S.key = w.key;
+    doc.win = { a: w.a, b: w.b }; doc.page = w; S.key = w.key;
     ta.value = doc.hist.text.slice(w.a, w.b);
     winSel.value = String(w.i);
     refreshEdits(doc); paint(); buttons(); drawPane(doc, w);
     SW.store.set('edit.place', { target: S.target, key: w.key });
-    if (sel) { ta.focus(); ta.setSelectionRange(sel[0] - w.a, sel[1] - w.a); } else SW.$('.vte-text', view).scrollTop = 0;
+    if (sel) { ta.focus({ preventScroll: true }); ta.setSelectionRange(sel[0] - w.a, sel[1] - w.a); scrollToOffset(sel[0] - w.a); } else box().scrollTop = 0;
     last = { value: ta.value, s: ta.selectionStart, e: ta.selectionEnd };
+    pump();
   }
   function winAt(doc, pos) {
     var wins = allWins(doc), hit = null;
@@ -511,8 +586,14 @@
     var op = dir < 0 ? doc.hist.undo() : doc.hist.redo();
     if (!op) return;
     var sel = dir < 0 ? (op.selBefore || [op.at, op.at + op.del.length]) : (op.selAfter || [op.at + op.ins.length, op.at + op.ins.length]);
-    var w = winAt(doc, sel[0]);
-    show(doc, w, sel);
+    var r = doc.win;
+    if (r && sel[0] >= r.a && sel[0] <= r.b && op.at >= r.a && op.at <= r.b) {
+      refreshEdits(doc);
+      setRange(doc, r.a, r.b + (dir < 0 ? op.del.length - op.ins.length : op.ins.length - op.del.length));
+      ta.focus({ preventScroll: true }); ta.setSelectionRange(sel[0] - r.a, sel[1] - r.a);
+      last = { value: ta.value, s: ta.selectionStart, e: ta.selectionEnd };
+      scrollToOffset(sel[0] - r.a); buttons(); pump();
+    } else show(doc, winAt(doc, sel[0]), sel);
     keep(doc);
   }
   function wire() {
@@ -536,8 +617,9 @@
       else if (d.dataset.do === 'cmd') copyCommand();
     });
     winSel.addEventListener('change', function () { took(); var w = allWins(S.cur)[+winSel.value]; if (w) show(S.cur, w); });
+    box().addEventListener('scroll', pump, { passive: true });
   }
-  function move(d) { var doc = S.cur; if (!doc || !doc.win) return; var w = allWins(doc)[winAt(doc, doc.win.a).i + d]; if (w) show(doc, w); }
+  function move(d) { var doc = S.cur; if (!doc || !doc.page) return; var wins = allWins(doc), at = wins.filter(function (x) { return x.key === S.key; })[0], w = at && wins[at.i + d]; if (w) show(doc, w); }
   document.addEventListener('keydown', function (e) {
     if (!SW.state || SW.state.tab !== 'edit' || document.querySelector('dialog[open]')) return;
     var mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
