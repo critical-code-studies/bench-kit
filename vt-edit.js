@@ -675,7 +675,14 @@
     view.addEventListener('click', function (e) {
       var t = e.target.closest('[data-target]'); if (t) { took(); go(t.dataset.target, S.key); return; }
       var g = e.target.closest('[data-go]'); if (g) { took(); move(+g.dataset.go); return; }
-      var b = e.target.closest('[data-beside]'); if (b) { S.beside = b.dataset.beside; SW.store.set('edit.beside', S.beside); buttons(); if (S.cur && S.cur.page) drawPane(S.cur, S.cur.page); return; }
+      var b = e.target.closest('[data-beside]'); if (b) { S.beside = b.dataset.beside; SW.store.set('edit.beside', S.beside); buttons();
+        if (S.cur && S.cur.page) {
+          var pg = S.cur.page, at = pg.page != null ? ta.value.indexOf('[p. ' + pg.page + ']') : -1;
+          drawPane(S.cur, pg);
+          // the text wraps afresh at the new width: back to the page in view
+          if (at >= 0) scrollToOffset(at, 8);
+        }
+        return; }
       var d = e.target.closest('[data-do]'); if (!d) return;
       if (d.dataset.do === 'lock') setLock(!S.locked);
       else if (d.dataset.do === 'undo') step(-1);
