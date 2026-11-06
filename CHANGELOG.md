@@ -3,6 +3,8 @@
 ## Unreleased
 
 - The Library stretches to the full width of the browser (David, 2026-11-06).
+- The Library no longer shows the private repository's size or a warning about it above the list (David, 2026-11-06). Its Help says a copy stays in the repository's history, and `docs/library.md` says how to read the size. `SW.library.size()` is gone.
+- The tests ask again for a module that did not load (`T.script`). A test run failed twice in about 25 with "could not load images.js" on a busy machine; the cause is not established.
 - More kinds have drawn covers (SHRDLU's request): preprint, conference and proceedings as articles, encyclopedia as a web page, and a newsprint cover of its own for news, newspaper and magazine.
 - `docs/library.md` names the citation-only stub (David's rule, through ELIZA): a work with no link and no file keeps its record and citation.
 

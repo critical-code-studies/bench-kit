@@ -26,7 +26,7 @@
       document.querySelectorAll('dialog.im-figdlg, dialog.im-pagedlg').forEach(function (d) { if (d.open) d.close(); d.remove(); });
     }
     return new Promise(function (res, rej) {
-      var s = document.createElement('script'); s.src = kit + 'images.js?t=' + Date.now(); s.onload = res; s.onerror = function () { rej(new Error('could not load images.js')); }; document.body.appendChild(s);
+      T.script(kit + 'images.js?t=' + Date.now() + Math.random()).then(res, rej);
     }).then(function () { return SW.images.openFigure('fig-01'); }).then(function () { return wait(50); }).then(function () {
       T.group('Images: the figure box');
       var d = box();
@@ -106,7 +106,7 @@
       document.querySelectorAll('dialog.im-pagedlg').forEach(function (d) { if (d.open) d.close(); d.remove(); });
     }
     return new Promise(function (res, rej) {
-      var s = document.createElement('script'); s.src = kit + 'images.js?t=' + Date.now(); s.onload = res; s.onerror = function () { rej(new Error('could not load images.js')); }; document.body.appendChild(s);
+      T.script(kit + 'images.js?t=' + Date.now() + Math.random()).then(res, rej);
     }).then(function () {
       T.group('Images: held copies');
       SW.views.images.show();
@@ -127,7 +127,7 @@
   function imageQueue() {
     return new Promise(function (res, rej) {
       if (window.SW.images && window.SW.images.makeQueue) return res();
-      var s = document.createElement('script'); s.src = kit + 'images.js?t=' + Date.now(); s.onload = res; s.onerror = function () { rej(new Error('could not load images.js')); }; document.body.appendChild(s);
+      T.script(kit + 'images.js?t=' + Date.now() + Math.random()).then(res, rej);
     }).then(function () {
       var make = window.SW.images.makeQueue, running = 0, most = 0;
       var q = make({ max: 2, wait: 5 });

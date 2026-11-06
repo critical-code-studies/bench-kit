@@ -46,13 +46,12 @@
  * name an entry (a record's library: [id], or a tag library:<id>) are offered in its box as well, and
  * open as a paratext does (SW.paratexts.peek). Without a token nothing is looked up or shown, and the
  * public manifest does not name these paratexts.
- * Members see the private repository's size above the list (GitHub works badly above about 1 GB).
  * Additions: a member adds a work from the tab (＋ Add a work), with a copy of it or without. A member's
  * token reaches the private repository only, so the entry goes in its library/additions.json ({ items })
  * and any copy beside it (library/<id>.<ext>, 40 MB at most). Members see additions in the list at once,
  * and may correct or remove them there; nobody else sees them. tools/library-publish.js brings them into
  * the public manifest, when the person running the bench chooses.
- * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), size(), add(record, file),
+ * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), add(record, file),
  * update(id, record), remove(id), form(entry), family(entry), year(date), surname(author), sorted(items, order),
  * has(id), citation(entry) { text, html },
  * help(), the guide for readers (Help ▸ The Library, ?help=library).
@@ -90,12 +89,6 @@
     return fetch('https://api.github.com/repos/' + L.privateRepo() + '/contents/' + String(path).split('/').map(encodeURIComponent).join('/'), { headers: { Authorization: 'Bearer ' + tokenOf(), Accept: 'application/vnd.github.raw' }, cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error(r.status === 401 ? 'GitHub refused your token; make it again (⚙ Settings)' : r.status === 404 ? 'it is not in the private repository, or your token cannot reach it' : 'GitHub answered ' + r.status); return r.blob(); });
   }
-  var sizeP = null;
-  L.size = function () {
-    if (!L.member()) return Promise.resolve(null);
-    return sizeP || (sizeP = fetch('https://api.github.com/repos/' + L.privateRepo(), { headers: { Authorization: 'Bearer ' + tokenOf() }, cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { return j && j.size != null ? j.size * 1024 : null; }, function () { return null; }));
-  };
   // ---------- additions, in the private repository, with the member's token ----------
   // GitHub's API took 41.5 MB and refused 42 MB in a trial on 2026-11-06; it publishes no figure
   var ADD = 'library/additions.json', MAXUP = 40e6, TRIES = 6, BUSY = 'Others were saving to the private repository at the same moment. Try again';
@@ -408,14 +401,8 @@
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span>' + (L.member() ? '<button class="btn lib-add">＋ Add a work</button>' : '') + '</div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
-        '<p class="hint lib-size" hidden></p><div class="lib-list"></div></div>';
+        '<div class="lib-list"></div></div>';
       list(view);
-      L.size().then(function (b) {
-        var el = SW.$('.lib-size', view); if (!el || b == null) return;
-        var mb = b / 1048576;
-        el.hidden = false; el.classList.toggle('lib-big', mb > 800);
-        el.textContent = 'The private repository (' + L.privateRepo() + ') holds ' + (mb >= 1024 ? (mb / 1024).toFixed(2) + ' GB' : Math.round(mb) + ' MB') + (mb > 800 ? ': GitHub works badly above about 1 GB.' : '.');
-      });
       var q = SW.$('.lib-q', view);
       q.addEventListener('input', function () { F.q = q.value; list(view); });
       if (view.libFor !== L) {
@@ -455,7 +442,8 @@
       ['Adding a work', ul([
         'A member with a token has <b>＋ Add a work</b>: a record, with a copy of up to 40 MB or without one, and a link to a cover image if you have one.',
         'It goes in the group’s private repository. Members see it at once, marked <b>Added, not yet public</b>, and can correct or remove it from its box. Nobody else sees it.',
-        'It joins the public list when the person running the bench publishes it, without the name of who added it. A copy stays private.'])]
+        'It joins the public list when the person running the bench publishes it, without the name of who added it. A copy stays private.',
+        'A copy added here stays in the private repository’s history, even if it is later removed. GitHub shows the repository’s size on its own page; the person running the bench looks after it.'])]
     ]]);
     SW.guide('library');
   };

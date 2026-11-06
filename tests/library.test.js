@@ -12,7 +12,7 @@
   function box() { var ds = document.querySelectorAll('dialog.lib-dlg'); return ds[ds.length - 1] || null; }
   function load() {
     return new Promise(function (res, rej) {
-      var s = document.createElement('script'); s.src = kit + 'library.js?t=' + Date.now() + Math.random(); s.onload = res; s.onerror = function () { rej(new Error('could not load library.js')); }; document.body.appendChild(s);
+      T.script(kit + 'library.js?t=' + Date.now() + Math.random()).then(res, rej);
     });
   }
   function b64(s) { var b = new TextEncoder().encode(s), t = ''; for (var i = 0; i < b.length; i++) t += String.fromCharCode(b[i]); return btoa(t); }

@@ -95,7 +95,7 @@ A `url` on YouTube (through youtube-nocookie.com, with any `t=` as its start), V
 
 A box shows PDF, text, Markdown, HTML, images, audio and video; any other file can be downloaded. A private file is read whole through GitHub before it opens, and GitHub holds no file over 100 MB. GitHub Pages limits a published site to 1 GB, so check the size of `library/files/` before pushing.
 
-Members see the private repository's size above the list, with a warning above 800 MB. The figure is GitHub's and can lag: in a trial on 2026-11-06 it read 0 for a repository that had taken about 1 GB in the half-hour before. Moving or deleting a file within the repository does not reduce that size, since the history keeps the file. Reducing it means rewriting the history or starting a new repository, which is a decision for the person running the bench.
+The bench does not show the private repository's size to its readers; the person running the bench can read it with `gh api repos/<org>/<repo> -q .size`, in KB. The figure is GitHub's and can lag: in a trial on 2026-11-06 it read 0 for a repository that had taken about 1 GB in the half-hour before. Moving or deleting a file within the repository does not reduce that size, since the history keeps the file. Reducing it means rewriting the history or starting a new repository, which is a decision for the person running the bench.
 
 ## Adding from the bench
 

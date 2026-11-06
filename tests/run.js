@@ -35,6 +35,20 @@
       results.push({ name: (group ? group + ': ' : '') + name, ok: ok, got: got, want: want });
     },
     yes: function (name, cond) { T.eq(name, !!cond, true); },
+    // a script loaded for a test: asked for again if the machine is too busy to answer the first time
+    script: function (src, tries) {
+      tries = tries == null ? 2 : tries;
+      return new Promise(function (res, rej) {
+        var el = document.createElement('script');
+        el.src = src; el.onload = res;
+        el.onerror = function () {
+          el.remove();
+          if (tries > 0) setTimeout(function () { T.script(src, tries - 1).then(res, rej); }, 300);
+          else rej(new Error('could not load ' + src.replace(/.*\//, '').replace(/\?.*/, '')));
+        };
+        document.head.appendChild(el);
+      });
+    },
     later: function (name, fn) {
       var g = group;
       pending.push(Promise.resolve().then(fn).then(null, function (e) {
