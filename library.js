@@ -102,7 +102,7 @@
     var before = after ? after.nextSibling : SW.$('[data-menu="versions"], [data-menu="help"]', tabs);
     tabs.insertBefore(btn, before || null);
   }
-  var main = SW.$('#view-read') && SW.$('#view-read').parentNode;
+  var main = SW.$('section.view') && SW.$('section.view').parentNode;   // beside the bench's own views, whichever it has
   if (main && !SW.$('#view-library')) main.appendChild(SW.el('section', { class: 'view', id: 'view-library' }));
   SW.kitViews = (SW.kitViews || []).concat('library');
 

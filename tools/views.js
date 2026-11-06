@@ -60,7 +60,7 @@ const CHECK = `(async (name) => {
   let failed = 0;
   try {
     await C.withBench({ dir, route, wait: 240 }, async (page) => {
-      const info = JSON.parse(await page.evaluate('JSON.stringify({ bench: SW.BENCH.title || SW.BENCH.name, version: SW.VERSION, kit: SW.KIT && SW.KIT.version, views: (SW.BENCH.shell && SW.BENCH.shell.views) || [] })'));
+      const info = JSON.parse(await page.evaluate('JSON.stringify({ bench: SW.BENCH.title || SW.BENCH.name, version: SW.VERSION, kit: SW.KIT && SW.KIT.version, views: ((SW.BENCH.shell && SW.BENCH.shell.views) || []).concat((SW.kitViews || []).filter(function (x) { return (SW.BENCH.menusOff || []).map(String).indexOf(x) < 0; })) })'));
       console.log((info.bench || 'bench') + ' ' + info.version + ', kit ' + info.kit + (kit ? ' (from ' + kit + ')' : ''));
       const views = info.views.filter((v) => skip.indexOf(v) < 0);
       for (const v of views) {
