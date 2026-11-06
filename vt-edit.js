@@ -513,7 +513,7 @@
   function pump() {
     if (pumping) return;
     pumping = true;
-    requestAnimationFrame(function () {
+    setTimeout(function () {
       pumping = false;
       var doc = S.cur, bx = view && box(); if (!doc || !doc.win || composing || !bx) return;
       took();
@@ -522,7 +522,7 @@
       else if (bx.scrollTop < NEAR) more = extend(doc, -1);
       track(doc);
       if (more) pump();
-    });
+    }, 30);
   }
   // a window of the text in the box. sel: the selection to set (offsets in the text), or null for the top
   function show(doc, w, sel) {
