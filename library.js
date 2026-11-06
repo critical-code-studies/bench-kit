@@ -47,7 +47,8 @@
  * and may correct or remove them there; nobody else sees them. tools/library-publish.js brings them into
  * the public manifest, when the person running the bench chooses.
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), size(), add(record, file),
- * update(id, record), remove(id), form(entry), family(entry), year(date), surname(author), sorted(items, order).
+ * update(id, record), remove(id), form(entry), family(entry), year(date), surname(author), sorted(items, order),
+ * help(), the guide for readers (Help ▸ The Library, ?help=library).
  * docs/library.md is the guide for a bench.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -390,6 +391,7 @@
         (kinds.length > 1 ? '<select class="lib-kind" aria-label="Kind"><option value="">Every kind</option>' + kinds.sort().map(function (k) { return '<option' + (k === F.kind ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>' : '') +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button></span>' +
+        '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span>' + (L.member() ? '<button class="btn lib-add">＋ Add a work</button>' : '') + '</div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
         '<p class="hint lib-size" hidden></p><div class="lib-list"></div></div>';
@@ -406,6 +408,7 @@
         view.libFor = L;
         view.addEventListener('click', function (ev) {
           if (ev.target.closest('.lib-add')) { L.form(); return; }
+          if (ev.target.closest('.lib-help')) { L.help(); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
           var s = ev.target.closest('[data-show]'); if (s) { F.show = s.dataset.show; SW.$$('[data-show]', view).forEach(function (b) { b.classList.toggle('on', b === s); }); list(view); return; }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
@@ -420,6 +423,26 @@
   }
   var drawn = false;
   function redraw() { if (drawn) draw(); }
+  L.help = function () {
+    function ul(items) { return '<ul class="ah-steps">' + items.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>'; }
+    SW.guideAdd('library', [C.label || 'The Library', [
+      ['What it holds', '<p>The secondary literature on the project: the books, articles, talks, podcasts and documentaries the group reads and cites. Each entry has a record. Some have a file held here, some a file the group keeps privately, and some a link to where the work is published.</p>'],
+      ['Finding a work', ul([
+        '<b>▦</b> shows covers on a shelf, and <b>☰</b> a list. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
+        '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view and order is kept in this browser.',
+        'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held here</b>, <b>For the group</b> and <b>Links out</b> show those entries only, and <b>Every kind</b> narrows to one kind.'])],
+      ['Opening a work', ul([
+        'Click a cover or a row: the record opens in a box over the bench, with the file where you can read it, and a link to where it is published.',
+        'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
+        '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
+        '<b>🔗 Link</b> copies a link to the entry.'])],
+      ['Adding a work', ul([
+        'A member with a token has <b>＋ Add a work</b>: a record, with a copy of up to 40 MB or without one, and a link to a cover image if you have one.',
+        'It goes in the group’s private repository. Members see it at once, marked <b>Added, not yet public</b>, and can correct or remove it from its box. Nobody else sees it.',
+        'It joins the public list when the person running the bench publishes it, without the name of who added it. A copy stays private.'])]
+    ]]);
+    SW.guide('library');
+  };
   SW.views.library = { show: function () { if (!drawn) { drawn = true; draw(); } } };
 
   // ---------- an entry, in a box over the bench ----------

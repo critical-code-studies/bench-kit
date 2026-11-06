@@ -149,6 +149,7 @@
     if (SW.cardsHelp && B.cards) h.cards = SW.cardsHelp;
     if (SW.marksHelp) h.marks = SW.marksHelp;
     if (B.implementations) h.implementations = function () { SW.guide('implementations'); };
+    if (SW.library && SW.library.help) h.library = SW.library.help;
     if (B.topics && SW.topics && SW.topics.help) h.topics = SW.topics.help;
     var own = H().help || {}; Object.keys(own).forEach(function (k) { h[k] = own[k]; });
     return h;

@@ -17,7 +17,7 @@ This is the template, with an invented example. Every value marked `EDIT` in `js
 | `text/translation/`, `text/literal/` | the translation and the literal, a snapshot of their repository at a commit |
 | `glossary.csv`, `checks/` | the glossary and the change lists |
 | `source/ocr.txt` | the source's OCR, divided by image (`=== PAGE n`) |
-| `library/library.json` | the Library: its public shelf (held in `library/files/`, or linked to) and the group's private shelf (`shelf: 'private'`, files in the private repository's `library/`); parallel texts are a kind in it |
+| `library/library.json` | the Library: its public shelf (held in `library/files/`, or linked to) and the group's private shelf (`shelf: 'private'`, files in the private repository's `library/`); parallel texts are a kind in it; `thumb` gives an entry a cover image |
 | `tests/` | the kit's tests, with this bench's values |
 | `kit/` | bench-kit, a git submodule |
 

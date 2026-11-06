@@ -73,7 +73,7 @@ A cover is drawn from the entry's `kind`: book, thesis, article, chapter, letter
 { "id": "L-004", "title": "A book with a jacket", "kind": "book", "thumb": "library/thumbs/L-004.jpg" }
 ```
 
-Put a bench's own images in `library/thumbs/`, at about 260 by 390 pixels. A public image file is its own cover without a `thumb`. A picture that will not load leaves the drawn cover. The kit makes no thumbnails from PDFs or videos. Everything in `library/thumbs/` is public, so the person running the bench decides whether a cover or a first page may be shown, as for a file. A link in `thumb` makes each reader's browser ask that site for the picture.
+Put a bench's own images in `library/thumbs/`, at about 260 by 390 pixels. A public image file is its own cover without a `thumb`. A picture that will not load leaves the drawn cover. The kit makes no thumbnails from PDFs or videos. Everything in `library/thumbs/` is public, so the person running the bench decides whether a cover or a first page may be shown, as for a file. A link in `thumb` makes each reader's browser ask that site for the picture. ＋ Add a work takes a cover image as a link; the image for a member's addition cannot go in the bench's own repository, since a member's token reaches only the private one.
 
 Author order files under the first author's surname: the part before the comma in `Ōtsuka, Hisao`, and otherwise the last word, so write a name whose surname comes first with the comma. Date order reads the first four-figure year in `date`. Entries with no value for the order chosen go last.
 

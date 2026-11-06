@@ -172,7 +172,7 @@ SW.BENCH = {
 | `layers` | `layers.js` | `{ list: [{ id, label, below, relation, start, more, note }], forms, pick(p), shown(id, versions) }`: the layers, top first, and how Read ▾ lists them; see the head of `layers.js`. |
 | `paratexts` | `paratexts.js`, `guides.js`, `settings.js` | `{ org, repo, cache, tokenName, words }` (`words`: `{ one, many }`, the collection's name in the bench's text; Paratexts if not given): the private repository of scans and documents, the name of the browser cache, and the name given to members' GitHub tokens (by default "<name> research bench"). | `genres`: [[group, [[id, label, DCMI, CSL, RIS]]]], a bench's own types of item, added to the kit's.
 | `topics` | `topics.js` | `{ documents(o), sets, source(), models, stopwords, label }`: `documents(o)` a promise of the bench's documents (`[{ id, label, tokens, meta }]`, ids the same from build to build) for `o.set` and its choice; `sets` `[{ id, label, param, choices() }]` the documents a reader may model; `source()` `{ bench, sources: [{ name, repo, commit }] }`, recorded in each model so the tab can say when the text has changed; `models` `[{ id, name, url, note }]` the models the bench publishes (written by `tools/topics.js`). Optional: `open(doc)` a document's text in the bench (else its meta's `v`, `from`, `to`), `tokens(text)` a passage's words as its documents have them. `menusOff: ['topics']` leaves the tab out. |
-| `library` | `library.js` | `true` (the manifest at `library/library.json`), or `{ url, label, intro, items, load, private: { org, repo }, view, order }`. An entry: `{ id, title, author, date, kind, lang, note, licence, shelf, file, url, source, tags }`; `file` is a PDF, text, Markdown, HTML, an image, audio or video; `shelf: 'private'` puts its `file` in the private repository (`paratexts`' unless `private` names another), and a paratext names the entries it answers by `library: [id]` or a tag `library:<id>`. |
+| `library` | `library.js` | `true` (the manifest at `library/library.json`), or `{ url, label, intro, items, load, private: { org, repo }, view, order }`. `view` is `icons` (the default) or `list`; `order` is `author` (the default), `title`, `new`, `old`, `kind`, `lang` or `listed`. An entry: `{ id, title, author, date, kind, lang, note, licence, shelf, file, url, source, tags, thumb }`; `file` is a PDF, text, Markdown, HTML, an image, audio or video; `thumb` is an image for its cover, a path from the page or a link; `shelf: 'private'` puts its `file` in the private repository (`paratexts`' unless `private` names another), and a paratext names the entries it answers by `library: [id]` or a tag `library:<id>`. |
 | `images` | `images.js` | `true`, or `{ label, map, figures: { url, overlays }, intro, credit, labelsNote, start, held }` (`start: 'pages'`: Pages first, where the bench has figures; `held: { thumb, full }`: the bench's own copies of the page images, paths with `{key}` or `{key3}`, so that nothing is asked of the library): `map` the image map's global (`SWImages`, from `tools/iiif-map.js`); `figures` the records and labels, from `tools/vt-figures.js` or the bench's own ([`docs/figure-labels.md`](docs/figure-labels.md)). |
 | `folder` | `folder.js` | `true`, or `{ hint, root }`: `root` a folder within the one chosen that the bench's paths start from. |
 | `translation` | `vt-reader.js`, `vt-views.js`, `tools/vt-figures.js` | The translation's descriptor: `versions` (`{ translation, literal, ocr }`, the ids), `page` and `image` (the markers), `body` (`{ from, until }`: the author's text, between the translator's front matter and the apparatus), `glossary`, `changes`, `ocr`, `side(page)` (the half of a spread a page is on), `figures` (`{ list, overlays }`). `vt-reader.js` lists every field. |
@@ -197,6 +197,9 @@ SW.BENCH = {
 | `findings`, `findingCats`, `findingsTitle`, `findingsSubtitle`, `findingsIntro`, `findingsSide`, `findingsRecheck` | `findings.js` | The bench's own findings (below), their categories, the view's texts (`findingsIntro` is HTML), the side shown first (`crew` or `bench`), the hover of Check again. Conventionally in `js/findings-data.js`, loaded before the kit. |
 | `tours`, `tourOffer` | `tours.js` | The guided tours and the offer made on a first visit (below). Conventionally in `js/tour.js`, loaded before the kit. |
 | `forks`, `start` | `shell.js` | The version picker's groups (`[[fork, label]]`, by each version's `fork`) and the version shown first. |
+| `readFiles` | `menus.js` | `{ groups: [{ label, note, test, rest }] }`: how File ▾ ▸ Open a version… groups a version's files. `test` is a pattern on a file's name, without its version; `rest` takes what no group's `test` takes. |
+| `columns` | `read.js`, `lang-mad.js` | `{ layout, files: [[pattern, layout]], expand, note }`: a fixed-column file read as cards, Read's card lens; `read.js` gives a layout's fields. |
+| `marks` | `helppages.js` | `{ uses: { id: text }, add: [[id, …]], note }`: Help's list of the marks in the text, reworded or added to for this bench. |
 | `picker` | `shell.js` | `true` puts the version picker, with the version's reference and language, in the top bar (the page holds it as `.pick`, `#pick-a`, `#vref`, `#vlang`). Off by default: the versions are chosen from File ▾ ▸ Open a version… (⌘O), or Versions ▾ where the bench has no File ▾, and Read's file header gives the reference. |
 | `shell` | `shell.js` | The bench's parts of the frame (hooks, below). |
 | `sitemap` | `menus.js`, `sitemap.js` | Where the bench has a `sitemap.html` (Help ▸ Site map): `true`, or how `tools/sitemap.js` writes it: `site` ([href, label], the project's site), `sitePages` ([[href, label]]), `intro` (HTML), `opens` (what a link opens when it names no version), `files` (a sentence on the files), `lost` (the line for a version with no text), `links` ({ pick: href } for a menu item that opens a page of its own). |
@@ -458,7 +461,7 @@ node tools/kit-release.js minor --author "Name <address>"
 node research/kit/tools/sitemap.js
 ```
 
-`tools/styles.js` checks a change to the stylesheets, the bench's or the kit's: in each colour theme and each state of the page (every tab, the Key, every menu open, every menu item, the genealogy's figures) it reads every visible element's computed style with the stylesheets on disk and again with them as committed (`--ref`, HEAD by default; the kit's as that commit pointed to it), and lists the elements that differ, with the properties. Only stylesheets change between the two readings, so nothing else can account for a difference. Use it before releasing a move of CSS between a bench and the kit: it should report that nothing differs. `--themes all` checks every theme (two by default), `--only` named states; it exits 1 when anything differs, and takes a few minutes.
+`tools/styles.js` (with `tools/styles-page.js`, which it runs in the page) checks a change to the stylesheets, the bench's or the kit's: in each colour theme and each state of the page (every tab, the Key, every menu open, every menu item, the genealogy's figures) it reads every visible element's computed style with the stylesheets on disk and again with them as committed (`--ref`, HEAD by default; the kit's as that commit pointed to it), and lists the elements that differ, with the properties. Only stylesheets change between the two readings, so nothing else can account for a difference. Use it before releasing a move of CSS between a bench and the kit: it should report that nothing differs. `--themes all` checks every theme (two by default), `--only` named states; it exits 1 when anything differs, and takes a few minutes.
 
 ```bash
 node research/kit/tools/styles.js --themes all
@@ -502,7 +505,35 @@ node tools/new-bench.js translation ../my-bench --name "My Text" --org my-org --
 
 ## The Library
 
-[`docs/library.md`](docs/library.md) is the guide for a bench: what belongs in the Library and what in Paratexts, the three kinds of entry, how to adopt it, and how members add to it. `tools/library-publish.js` brings what members have added into the public manifest:
+![The Library tab: books, a jacket, an article, a chapter, a thesis, a letter, a podcast, a talk, a documentary and a web page as covers on a shelf, with the search, the filters, the order and the switch to a list above them](docs/img/library-shelf.jpg)
+
+The Library tab shows a project's secondary literature as covers on a shelf, or as a list. A bench turns it on with `library: true` in `js/config.js`, and writes `library/library.json` beside its `index.html`:
+
+```json
+{
+  "title": "Library",
+  "intro": "The secondary literature on the project.",
+  "items": [
+    { "id": "L-001", "title": "A Book Held Elsewhere", "author": "Scholar, Ada", "date": "2011", "kind": "book",
+      "url": "https://example.org/book" },
+    { "id": "L-002", "title": "A Book with a Jacket", "author": "Reader, Ben", "date": "2014", "kind": "book",
+      "thumb": "library/thumbs/L-002.jpg", "url": "https://example.org/jacket" },
+    { "id": "L-003", "title": "An Open Article", "author": "Writer, Cass", "date": "2020", "kind": "article",
+      "licence": "CC BY 4.0", "file": "library/files/open-article.pdf", "url": "https://example.org/article" },
+    { "id": "L-004", "title": "A Podcast Episode", "author": "Host, Dana", "date": "2021", "kind": "podcast",
+      "shelf": "private", "file": "library/L-004.m4a", "url": "https://example.org/episode" }
+  ]
+}
+```
+
+- **L-001** has a record and a link out, and its cover is drawn from its `kind`.
+- **L-002** shows the image in `thumb` as its cover.
+- **L-003** is held in the bench's `library/files/`, and anyone can open it.
+- **L-004** is held in the private repository's `library/`. A member with a token plays it in the bench; anyone else sees the record and the link out.
+
+A reader orders either view by author, title, date, kind or language, or as the manifest lists them. `library: { view: 'list', order: 'new' }` sets what a reader sees first. An entry needs only `id` and `title`.
+
+[`docs/library.md`](docs/library.md) is the guide for a bench: what belongs in the Library and what in Paratexts, the three kinds of entry, how to adopt it, covers and order, and how members add to it. Help ▸ The Library is the guide for its readers. `tools/library-publish.js` brings what members have added into the public manifest:
 
 ```bash
 node research/kit/tools/library-publish.js ../my-paratexts --write

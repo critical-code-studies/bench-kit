@@ -120,6 +120,7 @@
                                         ['anno', 'Advanced annotation', 'Rich text, and links between annotations across versions'],
                                         ['codes', 'Codes, links and sharing', 'Every item’s code, links in annotations, Share, Findings and My notes'],
                                         ['paratexts', SW.px('Many'), 'Scans and documents: collections, views, metadata, links']]
+                                       .concat(B.library ? [['library', 'The Library', 'Covers and the list, the order, opening a work, adding one']] : [])
                                        .concat(B.implementations ? [['implementations', 'Implementations', 'Ports, translations and reimplementations: their descent, features and comparison']] : [])],
             ['Your bench', [['settings', 'Settings', 'Initials, group, theme, fonts'],
                             ['backup', 'Back up my data', ''],

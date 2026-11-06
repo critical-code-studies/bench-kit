@@ -95,6 +95,7 @@
         T.yes('its picture over it', v.querySelector('[data-lib="c3"] img.lib-thumb'));
         T.yes('an article as an article', v.querySelector('[data-lib="c2"] .lib-cover.lib-c-article'));
         T.eq('by author first', v.querySelector('.lib-order select').value, 'author');
+        if (SW.guideAdd) { SW.library.help(); var hd = document.querySelector('dialog h3'); T.yes('the guide opens, from the Help menu or the ?', hd && /holds/.test(hd.textContent)); hd.closest('dialog').close(); }
         v.querySelector('[data-libview="list"]').click();
         T.eq('the switch: a list', v.querySelectorAll('.lib-row').length, 6);
         T.eq('which is kept', SW.store.get('library.view', ''), 'list');
