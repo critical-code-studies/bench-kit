@@ -10,7 +10,7 @@
  *            has no labels, the key from its caption beside it; On the page (its region of the page
  *            image, outlined, in the zooming box); the page in Book; and a labelled copy exported as PNG
  *            or SVG (made then, never stored)
- * SW.BENCH.images: true, or { label, map, figures: { url, overlays }, intro, credit, labelsNote }:
+ * SW.BENCH.images: true, or { label, map, figures: { url, overlays } (or { items, labels }, given here), intro, credit, labelsNote }:
  *   labelsNote, HTML folded under a figure's key ("About the labels"), with a figure's own labelsNote
  *   before it: why some of the source's writing has no label of its own (a word written a character
  *   at a time along a line has one label). figures.url gives
@@ -51,6 +51,7 @@
   var figs = null;
   I.figures = function () {
     if (figs) return figs;
+    if (FG && FG.items) { FG.items.forEach(function (f) { f.labels = f.overlays === false ? [] : (FG.labels || {})[String(f.file).split('/').pop()] || []; }); return (figs = Promise.resolve(FG.items)); }
     if (!FG || !FG.url) return (figs = Promise.resolve([]));
     var get = function (u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(u + ': ' + r.status); return r.json(); }); };
     figs = Promise.all([get(FG.url), FG.overlays ? get(FG.overlays).catch(function () { return {}; }) : {}]).then(function (r) {
@@ -210,7 +211,7 @@
         (hasLabels ? '<span class="im-seg"><button class="btn" data-lab="0">Source only</button><button class="btn" data-lab="1">With English</button></span>' : '') +
         (f.image != null && map().images[f.image] ? '<button class="btn ghost" data-a="page" title="Its place on the page image, outlined">On the page</button>' : '') +
         (f.page != null && SW.views.book ? '<button class="btn ghost" data-a="book" title="The page in Book">Page ' + esc(f.page) + ' ↗</button>' : '') +
-        '<details class="im-exp"><summary class="btn ghost">⤓ Export</summary><div><button class="btn ghost" data-x="png">PNG</button><button class="btn ghost" data-x="svg">SVG</button></div></details>' +
+        '<details class="im-exp"><summary class="btn ghost">⤓ Export</summary><div><button class="btn ghost" data-exp="png">PNG</button><button class="btn ghost" data-exp="svg">SVG</button></div></details>' +
         '<button class="btn ghost" data-a="link">🔗 Link</button></span>', 'im-figdlg');
       var wrap = SW.el('div', { class: 'im-figwrap' });
       wrap.innerHTML = '<div class="im-stage"><img class="im-figimg" alt="Figure ' + esc(f.n) + '"><div class="im-labels"' + (B.textLang ? ' lang="en"' : '') + '></div></div>' +
@@ -236,7 +237,7 @@
         if (a && a.dataset.a === 'page') { I.openPage(f.image, f.region); return; }
         if (a && a.dataset.a === 'book') { d.close(); toBook(f.page); return; }
         if (a && a.dataset.a === 'link') { SW.copyText(SW.permalink({ tab: 'images', fig: f.id }), 'the link'); return; }
-        var x = e.target.closest('[data-x]'); if (x) exportFig(f, x.dataset.x, hasLabels && FS.labels && FS.form !== 'original');
+        var x = e.target.closest('[data-exp]'); if (x) exportFig(f, x.dataset.exp, hasLabels && FS.labels && FS.form !== 'original');
       });
     });
   };

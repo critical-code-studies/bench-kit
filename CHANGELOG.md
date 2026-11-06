@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Closing a figure's box no longer saves a file** (reported by David on the Kuki bench). The box's ✕ and its export buttons shared an attribute (`data-x`), so ✕ also exported the figure as an SVG, and PNG or SVG also closed the box. The export buttons are now `data-exp`. `tests/images.test.js`: 8 checks, on a real box, of what ✕ and each export button do. `images.figures` may give `{ items, labels }` in place of files.
+
 ## 0.98.0 (2026-11-05)
 
 - **A figure's labels centred and turned** (David, 2026-11-05, for Kuki's Figure 1). A label in the Images tab's labels file may give `anchor: 'center'` (its centre at x, y) and `angle` (degrees, clockwise, about that point), so that a word set along a diagonal or down beside the drawing has its English the same way; the PNG and SVG exports draw them so. Labels without them are placed as before. `docs/figure-labels.md`: the format, and the rules for placing labels.
