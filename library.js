@@ -56,7 +56,7 @@
  * on its cover, an Annotated filter, and a Notes view of them all.
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), add(record, file),
  * update(id, record), remove(id), form(entry), family(entry), year(date), surname(author), sorted(items, order),
- * has(id), citation(entry) { text, html },
+ * has(id), citation(entry) { text, html }, canAdd() (a promise: may this reader's token write there),
  * help(), the guide for readers (Help ▸ The Library, ?help=library).
  * docs/library.md is the guide for a bench.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
@@ -86,6 +86,16 @@
   L.privateRepo = function () { var p = C.private || {}, bp = B.paratexts || {}; var org = p.org || bp.org, repo = p.repo || bp.repo; return org && repo ? org + '/' + repo : null; };
   function tokenOf() { return String(SW.store.get('gh.token', '') || '').trim(); }
   L.member = function () { return !!(tokenOf() && L.privateRepo()); };
+  // whether this reader's token can write to the private repository, as GitHub says; a token that is
+  // out of date, or reads only, gets no button that would fail
+  var addP = null, addFor = '';
+  L.canAdd = function () {
+    if (!L.member()) return Promise.resolve(false);
+    if (addP && addFor === tokenOf()) return addP;
+    addFor = tokenOf();
+    return (addP = fetch('https://api.github.com/repos/' + L.privateRepo(), { headers: { Authorization: 'Bearer ' + tokenOf(), Accept: 'application/vnd.github+json' }, cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { return !!(j && j.permissions && j.permissions.push); }, function () { return false; }));
+  };
   function isPrivate(e) { return e.shelf === 'private'; }
   // a private file, through GitHub's API with the member's token
   function privateFile(path) {
@@ -483,10 +493,14 @@
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
-        '<span class="lib-n faint"></span>' + (L.member() ? '<button class="btn lib-add">＋ Add a work</button>' : '') + '</div>' +
+        '<span class="lib-n faint"></span></div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
         '<div class="lib-body"><details class="lib-facets"' + (root.innerWidth >= 860 ? ' open' : '') + '><summary>Filters</summary><div class="lib-fbody"></div></details><div class="lib-list"></div></div></div>';
       list(view);
+      L.canAdd().then(function (yes) {
+        var bar = SW.$('.lib-bar', view);
+        if (yes && bar && !SW.$('.lib-add', bar)) bar.appendChild(SW.el('button', { class: 'btn lib-add' }, '＋ Add a work'));
+      });
       var q = SW.$('.lib-q', view);
       q.addEventListener('input', function () { F.q = q.value; list(view); });
       if (view.libFor !== L) {
@@ -536,7 +550,7 @@
         'A count on a cover shows a work has notes. <b>Annotated</b> shows those works, and <b>✎</b> lists all the notes, newest work first; the search reads them too.',
         'A note made on a paratext stays with its code if the item moves to the Library.'])],
       ['Adding a work', ul([
-        'A member with a token has <b>＋ Add a work</b>: a record, with a copy of up to 40 MB or without one, and a link to a cover image if you have one.',
+        'A member whose GitHub token (⚙ Settings) can write to the private repository has <b>＋ Add a work</b>: a record, with a copy of up to 40 MB or without one, and a link to a cover image if you have one.',
         'It goes in the group’s private repository. Members see it at once, marked <b>Added, not yet public</b>, and can correct or remove it from its box. Nobody else sees it.',
         'It joins the public list when the person running the bench publishes it, without the name of who added it. A copy stays private.',
         'A copy added here stays in the private repository’s history, even if it is later removed. GitHub shows the repository’s size on its own page; the person running the bench looks after it.'])]

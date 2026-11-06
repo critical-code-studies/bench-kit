@@ -70,11 +70,12 @@
     ];
     B.library = { private: { org: 'group', repo: 'archive' }, items: PUB };
     SW.paratexts = undefined;   // the group's copies are not what is tried here
-    var asked = [], repo = null, shas = 0, conflicts = 0, puts = [];
+    var asked = [], repo = null, shas = 0, conflicts = 0, puts = [], canPush = true;
     // repo null: every answer a small file. repo an object: GitHub's contents API, on that object
     window.fetch = function (u, o) {
       if (!/api\.github\.com/.test(String(u))) return was.fetch.apply(window, arguments);
       asked.push(String(u));
+      if (/\/repos\/[^/]+\/[^/]+$/.test(String(u))) return json({ permissions: { push: canPush } });
       if (!repo) return Promise.resolve(new Response(new Blob(['x']), { status: 200 }));
       var p = decodeURIComponent(String(u).split('/contents/')[1] || ''), m = (o && o.method) || 'GET', b = o && o.body ? JSON.parse(o.body) : null;
       if (m === 'GET') return repo[p] ? json({ sha: repo[p].sha, content: repo[p].content }) : json({}, 404);
@@ -146,6 +147,18 @@
         { id: 'P-LINK1', title: 'A linked film', kind: 'film', url: 'https://vimeo.com/123' }, { id: 'P-BOTH1', title: 'Both', kind: 'talk', file: 'library/files/b.mp3', url: 'https://vimeo.com/456' }], private: { org: 'group', repo: 'archive' } };
       return load().then(function () { Lm = SW.library; return Lm.load(); }).then(function () {
         T.yes('it has the code', Lm.has('P-AAAAA'));
+        return Lm.canAdd();
+      }).then(function (yes) {
+        T.eq('without a token, no adding', yes, false);
+        SW.store.set('gh.token', 'read-only'); canPush = false;
+        return Lm.canAdd();
+      }).then(function (yes) {
+        T.eq('a token that cannot write, no adding', yes, false);
+        SW.store.set('gh.token', 'can-write'); canPush = true;
+        return Lm.canAdd();
+      }).then(function (yes) {
+        T.eq('a token that can write, adding', yes, true);
+        SW.store.set('gh.token', ''); asked.length = 0;
         SW.views.library.show();
         return wait(40);
       }).then(function () {
