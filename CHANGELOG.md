@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.2.0 (2026-11-06)
 
 - **Notes on Library and Paratexts items** (David, 2026-11-06, for Mark Marino: "so we can record our thoughts on these artefacts"). Annotations in the bench's Hypothesis group: a panel in an item's box, with replies and reactions; a pin to a time, a page or quoted words; a count on covers and cards; an Annotated filter and a ✎ view of all of them in the Library; What's new takes them in. A note stays with an item's code when it moves from Paratexts to the Library. `N.itemPanel`, `N.itemNotes`, `N.itemCounts`, `N.itemGo` in `notes.js`; no new script for a bench to load.
 - The Library stretches to the full width of the browser (David, 2026-11-06).
