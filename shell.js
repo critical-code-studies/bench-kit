@@ -157,7 +157,7 @@
   SW.help = function (name) { var h = helpItems()[name]; if (!h) return false; h(); return true; };
 
   function init() {
-    theme(SW.store.get('theme', 'phosphor'));
+    theme(SW.store.get('theme', (B.theme || {}).start || 'phosphor'));   // the first visit: the bench's own (theme.start)
     fillPicker();
     SW.$('#tabs').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-tab]');

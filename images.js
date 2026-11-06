@@ -9,9 +9,12 @@
  *            original; the English labels drawn over it from data, or the source alone; where a figure
  *            has no labels, the key from its caption beside it; On the page (its region of the page
  *            image, outlined, in the zooming box); the page in Book; and a labelled copy exported as PNG
- *            or SVG (made then, never stored)
+ *            or SVG (made then, never stored), its labels gold or black. The labels are in kintsugi
+ *            gold, as what the bench adds to the author's figure: one gold for every theme (#8f6c00,
+ *            4.9:1 on white), since a figure's ground stays white whatever the bench's colours.
+ *   Figures come first where the bench has them; images.start: 'pages' for Pages first.
  * A translation bench makes both files with kit/tools/vt-figures.js.
- * SW.BENCH.images: true, or { label, map, figures: { url, overlays }, intro, credit, labelsNote }:
+ * SW.BENCH.images: true, or { label, map, figures: { url, overlays }, intro, credit, labelsNote, start }:
  *   labelsNote, HTML folded under a figure's key ("About the labels"), with a figure's own labelsNote
  *   before it: why some of the source's writing has no label of its own (a word written a character
  *   at a time along a line has one label). figures.url gives
@@ -64,7 +67,8 @@
   };
 
   // ---------- the view ----------
-  var part = Q0.fig ? 'figures' : 'pages', drawn = false;
+  // the part shown first: Figures where the bench has them (images.start: 'pages' for Pages), Pages for a link to one
+  var part = Q0.img ? 'pages' : Q0.fig || (FG && C.start !== 'pages') ? 'figures' : 'pages', drawn = false;
   function draw() {
     var view = SW.$('#view-images'); if (!view) return;
     var keys = Object.keys(map().images);
@@ -199,7 +203,9 @@
   };
 
   // ---------- a figure ----------
-  var FS = { form: 'print', labels: true };
+  var FS = { form: 'print', labels: true, ink: 'gold' };
+  // the labels' colours in an export: gold (as on the screen) or black, for print
+  var INK = { gold: '#8f6c00', black: '#1a1a1a' };
   I.openFigure = function (id) {
     return I.figures().then(function (fs) {
       var f = fs.filter(function (x) { return x.id === id; })[0];
@@ -211,7 +217,9 @@
         (hasLabels ? '<span class="im-seg"><button class="btn" data-lab="0">Source only</button><button class="btn" data-lab="1">With English</button></span>' : '') +
         (f.image != null && map().images[f.image] ? '<button class="btn ghost" data-a="page" title="Its place on the page image, outlined">On the page</button>' : '') +
         (f.page != null && SW.views.book ? '<button class="btn ghost" data-a="book" title="The page in Book">Page ' + esc(f.page) + ' ↗</button>' : '') +
-        '<details class="im-exp"><summary class="btn ghost">⤓ Export</summary><div><button class="btn ghost" data-x="png">PNG</button><button class="btn ghost" data-x="svg">SVG</button></div></details>' +
+        '<details class="im-exp"><summary class="btn ghost">⤓ Export</summary><div>' +
+        (hasLabels ? '<span class="im-seg" title="The colour of the labels in the file"><button class="btn" data-ink="gold">Gold</button><button class="btn" data-ink="black">Black</button></span>' : '') +
+        '<button class="btn ghost" data-exp="png">PNG</button><button class="btn ghost" data-exp="svg">SVG</button></div></details>' +
         '<button class="btn ghost" data-a="link">🔗 Link</button></span>', 'im-figdlg');
       var wrap = SW.el('div', { class: 'im-figwrap' });
       wrap.innerHTML = '<div class="im-stage"><img class="im-figimg" alt="Figure ' + esc(f.n) + '"><div class="im-labels"' + (B.textLang ? ' lang="en"' : '') + '></div></div>' +
@@ -227,6 +235,7 @@
         var on = hasLabels && FS.labels && FS.form !== 'original';
         lab.hidden = !on;
         SW.$$('[data-form]', d).forEach(function (b) { b.classList.toggle('on', b.dataset.form === FS.form); });
+        SW.$$('[data-ink]', d).forEach(function (b) { b.classList.toggle('on', b.dataset.ink === FS.ink); });
         SW.$$('[data-lab]', d).forEach(function (b) { b.classList.toggle('on', (b.dataset.lab === '1') === FS.labels); b.disabled = FS.form === 'original'; b.title = FS.form === 'original' ? 'The labels are drawn on the print file' : ''; });
       }
       show();
@@ -237,7 +246,8 @@
         if (a && a.dataset.a === 'page') { I.openPage(f.image, f.region); return; }
         if (a && a.dataset.a === 'book') { d.close(); toBook(f.page); return; }
         if (a && a.dataset.a === 'link') { SW.copyText(SW.permalink({ tab: 'images', fig: f.id }), 'the link'); return; }
-        var x = e.target.closest('[data-x]'); if (x) exportFig(f, x.dataset.x, hasLabels && FS.labels && FS.form !== 'original');
+        var ik = e.target.closest('[data-ink]'); if (ik) { FS.ink = ik.dataset.ink; show(); return; }
+        var x = e.target.closest('[data-exp]'); if (x) exportFig(f, x.dataset.exp, hasLabels && FS.labels && FS.form !== 'original', FS.ink);
       });
     });
   };
@@ -266,10 +276,11 @@
   }
 
   // ---------- a labelled copy, made when asked ----------
-  function exportFig(f, kind, labels) {
+  function exportFig(f, kind, labels, ink) {
     var im = new Image();
     im.onload = function () {
-      var W = im.naturalWidth, H = im.naturalHeight, fs = Math.max(11, Math.round(W * 0.022)), name = (B.slug || 'bench') + '-figure-' + (f.n != null ? f.n : f.id) + (labels ? '-en' : '');
+      var W = im.naturalWidth, H = im.naturalHeight, fs = Math.max(11, Math.round(W * 0.022)), name = (B.slug || 'bench') + '-figure-' + (f.n != null ? f.n : f.id) + (labels ? '-en' + (ink === 'black' ? '-black' : '') : '');
+      var fill = INK[ink] || INK.gold;
       var ls = labels ? f.labels : [];
       if (kind === 'png') {
         var c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -282,7 +293,7 @@
           lines.forEach(function (line, i) {
             var y = mid ? (i - (lines.length - 1) / 2) * fs * 1.2 : i * fs * 1.2;
             g.lineWidth = fs * 0.35; g.strokeStyle = 'rgba(255,255,255,0.95)'; g.strokeText(line, 0, y);
-            g.fillStyle = '#1a1a1a'; g.fillText(line, 0, y);
+            g.fillStyle = fill; g.fillText(line, 0, y);
           });
           g.restore();
         });
@@ -292,7 +303,7 @@
       var c2 = document.createElement('canvas'); c2.width = W; c2.height = H; c2.getContext('2d').drawImage(im, 0, 0);
       var svg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">' +
         '<image width="' + W + '" height="' + H + '" xlink:href="' + c2.toDataURL('image/png') + '"/>' +
-        '<g font-family="Helvetica Neue, Arial, sans-serif" font-size="' + fs + '" fill="#1a1a1a" stroke="#ffffff" stroke-width="' + (fs * 0.35).toFixed(1) + '" stroke-linejoin="round" paint-order="stroke">' +
+        '<g font-family="Helvetica Neue, Arial, sans-serif" font-size="' + fs + '" fill="' + fill + '" stroke="#ffffff" stroke-width="' + (fs * 0.35).toFixed(1) + '" stroke-linejoin="round" paint-order="stroke">' +
         ls.map(function (l) {
           var lines = String(l.en || '').split('\n'), mid = l.anchor === 'center', right = l.align === 'right', x = (l.x * W).toFixed(1), y0 = (l.y * H).toFixed(1);
           return '<g transform="translate(' + x + ' ' + y0 + ')' + (+l.angle ? ' rotate(' + (+l.angle) + ')' : '') + '">' + lines.map(function (line, i) {

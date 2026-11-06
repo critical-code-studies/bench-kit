@@ -77,7 +77,7 @@
       code: 'https://github.com/vector-humanities/example-bench',   // EDIT
       catalogue: { skip: [], held: 'held' }
     },
-    theme: { label: 'Bench', note: 'light text on a dark ground (the default)' },
+    theme: { label: 'Bench', note: 'light text on a dark ground', start: 'paper' },   // start: the theme on a first visit (a light one here); a reader's choice is kept
     accent: { dark: '#e58be0', light: '#a3317a' },
     group: '',                                             // EDIT: the Hypothesis group's ID, once you have made one
     relation: 'Example Translation, ',
