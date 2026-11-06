@@ -12,8 +12,6 @@
 - **A citation in the Library's box, with Copy** (David, through the translation session), in Harvard form from the record, or `citation` as written. New fields in the record and the form: `contributor`, `in`, `publisher`, `pages`, `doi`, and `extent` in the record. Its DOI or web address is a live link.
 - A book's cover names its kind where the kind is not simply book: edition, translation, parallel text (the translation session's request).
 - The Library's filters and tags say **Held** and **Linked**, for Held here and Links out (David, through the translation session).
-- **Book's images button** (David, 2026-11-06): an eye, crossed when the images are hidden, in place of the word Off, which read the same in both states. Images show whenever a page opens, unless a link says otherwise; the last click is no longer remembered (`book.imgon` is no longer read).
-- **The Library's labels** (David, 2026-11-06): Held and Linked, in place of Held here and Links out.
 - **A DOI is a link** (David, 2026-11-06): the Library's box shows an entry's `doi`, and any DOI in a record's text opens at doi.org.
 - **Copy link** (David, 2026-11-06): the button in the Library's and the Images tab's boxes that read Link and copied one. A record with no copy held opens with Open where it is published ↗ as its main button.
 
