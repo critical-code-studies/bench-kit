@@ -277,7 +277,7 @@
 
   function meta(e) { return [e.author, e.date, e.kind].filter(Boolean).map(esc).join(' · '); }
   function heldAs(e) {
-    return (isPrivate(e) ? 'For the group' + (L.member() ? '' : e.url ? ' · link out ↗' : ' · record') : e.file ? 'Held here' : e.url ? 'Link out ↗' : 'Record only') +
+    return (isPrivate(e) ? 'For the group' + (L.member() ? '' : e.url ? ' · linked ↗' : ' · record') : e.file ? 'Held' : e.url ? 'Linked ↗' : 'Record only') +
       (e.file && (!isPrivate(e) || L.member()) && kindOfFile(e.file) !== 'file' ? ' · ' + kindOfFile(e.file).toUpperCase() : '') + (isAdded(e) ? ' · Added, not yet public' : '');
   }
   function heldClass(e) { return isPrivate(e) ? 'group' : e.file ? 'held' : 'out'; }
@@ -387,7 +387,7 @@
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
         ((C.intro || m.intro) ? '<div class="lib-intro">' + (C.intro || m.intro) + '</div>' : '') +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
-        '<span class="lib-show">' + [['all', 'All'], ['held', 'Held here']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Links out']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
+        '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
         (kinds.length > 1 ? '<select class="lib-kind" aria-label="Kind"><option value="">Every kind</option>' + kinds.sort().map(function (k) { return '<option' + (k === F.kind ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>' : '') +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button></span>' +
@@ -430,7 +430,7 @@
       ['Finding a work', ul([
         '<b>▦</b> shows covers on a shelf, and <b>☰</b> a list. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view and order is kept in this browser.',
-        'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held here</b>, <b>For the group</b> and <b>Links out</b> show those entries only, and <b>Every kind</b> narrows to one kind.'])],
+        'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only, and <b>Every kind</b> narrows to one kind.'])],
       ['Opening a work', ul([
         'Click a cover or a row: the record opens in a box over the bench, with the file where you can read it, and a link to where it is published.',
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
