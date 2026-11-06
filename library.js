@@ -37,6 +37,7 @@
  * public manifest does not name these paratexts.
  * Members see the private repository's size above the list (GitHub works badly above about 1 GB).
  * SW.library: load(), items(), open(id), copies(id), privateRepo(), member(), size().
+ * docs/library.md is the guide for a bench.
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
 (function (root) {

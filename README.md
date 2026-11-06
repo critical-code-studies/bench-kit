@@ -500,6 +500,10 @@ node tools/new-bench.js translation ../my-bench --name "My Text" --org my-org --
 
 [`docs/bench-types.md`](docs/bench-types.md) sets out the kinds of bench and which modules each uses; [`docs/advising.md`](docs/advising.md) what to settle before starting one; [`docs/lessons.md`](docs/lessons.md) what the benches so far have taught. [`templates/`](templates/README.md) holds the starting state of a kind of bench: `templates/translation/` so far; the code template is the [bench-template](https://github.com/critical-code-studies/bench-template) repository.
 
+## The Library
+
+[`docs/library.md`](docs/library.md) is the guide for a bench: what belongs in the Library and what in Paratexts, the three kinds of entry, and how to adopt it.
+
 ## Topic models
 
 A bench makes and keeps its own models: [`docs/topics-guide.md`](docs/topics-guide.md) is the guide, from its documents to publishing a model and rebuilding it when the text changes.

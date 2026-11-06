@@ -17,6 +17,7 @@ What making and keeping the Spacewar!, SHRDLU, ELIZA, Melville and CCSbench benc
 
 ## Releasing
 
+- **A feature reaches a bench with guidance.** When the kit ships one, each bench it concerns is told what it is for, what belongs in it, and what to do to adopt it, and the kit's `docs/` holds the same. Spacewar learnt how the Library works, and where it stops, by reading `library.js`. (Spacewar, 2026-11-06.)
 - **Before a release**: the bench's own tests and the kit's (`tools/test.js`), every view (`tools/views.js`), `release.js --check`, and the site map made again. (Every release since 0.80.)
 - **The browser keeps old scripts.** Scripts load with `?v=`, and a page that seems to run old code is usually being served an old copy; fetch the script again before looking for a bug. (Every bench.)
 - **Zenodo archives a release only when `CITATION.cff` is valid**, an author's ORCID included; a bad ORCID fails without a message. (bench-kit, mallette.)
@@ -24,7 +25,8 @@ What making and keeping the Spacewar!, SHRDLU, ELIZA, Melville and CCSbench benc
 ## Public and private
 
 - **No private URLs or repository names in public repositories**, READMEs and examples included. The mallette README once named the benches' private repositories, and the repository had to be deleted and made again. (mallette, 2026-11.)
-- **Public and private collections are kept apart.** The Library is public and held in the bench's own repository; Paratexts is the group's, private, read with each member's token. A Library entry's private copy is found from the private side (the paratext names the entry), so the public list says nothing of it. (Melville, 2026-11-05.)
+- **Secondary literature in the Library, evidence in Paratexts.** A work is public in the Library only if it is under a CC licence or freely distributable. A work the group holds otherwise is on the private shelf, with a public record that says so; a work not held is a record with a link out. `docs/library.md` is the guide. (Spacewar, 2026-11-06.)
+- **A copy kept as a paratext is found from the private side.** The paratext names the entry, so the public list does not name the paratext. (Melville, 2026-11-05.)
 
 ## The group
 
