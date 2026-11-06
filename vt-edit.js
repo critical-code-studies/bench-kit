@@ -548,7 +548,7 @@
     SW.store.set('edit.place', { target: S.target, key: w.key });
     // enough text after it to scroll to the place asked for
     last = { value: ta.value, s: 0, e: 0 };
-    var guard = 0; while (box().scrollHeight < box().clientHeight * 2 && guard++ < 30 && extend(doc, 1)) {}
+    var guard = 0; while (box().scrollHeight < box().clientHeight * 6 && guard++ < 30 && extend(doc, 1)) {}
     if (sel) { ta.focus({ preventScroll: true }); ta.setSelectionRange(sel[0] - w.a, sel[1] - w.a); scrollToOffset(sel[0] - w.a); }
     else {
       // a page may begin inside a paragraph: to its marker
