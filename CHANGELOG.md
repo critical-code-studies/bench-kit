@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The bench's name on one line in the top bar by default** (David, 2026-11-08). The kit's rule now wins over a bench's own stylesheet that stacks the name, as SHRDLU's, ELIZA's and CCSbench's did. A bench that wants it stacked sets `.bar .brand-name` itself.
+
 ## 1.8.3 (2026-11-07)
 
 - **Relevance set with a drop-down in a Library entry's box** (David, 2026-11-08), kept as a tag in the group's annotations, so members can change a level at once. A tag naming a level comes before the `relevance` field, which stays what readers outside the group see. The level shows in its drop-down and filter, not among the tags.
