@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- A failed read of the group's notes is no longer kept as "no notes" (Spacewar's report). A Library entry's box says the notes could not be read, with Try again, and the next look asks the group again. The counts, ratings, marks and tags no longer take a failed read for an empty group.
+- A draft is plainly marked, "Draft: this browser only", on every note surface, and an entry's Notes fold opens when it holds one (from a note that seemed lost in a browser with no token).
 - A cover with both the Preprint and Key work badges keeps them on one row, as Preprint and Key, so they no longer cover the title (ELIZA's report on 1.8.3). The list and the box still say Key work. A book's cover, which has no kind label, makes room above its title for a badge.
 - **The bench's name on one line in the top bar by default** (David, 2026-11-08). The kit's rule now wins over a bench's own stylesheet that stacks the name, as SHRDLU's, ELIZA's and CCSbench's did. A bench that wants it stacked sets `.bar .brand-name` itself.
 

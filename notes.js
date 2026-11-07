@@ -193,8 +193,12 @@
   function drafts() { return SW.store.get('drafts', []); }
   function saveDrafts(d) { SW.store.set('drafts', d); }
 
+  // a failed read is said, and not kept: the next look asks the group again
+  var readFail = {}, allFail = '';
+  N.readFailed = function (vid) { return readFail[vid] || ''; };
   N.list = function (vid, force) {
     if (cache[vid] && !force) return cache[vid];
+    delete readFail[vid];
     var v = root.SWVersions.byId(vid);
     var log = (v && v.buildNotes || []).map(function (bn, i) {
       return { id: 'log-' + vid + '-' + i, vid: vid, kind: 'version', anchor: null, text: bn.text,
@@ -219,9 +223,10 @@
             if ((r.rows || []).length < 200) sweepOrphans(rows.concat(pending[vid] || []));
             return rows.filter(function (n) { return !isBinned(n); });
           })
-          .catch(function (e) { SW.toast(e.message, 5000); return []; })
+          .catch(function (e) { readFail[vid] = e.message; SW.toast(e.message, 5000); return []; })
       : Promise.resolve([]);
     cache[vid] = remote.then(function (rows) {
+      if (readFail[vid]) delete cache[vid];
       var have = {};
       rows.forEach(function (r) { have[r.id] = 1; });
       pending[vid] = (pending[vid] || []).filter(function (p) { return !have[p.id] && !isBinned(p); });
@@ -307,7 +312,8 @@
           return (r.rows || []).length === 200 && offset < 5000 ? page(offset + 200, acc) : acc;
         });
     }
-    var remote = N.configured() ? page(0, []).catch(function (e) { SW.toast(e.message, 5000); return []; }) : Promise.resolve([]);
+    allFail = '';
+    var remote = N.configured() ? page(0, []).catch(function (e) { allFail = e.message; SW.toast(e.message, 5000); return []; }) : Promise.resolve([]);
     return remote.then(function (rows) { return logs.concat(rows, local).filter(function (n) { return opts.reactions || !N.isReaction(n); }); });
   };
 
@@ -846,7 +852,7 @@
       (n.at && n.at.indexOf('q') !== 0 ? '<button class="note-at" data-at="' + SW.esc(n.at) + '" title="Go there">' + SW.esc(N.atLabel(n.at)) + '</button>' : '') +
       (isItem(n.vid) && n.quote && !isReply ? '<blockquote class="note-quote" data-at="q" title="Find it">' + SW.esc(n.quote) + '</blockquote>' : '') +
       '<div class="by">' + (!isReply && N.isOpen(N.statusOf(reactions).state) ? statusChip(N.statusOf(reactions)) + ' ' : '') + (N.code(n) ? '<span class="ncode mono" data-copy="' + N.code(n) + '" title="Its code, which does not change: click to copy">' + N.code(n) + '</span> ' : '') + '<b>' + SW.esc(n.by) + '</b> · ' + SW.esc(SW.fmtDate(n.date)) +
-      (who ? ' · ' + SW.esc(who) : '') + (n.source === 'draft' ? ' · <i>draft</i>' : '') + (n.dev ? ' · <span class="dev-badge" title="Developer only: hidden on the bench unless Developer mode is on (⚙)">dev</span>' : '') +
+      (who ? ' · ' + SW.esc(who) : '') + (n.source === 'draft' ? ' <span class="note-draft" title="Kept in this browser only: the group cannot see it. Set your Hypothesis token in Settings to share it.">Draft: this browser only</span>' : '') + (n.dev ? ' · <span class="dev-badge" title="Developer only: hidden on the bench unless Developer mode is on (⚙)">dev</span>' : '') +
       ((n.updated && String(n.updated).slice(0, 16) !== String(n.date).slice(0, 16)) || SW.noteHistory.list(n.text).length ? ' · ' + (SW.noteHistory.list(n.text).length
         ? '<button type="button" class="hist" data-act="history" title="See the earlier wordings">edited ' + SW.esc(SW.fmtDate(n.updated || n.date)) + ' · ' + SW.noteHistory.list(n.text).length + ' earlier</button>'
         : '<i title="' + SW.esc(new Date(n.updated).toLocaleString('en-GB')) + '">edited ' + SW.esc(SW.fmtDate(n.updated)) + '</i>') : '') + '</div>' +
@@ -1380,6 +1386,7 @@
   var itemsP = null;
   N.itemNotes = function () {
     return itemsP || (itemsP = N.whoami().catch(function () {}).then(function () { return N.listAll({ reactions: true, items: true }); }).then(function (all) {
+      if (allFail) { itemsP = null; throw new Error(allFail); }
       return all.filter(function (n) { return isItem(n.vid); });
     }));
   };
@@ -1470,7 +1477,7 @@
     o = o || {};
     var vid = 'item:' + code, host = o.host || null, sel = '', me = SW.me(), ts = types();
     el.classList.add('item-notes');
-    el.innerHTML = (o.rate && N.configured() ? '<div class="fd-rxbar in-rate"></div>' : '') + '<details class="in-fold"' + (N.configured() ? ' open' : '') + '><summary class="fd-rh">Notes <span class="faint in-n"></span></summary>' +
+    el.innerHTML = (o.rate && N.configured() ? '<div class="fd-rxbar in-rate"></div>' : '') + '<details class="in-fold"' + (N.configured() || drafts().some(function (x) { return x.vid === vid && !x.deleted; }) ? ' open' : '') + '><summary class="fd-rh">Notes <span class="faint in-n"></span></summary>' +
       (N.configured() ? '' : '<p class="hint">Notes are kept in the annotation group (Help ▸ Getting set up). Until you have joined, one stays a draft in this browser.</p>') +
       '<div class="in-list"></div><div class="in-new"><div class="in-quote" hidden><span></span> <button type="button" class="icon-btn" data-in="unquote" title="Without the words">✕</button></div>' +
       '<textarea rows="3" placeholder="A note on this work. Select words in it to quote them."></textarea>' +
@@ -1486,7 +1493,8 @@
         rated(all);
         var th = N.threads(all).reverse();
         SW.$('.in-n', el).textContent = th.length || '';
-        list.innerHTML = th.map(function (t) { return N.renderThread(t); }).join('');
+        var fail = N.readFailed(vid);
+        list.innerHTML = (fail ? '<p class="hint in-fail">The group’s notes could not be read: ' + SW.esc(fail) + '. <button type="button" class="btn ghost" data-in="retry">Try again</button></p>' : '') + th.map(function (t) { return N.renderThread(t); }).join('');
         N.wire(list, vid, all);
       });
     }
@@ -1529,6 +1537,7 @@
       var go = e.target.closest('[data-at]');
       if (go) { var nt = e.target.closest('.note'), q = go.dataset.at === 'q' ? go.textContent : ''; N.itemGo(go.dataset.at, q, host); if (nt) return; return; }
       var b = e.target.closest('[data-in]'); if (!b) return;
+      if (b.dataset.in === 'retry') { N.invalidate(vid); return; }
       if (b.dataset.in === 'unquote') { setQuote(''); return; }
       if (b.dataset.in === 'now') { var m = media(); if (m) atIn.value = N.atLabel('t:' + Math.floor(m.currentTime)); return; }
       var text = ta.value.trim(), at = atIn.value.trim() ? N.parseAt(atIn.value) : null;

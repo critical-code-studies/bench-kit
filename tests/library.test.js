@@ -687,6 +687,43 @@
                       x8.close();
                     });
                   });
+                }).then(function () {
+                  var f2 = window.fetch, failing = true, el2 = document.createElement('div');
+                  document.body.appendChild(el2);
+                  window.fetch = function (u) { return failing && /api\.hypothes\.is.*search/.test(String(u)) ? Promise.resolve(new Response('{}', { status: 500 })) : f2.apply(window, arguments); };
+                  N.invalidate('item:P-AAAAA');
+                  return N.itemPanel(el2, 'P-AAAAA', {}).then(function () { return wait(30); }).then(function () {
+                    T.yes('a failed read is said', el2.querySelector('.in-fail [data-in="retry"]'));
+                    return N.itemNotes().then(function () { return 'read'; }, function () { return 'refused'; });
+                  }).then(function (said) {
+                    T.eq('and is not taken for an empty group', said, 'refused');
+                    failing = false;
+                    el2.querySelector('[data-in="retry"]').click();
+                    return wait(150);
+                  }).then(function () {
+                    T.eq('try again reads the notes', [el2.querySelectorAll('.in-fail').length, el2.querySelectorAll('.in-list .note').length > 0], [0, true]);
+                    return N.itemNotes().then(function () { return 'read'; }, function () { return 'refused'; });
+                  }).then(function (said) {
+                    T.eq('and the failure was not kept', said, 'read');
+                    window.fetch = f2; el2.remove();
+                    SW.store.set('token', ''); N.forget();
+                    var el3 = document.createElement('div');
+                    document.body.appendChild(el3);
+                    return N.itemPanel(el3, 'D-1', {}).then(function () {
+                      el3.querySelector('.in-new textarea').value = 'Mine alone.';
+                      el3.querySelector('[data-in="save"]').click();
+                      return wait(120);
+                    }).then(function () {
+                      T.eq('a draft is plainly marked', el3.querySelectorAll('.in-list .note-draft').length, 1);
+                      el3.remove();
+                      var el4 = document.createElement('div');
+                      document.body.appendChild(el4);
+                      return N.itemPanel(el4, 'D-1', {}).then(function () {
+                        T.yes('and its fold opens', el4.querySelector('.in-fold').open);
+                        el4.remove();
+                      });
+                    });
+                  }, function (e) { window.fetch = f2; el2.remove(); throw e; });
                 });
               });
             });
