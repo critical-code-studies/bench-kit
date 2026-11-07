@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.5 (2026-11-07)
 
 - The Library asks for `library/group.json` only where `library.snapshot` is true, so a bench with no snapshot no longer logs a 404 (kuki-bench's report on 1.8.4). A bench using the snapshot sets it.
 - A Library entry with no copy now says "Copy not held in the library, use the link above to view it." (David, 2026-11-08).
