@@ -36,6 +36,9 @@ function build(rows, codes, prefixes) {
     const t = a.tags || [], vid = tv(t, 'v:') || '';
     if (!/^item:/.test(vid) || tv(t, 'kind:') !== 'reaction') return;
     if ((a.references || []).length || has(t, 'deleted') || has(t, 'dev')) return;
+    // an annotation its maker alone may read (a loan) is never published
+    const read = (a.permissions && a.permissions.read) || [];
+    if (read.length && !read.some((r) => /^group:/.test(r))) return;
     const code = vid.slice(5), text = String(a.text || '');
     if (!known.has(code)) return;
     let m;

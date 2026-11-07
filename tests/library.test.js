@@ -752,6 +752,48 @@
                     T.yes('and its tags', x9.querySelector('.lib-tag'));
                     T.eq('with nothing to change', [x9.querySelectorAll('[data-a="key"], .lib-relsel, .lib-taginput, [data-tagoff], [data-star]').length], [0]);
                     x9.close();
+                    SW.store.set('library.loans', {});
+                    return SW.library.open('S-2').then(function () { return wait(30); });
+                  }).then(function () {
+                    function plus(n) { var d = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); }
+                    var xb = box();
+                    xb.querySelector('[data-a="co"][data-m="2"]').click();
+                    T.eq('checked out for two months', SW.library.onLoan('S-2') && SW.library.onLoan('S-2').due, plus(2));
+                    T.yes('the box says so, with Return', /To read shelf/.test(xb.querySelector('.lib-loanbox').textContent) && xb.querySelector('[data-a="return"]'));
+                    xb.close();
+                    var vl = document.getElementById('view-library');
+                    T.eq('a due stamp on its cover, and no other', [vl.querySelectorAll('[data-lib="S-2"] .lib-due').length, vl.querySelectorAll('[data-lib="S-1"] .lib-due').length], [1, 0]);
+                    vl.querySelector('[data-show="loans"]').click();
+                    T.eq('To read: a card for it', [vl.querySelectorAll('.lib-card').length, vl.querySelector('[data-show="loans"]').textContent], [1, 'To read (1)']);
+                    vl.querySelector('.lib-card [data-ext="1"]').click();
+                    T.eq('renewed: a second line, the first struck through, a month on', [vl.querySelectorAll('.lib-card tbody tr.lib-card-done').length, SW.library.onLoan('S-2').due], [1, plus(3)]);
+                    vl.querySelector('.lib-card [data-ext="0"]').click();
+                    T.eq('and with no date', [SW.library.onLoan('S-2').due, /NO DATE/.test(vl.querySelector('.lib-card').textContent)], [null, true]);
+                    vl.querySelector('.lib-card [data-ret]').click();
+                    T.eq('returned', [SW.library.onLoan('S-2'), vl.querySelectorAll('.lib-card').length], [null, 0]);
+                    var l = SW.store.get('library.loans', {});
+                    l['S-3'] = [{ out: '1999-01-01', due: '2000-01-01', by: 'TT' }];
+                    SW.store.set('library.loans', l);
+                    return load().then(function () { return SW.library.load(); });
+                  }).then(function () {
+                    T.eq('past its date it goes back', [SW.library.onLoan('S-3'), (SW.store.get('library.loans', {})['S-3'] || [{}])[0].back], [null, '2000-01-01']);
+                    SW.store.set('library.loans', {}); SW.store.set('token', 'x'); N.forget();
+                    return SW.library.open('S-1').then(function () { return wait(30); });
+                  }).then(function () {
+                    box().querySelector('[data-a="co"][data-m="1"]').click();
+                    return wait(200);
+                  }).then(function () {
+                    function plus1() { var d = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + 1); return d.toISOString().slice(0, 10); }
+                    var p = posted[posted.length - 1];
+                    T.eq('with a token, kept in the group for you alone', [p && p.text, p && p.permissions && p.permissions.read], ['loan:out:' + plus1(), ['acct:tester@hypothes.is']]);
+                    box().close();
+                    SW.store.set('library.loans', {});
+                    N.invalidate('item:S-1');
+                    return load().then(function () { return SW.library.load(); }).then(function () { SW.views.library.show(); return wait(200); }).then(function () {
+                      T.eq('and read back in another browser', SW.library.onLoan('S-1') && SW.library.onLoan('S-1').due, plus1());
+                    });
+                  }).then(function () {
+                    SW.store.set('library.loans', {}); SW.store.set('token', ''); N.forget();
                     window.fetch = f3;
                   }, function (e) { window.fetch = f3; throw e; });
                 });

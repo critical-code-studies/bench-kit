@@ -41,6 +41,9 @@
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter and the box. Members of the annotation group add and take off tags in the box,
  *             for the group: see N.itemTags in notes.js
+ * A reader checks a work out to their To read shelf for one, two or three months, renews it as often as they like
+ * or takes the date away, and returns it; past its date it goes back. Kept in this browser, and for a reader with
+ * the group's token also as annotations readable by them alone (N.itemLoans), so it follows them to other browsers.
  *   relevance 'essential', 'high', 'medium', 'low', 'minimal' or 'unchecked': an order, the first shown where any entry
  *             has it, and a filter. 'about', 'section', 'mention' and 'unread' from 1.8.0 read as high, medium, low, unchecked.
  *             A tag naming a level (High, Not Checked) comes before this field: the drop-down in the box writes one
@@ -84,7 +87,7 @@
     if (loading) return loading;
     loading = (man ? Promise.resolve(man) : (C.items ? Promise.resolve({ items: C.items }) : C.load ? Promise.resolve(C.load()) :
       fetch(URL0, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('The library’s list could not be read (' + r.status + ').'); return r.json(); }))
-      .then(function (m) { man = m || {}; man.pub = man.items = (man.items || []).filter(function (e) { return e && e.id && e.title; }); return readSnapshot().then(function () { return man; }); }))
+      .then(function (m) { man = m || {}; man.pub = man.items = (man.items || []).filter(function (e) { return e && e.id && e.title; }); return readSnapshot().then(function () { sweepLoans(); return man; }); }))
       .then(function () { return L.member() ? readAdds() : man; });
     loading.then(function () { loading = null; }, function () { loading = null; });
     return loading;
@@ -416,6 +419,86 @@
       (f === 'web' ? '<span class="lib-c-chrome"><i></i><i></i><i></i></span>' : '') + word +
       '<span class="lib-c-t">' + esc(e.title) + '</span>' + (f === 'web' && !e.author && host(e.url) ? '<span class="lib-c-a">' + esc(host(e.url)) + '</span>' : who) + '</span>';
   }
+  // ---------- To read: loans to this reader ----------
+  var STAMP = ['JA', 'FE', 'MR', 'AP', 'MY', 'JE', 'JL', 'AG', 'SE', 'OC', 'NO', 'DE'];
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function stampOf(day) { if (!day) return 'NO DATE'; var d = new Date(day + 'T00:00:00Z'); return STAMP[d.getUTCMonth()] + ' ' + d.getUTCDate() + " '" + String(d.getUTCFullYear()).slice(2); }
+  function plusMonths(day, n) { var d = new Date((day || today()) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); }
+  function borrower() { var me = SW.me(); return me.name || me.initials || 'You'; }
+  var LOANS = null;
+  function loans() { if (!LOANS) { var l = SW.store.get('library.loans', {}); LOANS = l && typeof l === 'object' && !Array.isArray(l) ? l : {}; } return LOANS; }
+  function saveLoans() { SW.store.set('library.loans', LOANS || {}); }
+  // past its date a work goes back into the library
+  function sweepLoans() {
+    var l = loans(), t = today(), moved = false;
+    Object.keys(l).forEach(function (c) { var h = l[c] || [], cur = h[h.length - 1]; if (cur && !cur.back && cur.due && cur.due < t) { cur.back = cur.due; moved = true; } });
+    if (moved) saveLoans();
+  }
+  function onLoan(id) { var h = loans()[id] || [], cur = h[h.length - 1]; return cur && !cur.back ? cur : null; }
+  L.onLoan = onLoan;
+  // the group's record of this reader's loans, where they have a token: events in order make the history
+  function fromEvents(evs) {
+    var h = [];
+    evs.forEach(function (ev) {
+      var day = String(ev.date || '').slice(0, 10), m = /^loan:(out|ext|back)(?::(.*))?$/.exec(ev.text) || [], due = m[2] && m[2] !== 'none' ? m[2] : null, cur = h[h.length - 1];
+      if (m[1] === 'out') { if (cur && !cur.back) cur.back = day; h.push({ out: day, due: due, by: ev.by }); }
+      else if (m[1] === 'ext' && cur && !cur.back) { cur.back = day; cur.renewed = true; h.push({ out: day, due: due, by: ev.by, renewal: true }); }
+      else if (m[1] === 'back' && cur && !cur.back) cur.back = day;
+    });
+    return h;
+  }
+  var LS = '';
+  function setLoans(byCode) {
+    var l = loans();
+    Object.keys(byCode).forEach(function (c) { l[c] = fromEvents(byCode[c]); });
+    saveLoans(); sweepLoans();
+    var sig = JSON.stringify(l), moved = sig !== LS; LS = sig;
+    return moved;
+  }
+  function synced(text, id) {
+    var N = itemNotes();
+    if (!N || !N.setLoan || !canRate()) return;
+    N.setLoan(id, text).catch(function (err) { SW.toast('Kept in this browser; the group did not take it: ' + err.message, 5000); });
+  }
+  L.checkOut = function (id, months) {
+    var l = loans(), h = l[id] = l[id] || [], due = months ? plusMonths(today(), months) : null;
+    h.push({ out: today(), due: due, by: borrower() }); saveLoans();
+    synced('loan:out:' + (due || 'none'), id);
+  };
+  L.renew = function (id, months) {
+    var l = loans(), h = l[id] || [], cur = h[h.length - 1]; if (!cur || cur.back) return;
+    var due = months ? plusMonths(cur.due && cur.due > today() ? cur.due : today(), months) : null;
+    cur.back = today(); cur.renewed = true;
+    h.push({ out: today(), due: due, by: borrower(), renewal: true }); saveLoans();
+    synced('loan:ext:' + (due || 'none'), id);
+  };
+  L.giveBack = function (id) {
+    var cur = onLoan(id); if (!cur) return;
+    cur.back = today(); saveLoans();
+    synced('loan:back', id);
+  };
+  function dueStamp(e) {
+    var cur = onLoan(e.id); if (!cur) return '';
+    return '<span class="lib-due" title="On your To read shelf' + (cur.due ? ', due back ' + esc(cur.due) : ', with no return date') + '">' + (cur.due ? 'DUE ' + stampOf(cur.due) : 'ON LOAN') + '</span>';
+  }
+  // the card in the book's pocket, after the old library cards
+  function cardOf(e) {
+    var h = loans()[e.id] || [], cur = onLoan(e.id), lines = h.slice(-10).map(function (r) {
+      return '<tr class="' + (r.back ? 'lib-card-done' : '') + '"><td class="lib-card-d">' + stampOf(r.out) + '</td><td class="lib-card-who"><span>' + esc(r.by || '') + '</span></td><td class="lib-card-d">' + stampOf(r.due) + '</td></tr>';
+    });
+    while (lines.length < 6) lines.push('<tr><td></td><td></td><td></td></tr>');
+    return '<article class="lib-card" data-card="' + esc(e.id) + '">' +
+      '<div class="lib-card-lib">Library<br><span>' + esc(B.name || B.title || '') + '</span></div>' +
+      '<div class="lib-card-label">' + esc(e.id) + '<br>' + esc(e.author || '') + '<br>' + esc(e.title) + '</div>' +
+      '<table class="lib-card-t"><thead><tr><th>Date<br>loaned</th><th>Borrower’s name</th><th>Date<br>due</th></tr></thead><tbody>' + lines.join('') + '</tbody></table>' +
+      '<div class="lib-card-acts">' + (cur ? '<span>Renew for</span> <button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3 months</button><button class="btn ghost" data-ext="0" title="Keep it with no return date">No date</button> <button class="btn ghost" data-ret>Return</button> ' : '') +
+      '<button class="btn ghost" data-lib="' + esc(e.id) + '">Open</button></div></article>';
+  }
+  function paintLoanCount(view) {
+    var b = SW.$('[data-show="loans"]', view); if (!b) return;
+    var n = Object.keys(loans()).filter(function (c) { return onLoan(c); }).length;
+    b.textContent = 'To read' + (n ? ' (' + n + ')' : '');
+  }
   function isPreprint(e) { return /^pre-?print$/i.test(String(e.kind || '').trim()); }
   function ppBadge(e) { return isPreprint(e) ? '<span class="lib-pp" title="A preprint, before or outside publication">Preprint</span>' : ''; }
   // the list's tags with the group's over them
@@ -453,7 +536,7 @@
   function tile(e) {
     var pic = thumbOf(e), said = [e.title, e.author, e.date, e.kind].filter(Boolean).join(', '), marks = marksOf(e);
     return '<button class="lib-tile" data-lib="' + esc(e.id) + '" title="' + esc(said) + '" aria-label="' + esc(said + '. ' + heldAs(e)) + '">' +
-      '<span class="lib-stand' + (marks ? ' lib-has-mark' : '') + '">' + coverOf(e) + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + (marks ? '<span class="lib-marks">' + marks + '</span>' : '') + '</span>' +
+      '<span class="lib-stand' + (marks ? ' lib-has-mark' : '') + '">' + coverOf(e) + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + (marks ? '<span class="lib-marks">' + marks + '</span>' : '') + dueStamp(e) + '</span>' +
       '<span class="lib-cap">' + (pic ? '<span class="lib-t">' + esc(e.title) + '</span>' : '') +
       '<span class="lib-m">' + [e.author, L.year(e.date) || e.date].filter(Boolean).map(esc).join(', ') + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></span></button>';
@@ -463,7 +546,7 @@
   function row(e) {
     var pic = thumbOf(e);
     return '<button class="lib-row" data-lib="' + esc(e.id) + '"><span class="lib-mini lib-c-' + L.family(e) + '">' + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : glyph(L.family(e))) + '</span>' +
-      '<span class="lib-t">' + marksOf(e) + esc(e.title) + '</span><span class="lib-m">' + meta(e) + '</span>' +
+      '<span class="lib-t">' + marksOf(e) + esc(e.title) + dueStamp(e) + '</span><span class="lib-m">' + meta(e) + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></button>';
   }
   // ---------- facets ----------
@@ -535,6 +618,7 @@
       if (F.show === 'out' && (e.file || !e.url)) return false;
       if (F.show === 'added' && !isAdded(e)) return false;
       if (F.show === 'noted' && !NC[e.id]) return false;
+      if (F.show === 'loans' && !onLoan(e.id)) return false;
       if (!inFacets(e, skip)) return false;
       if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, L.langName(e.lang), tagsOf(e).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
       return true;
@@ -568,6 +652,7 @@
   function paintCounts(view) {
     if (!canRate()) paintRatings(view, NR);
     var N = itemNotes(); if (!N) return;
+    if (N.itemLoans && canRate()) N.itemLoans().then(function (h) { if (setLoans(h) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t)) afterTags(view); }, function () {});
     if (N.itemRatings && canRate()) N.itemRatings().then(function (r) {
@@ -625,7 +710,17 @@
     var fp = SW.$('.lib-facets', view), fb = SW.$('.lib-fbody', view);
     if (fp) fp.hidden = F.view === 'notes';
     if (F.view === 'notes') { drawNotes(view, box); paintCounts(view); return; }
+    sweepLoans(); paintLoanCount(view);
     if (fb) fb.innerHTML = facetHTML();
+    if (F.show === 'loans') {
+      var due = function (e) { return (onLoan(e.id) || {}).due || '9999'; };
+      var ls = rows().sort(function (a, b) { return due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0; });
+      box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
+      var zl = SW.$('.lib-sizes', view); if (zl) zl.hidden = true;
+      box.innerHTML = ls.length ? '<div class="lib-cards">' + ls.map(cardOf).join('') + '</div>' : '<p class="hint pad">Nothing on your To read shelf. Open a work and check it out for one, two or three months.</p>';
+      var nl = SW.$('.lib-n', view); if (nl) nl.textContent = ls.length + ' to read';
+      return;
+    }
     var rs = L.sorted(rows(), F.order), icons = F.view !== 'list';
     box.classList.toggle('lib-shelf', icons);
     ['s', 'm', 'l'].forEach(function (z) { box.classList.toggle('lib-' + z, icons && F.size === z); });
@@ -650,7 +745,7 @@
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
         ((C.intro || m.intro) ? '<div class="lib-intro">' + (C.intro || m.intro) + '</div>' : '') +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
-        '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
+        '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).concat([['loans', 'To read']]).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
@@ -680,6 +775,9 @@
           if (ng && sec) { var nq = ng.dataset.at === 'q' ? ng.textContent : '', nat = ng.dataset.at; SW.notes.openItem(sec.dataset.code).then(function () { setTimeout(function () { var ds = SW.$$('dialog[open]'); SW.notes.itemGo(nat, nq, ds[ds.length - 1]); }, 800); }); return; }
           var zb = ev.target.closest('[data-libsize]'); if (zb) { setting('size', 'size', zb.dataset.libsize); SW.$$('[data-libsize]', view).forEach(function (b) { b.classList.toggle('on', b === zb); }); list(view); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
+          var cd = ev.target.closest('[data-card]');
+          if (cd && ev.target.closest('[data-ext]')) { L.renew(cd.dataset.card, +ev.target.closest('[data-ext]').dataset.ext); list(view); return; }
+          if (cd && ev.target.closest('[data-ret]')) { L.giveBack(cd.dataset.card); list(view); return; }
           var s = ev.target.closest('[data-show]'); if (s) { F.show = s.dataset.show; SW.$$('[data-show]', view).forEach(function (b) { b.classList.toggle('on', b === s); }); list(view); return; }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
         });
@@ -707,6 +805,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
+        '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. It is kept in this browser, and with the group’s Hypothesis token it follows you to your other browsers, readable by you alone.',
         'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
         '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.',
@@ -799,6 +898,7 @@
         (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Open where it is published ↗') + '</a>' : '') +
         '<button class="btn ghost" data-a="share" title="Share a link to this entry">' + (SW.SHARE_ICON || '') + ' Share</button>' +
         (canRate() ? '<button class="btn ghost" data-a="key"></button>' : '') +
+        '<span class="lib-loanbox"></span>' +
         '<button class="btn ghost" data-a="link" title="Copies a link to this entry">🔗 Copy link</button>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <span class="lib-dmarks"></span><b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
@@ -820,6 +920,13 @@
         if (kb) { kb.textContent = on ? '⚑ Key work' : '⚐ Mark as a key work'; kb.classList.toggle('on', on); kb.setAttribute('aria-pressed', on ? 'true' : 'false'); kb.title = on ? 'A key work for the group. Press to take the mark off' : 'Mark this as a key work for the group'; }
       }
       paintKey();
+      function paintLoan() {
+        var lb = SW.$('.lib-loanbox', d), cur = onLoan(e.id); if (!lb) return;
+        lb.innerHTML = cur ? '<span class="lib-loanst">On your To read shelf, due ' + stampOf(cur.due) + '</span> <button class="btn ghost" data-a="return">Return</button>'
+          : '<span class="lib-loanst">To read for</span> <button class="btn ghost" data-a="co" data-m="1">1</button><button class="btn ghost" data-a="co" data-m="2">2</button><button class="btn ghost" data-a="co" data-m="3" title="Check it out to your To read shelf">3 months</button>';
+      }
+      function afterLoan() { paintLoan(); var v2 = SW.$('#view-library'); if (v2 && SW.$('.lib-list', v2)) list(v2); }
+      sweepLoans(); paintLoan();
       if (canRate()) itemNotes().itemKeys().then(function (k) { setKeys(k); paintKey(); }, function () {});
       function paintTags() {
         var at = SW.$('.lib-tags', d), can = canRate(), ws = plainTags(e), was = SW.$('.lib-taginput', d), typed = was ? was.value : '', lvl = relOf(e);
@@ -864,6 +971,8 @@
       d.addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-boxcover')) ev.target.remove(); }, true);
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
+        var co = ev.target.closest('[data-a="co"]'); if (co) { L.checkOut(e.id, +co.dataset.m); afterLoan(); return; }
+        if (ev.target.closest('[data-a="return"]')) { L.giveBack(e.id); afterLoan(); return; }
         var tf = ev.target.closest('[data-tagoff]'); if (tf) { changeTag(tf.dataset.tagoff, false); return; }
         var kb = ev.target.closest('[data-a="key"]');
         if (kb) {

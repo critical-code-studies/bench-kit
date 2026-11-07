@@ -181,6 +181,12 @@ An entry's tags show in its box, and **Filters** and the search read them. There
 
 To show a tag to every reader, put it in `library.json`. A bench with no annotation group shows its tags with no way to change them.
 
+## To read
+
+Each reader has a **To read** shelf, a part of the Library to attend to. A work is checked out from its box for one, two or three months, and its cover then carries a due stamp in its upper right corner, in that reader's view only. **To read** beside **All** shows a library card for each work, after the cards once kept in a book's pocket: the work's code, author and title, and a line for each loan and renewal, with the date loaned, the borrower's name and the date due. A card renews a loan for one, two or three months as often as the reader likes, takes the date away, or returns the work. Past its date a work goes back into the library.
+
+Loans are kept in the reader's browser. With the group's Hypothesis token they are also kept as annotations readable by that reader alone (`loan:out:<date>`, `loan:ext:<date>`, `loan:back`), so they follow the reader to other browsers. The group cannot see them, and `tools/library-snapshot.js` never publishes them.
+
 ## For readers with no token
 
 A private Hypothesis group can be read only with a member's token, so without more, ratings, marks and tags made in the box are seen by members only. `tools/library-snapshot.js` publishes them: it reads the group and writes `library/group.json`, which the Library loads for every reader. Covers, the filters, the order and the record then show them. A member with a token still sees the group live.

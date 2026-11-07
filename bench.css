@@ -1294,6 +1294,27 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-rt-c { position: absolute; z-index: 1; bottom: 5px; right: calc(50% - var(--cw) / 2 + 5px); padding: 1px 4px; border-radius: 3px; background: rgba(0, 0, 0, 0.72); color: #ffd23f; font-size: 9px; line-height: 1.3; }
 .lib-s .lib-rt-c { bottom: 3px; right: calc(50% - var(--cw) / 2 + 3px); padding: 0 3px; font-size: 7.5px; }
 .lib-sizes[hidden] { display: none; }
+/* To read: a due stamp, and the card in the book's pocket */
+.lib-due { display: inline-block; padding: 0 3px; border: 1px solid #b0302a; border-radius: 2px; color: #b0302a; background: rgba(255, 252, 240, 0.9); font: 700 8px/1.4 var(--mono); letter-spacing: 0.5px; white-space: nowrap; transform: rotate(-4deg); }
+.lib-stand .lib-due { position: absolute; z-index: 2; top: 15px; right: calc(50% - var(--cw) / 2 - 4px); }
+.lib-s .lib-stand .lib-due { font-size: 6.5px; top: 13px; }
+.lib-t .lib-due { margin-left: 8px; vertical-align: 1px; }
+.lib-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; padding: 6px 4px 20px; }
+.lib-card { position: relative; padding: 14px 14px 10px; background: #f4ecd4; color: #2a2a2a; border-radius: 3px; box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12); font-family: Helvetica, Arial, sans-serif; }
+.lib-card-lib { margin: 0 0 10px 6px; font-weight: 700; font-size: 15px; line-height: 1.1; color: #444; }
+.lib-card-lib span { font-weight: 400; font-size: 13px; }
+.lib-card-label { margin: 0 0 10px; padding: 8px 10px; background: #fffdf6; border-radius: 3px; font: 13px/1.35 var(--mono); overflow-wrap: anywhere; }
+.lib-card-t { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.lib-card-t th { padding: 2px 3px; border-top: 2px solid #3d63ad; border-bottom: 1px solid #3d63ad; color: #3d63ad; font: 700 8.5px/1.15 Helvetica, Arial, sans-serif; letter-spacing: 0.6px; text-transform: uppercase; }
+.lib-card-t th:nth-child(1), .lib-card-t th:nth-child(3) { width: 74px; }
+.lib-card-t td { height: 26px; padding: 0 4px; border-bottom: 1px solid #6f8fd0; vertical-align: bottom; }
+.lib-card-t td + td { border-left: 1px solid #3d63ad; }
+.lib-card-d { font: 700 11px/1.4 var(--mono); color: #3a3a5a; white-space: nowrap; }
+.lib-card-who span { font: 17px/1.1 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; color: #1f2c6b; }
+.lib-card-done .lib-card-who span, .lib-card-done .lib-card-d { text-decoration: line-through; text-decoration-color: #1f2c6b; }
+.lib-card-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 10px; font-size: 12px; color: #555; }
+.lib-card-acts .btn { padding: 1px 7px; font-size: 12px; color: #2a2a2a; }
+.lib-loanst { color: var(--text-dim); font-size: 13px; }
 .note-draft { display: inline-block; padding: 0 5px; border: 1px dashed var(--amber); border-radius: 3px; color: var(--amber); font-size: 11px; }
 .in-fail { margin: 0 0 8px; }
 .in-fail-t { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
