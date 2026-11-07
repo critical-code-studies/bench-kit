@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Share in a Library entry's box** (David, 2026-11-07), with the system's share sheet and the kit's share icon: the citation and a link, with the file where the library holds a public copy the browser can send. A copy on the private shelf is not sent. `SW.share` takes `files` and `copyAll`.
+- **Share in a Library entry's box** (David, 2026-11-07), with the system's share sheet and the kit's share icon: the entry's title and a link that opens its box.
 
 ## 1.5.1 (2026-11-07)
 

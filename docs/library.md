@@ -159,7 +159,7 @@ The entry and its note stay as written. The record goes from `catalogue.json` in
 
 ## Sharing an entry
 
-**Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac). It sends the citation and a link to the entry, with the file itself where the library holds a public copy of a kind the browser can send: PDF, audio, video, image or plain text. A browser with no share sheet, such as Firefox, copies the citation and link. A copy on the private shelf is not sent. **Copy link** stays beside it.
+**Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac) with the entry's title and a link that opens its box. A browser with no share sheet, such as Firefox, copies the link. **Copy link** stays beside it.
 
 ## A large library
 
