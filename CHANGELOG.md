@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.2 (2026-11-07)
 
 - **Relevance levels are now Essential, High, Medium, Low, Minimal and Not Checked** (David, 2026-11-08), with the values `essential`, `high`, `medium`, `low`, `minimal` and `unchecked`. The values from 1.8.0 still read: `about` as High, `section` as Medium, `mention` as Low and `unread` as Not Checked.
 - **Tags on Library entries** (David, 2026-11-08): shown in the box, and members with the group's Hypothesis token add and take them off there. Kept in the group's annotations, so members see them and readers outside the group see only `tags` in `library.json`. `N.itemTags`, `N.setItemTag` in `notes.js`.
