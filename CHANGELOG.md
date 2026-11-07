@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.1 (2026-11-07)
 
 - **Key works first in By relevance** (David, 2026-11-07, through ELIZA): an entry with a number in `key` comes ahead of the groups, by that number. Other orders ignore it.
 
