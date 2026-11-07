@@ -794,7 +794,7 @@
         (boxCover ? '</div></div>' : '') +
         (canOpen ? '<div class="lib-file" data-k="' + k + '"><p class="hint">Opening the file…</p></div>' :
           priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' + (player || '') :
-          player || '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>') +
+          player || '<p class="hint">' + (e.url ? 'Copy not held in the library, use the link above to view it.' : 'Copy not held in the library.') + '</p>') +
         (alts.length || (canOpen && player) ? '<div class="lib-alts">' + (canOpen && player ? '<button class="btn ghost" data-play>▶ Play from ' + esc(hostName(e.url)) + '</button>' : '') + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '') +
         '</div><div class="lib-side"></div></div>';
       document.body.appendChild(d);

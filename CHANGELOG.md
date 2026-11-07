@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- A Library entry with no copy now says "Copy not held in the library, use the link above to view it." (David, 2026-11-08).
+
 ## 1.8.4 (2026-11-07)
 
 - **Ratings, Key work marks and tags for readers with no token** (David, 2026-11-08): `tools/library-snapshot.js` reads the private group with a member's token and writes `library/group.json`, which the Library loads for everyone. No note text, replies, emoji or names. `templates/library-snapshot.yml` runs it each day, with the token as a repository secret. See `docs/library.md`.
