@@ -763,6 +763,7 @@
                     xb.close();
                     var vl = document.getElementById('view-library');
                     T.eq('a due stamp on its cover, and no other', [vl.querySelectorAll('[data-lib="S-2"] .lib-due').length, vl.querySelectorAll('[data-lib="S-1"] .lib-due').length], [1, 0]);
+                    T.yes('as DUE and the month and day', /^DUE [A-Z]{3} \d{1,2}$/.test(vl.querySelector('[data-lib="S-2"] .lib-due').textContent));
                     vl.querySelector('[data-show="loans"]').click();
                     T.eq('To read: a card for it', [vl.querySelectorAll('.lib-card').length, vl.querySelector('[data-show="loans"]').textContent], [1, 'To read (1)']);
                     vl.querySelector('.lib-card [data-ext="1"]').click();

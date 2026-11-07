@@ -423,6 +423,9 @@
   var STAMP = ['JA', 'FE', 'MR', 'AP', 'MY', 'JE', 'JL', 'AG', 'SE', 'OC', 'NO', 'DE'];
   function today() { return new Date().toISOString().slice(0, 10); }
   function stampOf(day) { if (!day) return 'NO DATE'; var d = new Date(day + 'T00:00:00Z'); return STAMP[d.getUTCMonth()] + ' ' + d.getUTCDate() + " '" + String(d.getUTCFullYear()).slice(2); }
+  // on a cover: DUE DEC 7
+  var MON3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  function dueShort(day) { var d = new Date(day + 'T00:00:00Z'); return MON3[d.getUTCMonth()] + ' ' + d.getUTCDate(); }
   function plusMonths(day, n) { var d = new Date((day || today()) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); }
   function borrower() { var me = SW.me(); return me.name || me.initials || 'You'; }
   var LOANS = null;
@@ -479,7 +482,7 @@
   };
   function dueStamp(e) {
     var cur = onLoan(e.id); if (!cur) return '';
-    return '<span class="lib-due" title="On your To read shelf' + (cur.due ? ', due back ' + esc(cur.due) : ', with no return date') + '">' + (cur.due ? 'DUE ' + stampOf(cur.due) : 'ON LOAN') + '</span>';
+    return '<span class="lib-due" title="On your To read shelf' + (cur.due ? ', due back ' + esc(cur.due) : ', with no return date') + '">' + (cur.due ? 'DUE ' + dueShort(cur.due) : 'ON LOAN') + '</span>';
   }
   // the card in the book's pocket, after the old library cards
   function cardOf(e) {
