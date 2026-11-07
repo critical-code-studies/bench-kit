@@ -497,6 +497,48 @@
         T.eq('a kept order of Rating, with no token: Author', sel.value, 'author');
         T.eq('and it stays kept', SW.store.get('library.order', ''), 'rating');
         SW.store.set('library.order', '');
+        // sharing an entry
+        var shared = [], refuse = 1, gets = 0, was0 = window.fetch;
+        function stub(on) {
+          if (on) {
+            Object.defineProperty(navigator, 'share', { configurable: true, value: function (d) { if (d.files && refuse) { refuse--; return Promise.reject(new DOMException('late', 'NotAllowedError')); } shared.push(d); return Promise.resolve(); } });
+            Object.defineProperty(navigator, 'canShare', { configurable: true, value: function () { return true; } });
+          } else { delete navigator.share; delete navigator.canShare; }
+        }
+        function open(id) { return SW.library.open(id).then(function () { return wait(20); }).then(function () { return box(); }); }
+        function press(d) { d.querySelector('[data-a="share"]').click(); return wait(150); }
+        window.fetch = function (u) { if (/library-shelf/.test(String(u))) gets++; return was0.apply(window, arguments); };
+        B.library = { private: { org: 'group', repo: 'archive' }, items: [
+          { id: 'P-HELD', title: 'Held work', author: 'A. Writer', date: '2001', file: kit + 'docs/img/library-shelf.jpg' },
+          { id: 'P-PRIV', title: 'Private work', shelf: 'private', file: 'library/p.pdf' },
+          { id: 'P-LINK', title: 'Linked work', url: 'https://example.org/w' }] };
+        stub(true);
+        return load().then(function () { return SW.library.load(); }).then(function () { return open('P-HELD'); }).then(function (d) {
+          return press(d).then(function () {
+            T.eq('a sheet refused after the fetch asks again', shared.length, 0);
+            return press(d);
+          }).then(function () {
+            T.eq('the file, sent the second time without a second fetch', [shared.length, gets], [1, 1]);
+            var s = shared[0];
+            T.eq('with its name and type', [s.files[0].name, s.files[0].type], ['library-shelf.jpg', 'image/jpeg']);
+            T.yes('with the citation and the link in the text', /A\. Writer/.test(s.text) && /lib=P-HELD/.test(s.text));
+            d.close();
+            return open('P-PRIV');
+          });
+        }).then(function (d) {
+          shared.length = 0;
+          return press(d).then(function () {
+            T.eq('a private copy is not sent', [shared.length, !!(shared[0] && shared[0].files), /lib=P-PRIV/.test(shared[0] && shared[0].url)], [1, false, true]);
+            d.close();
+            return open('P-LINK');
+          });
+        }).then(function (d) {
+          shared.length = 0;
+          return press(d).then(function () {
+            T.eq('an entry with only a link', [shared.length, !!shared[0].files], [1, false]);
+            d.close();
+          });
+        }).then(function () { stub(false); window.fetch = was0; }, function (e) { stub(false); window.fetch = was0; throw e; });
       });
     }).then(function () {
       restore();

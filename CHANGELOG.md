@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Share in a Library entry's box** (David, 2026-11-07), with the system's share sheet and the kit's share icon: the citation and a link, with the file where the library holds a public copy the browser can send. A copy on the private shelf is not sent. `SW.share` takes `files` and `copyAll`.
+
 ## 1.5.1 (2026-11-07)
 
 - The Library's **Order** menu offers Rating only to a reader with the group's Hypothesis token (the translation session's report on 1.5.0). Without one there are no ratings to sort by. A kept order of Rating falls back to the bench's order, or Author, and stays in the store for when a token is set.

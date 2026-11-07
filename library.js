@@ -592,6 +592,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
+        '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with the work’s citation and a link, and the file itself where the library holds a public copy and your browser can send it. A browser with no share sheet copies the citation and link. A copy on the private shelf is not sent.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
       ['Notes on a work', ul([
         'Above them, members of the group give a work one to three stars, and an emoji. The average shows on its cover, and <b>Order</b> can sort by it.',
@@ -652,6 +653,25 @@
   };
 
   // ---------- an entry, in a box over the bench ----------
+  // what a share sheet takes; a browser may still refuse one, and then the record goes alone
+  var SHARE_TYPES = { pdf: 'application/pdf', mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav', ogg: 'audio/ogg', mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', txt: 'text/plain' };
+  function shareTypeOf(path) { return SHARE_TYPES[String(path).split(/[?#]/)[0].split('.').pop().toLowerCase()] || ''; }
+  // the entry's public copy, if the browser can send it. A copy on the private shelf stays out.
+  function shareable(e) { return e.file && !isPrivate(e) && navigator.share && navigator.canShare && root.File && shareTypeOf(e.file) ? e.file : ''; }
+  function shareEntry(e, cite, btn, kept) {
+    var o = { title: e.title, text: cite.text, url: SW.permalink({ tab: 'library', lib: e.id }), copyAll: true }, path = shareable(e);
+    if (!path) return SW.share(o);
+    if (kept.file) { if (navigator.canShare({ files: [kept.file] })) o.files = [kept.file]; return SW.share(o); }
+    var label = btn.innerHTML;
+    btn.disabled = true; btn.textContent = 'Preparing…';
+    return fetch(path).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.blob(); }).then(function (b) {
+      kept.file = new File([b], String(path).split(/[?#]/)[0].split('/').pop(), { type: shareTypeOf(path) });
+      if (navigator.canShare({ files: [kept.file] })) o.files = [kept.file];
+    }, function () { SW.toast('The file could not be read, so the reference goes alone.', 4000); }).then(function () {
+      btn.disabled = false; btn.innerHTML = label;
+      return SW.share(o);
+    });
+  }
   L.open = function (id) {
     return L.load().then(function () {
       var e = byId(id);
@@ -667,6 +687,7 @@
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
         (canOpen && priv ? '<button class="btn ghost" data-a="dl">⤓ Download</button>' : '') +
         (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Open where it is published ↗') + '</a>' : '') +
+        '<button class="btn ghost" data-a="share" title="' + (e.file && !isPrivate(e) ? 'Share this work: the file where the browser can send it, its citation and a link' : 'Share this work: its citation and a link') + '">' + (SW.SHARE_ICON || '') + ' Share</button>' +
         '<button class="btn ghost" data-a="link" title="Copies a link to this entry">🔗 Copy link</button>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
@@ -679,9 +700,11 @@
         (alts.length || (canOpen && player) ? '<div class="lib-alts">' + (canOpen && player ? '<button class="btn ghost" data-play>▶ Play from ' + esc(hostName(e.url)) + '</button>' : '') + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '') +
         '</div><div class="lib-side"></div></div>';
       document.body.appendChild(d);
+      var keptShare = {};
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
+        var shb = ev.target.closest('[data-a="share"]'); if (shb) { shareEntry(e, cite, shb, keptShare); return; }
         if (ev.target.closest('[data-a="link"]')) { SW.copyText(SW.permalink({ tab: 'library', lib: e.id }), 'the link'); return; }
         if (ev.target.closest('[data-a="cite"]')) { SW.copyText(cite.text, 'the citation'); return; }
         var pl = ev.target.closest('[data-play]');

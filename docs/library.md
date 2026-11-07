@@ -157,6 +157,10 @@ node research/kit/tools/library-move.js ../my-paratexts --adopt P-AAAAA,P-BBBBB 
 
 The entry and its note stay as written. The record goes from `catalogue.json` into `library/moved.json`, and its files stay where they are in the private repository, for `--back`. `--back` then restores the record and takes out the entry and any public copies the entry named.
 
+## Sharing an entry
+
+**Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac). It sends the citation and a link to the entry, with the file itself where the library holds a public copy of a kind the browser can send: PDF, audio, video, image or plain text. A browser with no share sheet, such as Firefox, copies the citation and link. A copy on the private shelf is not sent. **Copy link** stays beside it.
+
 ## A large library
 
 The tab's **Filters** narrow by kind, language, rating, decade, author and tag, with counts. They come from the entries' `kind`, `lang`, `date`, `author` and `tags`, so a large library is easier to search where those are filled in consistently, with one spelling for a kind and for a surname. Give `lang` as a language code (`ja`, `de`): readers see its English name, here and in the record, where the browser knows it, and the code where it does not. Rating comes from the group's stars: the average to the nearest star, or Not rated. A facet with only one value does not show, so a bench with no ratings has no Rating filter.

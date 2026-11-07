@@ -158,13 +158,21 @@
   SW.status = function (msg) { SW.$('#status').textContent = msg || ''; };
 
   // Share a link: the system's share sheet where the browser has one (Mail, Messages…), else the link copied.
-  // A local address becomes the public one.
+  // A local address becomes the public one. o.files goes with it, the link then in the text; o.copyAll copies
+  // the text with the link where there is no sheet. A browser refuses a sheet opened long after the click, as
+  // after fetching a file, so that case asks for the button again.
   SW.share = function (o) {
     var url = String(o.url || location.href).replace(/[?&]nc=\d+/, '');
     var m = /\/research\/(?:index\.html)?(\?.*)?$/.exec(url); if (m && url.indexOf(SW.BASE_URI) !== 0) url = SW.BASE_URI + (m[1] || '');
-    var d = { title: o.title || document.title, text: o.text || '', url: url };
-    if (navigator.share && (!navigator.canShare || navigator.canShare(d))) return navigator.share(d).catch(function (e) { if (e && e.name !== 'AbortError') SW.copyText(url, 'the link'); });
-    SW.copyText(url, 'the link');
+    var d = { title: o.title || document.title, text: o.text || '', url: url }, whole = [d.text, url].filter(Boolean).join('\n');
+    if (o.files) d = { title: d.title, text: whole, files: o.files };
+    function copy() { if (o.copyAll) SW.copyText(whole, 'the reference and link'); else SW.copyText(url, 'the link'); }
+    if (navigator.share && (!navigator.canShare || navigator.canShare(d))) return navigator.share(d).catch(function (e) {
+      if (e && e.name === 'AbortError') return;
+      if (e && e.name === 'NotAllowedError' && o.files) { SW.toast('The file is ready. Press Share again.', 4000); return; }
+      copy();
+    });
+    copy();
   };
   SW.SHARE_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" style="vertical-align:-2px"><path d="M8 1.5v8M5 4.5l3-3 3 3M3.5 7.5v6h9v-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   // Copy text; where the clipboard API is refused, through a selected textarea.
