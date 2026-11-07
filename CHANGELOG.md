@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.6 (2026-11-07)
 
 - `templates/library-snapshot.yml` uses actions/checkout and actions/setup-node v7 on Node 24, so its run no longer warns that Node 20 is deprecated (kuki-bench's first real run). A bench that copied it can change the three lines.
 
