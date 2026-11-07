@@ -741,14 +741,15 @@
                     var vs = document.getElementById('view-library');
                     function sh(id, q) { return vs.querySelectorAll('[data-lib="' + id + '"] ' + q).length; }
                     T.eq('a rating and a mark with no token', [sh('S-1', '.lib-rt'), sh('S-3', '.lib-rt'), sh('S-2', '.lib-key'), sh('S-1', '.lib-key')], [1, 0, 1, 0]);
-                    T.eq('the rating read', vs.querySelector('[data-lib="S-1"] .lib-rt').textContent.trim(), '★ 2.5');
+                    T.eq('the rating as stars, on the cover', [vs.querySelector('[data-lib="S-1"] .lib-stand .lib-rt').textContent, /2\.5 from 2/.test(vs.querySelector('[data-lib="S-1"] .lib-rt').title)], ['★★★', true]);
                     T.yes('a filter by rating, and the order', vs.querySelector('[data-facet="rating"][data-val="3"]') && vs.querySelector('.lib-order option[value="rating"]'));
                     T.yes('a tag in the filter', vs.querySelector('[data-facet="tag"][data-val="shared"]'));
                     T.yes('and a level from a tag', vs.querySelector('[data-facet="relevance"][data-val="high"]'));
                     return SW.library.open('S-1').then(function () { return wait(40); });
                   }).then(function () {
                     var x9 = box();
-                    T.yes('in the box', /★ 2\.5 from 2/.test(x9.querySelector('.lib-rec').textContent) && x9.querySelector('.lib-tag'));
+                    T.eq('in the box, as stars only', [x9.querySelector('.lib-rec .lib-stars').textContent, /from/.test(x9.querySelector('.lib-rec').textContent)], ['★★★', false]);
+                    T.yes('and its tags', x9.querySelector('.lib-tag'));
                     T.eq('with nothing to change', [x9.querySelectorAll('[data-a="key"], .lib-relsel, .lib-taginput, [data-tagoff], [data-star]').length], [0]);
                     x9.close();
                     window.fetch = f3;

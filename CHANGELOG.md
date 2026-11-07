@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A rating as yellow stars** (David, 2026-11-08): one to three stars, the average to the nearest star, in a Library entry's record and the list, for every reader. Hovering gives a member their own rating, and a reader with no token the average and how many rated. In the covers view, a small dark box in each cover's lower right corner. The Key work badge is smaller.
+
 ## 1.8.7 (2026-11-07)
 
 - A failed read in a Library entry's box now says NOTES NOT UPDATED in small capitals (David, 2026-11-08), with Try again; the reason is in its tooltip.

@@ -543,12 +543,26 @@
   // ---------- notes on the entries ----------
   var NC = {}, NR = {}, NRS = '{}';
   function itemNotes() { return SW.notes && SW.notes.itemNotes ? SW.notes : null; }
+  // a rating as stars, the average to the nearest one. The tooltip gives a member their own rating, and a reader
+  // with no token the figures
+  function stars(k) { return new Array(Math.max(1, Math.min(3, Math.round(k))) + 1).join('★'); }
+  function starText(s) { return stars(s.avg); }
+  function myStars(s) {
+    var me = SW.me ? SW.me().initials : '';
+    if (!me || !s.who) return 0;
+    var hit = s.who.filter(function (w) { return w.indexOf(me + ' ') === 0; }).pop();
+    return hit ? +hit.split(' ').pop() : 0;
+  }
+  function starTitle(s) {
+    if (canRate() && s.who) { var m = myStars(s); return m ? 'Your rating: ' + stars(m) : 'You have not rated this'; }
+    return (Math.round(s.avg * 10) / 10) + ' from ' + s.n + (s.n === 1 ? ' rating' : ' ratings');
+  }
   function paintRatings(view, r) {
     var box0 = SW.$('.lib-list', view); if (!box0) return;
     SW.$$('[data-lib]', box0).forEach(function (x) {
-      var s = r[x.dataset.lib], at = SW.$('.lib-cap .lib-m', x) || SW.$('.lib-m', x), old = SW.$('.lib-rt', x);
+      var s = r[x.dataset.lib], stand = SW.$('.lib-stand', x), at = stand || SW.$('.lib-m', x), old = SW.$('.lib-rt', x);
       if (old) old.remove();
-      if (s && at) at.appendChild(SW.el('span', { class: 'lib-rt', title: s.who ? s.who.join('; ') : s.n + (s.n === 1 ? ' rating' : ' ratings') }, ' ★ ' + (Math.round(s.avg * 10) / 10)));
+      if (s && at) at.appendChild(SW.el('span', { class: 'lib-rt' + (stand ? ' lib-rt-c' : ''), title: starTitle(s), 'aria-label': starText(s).length + ' of 3 stars. ' + starTitle(s) }, starText(s)));
     });
   }
   function paintCounts(view) {
@@ -776,9 +790,10 @@
       var cite = L.citation(e);
       // a real cover; a public image used as its own cover already shows below
       var boxCover = e.thumb && e.thumb !== e.file ? e.thumb : '';
-      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', canRate() ? '' : REL_NAMES[relOf(e)]], ['Rating', !canRate() && NR[e.id] ? '★ ' + (Math.round(NR[e.id].avg * 10) / 10) + ' from ' + NR[e.id].n : ''], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', canRate() ? '' : REL_NAMES[relOf(e)]], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
-        .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
+        .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('') +
+        (NR[e.id] ? '<dt>Rating</dt><dd><span class="lib-stars" title="' + esc(starTitle(NR[e.id])) + '">' + starText(NR[e.id]) + '</span></dd>' : '');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
         (canOpen && priv ? '<button class="btn ghost" data-a="dl">⤓ Download</button>' : '') +
         (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Open where it is published ↗') + '</a>' : '') +
