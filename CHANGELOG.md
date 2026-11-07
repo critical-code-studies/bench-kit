@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Key works first in By relevance** (David, 2026-11-07, through ELIZA): an entry with a number in `key` comes ahead of the groups, by that number. Other orders ignore it.
+
 ## 1.8.0 (2026-11-07)
 
 - **By relevance in the Library** (David, 2026-11-07, through ELIZA and SHRDLU): a `relevance` field on an entry (`about`, `section`, `mention`, `unread`) gives an order and a filter. Where entries have it, that order comes first and replaces As listed in the menu, and `library.order: 'listed'` shows it. Without the field, nothing changes.

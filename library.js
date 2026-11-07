@@ -40,6 +40,7 @@
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter
  *   relevance 'about', 'section', 'mention' or 'unread': an order, the first shown where any entry has it, and a filter
+ *   key       a number (1, 2, 3…): a key work, ahead of the groups in that order, in this order
  * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search,
  * filters (held, linked, annotated) and facets with their counts (kind, language, rating, decade, author, tag); an
  * entry opens
@@ -314,6 +315,7 @@
   var AZ = root.Intl && Intl.Collator ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare : function (a, b) { return a < b ? -1 : a > b ? 1 : 0; };
   var RELEVANCE = ['about', 'section', 'mention', 'unread'], REL_NAMES = { about: 'About it', section: 'A section on it', mention: 'A passing mention', unread: 'Not yet read' };
   function relRank(e) { var i = RELEVANCE.indexOf(e.relevance); return i < 0 ? RELEVANCE.length : i; }
+  function keyOf(e) { var k = Number(e.key); return k > 0 ? k : Infinity; }
   L.sorted = function (items, order) {
     var byTitle = function (a, b) { return AZ(titleKey(a.title), titleKey(b.title)); };
     // what has no value for this order goes after what has
@@ -323,7 +325,7 @@
     var fn = order === 'title' ? byTitle : order === 'new' ? byYear(-1) : order === 'old' ? byYear(1) :
       order === 'kind' ? by(function (e) { return e.kind; }, byTitle) : order === 'lang' ? by(function (e) { return e.lang; }, byTitle) :
       order === 'author' ? byAuthor :
-      order === 'relevance' ? function (a, b) { return (relRank(a) - relRank(b)) || byAuthor(a, b); } :
+      order === 'relevance' ? function (a, b) { var x = keyOf(a), y = keyOf(b); if (x !== y) return x < y ? -1 : 1; return (relRank(a) - relRank(b)) || byAuthor(a, b); } :
       order === 'rating' ? function (a, b) { var x = NR[a.id] ? NR[a.id].avg : 0, y = NR[b.id] ? NR[b.id].avg : 0; return (y - x) || byTitle(a, b); } : null;
     return fn ? items.slice().sort(fn) : items.slice();
   };

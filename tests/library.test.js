@@ -551,7 +551,7 @@
                   T.eq('and in its box', x.querySelectorAll('.tray-bighead .lib-pp').length, 1);
                   x.close();
                   T.yes('As listed, on a bench with no relevance', document.querySelector('#view-library .lib-order option[value="listed"]') && !document.querySelector('#view-library .lib-order option[value="relevance"]'));
-                  B.library = { order: 'listed', items: [{ id: 'R-1', title: 'M', author: 'Zed', relevance: 'mention' }, { id: 'R-2', title: 'U', author: 'Ann', relevance: 'unread' }, { id: 'R-3', title: 'A2', author: 'Bee', relevance: 'about' }, { id: 'R-4', title: 'None', author: 'Aab' }, { id: 'R-5', title: 'A1', author: 'Abe', relevance: 'about' }] };
+                  B.library = { order: 'listed', items: [{ id: 'R-1', title: 'M', author: 'Zed', relevance: 'mention' }, { id: 'R-2', title: 'U', author: 'Ann', relevance: 'unread' }, { id: 'R-3', title: 'A2', author: 'Bee', relevance: 'about' }, { id: 'R-4', title: 'None', author: 'Aab' }, { id: 'R-5', title: 'A1', author: 'Abe', relevance: 'about' }, { id: 'R-6', title: 'K2', author: 'Zzz', relevance: 'unread', key: 2 }, { id: 'R-7', title: 'K1', author: 'Yyy', key: 1 }] };
                   return load().then(function () { return SW.library.load(); });
                 }).then(function () {
                   SW.views.library.show();
@@ -561,7 +561,8 @@
                   function rids() { return Array.prototype.map.call(vr.querySelectorAll('[data-lib]'), function (x) { return x.dataset.lib; }).join(' '); }
                   T.eq('order: listed shows By relevance', sel.value, 'relevance');
                   T.eq('and no As listed', sel.querySelector('option[value="listed"]'), null);
-                  T.eq('by group, then author, the rest last', rids(), 'R-5 R-3 R-1 R-2 R-4');
+                  T.eq('key works, then by group and author, the rest last', rids(), 'R-7 R-6 R-5 R-3 R-1 R-2 R-4');
+                  T.eq('another order ignores key', SW.library.sorted(SW.library.items(), 'author').map(function (e) { return e.id; }).join(' '), 'R-4 R-5 R-2 R-3 R-7 R-1 R-6');
                   var fa = vr.querySelector('[data-facet="relevance"][data-val="about"]');
                   T.eq('the filter, by name', fa && fa.querySelector('span').textContent, 'About it');
                   T.eq('its groups in order', Array.prototype.map.call(vr.querySelectorAll('[data-facet="relevance"]'), function (x) { return x.dataset.val; }), ['about', 'mention', 'unread']);
