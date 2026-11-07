@@ -1494,7 +1494,7 @@
         var th = N.threads(all).reverse();
         SW.$('.in-n', el).textContent = th.length || '';
         var fail = N.readFailed(vid);
-        list.innerHTML = (fail ? '<p class="hint in-fail">The group’s notes could not be read: ' + SW.esc(fail) + '. <button type="button" class="btn ghost" data-in="retry">Try again</button></p>' : '') + th.map(function (t) { return N.renderThread(t); }).join('');
+        list.innerHTML = (fail ? '<p class="hint in-fail" title="' + SW.esc(fail) + '">Notes not updated. <button type="button" class="btn ghost" data-in="retry">Try again</button></p>' : '') + th.map(function (t) { return N.renderThread(t); }).join('');
         N.wire(list, vid, all);
       });
     }
