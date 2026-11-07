@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.0 (2026-11-07)
 
 - **By relevance in the Library** (David, 2026-11-07, through ELIZA and SHRDLU): a `relevance` field on an entry (`about`, `section`, `mention`, `unread`) gives an order and a filter. Where entries have it, that order comes first and replaces As listed in the menu, and `library.order: 'listed'` shows it. Without the field, nothing changes.
 - The S M L buttons no longer show in the Library's list view, where they do nothing.
