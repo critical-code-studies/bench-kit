@@ -1286,6 +1286,13 @@ ul.reading a { overflow-wrap: anywhere; }
 .in-rate { margin: 0 0 8px; }
 .lib-rt { white-space: nowrap; color: var(--text-dim); }
 .lib-sizes[hidden] { display: none; }
+.lib-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 0 0 12px; font-size: 13px; }
+.lib-tags[hidden] { display: none; }
+.lib-tags-h { margin-right: 6px; color: var(--text-faint); font-size: 14px; }
+.lib-tag { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); overflow-wrap: anywhere; }
+.lib-tag button { padding: 0 2px; border: 0; background: none; color: var(--text-dim); cursor: pointer; font-size: 14px; line-height: 1; }
+.lib-tag button:hover { color: var(--text); }
+.lib-taginput { width: 11em; max-width: 100%; padding: 2px 7px; font-size: 13px; }
 .lib-pp, .lib-key { display: inline-block; flex: none; margin-right: 7px; padding: 1px 6px; border-radius: 3px; background: #b45309; color: #fff; font: 700 10px/1.5 var(--sans, system-ui, sans-serif); letter-spacing: 0.5px; text-transform: uppercase; vertical-align: 1px; white-space: nowrap; }
 .lib-key { background: #0f5e63; }
 .lib-marks { position: absolute; z-index: 1; top: 19px; left: calc(50% - var(--cw) / 2 + 7px); width: calc(var(--cw) - 14px); display: flex; flex-wrap: wrap; gap: 3px; }

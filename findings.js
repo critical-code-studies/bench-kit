@@ -266,7 +266,7 @@
           if (!t) { t = { note: n, replies: [], reactions: [] }; live.threads = (live.threads || []).concat([t]); }
           if (made) t.replies.push({ note: made, replies: [], reactions: [] });
           listStale = true;
-          ta.value = ''; rb.disabled = false;
+          ta.value = ''; if (ta._mdReset) ta._mdReset(); rb.disabled = false;
           paintReplies();
           var last = SW.$('.fd-repl .fd-reply:last-child', d); if (last) last.scrollIntoView({ block: 'nearest' });
         }, function (err) { rb.disabled = false; if (err.message !== 'no initials') SW.toast(err.message, 5000); });

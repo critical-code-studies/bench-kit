@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Tags on Library entries** (David, 2026-11-08): shown in the box, and members with the group's Hypothesis token add and take them off there. Kept in the group's annotations, so members see them and readers outside the group see only `tags` in `library.json`. `N.itemTags`, `N.setItemTag` in `notes.js`.
+- A note added in a Library entry's box no longer stays in the box as a second copy (David's report). The rich editor was left holding the text after the note was saved, until the box was opened again. The same in a finding's reply box.
 - **A Key work mark in the Library** (David, 2026-11-07), on the cover, in the list and in the box, for an entry with `key`. Members with the group's Hypothesis token add and take off the mark in the box. It is kept in the group's annotations, so members see it and readers outside the group see only `key` in `library.json`. `N.itemKeys`, `N.setItemKey` in `notes.js`.
 - The Library's notes view no longer lists a work that has only a rating or an emoji.
 

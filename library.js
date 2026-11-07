@@ -38,7 +38,8 @@
  *             its own shelf, opened below the work in its box; a private one for members only
  *   thumb     an image for its cover: a path from the page, or a link. Without one, a public image file
  *             is its own cover, and otherwise a cover is drawn from the kind
- *   tags      [word], for the filter
+ *   tags      [word], for the filter and the box. Members of the annotation group add and take off tags in the box,
+ *             for the group: see N.itemTags in notes.js
  *   relevance 'about', 'section', 'mention' or 'unread': an order, the first shown where any entry has it, and a filter
  *   key       a number (1, 2, 3…): a key work, marked as one, and ahead of the groups in that order. Members of the
  *             annotation group add and take off the mark in the box, for the group: see N.itemKeys in notes.js
@@ -390,6 +391,28 @@
   }
   function isPreprint(e) { return /^pre-?print$/i.test(String(e.kind || '').trim()); }
   function ppBadge(e) { return isPreprint(e) ? '<span class="lib-pp" title="A preprint, before or outside publication">Preprint</span>' : ''; }
+  // the list's tags with the group's over them
+  var TM = {}, TMINE = {}, TS = '{}';
+  function tagsOf(e) {
+    var own = TM[e.id] || {}, out = (e.tags || []).map(String).filter(function (w) { return !own[w] || own[w].on; });
+    Object.keys(own).forEach(function (w) { if (own[w].on && out.indexOf(w) < 0) out.push(w); });
+    return out;
+  }
+  L.tagsOf = tagsOf;
+  function setTags(t) {
+    Object.keys(TMINE).forEach(function (id) {
+      t[id] = t[id] || {};
+      Object.keys(TMINE[id]).forEach(function (w) { if (!t[id][w] || String(t[id][w].date) < String(TMINE[id][w].date)) t[id][w] = TMINE[id][w]; });
+    });
+    var sig = JSON.stringify(t), moved = sig !== TS;
+    TM = t; TS = sig;
+    return moved;
+  }
+  function allTags() {
+    var seen = {};
+    L.items().forEach(function (e) { tagsOf(e).forEach(function (w) { seen[w] = 1; }); });
+    return Object.keys(seen).sort(AZ);
+  }
   function marksOf(e) { return ppBadge(e) + (keyOf(e) < Infinity ? '<span class="lib-key" title="A key work">Key work</span>' : ''); }
   // a picture that will not load leaves the drawn cover under it
   function tile(e) {
@@ -442,7 +465,7 @@
     if (f === 'lang') return e.lang ? [String(e.lang)] : [];
     if (f === 'rating') return [ratingBand(e)];
     if (f === 'relevance') return REL_NAMES[e.relevance] ? [e.relevance] : [];
-    return (e.tags || []).map(String);
+    return tagsOf(e);
   }
   function facetsOn() { return Object.keys(F.facets).some(function (f) { return Object.keys(F.facets[f] || {}).length; }); }
   function inFacets(e, skip) {
@@ -478,7 +501,7 @@
       if (F.show === 'added' && !isAdded(e)) return false;
       if (F.show === 'noted' && !NC[e.id]) return false;
       if (!inFacets(e, skip)) return false;
-      if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, L.langName(e.lang), (e.tags || []).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
+      if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, L.langName(e.lang), tagsOf(e).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
   }
@@ -488,6 +511,7 @@
   function paintCounts(view) {
     var N = itemNotes(); if (!N) return;
     if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
+    if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemRatings) N.itemRatings().then(function (r) {
       var sig = JSON.stringify(r), moved = sig !== NRS;
       NR = r; NRS = sig;
@@ -628,6 +652,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
+        'Members of the group add <b>tags</b> to a work in its box, and take them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
         '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
@@ -725,6 +750,7 @@
         (boxCover ? '<div class="lib-head"><img class="lib-boxcover" src="' + esc(boxCover) + '" alt="" referrerpolicy="no-referrer"><div class="lib-head-t">' : '') +
         '<div class="lib-cite"><span class="lib-cite-t">' + cite.html + '</span> <button class="btn ghost" data-a="cite" title="Copy this citation">Copy</button></div>' +
         (rec ? '<dl class="lib-rec">' + rec + '</dl>' : '') +
+        '<div class="lib-tags"></div>' +
         (boxCover ? '</div></div>' : '') +
         (canOpen ? '<div class="lib-file" data-k="' + k + '"><p class="hint">Opening the file…</p></div>' :
           priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' + (player || '') :
@@ -739,10 +765,41 @@
       }
       paintKey();
       if (canRate()) itemNotes().itemKeys().then(function (k) { setKeys(k); paintKey(); }, function () {});
+      function paintTags() {
+        var at = SW.$('.lib-tags', d), can = canRate(), ws = tagsOf(e), was = SW.$('.lib-taginput', d), typed = was ? was.value : '';
+        if (!at) return;
+        at.hidden = !ws.length && !can;
+        at.innerHTML = (ws.length || can ? '<span class="lib-tags-h">Tags</span>' : '') + ws.map(function (w) {
+          return '<span class="lib-tag">' + esc(w) + (can ? '<button type="button" data-tagoff="' + esc(w) + '" title="Take this tag off, for the group" aria-label="Take off ' + esc(w) + '">×</button>' : '') + '</span>';
+        }).join('') + (can ? '<input class="lib-taginput" list="lib-alltags" placeholder="Add a tag" aria-label="Add a tag" value="' + esc(typed) + '"><datalist id="lib-alltags">' + allTags().map(function (w) { return '<option value="' + esc(w) + '">'; }).join('') + '</datalist>' : '');
+      }
+      function changeTag(word, on) {
+        return itemNotes().setItemTag(e.id, word, on).then(function () {
+          TMINE[e.id] = TMINE[e.id] || {};
+          TMINE[e.id][word] = { on: on, date: new Date().toISOString(), by: 'you' };
+          setTags(JSON.parse(JSON.stringify(TM)));
+          paintTags();
+          var v1 = SW.$('#view-library'); if (v1 && SW.$('.lib-list', v1)) list(v1);
+        }, function (err) { if (err.message !== 'no initials') SW.toast(err.message, 5000); });
+      }
+      paintTags();
+      if (canRate()) itemNotes().itemTags().then(function (t) { setTags(t); paintTags(); }, function () {});
+      d.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter' || !ev.target.classList || !ev.target.classList.contains('lib-taginput')) return;
+        ev.preventDefault();
+        var inp = ev.target, typed = inp.value.replace(/\s+/g, ' ').trim();
+        if (!typed) return;
+        // the spelling already in use, whatever the case
+        var same = allTags().filter(function (w) { return w.toLowerCase() === typed.toLowerCase(); })[0] || typed;
+        if (tagsOf(e).indexOf(same) >= 0) { inp.value = ''; return; }
+        inp.value = '';
+        changeTag(same, true).then(function () { var again = SW.$('.lib-taginput', d); if (again) again.focus(); });
+      });
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-boxcover')) ev.target.remove(); }, true);
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
+        var tf = ev.target.closest('[data-tagoff]'); if (tf) { changeTag(tf.dataset.tagoff, false); return; }
         var kb = ev.target.closest('[data-a="key"]');
         if (kb) {
           var want = !(keyOf(e) < Infinity), N0 = itemNotes();

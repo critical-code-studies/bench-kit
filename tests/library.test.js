@@ -412,6 +412,7 @@
     return N.itemPanel(el, 'P-AAAAA', { host: host, rate: true }).then(function () {
       T.yes('the panel draws, open for a member', el.querySelector('details[open] textarea'));
       el.querySelector('textarea').value = 'At this moment.';
+      if (el.querySelector('.md-rich')) el.querySelector('.md-rich').textContent = 'At this moment.';
       el.querySelector('.in-at').value = '12:46';
       el.querySelector('[data-in="save"]').click();
       return wait(40);
@@ -437,6 +438,7 @@
       T.yes('its label names the item', /P-AAAAA/.test(N.labelOf({ vid: 'item:P-AAAAA', by: 'TT' })));
       // the reply goes to the same item
       el.querySelector('[data-act="reply"]').click();
+      T.eq('nothing left in the box after adding a note', [el.querySelector('.in-new textarea').value, el.querySelector('.in-new .md-rich') ? el.querySelector('.in-new .md-rich').textContent : ''], ['', '']);
       var box = el.querySelector('.reply-box'); box.querySelector('textarea').value = 'And a reply.'; box.querySelector('[data-r="save"]').click();
       return wait(60);
     }).then(function () {
@@ -574,7 +576,7 @@
                   var x2 = box();
                   T.yes('in the record', /About it/.test(x2.querySelector('.lib-rec').textContent));
                   x2.close();
-                  B.library = { items: [{ id: 'K-1', title: 'Listed key', key: 1 }, { id: 'K-2', title: 'Plain' }, { id: 'K-3', title: 'Early', kind: 'preprint', key: 2 }] };
+                  B.library = { items: [{ id: 'K-1', title: 'Listed key', key: 1, tags: ['listed'] }, { id: 'K-2', title: 'Plain' }, { id: 'K-3', title: 'Early', kind: 'preprint', key: 2 }] };
                   return load().then(function () { return SW.library.load(); });
                 }).then(function () {
                   SW.views.library.show();
@@ -592,6 +594,7 @@
                 }).then(function () {
                   var x3 = box();
                   T.eq('in the box, and no button without the group', [x3.querySelectorAll('.lib-dmarks .lib-key').length, x3.querySelectorAll('[data-a="key"]').length], [1, 0]);
+                  T.eq('tags shown, with no way to change them without the group', [x3.querySelectorAll('.lib-tag').length, x3.querySelectorAll('[data-tagoff]').length, x3.querySelectorAll('.lib-taginput').length], [1, 0, 0]);
                   x3.close();
                   SW.store.set('token', 'x'); N.forget();
                   return SW.library.open('K-2').then(function () { return wait(60); });
@@ -624,6 +627,36 @@
                   return N.itemKeys();
                 }).then(function (k2) {
                   T.eq('the latest mark counts, whoever made it', k2['K-1'] && k2['K-1'].on, true);
+                  return SW.library.open('K-2').then(function () { return wait(60); });
+                }).then(function () {
+                  var x6 = box(), inp = x6.querySelector('.lib-taginput');
+                  inp.value = '  early   work ';
+                  inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+                  return wait(150).then(function () {
+                    T.eq('a tag, kept in the group', rows.filter(function (a) { return a.text === 'tag:on:early work'; }).length, 1);
+                    T.eq('shown, and read by the filter and search', [x6.querySelectorAll('.lib-tag').length, SW.library.tagsOf(SW.library.items()[1])], [1, ['early work']]);
+                    x6.querySelector('.lib-taginput').value = 'LISTED';
+                    x6.querySelector('.lib-taginput').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+                    return wait(150);
+                  }).then(function () {
+                    T.eq('the spelling in use, whatever the case', rows.filter(function (a) { return a.text === 'tag:on:listed'; }).length, 1);
+                    x6.querySelector('[data-tagoff="early work"]').click();
+                    return wait(150);
+                  }).then(function () {
+                    T.eq('taken off', [rows.filter(function (a) { return a.text === 'tag:off:early work'; }).length, SW.library.tagsOf(SW.library.items()[1])], [1, ['listed']]);
+                    x6.close();
+                    return SW.library.open('K-1').then(function () { return wait(60); });
+                  });
+                }).then(function () {
+                  var x7 = box();
+                  x7.querySelector('[data-tagoff="listed"]').click();
+                  return wait(150).then(function () {
+                    T.eq('a tag from the list can be taken off', SW.library.tagsOf(SW.library.items()[0]), []);
+                    x7.close();
+                    return N.itemCounts();
+                  });
+                }).then(function (c4) {
+                  T.eq('tags are not counted as notes', c4['K-2'], undefined);
                 });
               });
             });

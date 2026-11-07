@@ -170,6 +170,15 @@ A key work carries a **Key work** badge on its cover, in the list and in its box
 
 To show a mark to every reader, set `key` in `library.json`. A bench with no annotation group has no button. The box does not change the order of key works: edit the numbers in `key` for that.
 
+## Tags
+
+An entry's tags show in its box, and **Filters** and the search read them. There are two sources, as for key works:
+
+- `tags` in `library.json`, which every reader sees.
+- The tags members add in the box with the group's Hypothesis token, one at a time with Enter, and suggested from those in use. Each is an annotation in the group (`tag:on:word`, `tag:off:word`), so members see it and readers outside the group do not. Any member can take off a tag, including one from `library.json`, and the latest counts.
+
+To show a tag to every reader, put it in `library.json`. A bench with no annotation group shows its tags with no way to change them.
+
 ## Preprints
 
 An entry with `kind: 'preprint'` carries a **Preprint** badge on its cover, in the list and in its box. A preprint kept beside its published version is a second entry, with the note on each naming the other.

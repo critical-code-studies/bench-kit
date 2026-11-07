@@ -21,7 +21,8 @@
  * reaction with no parent: the text ★1 to ★3, or the emoji. N.itemRatings() { code: { avg, n } }.
  * A key work mark is the same kind of reaction, key:on or key:off. Hypothesis lets a person delete only their own
  * annotations, so taking off someone else's mark is a new one, and the latest counts. N.itemKeys() { code: { on, date, by } };
- * N.setItemKey(code, on).
+ * N.setItemKey(code, on). A tag is kept the same way, tag:on:word or tag:off:word: N.itemTags() { code: { word: { on, date, by } } };
+ * N.setItemTag(code, word, on).
  * N.listAll leaves them out unless opts.items, since the other views read a version from each note.
  */
 (function (root) {
@@ -352,7 +353,7 @@
     var what = N.isReaction(n) && (OPEN[n.text] || DONE[n.text]) ? (DONE[n.text] ? 'resolved ' : OPEN[n.text] === 'help' ? 'asked for help on ' : 'marked open ') + (par ? par.by + '’s annotation' : 'an annotation') : N.isReaction(n) ? n.text + ' on ' + (par ? par.by + '’s annotation' : 'an annotation') : n.parent ? 'reply to ' + (par ? par.by : 'an annotation') : n.anchor ? 'annotation' : 'annotation on the version';
     if (isItem(n.vid) && !N.isReaction(n)) what = n.parent ? 'reply on a note on' : 'note on';
     if (pageOf) what = 'rated ' + pageOf.slice(5) + ' ' + String(n.text).split(/\s/)[0];
-    if (isItem(n.vid) && N.isReaction(n) && !n.parent) what = n.text === 'key:on' ? 'marked as a key work' : n.text === 'key:off' ? 'took the key work mark off' : (/^★/.test(n.text) ? 'rated ' : 'reacted ') + n.text + ' on';
+    if (isItem(n.vid) && N.isReaction(n) && !n.parent) what = n.text === 'key:on' ? 'marked as a key work' : n.text === 'key:off' ? 'took the key work mark off' : /^tag:on:/.test(n.text) ? 'tagged “' + n.text.slice(7) + '”' : /^tag:off:/.test(n.text) ? 'took the tag “' + n.text.slice(8) + '” off' : (/^★/.test(n.text) ? 'rated ' : 'reacted ') + n.text + ' on';
     var toYou = !N.isReaction(n) && N.mentions(n, SW.me().initials), mine = toMine(n, byId);
     if (mine) what = (N.isReaction(n) ? n.text + ' on' : n.parent === mine.id ? 'replies to' : 'replies under') + ' your ' + (isFinding(mine) ? 'finding' : 'annotation') + ' ' + N.code(mine).replace(/^A-/, isFinding(mine) ? 'C-' : 'A-');
     var root0 = par; while (root0 && root0.parent && byId[root0.parent]) root0 = byId[root0.parent];
@@ -1400,6 +1401,19 @@
       return out;
     });
   };
+  N.itemTags = function () {
+    return N.itemNotes().then(function (all) {
+      var out = {};
+      all.filter(function (n) { return N.isReaction(n) && !n.parent && /^tag:(on|off):./.test(n.text); })
+        .sort(function (a, b) { return String(a.date) < String(b.date) ? -1 : 1; })
+        .forEach(function (n) {
+          var c = N.itemCode(n.vid), m = /^tag:(on|off):([\s\S]+)$/.exec(n.text);
+          (out[c] = out[c] || {})[m[2]] = { on: m[1] === 'on', date: n.date, by: n.by };
+        });
+      return out;
+    });
+  };
+  N.setItemTag = function (code, word, on) { return N.create({ vid: 'item:' + code, kind: 'reaction', text: 'tag:' + (on ? 'on:' : 'off:') + word, tags: [], quiet: true }); };
   N.setItemKey = function (code, on) { return N.create({ vid: 'item:' + code, kind: 'reaction', text: on ? 'key:on' : 'key:off', tags: [], quiet: true }); };
   // the latest rating from each person
   function starsOf(rs) {
@@ -1523,7 +1537,7 @@
       var ty = SW.$('.in-type', el);
       b.disabled = true;
       N.create({ vid: vid, kind: 'item', at: at || (sel ? 'q' : null), quote: sel, text: text, tags: ty && ty.value ? ['type:' + ty.value] : [] }).then(function () {
-        b.disabled = false; ta.value = ''; atIn.value = ''; setQuote('');
+        b.disabled = false; ta.value = ''; if (ta._mdReset) ta._mdReset(); atIn.value = ''; setQuote('');
       }, function (err) { b.disabled = false; if (err.message !== 'no initials') SW.toast(err.message, 5000); });
     });
     if (SW.on) SW.on('notes', function (v) { if (v === vid && el.isConnected) draw(); });
