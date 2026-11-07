@@ -159,7 +159,17 @@ The entry and its note stay as written. The record goes from `catalogue.json` in
 
 ## Sharing an entry
 
-**Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac) with the entry's title and a link that opens its box. A browser with no share sheet, such as Firefox, copies the link. **Copy link** stays beside it.
+**Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac) with the entry's title and a link that opens its box. A browser with no share sheet, such as Firefox, copies the link. **Copy link** stays beside it and gives the same link.
+
+Posted in a chat or on social media, the link shows one preview card for the whole Library, such as "Melville Library". `tools/release.js` writes it into `library/index.html` at each release, and that page sends a person on to the entry. A release needs `base` in `js/config.js`, or an `og:url` in `index.html`, to write it. Until the page exists, links go straight to the bench.
+
+| On the card | Comes from, in order |
+|---|---|
+| Title | `library.card.title`, then the bench's `name` and `library.label` |
+| Description | `library.card.description`, `library.intro`, then the `intro` in `library.json` |
+| Image | `library.card.image`, the `og:image` in `index.html`, then a shelf of books from the kit |
+
+An image should be 1200 by 630 pixels. Sites keep a card for a while, so a changed card can take time to show.
 
 ## A large library
 

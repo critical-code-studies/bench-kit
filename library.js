@@ -12,7 +12,8 @@
  * manifest is public, so everyone sees every entry's record, and a private entry's shelf and file path
  * are in it; without a token the entry shows its record and its link out.
  * SW.BENCH.library: true (the manifest at library/library.json), or
- *   { url, label, intro, items, load, private, view, order, size }: url the manifest (from the page); items the entries given here
+ *   { url, label, intro, items, load, private, view, order, size, card }: card { title, description, image } for
+ *   the preview card that tools/release.js writes into library/index.html; url the manifest (from the page); items the entries given here
  *   instead; load() a promise of the manifest (a bench that makes it from another list, such as a
  *   translation's corpus/SOURCES.md); label the tab's name (Library); intro HTML above the list; view, order and
  *   size what a reader sees first ('icons' or 'list'; 'author', 'title', 'new', 'old', 'kind', 'lang' or
@@ -653,7 +654,16 @@
   };
 
   // ---------- an entry, in a box over the bench ----------
+  // the Library's own page with its preview card (tools/release.js): links to an entry go through it once it is there
+  var cardPage = null;
+  function checkCard() {
+    if (cardPage !== null) return;
+    cardPage = false;
+    fetch('library/index.html', { method: 'HEAD', cache: 'no-store' }).then(function (r) { cardPage = r.ok; }, function () {});
+  }
+  function linkTo(id) { return cardPage ? SW.BASE_URI + 'library/?lib=' + encodeURIComponent(id) : SW.permalink({ tab: 'library', lib: id }); }
   L.open = function (id) {
+    checkCard();
     return L.load().then(function () {
       var e = byId(id);
       if (!e) { SW.toast('No entry ' + id + ' in the library.', 3000); return; }
@@ -684,8 +694,8 @@
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
-        if (ev.target.closest('[data-a="share"]')) { SW.share({ title: e.title, url: SW.permalink({ tab: 'library', lib: e.id }) }); return; }
-        if (ev.target.closest('[data-a="link"]')) { SW.copyText(SW.permalink({ tab: 'library', lib: e.id }), 'the link'); return; }
+        if (ev.target.closest('[data-a="share"]')) { SW.share({ title: e.title, url: linkTo(e.id) }); return; }
+        if (ev.target.closest('[data-a="link"]')) { SW.copyText(linkTo(e.id), 'the link'); return; }
         if (ev.target.closest('[data-a="cite"]')) { SW.copyText(cite.text, 'the citation'); return; }
         var pl = ev.target.closest('[data-play]');
         if (pl) {

@@ -2,8 +2,8 @@
 /*
  * tools/release.js - a bench's release: its version raised on every script and stylesheet
  * (the ?v= in its pages) and its date (the bench-date meta) set to the day, a line in its
- * changelog, the version in its README, the DOI badge at the README's foot (from about.doi), and the
- * kit moved to a release if asked; then a check for conflict markers. It changes files only: committing and pushing stay with you. Run from
+ * changelog, the version in its README, the DOI badge at the README's foot (from about.doi), the Library's
+ * page with its preview card (library/index.html, for a bench with a Library), and the kit moved to a release if asked; then a check for conflict markers. It changes files only: committing and pushing stay with you. Run from
  * the bench's repository:
  *
  *   node research/kit/tools/release.js next "What changed."           raise the last number
@@ -157,6 +157,54 @@ if (!NOLOG) {
     const t = keep.join('\n').replace(/\s+$/, '') + '\n\n' + badge + '\n';
     if (t !== s) { write(readme, t); changes.push(readme + ': the DOI badge at the foot'); }
   } else if (!A.doi) console.log('No DOI: set about.doi in js/config.js once Zenodo has archived a GitHub Release (https://zenodo.org/account/settings/github/; the kit\'s README, "A bench\'s DOI").');
+}
+
+// the Library's own page, for the preview card a site shows when a link is posted. Every tab is one page and a
+// site's reader runs no script, so the card needs a page of its own, which sends a person on to the entry.
+{
+  let B = {}, SWx = {};
+  try {
+    const vm = require('vm'), sb = { SW: {} }; sb.window = sb; sb.globalThis = sb;
+    vm.runInNewContext(fs.readFileSync(path.join(dir, 'js', 'config.js'), 'utf8'), sb);
+    SWx = sb.SW; B = sb.SW.BENCH || {};
+  } catch (e) { /* no config.js, or one that needs the page */ }
+  if (B.library) {
+    const C = B.library === true ? {} : B.library, K = C.card || {}, html = fs.readFileSync(page, 'utf8');
+    const tag = (name) => { const m = new RegExp('property="og:' + name + '" content="([^"]*)"').exec(html); return m ? m[1] : ''; };
+    const base = B.base || SWx.BASE_URI || tag('url');
+    if (base) {
+      let man = {};
+      try { man = JSON.parse(fs.readFileSync(path.join(dir, 'library', 'library.json'), 'utf8')); } catch (e) { /* no manifest yet */ }
+      const attr = (s) => String(s).replace(/&(?!#?\w+;)/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const plain = (s) => String(s || '').replace(/<\/?(?:p|div|br|li|ul|ol|h\d)\b[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      const title = K.title || ((B.name || B.title || 'The') + ' ' + (C.label || 'Library'));
+      let desc = plain(K.description || C.intro || man.intro);
+      if (desc.length > 200) desc = desc.slice(0, 200).replace(/\s+\S*$/, '') + '…';
+      const root = base.replace(/\/?$/, '/'), abs = (u) => /^https?:/.test(u) ? u : root + u;
+      const ownImage = K.image || tag('image'), image = abs(ownImage || 'kit/docs/img/library-card.jpg');
+      const out = '<!doctype html>\n<!-- Written by the kit\'s tools/release.js: edit library.card in js/config.js, not this. -->\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
+        '<title>' + attr(title) + '</title>\n' +
+        (desc ? '<meta name="description" content="' + attr(desc) + '">\n' : '') +
+        '<meta property="og:title" content="' + attr(title) + '">\n' +
+        (desc ? '<meta property="og:description" content="' + attr(desc) + '">\n' : '') +
+        '<meta property="og:type" content="website">\n<meta property="og:url" content="' + attr(root + 'library/') + '">\n' +
+        '<meta property="og:image" content="' + attr(image) + '">\n' +
+        (ownImage ? '' : '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n') +
+        '<meta property="og:image:alt" content="' + attr(title) + '">\n' +
+        '<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="' + attr(title) + '">\n' +
+        (desc ? '<meta name="twitter:description" content="' + attr(desc) + '">\n' : '') +
+        '<meta name="twitter:image" content="' + attr(image) + '">\n' +
+        '<script>var m = /[?&]lib=([^&#]*)/.exec(location.search); location.replace(\'../?tab=library\' + (m ? \'&lib=\' + m[1] : \'\'));</script>\n' +
+        '<noscript><meta http-equiv="refresh" content="0; url=../?tab=library"></noscript>\n</head>\n' +
+        '<body><p><a href="../?tab=library">' + attr(title) + '</a></p></body>\n</html>\n';
+      const to = path.join(dir, 'library', 'index.html');
+      if (!fs.existsSync(to) || fs.readFileSync(to, 'utf8') !== out) {
+        if (!DRY) fs.mkdirSync(path.dirname(to), { recursive: true });
+        write(to, out);
+        changes.push(to + ': the Library\'s preview card');
+      }
+    } else console.log('No preview card for the Library: set base in js/config.js to the address the bench is published at.');
+  }
 }
 
 console.log((DRY ? 'would release ' : 'released ') + cur + ' → ' + next + ', bench-kit ' + kv + ':\n' + changes.map((c) => '  ' + c).join('\n'));

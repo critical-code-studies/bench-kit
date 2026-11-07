@@ -509,6 +509,17 @@
             T.eq('Share: the title and a link to the box', [shared.length, shared[0] && shared[0].title, /lib=P-AAAAA/.test(shared[0] && shared[0].url)], [1, 'Rated', true]);
             T.eq('and no file', shared[0] && shared[0].files, undefined);
             d.close();
+            var f1 = window.fetch;
+            window.fetch = function (u, o) { return /library\/index\.html/.test(String(u)) ? Promise.resolve(new Response('', { status: 200 })) : f1.apply(window, arguments); };
+            return load().then(function () { return SW.library.load(); }).then(function () { return SW.library.open('P-AAAAA'); }).then(function () { return wait(30); }).then(function () { return SW.library.open('P-AAAAA'); }).then(function () { return wait(30); }).then(function () {
+              var d2 = box(); shared.length = 0;
+              d2.querySelector('[data-a="share"]').click();
+              return wait(30).then(function () {
+                T.yes('through the card page, once it is there', /library\/\?lib=P-AAAAA$/.test(shared[0] && shared[0].url));
+                document.querySelectorAll('dialog.lib-dlg').forEach(function (x) { x.close(); });
+                window.fetch = f1;
+              });
+            });
           });
         }).then(unstub, function (e) { unstub(); throw e; });
       });
