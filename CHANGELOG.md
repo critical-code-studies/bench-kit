@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A Preprint badge in the Library** (David, 2026-11-07, through ELIZA), on the cover, in the list and in the box, for an entry with `kind: 'preprint'`. No new field.
+
 ## 1.7.0 (2026-11-07)
 
 - `tools/release.js --kit` hands the release to the tool in the kit it has just moved to, so a new step runs on that move (SHRDLU's report on 1.6.0). The old tool still runs on a move to this release itself. The card's description ends at a whole sentence where the first fits in 200 characters.

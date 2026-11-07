@@ -1285,6 +1285,10 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-side { min-width: 0; }
 .in-rate { margin: 0 0 8px; }
 .lib-rt { white-space: nowrap; color: var(--text-dim); }
+.lib-pp { display: inline-block; flex: none; margin-right: 7px; padding: 1px 6px; border-radius: 3px; background: #b45309; color: #fff; font: 700 10px/1.5 var(--sans, system-ui, sans-serif); letter-spacing: 0.5px; text-transform: uppercase; vertical-align: 1px; white-space: nowrap; }
+.lib-stand .lib-pp { position: absolute; z-index: 1; top: 19px; left: calc(50% - var(--cw) / 2 + 7px); margin: 0; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.lib-s .lib-stand .lib-pp { top: 16px; left: calc(50% - var(--cw) / 2 + 4px); padding: 0 4px; font-size: 8px; }
+.lib-has-pp .lib-c-k { visibility: hidden; }
 .lib-nb { display: inline-block; font: 11px var(--mono); padding: 0 5px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-dim); }
 .lib-stand .lib-nb { position: absolute; top: 4px; right: 18px; background: var(--surface); }
 .lib-t .lib-nb { margin-left: 8px; font-weight: 400; }

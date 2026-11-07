@@ -157,6 +157,10 @@ node research/kit/tools/library-move.js ../my-paratexts --adopt P-AAAAA,P-BBBBB 
 
 The entry and its note stay as written. The record goes from `catalogue.json` into `library/moved.json`, and its files stay where they are in the private repository, for `--back`. `--back` then restores the record and takes out the entry and any public copies the entry named.
 
+## Preprints
+
+An entry with `kind: 'preprint'` carries a **Preprint** badge on its cover, in the list and in its box. A preprint kept beside its published version is a second entry, with the note on each naming the other.
+
 ## Sharing an entry
 
 **Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac) with the entry's title and a link that opens its box. A browser with no share sheet, such as Firefox, copies the link. **Copy link** stays beside it and gives the same link.

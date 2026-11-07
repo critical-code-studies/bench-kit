@@ -532,6 +532,24 @@
                   return covers('C-NONE');
                 }).then(function (n) {
                   T.eq('no thumb, no cover', n, [0, 0]);
+                  B.library = { items: [{ id: 'C-PRE', title: 'Early', kind: 'Preprint' }, { id: 'C-ART', title: 'Later', kind: 'article' }] };
+                  return load().then(function () { return SW.library.load(); });
+                }).then(function () {
+                  SW.views.library.show();
+                  return wait(60);
+                }).then(function () {
+                  var vp = document.getElementById('view-library');
+                  function pp(id) { var x = vp.querySelector('[data-lib="' + id + '"]'); return x ? x.querySelectorAll('.lib-pp').length : null; }
+                  T.eq('a preprint badged on its cover, and no other', [pp('C-PRE'), pp('C-ART')], [1, 0]);
+                  vp.querySelector('[data-libview="list"]').click();
+                  T.eq('and in the list', [pp('C-PRE'), pp('C-ART')], [1, 0]);
+                  vp.querySelector('[data-libview="icons"]').click();
+                  SW.store.set('library.view', '');
+                  return SW.library.open('C-PRE').then(function () { return wait(20); });
+                }).then(function () {
+                  var x = box();
+                  T.eq('and in its box', x.querySelectorAll('.tray-bighead .lib-pp').length, 1);
+                  x.close();
                 });
               });
             });
