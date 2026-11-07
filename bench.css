@@ -1292,6 +1292,7 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-sizes[hidden] { display: none; }
 .note-draft { display: inline-block; padding: 0 5px; border: 1px dashed var(--amber); border-radius: 3px; color: var(--amber); font-size: 11px; }
 .in-fail { margin: 0 0 8px; }
+.in-fail-t { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
 .lib-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 0 0 12px; font-size: 13px; }
 .lib-tags[hidden] { display: none; }
 .lib-rel { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; color: var(--text-faint); font-size: 14px; }

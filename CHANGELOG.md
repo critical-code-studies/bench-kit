@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- A failed read in a Library entry's box now says "Notes not updated." (David, 2026-11-08), with Try again; the reason is in its tooltip.
+- A failed read in a Library entry's box now says NOTES NOT UPDATED in small capitals (David, 2026-11-08), with Try again; the reason is in its tooltip.
 
 ## 1.8.6 (2026-11-07)
 
