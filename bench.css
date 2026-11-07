@@ -1308,6 +1308,10 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-s .lib-marks { top: 16px; left: calc(50% - var(--cw) / 2 + 4px); width: calc(var(--cw) - 8px); }
 .lib-s .lib-marks .lib-pp, .lib-s .lib-marks .lib-key { padding: 0 4px; font-size: 8px; }
 .lib-has-mark .lib-c-k { visibility: hidden; }
+/* a cover with no kind label, as a book's: room above the title for the badge */
+.lib-has-mark .lib-cover:not(:has(.lib-c-k)) { padding-top: 30px; }
+.lib-s .lib-has-mark .lib-cover:not(:has(.lib-c-k)) { padding-top: 20px; }
+.lib-l .lib-has-mark .lib-cover:not(:has(.lib-c-k)) { padding-top: 32px; }
 .lib-nb { display: inline-block; font: 11px var(--mono); padding: 0 5px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-dim); }
 .lib-stand .lib-nb { position: absolute; top: 4px; right: 18px; background: var(--surface); }
 .lib-t .lib-nb { margin-left: 8px; font-weight: 400; }
