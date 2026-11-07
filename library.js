@@ -421,9 +421,9 @@
       '<span class="lib-c-t">' + esc(e.title) + '</span>' + (f === 'web' && !e.author && host(e.url) ? '<span class="lib-c-a">' + esc(host(e.url)) + '</span>' : who) + '</span>';
   }
   // ---------- To read: loans to this reader ----------
-  var STAMP = ['JA', 'FE', 'MR', 'AP', 'MY', 'JE', 'JL', 'AG', 'SE', 'OC', 'NO', 'DE'];
   function today() { return new Date().toISOString().slice(0, 10); }
-  function stampOf(day) { if (!day) return 'NO DATE'; var d = new Date(day + 'T00:00:00Z'); return STAMP[d.getUTCMonth()] + ' ' + d.getUTCDate() + " '" + String(d.getUTCFullYear()).slice(2); }
+  // on a card: NOV 07 26
+  function stampOf(day) { if (!day) return 'NO DATE'; var d = new Date(day + 'T00:00:00Z'), two = function (n) { return (n < 10 ? '0' : '') + n; }; return MON3[d.getUTCMonth()] + ' ' + two(d.getUTCDate()) + ' ' + two(d.getUTCFullYear() % 100); }
   // on a cover: DUE DEC 7
   var MON3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   function dueShort(day) { var d = new Date(day + 'T00:00:00Z'); return MON3[d.getUTCMonth()] + ' ' + d.getUTCDate(); }
@@ -791,6 +791,10 @@
   }
   function canRate() { var N = itemNotes(); return !!(N && N.configured()); }
   function canSortRating() { return canRate() || Object.keys(NR).length > 0; }
+  // the intro under the tab's title: its first sentence, small; the whole in the tooltip
+  function introText(html) { try { return new DOMParser().parseFromString(String(html), 'text/html').body.textContent.replace(/\s+/g, ' ').trim(); } catch (e) { return String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); } }
+  function firstSentence(t) { var m = /^[\s\S]*?[.!?](?=\s|$)/.exec(t); return m ? m[0] : t; }
+  L.firstSentence = firstSentence;
   function draw() {
     var view = SW.$('#view-library'); if (!view) return;
     view.innerHTML = '<p class="hint pad">Reading the library…</p>';
@@ -803,7 +807,7 @@
       if (hasRel && (F.order === 'listed' || (!SW.store.get('library.order', '') && !C.order))) F.order = 'relevance';
       if (!hasRel && F.order === 'relevance') F.order = C.order && C.order !== 'relevance' ? C.order : 'author';
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
-        ((C.intro || m.intro) ? '<div class="lib-intro">' + (C.intro || m.intro) + '</div>' : '') +
+        ((C.intro || m.intro) ? '<div class="lib-intro" title="' + esc(introText(C.intro || m.intro)) + '">' + esc(firstSentence(introText(C.intro || m.intro))) + '</div>' : '') +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).concat([['loans', 'To read']]).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +

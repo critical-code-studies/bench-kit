@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- The Library's intro under its title is its first sentence, in small type, with the whole in the tooltip (David, 2026-11-08). A bench can shorten its `intro` to one brief sentence.
+- A library card's dates read NOV 07 26 (David, 2026-11-08).
+
 ## 1.8.8 (2026-11-07)
 
 - **A To read shelf in the Library** (David, 2026-11-08): a reader checks a work out from its box for one, two or three months; its cover carries a due stamp. **To read** shows a library card for each work, after the cards in a book's pocket, where a loan is renewed as often as wanted, given no date, or returned; past its date a work goes back. Below the cards, a reading log of every work the reader has had out with their own rating, and **Your notes**, a box of the notes they have written on works in the library. Kept in the reader's browser, and with the group's token synced through Hypothesis as annotations the group can read, so a work's card and box show the other members who have it out (David, 2026-11-08). `N.create` takes `private`; `N.itemLoans`, `N.setLoan` in `notes.js`; the snapshot tool never publishes an annotation the group cannot read.

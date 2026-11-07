@@ -1237,7 +1237,7 @@ ul.reading a { overflow-wrap: anywhere; }
 /* kit/library.js: the Library, and an entry in a box over the bench */
 #view-library .lib { padding: 16px clamp(12px, 3vw, 32px) 80px; }
 #view-library .lib h2 { margin: 0 0 6px; }
-.lib-intro { color: var(--text-dim); margin: 0 0 12px; max-width: 48em; }
+.lib-intro { color: var(--text-dim); margin: 0 0 10px; max-width: 48em; font-size: 12px; line-height: 1.4; }
 .lib-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
 .lib-q { flex: 1 1 16em; min-width: 10em; }
 .lib-n { margin-left: auto; font-size: 12px; }

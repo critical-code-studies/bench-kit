@@ -60,6 +60,7 @@
       T.eq('any other address does not', play('https://example.org/a'), null);
       T.yes('in the frame class it is given', /class="lib-embed"/.test(play('https://vimeo.com/123') || ''));
       T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
+      T.eq('an intro to its first sentence', [L.firstSentence('One part. Two parts.'), L.firstSentence('No end'), L.firstSentence('Billy Budd: the works. More.')], ['One part.', 'No end', 'Billy Budd: the works.']);
       T.eq('a language by name, or its code', [L.langName('ja'), L.langName('simple'), L.langName('')], ['Japanese', 'simple', '']);
       T.eq('kinds a literature search uses', [{ kind: 'preprint' }, { kind: 'conference' }, { kind: 'news' }, { kind: 'magazine' }, { kind: 'encyclopedia' }].map(L.family), ['article', 'article', 'news', 'news', 'web']);
       T.eq('or from the file', [{ file: 'a.mp3' }, { file: 'a.webm' }, { file: 'a.pdf' }, { url: 'https://example.org' }].map(L.family), ['audio', 'film', 'article', 'web']);
