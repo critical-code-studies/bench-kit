@@ -494,6 +494,47 @@
       '<div class="lib-card-acts">' + (cur ? '<span>Renew for</span> <button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3 months</button><button class="btn ghost" data-ext="0" title="Keep it with no return date">No date</button> <button class="btn ghost" data-ret>Return</button> ' : '') +
       '<button class="btn ghost" data-lib="' + esc(e.id) + '">Open</button></div></article>';
   }
+  // every work this reader has had out, with their own rating where the group has one from them
+  function logHTML() {
+    var l = loans(), codes = Object.keys(l).filter(function (c) { return (l[c] || []).length && byId(c); });
+    codes.sort(function (a, b) { var x = l[a][l[a].length - 1].out, y = l[b][l[b].length - 1].out; return x < y ? 1 : x > y ? -1 : 0; });
+    var head = '<h3 class="lib-log-h">Your reading log <button class="btn ghost" data-mynotes title="The notes you have written on works in the library">Your notes</button></h3>';
+    if (!codes.length) return '<section class="lib-log">' + head + '<p class="hint">Works you check out are kept here, with your rating of each.</p></section>';
+    return '<section class="lib-log">' + head + '<table class="lib-log-t"><thead><tr><th>Work</th><th>First out</th><th>Back</th><th>Loans</th><th>Your rating</th></tr></thead><tbody>' + codes.map(function (c) {
+      var h = l[c], e = byId(c), last = h[h.length - 1], mine = NR[c] && canRate() ? myStars(NR[c]) : 0;
+      return '<tr><td><button class="lib-log-w" data-lib="' + esc(c) + '">' + esc(e.title) + '</button><span class="faint"> ' + esc(e.author || '') + '</span></td>' +
+        '<td class="mono">' + stampOf(h[0].out) + '</td><td class="mono">' + (onLoan(c) ? 'ON LOAN' : stampOf(last.back)) + '</td>' +
+        '<td>' + h.filter(function (r) { return !r.renewal; }).length + '</td>' +
+        '<td>' + (mine ? '<span class="lib-stars">' + stars(mine) + '</span>' : '<span class="faint">' + (canRate() ? 'not rated' : '') + '</span>') + '</td></tr>';
+    }).join('') + '</tbody></table></section>';
+  }
+  // the notes this reader has written on works in the library, in a box of their own
+  function showMyNotes() {
+    var N = itemNotes(), d = SW.el('dialog', { class: 'tray-big lib-dlg' });
+    d.innerHTML = '<div class="tray-bighead"><b>Your notes on works in the library</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div><div class="lib-mynotes"><p class="hint">Reading your notes…</p></div>';
+    document.body.appendChild(d);
+    d.addEventListener('close', function () { d.remove(); });
+    d.addEventListener('click', function (ev) {
+      if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
+      var r = ev.target.closest('[data-lib]'); if (r) { d.close(); L.open(r.dataset.lib); }
+    });
+    d.showModal();
+    var at = SW.$('.lib-mynotes', d);
+    if (!N) { at.innerHTML = '<p class="hint">This bench has no annotation group.</p>'; return Promise.resolve(); }
+    return N.itemNotes().then(function (all) {
+      var by = {};
+      all.filter(function (n) { return !N.isReaction(n) && N.mine(n); }).forEach(function (n) { var c = N.itemCode(n.vid); (by[c] = by[c] || []).push(n); });
+      var codes = Object.keys(by).sort(function (a, b) { return titleOf(a) < titleOf(b) ? -1 : 1; });
+      at.innerHTML = codes.length ? codes.map(function (c) {
+        return '<section class="lib-mynote-w"><button class="lib-nhead" data-lib="' + esc(c) + '"><span class="px-code mono">' + esc(c) + '</span> <b>' + esc(titleOf(c)) + '</b></button>' +
+          by[c].map(function (n) {
+            return '<div class="lib-mynote"><div class="faint">' + esc(SW.fmtDate(n.date)) + (n.parent ? ' · reply' : '') + (n.at ? ' · ' + esc(N.atLabel(n.at)) : '') + (n.source === 'draft' ? ' · <span class="note-draft">Draft: this browser only</span>' : '') + '</div>' +
+              (n.quote ? '<blockquote class="note-quote">' + esc(n.quote) + '</blockquote>' : '') + '<div class="note-md">' + SW.md(n.text) + '</div></div>';
+          }).join('') + '</section>';
+      }).join('') : '<p class="hint">You have not written notes on works in the library yet.</p>';
+    }, function (err) { at.innerHTML = '<p class="hint in-fail"><span class="in-fail-t">Notes not updated</span> ' + esc(err.message) + '</p>'; });
+  }
+  L.showMyNotes = showMyNotes;
   function paintLoanCount(view) {
     var b = SW.$('[data-show="loans"]', view); if (!b) return;
     var n = Object.keys(loans()).filter(function (c) { return onLoan(c); }).length;
@@ -717,7 +758,7 @@
       var ls = rows().sort(function (a, b) { return due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0; });
       box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
       var zl = SW.$('.lib-sizes', view); if (zl) zl.hidden = true;
-      box.innerHTML = ls.length ? '<div class="lib-cards">' + ls.map(cardOf).join('') + '</div>' : '<p class="hint pad">Nothing on your To read shelf. Open a work and check it out for one, two or three months.</p>';
+      box.innerHTML = (ls.length ? '<div class="lib-cards">' + ls.map(cardOf).join('') + '</div>' : '<p class="hint pad">Nothing on your To read shelf. Open a work and check it out for one, two or three months.</p>') + logHTML();
       var nl = SW.$('.lib-n', view); if (nl) nl.textContent = ls.length + ' to read';
       return;
     }
@@ -775,6 +816,7 @@
           if (ng && sec) { var nq = ng.dataset.at === 'q' ? ng.textContent : '', nat = ng.dataset.at; SW.notes.openItem(sec.dataset.code).then(function () { setTimeout(function () { var ds = SW.$$('dialog[open]'); SW.notes.itemGo(nat, nq, ds[ds.length - 1]); }, 800); }); return; }
           var zb = ev.target.closest('[data-libsize]'); if (zb) { setting('size', 'size', zb.dataset.libsize); SW.$$('[data-libsize]', view).forEach(function (b) { b.classList.toggle('on', b === zb); }); list(view); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
+          if (ev.target.closest('[data-mynotes]')) { showMyNotes(); return; }
           var cd = ev.target.closest('[data-card]');
           if (cd && ev.target.closest('[data-ext]')) { L.renew(cd.dataset.card, +ev.target.closest('[data-ext]').dataset.ext); list(view); return; }
           if (cd && ev.target.closest('[data-ret]')) { L.giveBack(cd.dataset.card); list(view); return; }
@@ -805,7 +847,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
-        '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. It is kept in this browser, and with the group’s Hypothesis token it follows you to your other browsers, readable by you alone.',
+        '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. Below the cards, your reading log lists every work you have had out, with your rating, and <b>Your notes</b> opens the notes you have written on works in the library. It is kept in this browser, and with the group’s Hypothesis token it follows you to your other browsers, readable by you alone.',
         'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
         '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.',

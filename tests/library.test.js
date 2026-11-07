@@ -771,6 +771,14 @@
                     T.eq('and with no date', [SW.library.onLoan('S-2').due, /NO DATE/.test(vl.querySelector('.lib-card').textContent)], [null, true]);
                     vl.querySelector('.lib-card [data-ret]').click();
                     T.eq('returned', [SW.library.onLoan('S-2'), vl.querySelectorAll('.lib-card').length], [null, 0]);
+                    T.eq('the reading log keeps it', [vl.querySelectorAll('.lib-log tbody tr').length, /Two/.test(vl.querySelector('.lib-log').textContent), vl.querySelector('.lib-log tbody td:nth-child(4)').textContent], [1, true, '1']);
+                    vl.querySelector('[data-mynotes]').click();
+                    return wait(120).then(function () {
+                      var dn = box();
+                      T.yes('your notes, in a box of their own', dn.querySelector('.lib-mynotes') && /Mine alone/.test(dn.querySelector('.lib-mynotes').textContent));
+                      dn.close();
+                    });
+                  }).then(function () {
                     var l = SW.store.get('library.loans', {});
                     l['S-3'] = [{ out: '1999-01-01', due: '2000-01-01', by: 'TT' }];
                     SW.store.set('library.loans', l);
