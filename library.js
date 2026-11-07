@@ -43,7 +43,8 @@
  *             for the group: see N.itemTags in notes.js
  * A reader checks a work out to their To read shelf for one, two or three months, renews it as often as they like
  * or takes the date away, and returns it; past its date it goes back. Kept in this browser, and for a reader with
- * the group's token also as annotations readable by them alone (N.itemLoans), so it follows them to other browsers.
+ * the group's token also as annotations the group can read (N.itemLoans), so it follows them to other browsers, and
+ * other members' loans show on the card.
  *   relevance 'essential', 'high', 'medium', 'low', 'minimal' or 'unchecked': an order, the first shown where any entry
  *             has it, and a filter. 'about', 'section', 'mention' and 'unread' from 1.8.0 read as high, medium, low, unchecked.
  *             A tag naming a level (High, Not Checked) comes before this field: the drop-down in the box writes one
@@ -450,6 +451,20 @@
     });
     return h;
   }
+  // other members' loans, from the group, for the cards and the box: { code: [rows] }
+  var OTH = {}, OS = '{}';
+  function setOthers(o) {
+    var built = {}, t = today();
+    Object.keys(o).forEach(function (c) {
+      Object.keys(o[c]).forEach(function (u) {
+        fromEvents(o[c][u].evs).forEach(function (r) { if (!r.back && r.due && r.due < t) r.back = r.due; r.other = true; (built[c] = built[c] || []).push(r); });
+      });
+    });
+    var sig = JSON.stringify(built), moved = sig !== OS;
+    OTH = built; OS = sig;
+    return moved;
+  }
+  function othersOut(id) { return (OTH[id] || []).filter(function (r) { return !r.back; }); }
   var LS = '';
   function setLoans(byCode) {
     var l = loans();
@@ -486,8 +501,8 @@
   }
   // the card in the book's pocket, after the old library cards
   function cardOf(e) {
-    var h = loans()[e.id] || [], cur = onLoan(e.id), lines = h.slice(-10).map(function (r) {
-      return '<tr class="' + (r.back ? 'lib-card-done' : '') + '"><td class="lib-card-d">' + stampOf(r.out) + '</td><td class="lib-card-who"><span>' + esc(r.by || '') + '</span></td><td class="lib-card-d">' + stampOf(r.due) + '</td></tr>';
+    var h = (loans()[e.id] || []).concat(OTH[e.id] || []).sort(function (a, b) { return a.out < b.out ? -1 : a.out > b.out ? 1 : 0; }), cur = onLoan(e.id), lines = h.slice(-10).map(function (r) {
+      return '<tr class="' + (r.back ? 'lib-card-done' : '') + (r.other ? ' lib-card-other' : '') + '"><td class="lib-card-d">' + stampOf(r.out) + '</td><td class="lib-card-who"><span>' + esc(r.by || '') + '</span></td><td class="lib-card-d">' + stampOf(r.due) + '</td></tr>';
     });
     while (lines.length < 6) lines.push('<tr><td></td><td></td><td></td></tr>');
     return '<article class="lib-card" data-card="' + esc(e.id) + '">' +
@@ -697,6 +712,7 @@
     if (!canRate()) paintRatings(view, NR);
     var N = itemNotes(); if (!N) return;
     if (N.itemLoans && canRate()) N.itemLoans().then(function (h) { if (setLoans(h) && F.view !== 'notes') list(view); }, function () {});
+    if (N.itemLoansOthers && canRate()) N.itemLoansOthers().then(function (o) { if (setOthers(o) && F.show === 'loans' && F.view !== 'notes') list(view); }, function () {});
     if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t)) afterTags(view); }, function () {});
     if (N.itemRatings && canRate()) N.itemRatings().then(function (r) {
@@ -850,7 +866,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
-        '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. Below the cards, your reading log lists every work you have had out, with your rating, and <b>Your notes</b> opens the notes you have written on works in the library. It is kept in this browser, and with the group’s Hypothesis token it follows you to your other browsers, readable by you alone.',
+        '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. Below the cards, your reading log lists every work you have had out, with your rating, and <b>Your notes</b> opens the notes you have written on works in the library. It is kept in this browser. With the group’s Hypothesis token it follows you to your other browsers and the group’s members can see it, and a work’s card and box show who else in the group has it out.',
         'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
         '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.',
@@ -966,12 +982,13 @@
       }
       paintKey();
       function paintLoan() {
-        var lb = SW.$('.lib-loanbox', d), cur = onLoan(e.id); if (!lb) return;
-        lb.innerHTML = cur ? '<span class="lib-loanst">On your To read shelf, due ' + stampOf(cur.due) + '</span> <button class="btn ghost" data-a="return">Return</button>'
-          : '<span class="lib-loanst">To read for</span> <button class="btn ghost" data-a="co" data-m="1">1</button><button class="btn ghost" data-a="co" data-m="2">2</button><button class="btn ghost" data-a="co" data-m="3" title="Check it out to your To read shelf">3 months</button>';
+        var lb = SW.$('.lib-loanbox', d), cur = onLoan(e.id), oth = othersOut(e.id); if (!lb) return;
+        lb.innerHTML = (oth.length ? '<span class="lib-loanst lib-loan-oth">Out to ' + oth.map(function (r) { return esc(r.by) + (r.due ? ' till ' + dueShort(r.due) : ''); }).join(', ') + '.</span> ' : '') + (cur ? '<span class="lib-loanst">On your To read shelf, due ' + stampOf(cur.due) + '</span> <button class="btn ghost" data-a="return">Return</button>'
+          : '<span class="lib-loanst">To read for</span> <button class="btn ghost" data-a="co" data-m="1">1</button><button class="btn ghost" data-a="co" data-m="2">2</button><button class="btn ghost" data-a="co" data-m="3" title="Check it out to your To read shelf">3 months</button>');
       }
       function afterLoan() { paintLoan(); var v2 = SW.$('#view-library'); if (v2 && SW.$('.lib-list', v2)) list(v2); }
       sweepLoans(); paintLoan();
+      if (canRate() && itemNotes().itemLoansOthers) itemNotes().itemLoansOthers().then(function (o) { setOthers(o); paintLoan(); }, function () {});
       if (canRate()) itemNotes().itemKeys().then(function (k) { setKeys(k); paintKey(); }, function () {});
       function paintTags() {
         var at = SW.$('.lib-tags', d), can = canRate(), ws = plainTags(e), was = SW.$('.lib-taginput', d), typed = was ? was.value : '', lvl = relOf(e);

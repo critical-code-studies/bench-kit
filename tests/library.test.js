@@ -794,12 +794,23 @@
                   }).then(function () {
                     function plus1() { var d = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + 1); return d.toISOString().slice(0, 10); }
                     var p = posted[posted.length - 1];
-                    T.eq('with a token, kept in the group for you alone', [p && p.text, p && p.permissions && p.permissions.read], ['loan:out:' + plus1(), ['acct:tester@hypothes.is']]);
+                    T.eq('with a token, kept in the group', [p && p.text, p && p.permissions && p.permissions.read], ['loan:out:' + plus1(), ['group:grp']]);
                     box().close();
                     SW.store.set('library.loans', {});
                     N.invalidate('item:S-1');
                     return load().then(function () { return SW.library.load(); }).then(function () { SW.views.library.show(); return wait(200); }).then(function () {
                       T.eq('and read back in another browser', SW.library.onLoan('S-1') && SW.library.onLoan('S-1').due, plus1());
+                      var mine = rows.filter(function (a) { return a.text === 'loan:out:' + plus1(); })[0];
+                      rows.push({ id: 'h-oth', created: '2026-01-02T00:00:00Z', user: 'acct:other@hypothes.is', uri: mine.uri, text: 'loan:out:2099-03-04', tags: ['bk:v:item:S-1', 'bk:kind:reaction', 'bk:by:OT'], references: [] });
+                      N.invalidate('item:S-1');
+                      return SW.library.open('S-1').then(function () { return wait(200); });
+                    }).then(function () {
+                      var xo = box();
+                      T.yes('the box says who else has it out', /Out to OT till MAR 4/.test(xo.querySelector('.lib-loanbox').textContent));
+                      xo.close();
+                      var vo = document.getElementById('view-library');
+                      vo.querySelector('[data-show="loans"]').click();
+                      T.eq('and the card has their line', [vo.querySelectorAll('.lib-card tr.lib-card-other').length, /OT/.test(vo.querySelector('.lib-card').textContent)], [1, true]);
                     });
                   }).then(function () {
                     SW.store.set('library.loans', {}); SW.store.set('token', ''); N.forget();

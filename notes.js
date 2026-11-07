@@ -22,8 +22,9 @@
  * A key work mark is the same kind of reaction, key:on or key:off. Hypothesis lets a person delete only their own
  * annotations, so taking off someone else's mark is a new one, and the latest counts. N.itemKeys() { code: { on, date, by } };
  * N.setItemKey(code, on). A tag is kept the same way, tag:on:word or tag:off:word: N.itemTags() { code: { word: { on, date, by } } };
- * N.setItemTag(code, word, on). A loan to the reader's To read shelf is a reaction readable by the reader alone:
- * loan:out:<due>, loan:ext:<due> (a date or none) and loan:back. N.itemLoans() { code: [{ text, date, by }] };
+ * N.setItemTag(code, word, on). A loan to a reader's To read shelf is a reaction the group can read:
+ * loan:out:<due>, loan:ext:<due> (a date or none) and loan:back. N.itemLoans() the reader's own,
+ * { code: [{ text, date, by }] }; N.itemLoansOthers() the other members', { code: { account: { by, evs } } };
  * N.setLoan(code, text).
  * N.listAll leaves them out unless opts.items, since the other views read a version from each note.
  */
@@ -1437,7 +1438,19 @@
       return out;
     });
   };
-  N.setLoan = function (code, text) { return N.create({ vid: 'item:' + code, kind: 'reaction', text: text, tags: [], quiet: true, private: true }); };
+  N.itemLoansOthers = function () {
+    return N.itemNotes().then(function (all) {
+      var out = {};
+      all.filter(function (n) { return N.isReaction(n) && !n.parent && /^loan:(out|ext|back)/.test(n.text) && !N.mine(n); })
+        .sort(function (a, b) { return String(a.date) < String(b.date) ? -1 : 1; })
+        .forEach(function (n) {
+          var c = N.itemCode(n.vid), u = n.user || n.by, at = out[c] = out[c] || {};
+          (at[u] = at[u] || { by: n.by, evs: [] }).evs.push({ text: n.text, date: n.date, by: n.by });
+        });
+      return out;
+    });
+  };
+  N.setLoan = function (code, text) { return N.create({ vid: 'item:' + code, kind: 'reaction', text: text, tags: [], quiet: true }); };
   N.setItemKey = function (code, on) { return N.create({ vid: 'item:' + code, kind: 'reaction', text: on ? 'key:on' : 'key:off', tags: [], quiet: true }); };
   // the latest rating from each person
   function starsOf(rs) {
