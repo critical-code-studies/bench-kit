@@ -83,11 +83,22 @@
     if (loading) return loading;
     loading = (man ? Promise.resolve(man) : (C.items ? Promise.resolve({ items: C.items }) : C.load ? Promise.resolve(C.load()) :
       fetch(URL0, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('The library’s list could not be read (' + r.status + ').'); return r.json(); }))
-      .then(function (m) { man = m || {}; man.pub = man.items = (man.items || []).filter(function (e) { return e && e.id && e.title; }); return man; }))
+      .then(function (m) { man = m || {}; man.pub = man.items = (man.items || []).filter(function (e) { return e && e.id && e.title; }); return readSnapshot().then(function () { return man; }); }))
       .then(function () { return L.member() ? readAdds() : man; });
     loading.then(function () { loading = null; }, function () { loading = null; });
     return loading;
   };
+  // the group's ratings, marks and tags for readers with no token, written by tools/library-snapshot.js. A member's
+  // live reading replaces it; no note text is in it
+  function readSnapshot() {
+    if (C.items || C.load) return Promise.resolve();
+    return fetch(URL0.replace(/[^/]*$/, 'group.json'), { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
+      if (!s || typeof s !== 'object') return;
+      if (s.ratings) { NR = s.ratings; NRS = JSON.stringify(NR); }
+      if (s.keys) setKeys(s.keys);
+      if (s.tags) setTags(s.tags);
+    }, function () {});
+  }
   L.items = function () { return man ? man.items : []; };
   // the private shelf's repository, and whether this reader can open it (a token, as Paratexts has)
   L.privateRepo = function () { var p = C.private || {}, bp = B.paratexts || {}; var org = p.org || bp.org, repo = p.repo || bp.repo; return org && repo ? org + '/' + repo : null; };
@@ -531,22 +542,26 @@
   // ---------- notes on the entries ----------
   var NC = {}, NR = {}, NRS = '{}';
   function itemNotes() { return SW.notes && SW.notes.itemNotes ? SW.notes : null; }
+  function paintRatings(view, r) {
+    var box0 = SW.$('.lib-list', view); if (!box0) return;
+    SW.$$('[data-lib]', box0).forEach(function (x) {
+      var s = r[x.dataset.lib], at = SW.$('.lib-cap .lib-m', x) || SW.$('.lib-m', x), old = SW.$('.lib-rt', x);
+      if (old) old.remove();
+      if (s && at) at.appendChild(SW.el('span', { class: 'lib-rt', title: s.who ? s.who.join('; ') : s.n + (s.n === 1 ? ' rating' : ' ratings') }, ' ★ ' + (Math.round(s.avg * 10) / 10)));
+    });
+  }
   function paintCounts(view) {
+    if (!canRate()) paintRatings(view, NR);
     var N = itemNotes(); if (!N) return;
     if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t)) afterTags(view); }, function () {});
-    if (N.itemRatings) N.itemRatings().then(function (r) {
+    if (N.itemRatings && canRate()) N.itemRatings().then(function (r) {
       var sig = JSON.stringify(r), moved = sig !== NRS;
       NR = r; NRS = sig;
       // ratings arrive after the first drawing: redraw where they decide what shows, or its order
       if (moved && F.view !== 'notes' && (F.order === 'rating' || Object.keys(F.facets.rating || {}).length)) { list(view); return; }
       var fb0 = SW.$('.lib-fbody', view); if (moved && fb0 && F.view !== 'notes') fb0.innerHTML = facetHTML();
-      var box0 = SW.$('.lib-list', view); if (!box0) return;
-      SW.$$('[data-lib]', box0).forEach(function (x) {
-        var s = r[x.dataset.lib], at = SW.$('.lib-cap .lib-m', x) || SW.$('.lib-m', x), old = SW.$('.lib-rt', x);
-        if (old) old.remove();
-        if (s && at) at.appendChild(SW.el('span', { class: 'lib-rt', title: s.who.join('; ') }, ' ★ ' + (Math.round(s.avg * 10) / 10)));
-      });
+      paintRatings(view, r);
     }, function () {});
     N.itemCounts().then(function (c) {
       NC = c;
@@ -605,12 +620,13 @@
     paintCounts(view);
   }
   function canRate() { var N = itemNotes(); return !!(N && N.configured()); }
+  function canSortRating() { return canRate() || Object.keys(NR).length > 0; }
   function draw() {
     var view = SW.$('#view-library'); if (!view) return;
     view.innerHTML = '<p class="hint pad">Reading the library…</p>';
     L.load().then(function (m) {
       // a kept order of Rating waits in the store for a reader with the group's token
-      if (F.order === 'rating' && !canRate()) F.order = C.order && C.order !== 'rating' ? C.order : 'author';
+      if (F.order === 'rating' && !canSortRating()) F.order = C.order && C.order !== 'rating' ? C.order : 'author';
       // relevance is the first order where entries have it, and stands in for As listed there
       var hasRel = m.items.some(function (e) { return relOf(e); });
       relShown = hasRel;
@@ -620,7 +636,7 @@
         ((C.intro || m.intro) ? '<div class="lib-intro">' + (C.intro || m.intro) + '</div>' : '') +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
-        '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canRate()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+        '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
@@ -759,7 +775,7 @@
       var cite = L.citation(e);
       // a real cover; a public image used as its own cover already shows below
       var boxCover = e.thumb && e.thumb !== e.file ? e.thumb : '';
-      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', canRate() ? '' : REL_NAMES[relOf(e)]], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', canRate() ? '' : REL_NAMES[relOf(e)]], ['Rating', !canRate() && NR[e.id] ? '★ ' + (Math.round(NR[e.id].avg * 10) / 10) + ' from ' + NR[e.id].n : ''], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Ratings, Key work marks and tags for readers with no token** (David, 2026-11-08): `tools/library-snapshot.js` reads the private group with a member's token and writes `library/group.json`, which the Library loads for everyone. No note text, replies, emoji or names. `templates/library-snapshot.yml` runs it each day, with the token as a repository secret. See `docs/library.md`.
 - A failed read of the group's notes is no longer kept as "no notes" (Spacewar's report). A Library entry's box says the notes could not be read, with Try again, and the next look asks the group again. The counts, ratings, marks and tags no longer take a failed read for an empty group.
 - A draft is plainly marked, "Draft: this browser only", on every note surface, and an entry's Notes fold opens when it holds one (from a note that seemed lost in a browser with no token).
 - A cover with both the Preprint and Key work badges keeps them on one row, as Preprint and Key, so they no longer cover the title (ELIZA's report on 1.8.3). The list and the box still say Key work. A book's cover, which has no kind label, makes room above its title for a badge.

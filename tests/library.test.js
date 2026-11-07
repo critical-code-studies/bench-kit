@@ -724,6 +724,35 @@
                       });
                     });
                   }, function (e) { window.fetch = f2; el2.remove(); throw e; });
+                }).then(function () {
+                  // with no token (cleared above), from the published snapshot
+                  var f3 = window.fetch, snap = { ratings: { 'S-1': { avg: 2.5, n: 2 } }, keys: { 'S-2': { on: true, date: '2026-01-01' } }, tags: { 'S-1': { shared: { on: true, date: '2026-01-01' }, High: { on: true, date: '2026-01-01' } }, 'S-2': { other: { on: true, date: '2026-01-01' }, Low: { on: true, date: '2026-01-01' } } } };
+                  window.fetch = function (u) {
+                    u = String(u);
+                    if (/snap\/library\.json/.test(u)) return Promise.resolve(new Response(JSON.stringify({ items: [{ id: 'S-1', title: 'One', author: 'Bee' }, { id: 'S-2', title: 'Two', author: 'Ann' }, { id: 'S-3', title: 'Three', author: 'Cee' }] })));
+                    if (/snap\/group\.json/.test(u)) return Promise.resolve(new Response(JSON.stringify(snap)));
+                    return f3.apply(window, arguments);
+                  };
+                  B.library = { url: 'snap/library.json' };
+                  return load().then(function () { return SW.library.load(); }).then(function () {
+                    SW.views.library.show();
+                    return wait(80);
+                  }).then(function () {
+                    var vs = document.getElementById('view-library');
+                    function sh(id, q) { return vs.querySelectorAll('[data-lib="' + id + '"] ' + q).length; }
+                    T.eq('a rating and a mark with no token', [sh('S-1', '.lib-rt'), sh('S-3', '.lib-rt'), sh('S-2', '.lib-key'), sh('S-1', '.lib-key')], [1, 0, 1, 0]);
+                    T.eq('the rating read', vs.querySelector('[data-lib="S-1"] .lib-rt').textContent.trim(), '★ 2.5');
+                    T.yes('a filter by rating, and the order', vs.querySelector('[data-facet="rating"][data-val="3"]') && vs.querySelector('.lib-order option[value="rating"]'));
+                    T.yes('a tag in the filter', vs.querySelector('[data-facet="tag"][data-val="shared"]'));
+                    T.yes('and a level from a tag', vs.querySelector('[data-facet="relevance"][data-val="high"]'));
+                    return SW.library.open('S-1').then(function () { return wait(40); });
+                  }).then(function () {
+                    var x9 = box();
+                    T.yes('in the box', /★ 2\.5 from 2/.test(x9.querySelector('.lib-rec').textContent) && x9.querySelector('.lib-tag'));
+                    T.eq('with nothing to change', [x9.querySelectorAll('[data-a="key"], .lib-relsel, .lib-taginput, [data-tagoff], [data-star]').length], [0]);
+                    x9.close();
+                    window.fetch = f3;
+                  }, function (e) { window.fetch = f3; throw e; });
                 });
               });
             });

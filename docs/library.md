@@ -181,6 +181,18 @@ An entry's tags show in its box, and **Filters** and the search read them. There
 
 To show a tag to every reader, put it in `library.json`. A bench with no annotation group shows its tags with no way to change them.
 
+## For readers with no token
+
+A private Hypothesis group can be read only with a member's token, so without more, ratings, marks and tags made in the box are seen by members only. `tools/library-snapshot.js` publishes them: it reads the group and writes `library/group.json`, which the Library loads for every reader. Covers, the filters, the order and the record then show them. A member with a token still sees the group live.
+
+It holds, for entries in the public `library.json`, the average rating and how many gave one, the Key work marks and the tags. It takes no note text, replies, emoji or names, and it is not written from them: only the reactions for ratings, marks and tags are read into it. Tags are published as typed. An average from one rating is one person's view with no name on it.
+
+```bash
+HYPOTHESIS_TOKEN=... node research/kit/tools/library-snapshot.js --dry-run
+```
+
+To run it each day, copy `templates/library-snapshot.yml` to `.github/workflows/library-snapshot.yml` and add a repository secret `HYPOTHESIS_TOKEN`, from a Hypothesis account in the group. A token reaches every group its account belongs to, so an account made for this and in this group alone is safer than a person's own. A token that is not a member, or any failed read, writes nothing.
+
 ## Preprints
 
 An entry with `kind: 'preprint'` carries a **Preprint** badge on its cover, in the list and in its box. A preprint kept beside its published version is a second entry, with the note on each naming the other.
