@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.7 (2026-11-07)
 
 - A failed read in a Library entry's box now says NOTES NOT UPDATED in small capitals (David, 2026-11-08), with Try again; the reason is in its tooltip.
 
