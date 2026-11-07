@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.4 (2026-11-07)
 
 - **Ratings, Key work marks and tags for readers with no token** (David, 2026-11-08): `tools/library-snapshot.js` reads the private group with a member's token and writes `library/group.json`, which the Library loads for everyone. No note text, replies, emoji or names. `templates/library-snapshot.yml` runs it each day, with the token as a repository secret. See `docs/library.md`.
 - A failed read of the group's notes is no longer kept as "no notes" (Spacewar's report). A Library entry's box says the notes could not be read, with Try again, and the next look asks the group again. The counts, ratings, marks and tags no longer take a failed read for an empty group.
