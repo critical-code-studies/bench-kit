@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.6.0 (2026-11-07)
 
 - **Share in a Library entry's box** (David, 2026-11-07), with the system's share sheet and the kit's share icon: the entry's title and a link that opens its box.
 - **A preview card for the Library** (David, 2026-11-07), such as "Melville Library", one for each bench. `tools/release.js` writes `library/index.html` with its own tags, and that page sends a person on to the entry. Share and Copy link go through it once it is there. `library.card` sets the title, description and image; see `docs/library.md`. Add `library/index.html` to what you commit after a release.
