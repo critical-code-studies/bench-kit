@@ -40,7 +40,8 @@
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter and the box. Members of the annotation group add and take off tags in the box,
  *             for the group: see N.itemTags in notes.js
- *   relevance 'about', 'section', 'mention' or 'unread': an order, the first shown where any entry has it, and a filter
+ *   relevance 'essential', 'high', 'medium', 'low', 'minimal' or 'unchecked': an order, the first shown where any entry
+ *             has it, and a filter. 'about', 'section', 'mention' and 'unread' from 1.8.0 read as high, medium, low, unchecked
  *   key       a number (1, 2, 3…): a key work, marked as one, and ahead of the groups in that order. Members of the
  *             annotation group add and take off the mark in the box, for the group: see N.itemKeys in notes.js
  * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search,
@@ -315,8 +316,10 @@
   // the title as filed: without an opening article or quotation mark
   function titleKey(t) { return String(t == null ? '' : t).replace(/^[\s"'“‘«(\[]+/, '').replace(/^(the|an?|le|la|les|der|die|das)\s+/i, ''); }
   var AZ = root.Intl && Intl.Collator ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare : function (a, b) { return a < b ? -1 : a > b ? 1 : 0; };
-  var RELEVANCE = ['about', 'section', 'mention', 'unread'], REL_NAMES = { about: 'About it', section: 'A section on it', mention: 'A passing mention', unread: 'Not yet read' };
-  function relRank(e) { var i = RELEVANCE.indexOf(e.relevance); return i < 0 ? RELEVANCE.length : i; }
+  var RELEVANCE = ['essential', 'high', 'medium', 'low', 'minimal', 'unchecked'], REL_NAMES = { essential: 'Essential', high: 'High', medium: 'Medium', low: 'Low', minimal: 'Minimal', unchecked: 'Not Checked' };
+  var REL_OLD = { about: 'high', section: 'medium', mention: 'low', unread: 'unchecked' };
+  function relOf(e) { var r = String(e.relevance || '').trim().toLowerCase(); r = REL_OLD[r] || r; return REL_NAMES[r] ? r : ''; }
+  function relRank(e) { var i = RELEVANCE.indexOf(relOf(e)); return i < 0 ? RELEVANCE.length : i; }
   // the group's marks over the list's: a mark added goes after the list's key works, by when it was made
   var KM = {}, KADD = {}, KMINE = {}, KS = '{}';
   function keyOf(e) {
@@ -464,7 +467,7 @@
     if (f === 'author') return e.author ? String(e.author).split(/\s*(?:;|&|\band\b)\s*/).map(function (a) { return L.surname(a); }).filter(Boolean) : [];
     if (f === 'lang') return e.lang ? [String(e.lang)] : [];
     if (f === 'rating') return [ratingBand(e)];
-    if (f === 'relevance') return REL_NAMES[e.relevance] ? [e.relevance] : [];
+    if (f === 'relevance') return relOf(e) ? [relOf(e)] : [];
     return tagsOf(e);
   }
   function facetsOn() { return Object.keys(F.facets).some(function (f) { return Object.keys(F.facets[f] || {}).length; }); }
@@ -589,7 +592,7 @@
       // a kept order of Rating waits in the store for a reader with the group's token
       if (F.order === 'rating' && !canRate()) F.order = C.order && C.order !== 'rating' ? C.order : 'author';
       // relevance is the first order where entries have it, and stands in for As listed there
-      var hasRel = m.items.some(function (e) { return e.relevance; });
+      var hasRel = m.items.some(function (e) { return relOf(e); });
       if (hasRel && (F.order === 'listed' || (!SW.store.get('library.order', '') && !C.order))) F.order = 'relevance';
       if (!hasRel && F.order === 'relevance') F.order = C.order && C.order !== 'relevance' ? C.order : 'author';
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
@@ -643,7 +646,7 @@
       ['What it holds', '<p>The secondary literature on the project: the books, articles, talks, podcasts and documentaries the group reads and cites. Each entry has a record. Some have a file held here, some a file the group keeps privately, and some a link to where the work is published.</p>'],
       ['Finding a work', ul([
         '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), and <b>☰</b> a list. A preprint and a key work carry a badge in each, and in the box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
-        '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Where entries say how far they concern the subject, <b>By relevance</b> comes first: works about it, then those with a section on it, passing mentions, and those not yet read, by author within each. Your choice of view, size and order is kept in this browser.',
+        '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Where entries say how far they concern the subject, <b>By relevance</b> comes first: key works, then Essential, High, Medium, Low, Minimal and Not Checked, by author within each. Your choice of view, size and order is kept in this browser.',
         'The search reads the title, author, date, kind, note, licence, source, language and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
         '<b>Filters</b> beside the list narrow by kind, relevance, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
       ['Opening a work', ul([
@@ -735,7 +738,7 @@
       var cite = L.citation(e);
       // a real cover; a public image used as its own cover already shows below
       var boxCover = e.thumb && e.thumb !== e.file ? e.thumb : '';
-      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', REL_NAMES[e.relevance]], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', REL_NAMES[relOf(e)]], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
