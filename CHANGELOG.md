@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.5.1 (2026-11-07)
 
 - The Library's **Order** menu offers Rating only to a reader with the group's Hypothesis token (the translation session's report on 1.5.0). Without one there are no ratings to sort by. A kept order of Rating falls back to the bench's order, or Author, and stays in the store for when a token is set.
 
