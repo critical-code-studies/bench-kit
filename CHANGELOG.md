@@ -4,7 +4,7 @@
 
 - The Library's intro under its title is its first sentence, in small type, with the whole in the tooltip (David, 2026-11-08). A bench can shorten its `intro` to one brief sentence.
 - A library card's dates read NOV 07 26 (David, 2026-11-08).
-- In a Library entry's box, "To read for" reads "Add to To Read:" before the 1, 2 and 3 months (David, 2026-11-08, through ELIZA).
+- **A Library entry's actions as one row of icons** (David, 2026-11-08, through ELIZA): open in a new tab, download, where it is published, share, copy link, Key work (a flag, filled when marked) and To Read (a bookmark, filled while out), each with its words in the tooltip and for a screen reader. To Read opens a small menu, "Add to To Read:" 1, 2 or 3 months, or the due date and Return. An entry with only a link keeps a visible Open button.
 
 ## 1.8.8 (2026-11-07)
 

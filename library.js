@@ -942,6 +942,17 @@
     fetch('library/index.html', { method: 'HEAD', cache: 'no-store' }).then(function (r) { cardPage = r.ok; }, function () {});
   }
   function linkTo(id) { return cardPage ? SW.BASE_URI + 'library/?lib=' + encodeURIComponent(id) : SW.permalink({ tab: 'library', lib: id }); }
+  // the box's actions as icons, each with its words in the tooltip and for a screen reader
+  function ico(d, fill) { return '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="' + d + '" fill="' + (fill ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  var ICON = {
+    tab: ico('M9 2.5h4.5V7M13.5 2.5 7.5 8.5M12 9.5v4H2.5V4h4'),
+    down: ico('M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 12.5v1h11v-1'),
+    globe: ico('M8 1.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 8 1.8zM1.8 8h12.4M8 1.8c1.8 1.7 2.6 3.8 2.6 6.2S9.8 12.5 8 14.2C6.2 12.5 5.4 10.4 5.4 8S6.2 3.5 8 1.8z'),
+    link: ico('M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.4-2.4a2.6 2.6 0 0 0-3.7-3.7l-.9.9M9.4 6.6a2.6 2.6 0 0 0-3.7 0L3.3 9a2.6 2.6 0 0 0 3.7 3.7l.9-.9'),
+    flag: function (on) { return ico('M3.5 14V2.5M3.5 2.5h8l-1.8 2.8 1.8 2.8h-8', on); },
+    mark: function (on) { return ico('M4 2h8v12l-4-3-4 3z', on); }
+  };
+  function ib(attrs, icon, words) { return '<' + (attrs.href ? 'a' : 'button') + ' class="btn ghost lib-ib"' + Object.keys(attrs).map(function (k) { return ' ' + k + '="' + esc(attrs[k]) + '"'; }).join('') + ' title="' + esc(words) + '" aria-label="' + esc(words) + '">' + icon + '</' + (attrs.href ? 'a' : 'button') + '>'; }
   L.open = function (id) {
     checkCard();
     return L.load().then(function () {
@@ -958,13 +969,14 @@
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('') +
         (NR[e.id] ? '<dt>Rating</dt><dd><span class="lib-stars" title="' + esc(starTitle(NR[e.id])) + '">' + starText(NR[e.id]) + '</span></dd>' : '');
-      var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
-        (canOpen && priv ? '<button class="btn ghost" data-a="dl">⤓ Download</button>' : '') +
-        (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Open where it is published ↗') + '</a>' : '') +
-        '<button class="btn ghost" data-a="share" title="Share a link to this entry">' + (SW.SHARE_ICON || '') + ' Share</button>' +
-        (canRate() ? '<button class="btn ghost" data-a="key"></button>' : '') +
+      var acts = (e.url && !e.file ? '<a class="btn lib-ib-open" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer" title="Open it where it is published">' + ICON.globe + ' Open ↗</a>' : '') +
+        (canOpen && !priv ? ib({ href: e.file, target: '_blank', rel: 'noopener' }, ICON.tab, 'Open in a new tab') + ib({ href: e.file, download: '' }, ICON.down, 'Download') : '') +
+        (canOpen && priv ? ib({ 'data-a': 'dl' }, ICON.down, 'Download') : '') +
+        (e.url && e.file ? ib({ href: e.url, target: '_blank', rel: 'noopener noreferrer' }, ICON.globe, 'Where it is published') : '') +
+        ib({ 'data-a': 'share' }, SW.SHARE_ICON || ICON.globe, 'Share a link to this entry') +
+        ib({ 'data-a': 'link' }, ICON.link, 'Copy a link to this entry') +
+        (canRate() ? ib({ 'data-a': 'key' }, ICON.flag(false), 'Mark this as a key work for the group') : '') +
         '<span class="lib-loanbox"></span>' +
-        '<button class="btn ghost" data-a="link" title="Copies a link to this entry">🔗 Copy link</button>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <span class="lib-dmarks"></span><b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
         '<div class="lib-cols"><div class="lib-main"><div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
@@ -982,13 +994,18 @@
       function paintKey() {
         var on = keyOf(e) < Infinity, kb = SW.$('[data-a="key"]', d), dm = SW.$('.lib-dmarks', d);
         if (dm) dm.innerHTML = marksOf(e);
-        if (kb) { kb.textContent = on ? '⚑ Key work' : '⚐ Mark as a key work'; kb.classList.toggle('on', on); kb.setAttribute('aria-pressed', on ? 'true' : 'false'); kb.title = on ? 'A key work for the group. Press to take the mark off' : 'Mark this as a key work for the group'; }
+        if (kb) { var words = on ? 'A key work for the group: take the mark off' : 'Mark this as a key work for the group'; kb.innerHTML = ICON.flag(on); kb.classList.toggle('on', on); kb.setAttribute('aria-pressed', on ? 'true' : 'false'); kb.title = words; kb.setAttribute('aria-label', words); }
       }
       paintKey();
       function paintLoan() {
         var lb = SW.$('.lib-loanbox', d), cur = onLoan(e.id), oth = othersOut(e.id); if (!lb) return;
-        lb.innerHTML = (oth.length ? '<span class="lib-loanst lib-loan-oth">Out to ' + oth.map(function (r) { return esc(r.by) + (r.due ? ' till ' + dueShort(r.due) : ''); }).join(', ') + '.</span> ' : '') + (cur ? '<span class="lib-loanst">On your To read shelf, due ' + stampOf(cur.due) + '</span> <button class="btn ghost" data-a="return">Return</button>'
-          : '<span class="lib-loanst">Add to To Read:</span> <button class="btn ghost" data-a="co" data-m="1">1</button><button class="btn ghost" data-a="co" data-m="2">2</button><button class="btn ghost" data-a="co" data-m="3" title="Check it out to your To read shelf">3 months</button>');
+        var was = SW.$('.lib-loanmenu', lb), open = was && !was.hidden;
+        var outTo = oth.length ? 'Out to ' + oth.map(function (r) { return r.by + (r.due ? ' till ' + dueShort(r.due) : ''); }).join(', ') + '.' : '';
+        var words = cur ? 'On your To read shelf, due ' + (cur.due ? dueShort(cur.due) : 'with no date') : 'Add to To Read';
+        lb.innerHTML = '<button class="btn ghost lib-ib' + (cur ? ' on' : '') + '" data-a="loan" aria-haspopup="true" aria-expanded="' + (open ? 'true' : 'false') + '" title="' + esc(words + (outTo ? '. ' + outTo : '')) + '" aria-label="' + esc(words) + '">' + ICON.mark(!!cur) + '</button>' +
+          (cur ? '<span class="lib-loandue">' + (cur.due ? 'DUE ' + dueShort(cur.due) : 'ON LOAN') + '</span>' : '') +
+          '<div class="lib-loanmenu"' + (open ? '' : ' hidden') + '>' + (outTo ? '<span class="lib-loanst lib-loan-oth">' + esc(outTo) + '</span>' : '') + (cur ? '<span class="lib-loanst">On your To read shelf, due ' + stampOf(cur.due) + '</span> <button class="btn ghost" data-a="return">Return</button>'
+          : '<span class="lib-loanst">Add to To Read:</span> <button class="btn ghost" data-a="co" data-m="1">1</button><button class="btn ghost" data-a="co" data-m="2">2</button><button class="btn ghost" data-a="co" data-m="3" title="Check it out to your To read shelf">3 months</button>') + '</div>';
       }
       function afterLoan() { paintLoan(); var v2 = SW.$('#view-library'); if (v2 && SW.$('.lib-list', v2)) list(v2); }
       sweepLoans(); paintLoan();
@@ -1037,6 +1054,9 @@
       d.addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-boxcover')) ev.target.remove(); }, true);
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
+        var lo = ev.target.closest('[data-a="loan"]');
+        if (lo) { var mn = SW.$('.lib-loanmenu', d); mn.hidden = !mn.hidden; lo.setAttribute('aria-expanded', mn.hidden ? 'false' : 'true'); return; }
+        if (!ev.target.closest('.lib-loanmenu')) { var mn0 = SW.$('.lib-loanmenu', d); if (mn0) mn0.hidden = true; }
         var co = ev.target.closest('[data-a="co"]'); if (co) { L.checkOut(e.id, +co.dataset.m); afterLoan(); return; }
         if (ev.target.closest('[data-a="return"]')) { L.giveBack(e.id); afterLoan(); return; }
         var tf = ev.target.closest('[data-tagoff]'); if (tf) { changeTag(tf.dataset.tagoff, false); return; }

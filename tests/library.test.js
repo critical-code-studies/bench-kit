@@ -603,7 +603,7 @@
                   return SW.library.open('K-2').then(function () { return wait(60); });
                 }).then(function () {
                   var x4 = box(), kb = x4.querySelector('[data-a="key"]');
-                  T.eq('with the group, a button to mark', [kb && kb.getAttribute('aria-pressed'), /Mark as/.test(kb && kb.textContent)], ['false', true]);
+                  T.eq('with the group, a button to mark', [kb && kb.getAttribute('aria-pressed'), /Mark this as a key work/.test(kb && kb.getAttribute('aria-label'))], ['false', true]);
                   kb.click();
                   return wait(150).then(function () {
                     T.eq('kept in the group, for that entry', rows.filter(function (a) { return a.text === 'key:on'; }).length, 1);
@@ -758,6 +758,9 @@
                   }).then(function () {
                     function plus(n) { var d = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); }
                     var xb = box();
+                    T.eq('To Read is one button, its menu shut', [xb.querySelectorAll('[data-a="loan"]').length, xb.querySelector('.lib-loanmenu').hidden], [1, true]);
+                    xb.querySelector('[data-a="loan"]').click();
+                    T.eq('and opens', xb.querySelector('.lib-loanmenu').hidden, false);
                     xb.querySelector('[data-a="co"][data-m="2"]').click();
                     T.eq('checked out for two months', SW.library.onLoan('S-2') && SW.library.onLoan('S-2').due, plus(2));
                     T.yes('the box says so, with Return', /To read shelf/.test(xb.querySelector('.lib-loanbox').textContent) && xb.querySelector('[data-a="return"]'));
