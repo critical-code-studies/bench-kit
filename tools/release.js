@@ -97,10 +97,16 @@ if (KIT) {
   else {
     git(['fetch', '--quiet', '--tags', '--force', 'origin'], kitDir);   // --force: a tag moved upstream is taken, not refused
     git(['checkout', '--quiet', KIT], kitDir);
-    changes.push('kit: ' + KIT + ' (' + git(['rev-parse', '--short', 'HEAD'], kitDir) + ')');
-    touched.push(kitDir);
+    // the rest of the release is the new kit's: this run is still the old tool
+    const rest = process.argv.slice(2), at = rest.indexOf('--kit');
+    rest.splice(at, 2);
+    const said = 'kit: ' + KIT + ' (' + git(['rev-parse', '--short', 'HEAD'], kitDir) + ')';
+    try { execFileSync(process.execPath, [path.join(kitDir, 'tools', 'release.js')].concat(rest), { stdio: 'inherit', env: Object.assign({}, process.env, { BENCH_KIT_MOVED: said }) }); }
+    catch (e) { process.exit(e.status || 1); }
+    process.exit(0);
   }
 }
+if (process.env.BENCH_KIT_MOVED) { changes.push(process.env.BENCH_KIT_MOVED); touched.push(kitDir); }
 const kv = kitVersion();
 // the kit's own version (base.js) should be the release it is checked out at
 {
@@ -179,7 +185,11 @@ if (!NOLOG) {
       const plain = (s) => String(s || '').replace(/<\/?(?:p|div|br|li|ul|ol|h\d)\b[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
       const title = K.title || ((B.name || B.title || 'The') + ' ' + (C.label || 'Library'));
       let desc = plain(K.description || C.intro || man.intro);
-      if (desc.length > 200) desc = desc.slice(0, 200).replace(/\s+\S*$/, '') + '…';
+      if (desc.length > 200) {
+        // whole sentences if the first fits, else cut at a word
+        const head = desc.slice(0, 201), end = Math.max(head.lastIndexOf('. '), head.lastIndexOf('! '), head.lastIndexOf('? '));
+        desc = end > 40 ? head.slice(0, end + 1) : head.replace(/\s+\S*$/, '') + '…';
+      }
       const root = base.replace(/\/?$/, '/'), abs = (u) => /^https?:/.test(u) ? u : root + u;
       const ownImage = K.image || tag('image'), image = abs(ownImage || 'kit/docs/img/library-card.jpg');
       const out = '<!doctype html>\n<!-- Written by the kit\'s tools/release.js: edit library.card in js/config.js, not this. -->\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +

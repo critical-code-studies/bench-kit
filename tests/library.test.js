@@ -518,6 +518,21 @@
                 T.yes('through the card page, once it is there', /library\/\?lib=P-AAAAA$/.test(shared[0] && shared[0].url));
                 document.querySelectorAll('dialog.lib-dlg').forEach(function (x) { x.close(); });
                 window.fetch = f1;
+                var dot = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+                B.library = { items: [{ id: 'C-REAL', title: 'Jacket', thumb: dot }, { id: 'C-BAD', title: 'Lost', thumb: 'library/no-such-cover.webp' }, { id: 'C-SELF', title: 'Own cover', thumb: dot, file: dot }, { id: 'C-NONE', title: 'Bare' }] };
+                function covers(id) { return SW.library.open(id).then(function () { return wait(120); }).then(function () { var x = box(), n = [x.querySelectorAll('.lib-boxcover').length, x.querySelectorAll('.lib-cover').length]; x.close(); return n; }); }
+                return load().then(function () { return SW.library.load(); }).then(function () { return covers('C-REAL'); }).then(function (n) {
+                  T.eq('a real cover in the box, and no drawn one', n, [1, 0]);
+                  return covers('C-BAD');
+                }).then(function (n) {
+                  T.eq('a picture that fails is removed', n, [0, 0]);
+                  return covers('C-SELF');
+                }).then(function (n) {
+                  T.eq('an image that is its own cover is not repeated', n, [0, 0]);
+                  return covers('C-NONE');
+                }).then(function (n) {
+                  T.eq('no thumb, no cover', n, [0, 0]);
+                });
               });
             });
           });

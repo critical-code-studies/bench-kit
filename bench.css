@@ -1299,6 +1299,10 @@ ul.reading a { overflow-wrap: anywhere; }
 .in-quote span { flex: 1; min-width: 0; }
 .note-at { display: inline-block; margin-bottom: 2px; padding: 0 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); color: inherit; font: 11px var(--mono); cursor: pointer; }
 .note-quote { margin: 2px 0 4px; padding: 2px 8px; border-left: 3px solid var(--line); color: var(--text-dim); font: italic 13.5px/1.4 var(--serif, Georgia, serif); cursor: pointer; }
+.lib-head { display: flex; gap: 14px; align-items: flex-start; }
+.lib-head-t { flex: 1; min-width: 0; }
+.lib-boxcover { flex: none; width: 130px; height: auto; max-height: 200px; object-fit: contain; border-radius: 2px 3px 3px 2px; background: #fff; box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.28), 3px 4px 9px rgba(0, 0, 0, 0.18); }
+@media (max-width: 520px) { .lib-head { flex-direction: column; } .lib-head-t { width: 100%; } .lib-boxcover { width: 110px; max-height: 170px; } }
 .lib-cite { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 12px; padding: 8px 10px; border-left: 3px solid var(--line); background: var(--surface-2); font: 14px/1.45 var(--serif, Georgia, serif); }
 .lib-cite-t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .lib-cite .btn { flex: none; font-family: inherit; }

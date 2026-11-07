@@ -672,6 +672,8 @@
       var alts = (e.alts || []).filter(function (a) { return a && a.file && (!isPrivate(a) || L.member()); });
       var fam = L.family(e), player = e.url && SW.embedPlayer ? SW.embedPlayer(e.url, e.title, fam, 'lib-embed') : null;
       var cite = L.citation(e);
+      // a real cover; a public image used as its own cover already shows below
+      var boxCover = e.thumb && e.thumb !== e.file ? e.thumb : '';
       var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
@@ -683,8 +685,10 @@
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
         '<div class="lib-cols"><div class="lib-main"><div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
+        (boxCover ? '<div class="lib-head"><img class="lib-boxcover" src="' + esc(boxCover) + '" alt="" referrerpolicy="no-referrer"><div class="lib-head-t">' : '') +
         '<div class="lib-cite"><span class="lib-cite-t">' + cite.html + '</span> <button class="btn ghost" data-a="cite" title="Copy this citation">Copy</button></div>' +
         (rec ? '<dl class="lib-rec">' + rec + '</dl>' : '') +
+        (boxCover ? '</div></div>' : '') +
         (canOpen ? '<div class="lib-file" data-k="' + k + '"><p class="hint">Opening the file…</p></div>' :
           priv && e.file ? '<p class="hint">The group keeps a copy of this work in its private repository; members open it here with their GitHub token (⚙ Settings)' + (e.url ? '. The link above goes to it where it is published.' : '.') + '</p>' + (player || '') :
           player || '<p class="hint">The library holds no copy of this work' + (e.url ? '; the link above goes to it.' : '.') + '</p>') +
@@ -692,6 +696,7 @@
         '</div><div class="lib-side"></div></div>';
       document.body.appendChild(d);
       d.addEventListener('close', function () { d.remove(); });
+      d.addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-boxcover')) ev.target.remove(); }, true);
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
         if (ev.target.closest('[data-a="share"]')) { SW.share({ title: e.title, url: linkTo(e.id) }); return; }

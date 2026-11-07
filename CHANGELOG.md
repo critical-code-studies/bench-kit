@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `tools/release.js --kit` hands the release to the tool in the kit it has just moved to, so a new step runs on that move (SHRDLU's report on 1.6.0). The old tool still runs on a move to this release itself. The card's description ends at a whole sentence where the first fits in 200 characters.
+- **A work's real cover in its Library box** (David, 2026-11-07), from the entry's `thumb`, beside the citation and above it at phone width. A public image used as its own cover already shows in the box and is not repeated, an entry with no `thumb` shows no drawn cover, and a picture that fails to load is removed.
+
 ## 1.6.0 (2026-11-07)
 
 - **Share in a Library entry's box** (David, 2026-11-07), with the system's share sheet and the kit's share icon: the entry's title and a link that opens its box.
