@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- `templates/library-snapshot.yml` uses actions/checkout and actions/setup-node v7 on Node 24, so its run no longer warns that Node 20 is deprecated (kuki-bench's first real run). A bench that copied it can change the three lines.
+
 ## 1.8.5 (2026-11-07)
 
 - The Library asks for `library/group.json` only where `library.snapshot` is true, so a bench with no snapshot no longer logs a 404 (kuki-bench's report on 1.8.4). A bench using the snapshot sets it.
