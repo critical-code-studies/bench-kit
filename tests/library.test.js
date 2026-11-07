@@ -60,6 +60,7 @@
       T.eq('any other address does not', play('https://example.org/a'), null);
       T.yes('in the frame class it is given', /class="lib-embed"/.test(play('https://vimeo.com/123') || ''));
       T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
+      T.eq('a call number', [L.callNo({ title: 'Computer Power and Human Reason', author: 'Weizenbaum, Joseph', date: '1976' }), L.callNo({ title: 'The Thrill of the Grass', author: 'Kinsella, W. P.' }), L.callNo({ title: 'x' })], ['1976 W23c', 'K35t', 'X11x']);
       T.eq('an intro to its first sentence', [L.firstSentence('One part. Two parts.'), L.firstSentence('No end'), L.firstSentence('Billy Budd: the works. More.')], ['One part.', 'No end', 'Billy Budd: the works.']);
       T.eq('a language by name, or its code', [L.langName('ja'), L.langName('simple'), L.langName('')], ['Japanese', 'simple', '']);
       T.eq('kinds a literature search uses', [{ kind: 'preprint' }, { kind: 'conference' }, { kind: 'news' }, { kind: 'magazine' }, { kind: 'encyclopedia' }].map(L.family), ['article', 'article', 'news', 'news', 'web']);
@@ -770,6 +771,11 @@
                     T.yes('as DUE and the month and day', /^DUE [A-Z]{3} \d{1,2}$/.test(vl.querySelector('[data-lib="S-2"] .lib-due').textContent));
                     vl.querySelector('[data-show="loans"]').click();
                     T.eq('To read: a card for it', [vl.querySelectorAll('.lib-card').length, vl.querySelector('[data-show="loans"]').textContent], [1, 'To read (1)']);
+                    T.eq('its code and title open the work', vl.querySelectorAll('.lib-card [data-lib="S-2"]').length, 3);
+                    vl.querySelector('[data-libview="list"]').click();
+                    T.eq('as a list', [vl.querySelectorAll('.lib-loanlist tbody tr').length, vl.querySelectorAll('.lib-card').length], [1, 0]);
+                    vl.querySelector('[data-libview="icons"]').click();
+                    SW.store.set('library.view', '');
                     vl.querySelector('.lib-card [data-ext="1"]').click();
                     T.eq('renewed: a second line, the first struck through, a month on', [vl.querySelectorAll('.lib-card tbody tr.lib-card-done').length, SW.library.onLoan('S-2').due], [1, plus(3)]);
                     vl.querySelector('.lib-card [data-ext="0"]').click();

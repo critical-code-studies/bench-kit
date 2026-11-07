@@ -185,6 +185,8 @@ To show a tag to every reader, put it in `library.json`. A bench with no annotat
 
 Each reader has a **To read** shelf, a part of the Library to attend to. A work is checked out from its box for one, two or three months, and its cover then carries a due stamp in its upper right corner, in that reader's view only. **To read** beside **All** shows a library card for each work, after the cards once kept in a book's pocket: the work's code, author and title, and a line for each loan and renewal, with the date loaned, the borrower's name and the date due. A card renews a loan for one, two or three months as often as the reader likes, takes the date away, or returns the work. Past its date a work goes back into the library. Below the cards, a reading log lists every work the reader has had out, with when it first went out, when it came back, how many loans, and the reader's own rating where they gave one. **Your notes** there opens, in a box, every note the reader has written on works in the library, drafts included, each with a link to its work.
 
+The cards come small, medium or large (**S M L**), and **☰** shows the shelf as a list with the same renewals. A card's code and title open the work. Each card's label, and the spine of a drawn book, carries a call number after the old shelf marks: the year, the author's initial and two figures from the next letters, and the title's first letter (`1966 W48e`). It is a guide to the shelf, not a classification.
+
 Loans are kept in the reader's browser. With the group's Hypothesis token they are also kept as annotations the group can read (`loan:out:<date>`, `loan:ext:<date>`, `loan:back`), so they follow the reader to other browsers. A work's card then has a line for each member's loan of it, and its box says who in the group has it out and till when. A reader with no token sees only their own. `tools/library-snapshot.js` never publishes loans.
 
 ## For readers with no token
@@ -205,7 +207,7 @@ An entry with `kind: 'preprint'` carries a **Preprint** badge on its cover, in t
 
 ## Sharing an entry
 
-**Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac) with the entry's title and a link that opens its box. A browser with no share sheet, such as Firefox, copies the link. **Copy link** stays beside it and gives the same link.
+**Share** in an entry's box opens the system's share sheet (Mail, Messages, AirDrop on a Mac) with the entry's title and a link that opens its box. A browser with no share sheet, such as Firefox, copies the link.
 
 Posted in a chat or on social media, the link shows one preview card for the whole Library, such as "Melville Library". `tools/release.js` writes it into `library/index.html` at each release, and that page sends a person on to the entry. A release needs `base` in `js/config.js`, or an `og:url` in `index.html`, to write it. Until the page exists, links go straight to the bench.
 

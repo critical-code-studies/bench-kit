@@ -331,6 +331,14 @@
     return w[w.length - 1] || '';
   };
   // the title as filed: without an opening article or quotation mark
+  // a shelf mark after the old ones: the year, then the author's initial and two figures from the next letters
+  // (after Cutter's tables, simplified), then the title's first letter. A guide to the shelf, not a classification
+  function cutterFig(c) { var i = 'abcdefghijklmnopqrstuvwxyz'.indexOf(String(c).toLowerCase()); return i < 0 ? 1 : Math.min(9, Math.max(1, Math.floor(i / 2.9) + 1)); }
+  L.callNo = function (e) {
+    var y = L.year(e.date), who = String(L.surname(e.author) || titleKey(e.title) || '').replace(/[^A-Za-zÀ-ÿ]/g, ''), t = titleKey(e.title).replace(/^[^A-Za-zÀ-ÿ]+/, '');
+    if (!who) return y ? String(y) : '';
+    return (y ? y + ' ' : '') + who.charAt(0).toUpperCase() + cutterFig(who.charAt(1)) + cutterFig(who.charAt(2)) + (t ? t.charAt(0).toLowerCase() : '');
+  };
   function titleKey(t) { return String(t == null ? '' : t).replace(/^[\s"'“‘«(\[]+/, '').replace(/^(the|an?|le|la|les|der|die|das)\s+/i, ''); }
   var AZ = root.Intl && Intl.Collator ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare : function (a, b) { return a < b ? -1 : a > b ? 1 : 0; };
   var RELEVANCE = ['essential', 'high', 'medium', 'low', 'minimal', 'unchecked'], REL_NAMES = { essential: 'Essential', high: 'High', medium: 'Medium', low: 'Low', minimal: 'Minimal', unchecked: 'Not Checked' };
@@ -507,7 +515,7 @@
     while (lines.length < 6) lines.push('<tr><td></td><td></td><td></td></tr>');
     return '<article class="lib-card" data-card="' + esc(e.id) + '">' +
       '<div class="lib-card-lib">Library<br><span>' + esc(B.name || B.title || '') + '</span></div>' +
-      '<div class="lib-card-label">' + esc(e.id) + '<br>' + esc(e.author || '') + '<br>' + esc(e.title) + '</div>' +
+      '<div class="lib-card-label">' + (L.callNo(e) ? '<span class="lib-card-call">' + esc(L.callNo(e)) + '</span> ' : '') + '<button class="lib-card-code" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.id) + '</button><br>' + esc(e.author || '') + '<br><button class="lib-card-title" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.title) + '</button></div>' +
       '<table class="lib-card-t"><thead><tr><th>Date<br>loaned</th><th>Borrower’s name</th><th>Date<br>due</th></tr></thead><tbody>' + lines.join('') + '</tbody></table>' +
       '<div class="lib-card-acts">' + (cur ? '<span>Renew for</span> <button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3 months</button><button class="btn ghost" data-ext="0" title="Keep it with no return date">No date</button> <button class="btn ghost" data-ret>Return</button> ' : '') +
       '<button class="btn ghost" data-lib="' + esc(e.id) + '">Open</button></div></article>';
@@ -553,6 +561,14 @@
     }, function (err) { at.innerHTML = '<p class="hint in-fail"><span class="in-fail-t">Notes not updated</span> ' + esc(err.message) + '</p>'; });
   }
   L.showMyNotes = showMyNotes;
+  // a work on the To read shelf as a line of the list
+  function loanRow(e) {
+    var cur = onLoan(e.id) || {};
+    return '<tr data-card="' + esc(e.id) + '"><td><button class="lib-card-code" data-lib="' + esc(e.id) + '">' + esc(e.id) + '</button></td>' +
+      '<td><button class="lib-log-w" data-lib="' + esc(e.id) + '">' + esc(e.title) + '</button><span class="faint"> ' + esc(e.author || '') + '</span></td>' +
+      '<td class="mono">' + stampOf(cur.due) + '</td>' +
+      '<td class="lib-loanlist-acts"><span class="faint">Renew</span> <button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3</button><button class="btn ghost" data-ext="0" title="No return date">∞</button> <button class="btn ghost" data-ret>Return</button></td></tr>';
+  }
   function paintLoanCount(view) {
     var b = SW.$('[data-show="loans"]', view); if (!b) return;
     var n = Object.keys(loans()).filter(function (c) { return onLoan(c); }).length;
@@ -595,7 +611,7 @@
   function tile(e) {
     var pic = thumbOf(e), said = [e.title, e.author, e.date, e.kind].filter(Boolean).join(', '), marks = marksOf(e);
     return '<button class="lib-tile" data-lib="' + esc(e.id) + '" title="' + esc(said) + '" aria-label="' + esc(said + '. ' + heldAs(e)) + '">' +
-      '<span class="lib-stand' + (marks ? ' lib-has-mark' : '') + '">' + coverOf(e) + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + (marks ? '<span class="lib-marks">' + marks + '</span>' : '') + dueStamp(e) + '</span>' +
+      '<span class="lib-stand' + (marks ? ' lib-has-mark' : '') + '">' + coverOf(e) + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + (marks ? '<span class="lib-marks">' + marks + '</span>' : '') + dueStamp(e) + (!pic && /^(book|thesis|chapter)$/.test(L.family(e)) && L.callNo(e) ? '<span class="lib-spine" aria-hidden="true">' + esc(L.callNo(e)) + '</span>' : '') + '</span>' +
       '<span class="lib-cap">' + (pic ? '<span class="lib-t">' + esc(e.title) + '</span>' : '') +
       '<span class="lib-m">' + [e.author, L.year(e.date) || e.date].filter(Boolean).map(esc).join(', ') + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></span></button>';
@@ -775,9 +791,10 @@
     if (F.show === 'loans') {
       var due = function (e) { return (onLoan(e.id) || {}).due || '9999'; };
       var ls = rows().sort(function (a, b) { return due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0; });
+      var asList = F.view === 'list';
       box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
-      var zl = SW.$('.lib-sizes', view); if (zl) zl.hidden = true;
-      box.innerHTML = (ls.length ? '<div class="lib-cards">' + ls.map(cardOf).join('') + '</div>' : '<p class="hint pad">Nothing on your To read shelf. Open a work and check it out for one, two or three months.</p>') + logHTML();
+      var zl = SW.$('.lib-sizes', view); if (zl) zl.hidden = asList;
+      box.innerHTML = (ls.length ? (asList ? '<table class="lib-loanlist"><thead><tr><th>Code</th><th>Work</th><th>Due</th><th></th></tr></thead><tbody>' + ls.map(loanRow).join('') + '</tbody></table>' : '<div class="lib-cards lib-cards-' + (F.size || 'm') + '">' + ls.map(cardOf).join('') + '</div>') : '<p class="hint pad">Nothing on your To read shelf. Open a work and check it out for one, two or three months.</p>') + logHTML();
       var nl = SW.$('.lib-n', view); if (nl) nl.textContent = ls.length + ' to read';
       return;
     }
@@ -873,8 +890,7 @@
         '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. Below the cards, your reading log lists every work you have had out, with your rating, and <b>Your notes</b> opens the notes you have written on works in the library. It is kept in this browser. With the group’s Hypothesis token it follows you to your other browsers and the group’s members can see it, and a work’s card and box show who else in the group has it out.',
         'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
-        '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.',
-        '<b>🔗 Copy link</b> copies a link to the entry.'])],
+        '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.'])],
       ['Notes on a work', ul([
         'Above them, members of the group give a work one to three stars, and an emoji. The average shows on its cover, and <b>Order</b> can sort by it.',
         'The panel beside a work holds the group’s notes on it, with replies and reactions as on a text. They are visible to the annotation group only (Help ▸ Getting set up).',
@@ -974,7 +990,6 @@
         (canOpen && priv ? ib({ 'data-a': 'dl' }, ICON.down, 'Download') : '') +
         (e.url && e.file ? ib({ href: e.url, target: '_blank', rel: 'noopener noreferrer' }, ICON.globe, 'Where it is published') : '') +
         ib({ 'data-a': 'share' }, SW.SHARE_ICON || ICON.globe, 'Share a link to this entry') +
-        ib({ 'data-a': 'link' }, ICON.link, 'Copy a link to this entry') +
         (canRate() ? ib({ 'data-a': 'key' }, ICON.flag(false), 'Mark this as a key work for the group') : '') +
         '<span class="lib-loanbox"></span>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');

@@ -4,7 +4,9 @@
 
 - The Library's intro under its title is its first sentence, in small type, with the whole in the tooltip (David, 2026-11-08). A bench can shorten its `intro` to one brief sentence.
 - A library card's dates read NOV 07 26 (David, 2026-11-08).
-- **A Library entry's actions as one row of icons** (David, 2026-11-08, through ELIZA): open in a new tab, download, where it is published, share, copy link, Key work (a flag, filled when marked) and To Read (a bookmark, filled while out), each with its words in the tooltip and for a screen reader. To Read opens a small menu, "Add to To Read:" 1, 2 or 3 months, or the due date and Return. An entry with only a link keeps a visible Open button.
+- The To read shelf comes as small, medium or large cards, or a list, and a card's code and title open the work (David, 2026-11-08).
+- **Call numbers** after the old shelf marks, such as `1966 W48e`, on each library card's label and up the spine of a drawn book (David, 2026-11-08). `SW.library.callNo(e)`.
+- **A Library entry's actions as one row of icons** (David, 2026-11-08, through ELIZA): open in a new tab, download, where it is published, share, Key work (a flag, filled when marked) and To Read (a bookmark, filled while out), each with its words in the tooltip and for a screen reader. To Read opens a small menu, "Add to To Read:" 1, 2 or 3 months, or the due date and Return. An entry with only a link keeps a visible Open button. Copy link is gone: Share copies the link where a browser has no share sheet (David).
 
 ## 1.8.8 (2026-11-07)
 
