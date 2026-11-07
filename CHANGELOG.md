@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.5.0 (2026-11-07)
 
 - **A Rating filter in the Library** (David, 2026-11-07): three stars, two, one, or Not rated, from the group's average to the nearest star. Shown once a work has a rating. An order or a filter by rating now redraws when the ratings arrive, so a kept order of Rating is right on opening the tab.
 - **Language in the Library's filters by name** (David, 2026-11-07), and moved up beside Kind, from below the list of authors. `SW.library.langName` turns `ja` into Japanese with the browser's own names, and leaves a code it has no name for. The record shows the name too, and the search reads it.
