@@ -39,7 +39,7 @@
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter
  * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search,
- * filters (held, linked, annotated) and facets with their counts (kind, decade, author, language, tag); an
+ * filters (held, linked, annotated) and facets with their counts (kind, language, rating, decade, author, tag); an
  * entry opens
  * in a box over the bench: its record, the file shown (a PDF in the browser's own viewer), Open in a
  * new tab, Download, the link out, and a link to the entry.
@@ -382,12 +382,36 @@
   }
   // ---------- facets ----------
   // An entry's values for each facet. Values within a facet widen the choice, and facets narrow one another.
-  var FACETS = [['kind', 'Kind'], ['decade', 'Decade'], ['author', 'Author'], ['lang', 'Language'], ['tag', 'Tag']];
+  var FACETS = [['kind', 'Kind'], ['lang', 'Language'], ['rating', 'Rating'], ['decade', 'Decade'], ['author', 'Author'], ['tag', 'Tag']];
+  // a language's English name from its code, or the code where the browser has no name for it
+  var LANGS = {};
+  L.langName = function (code) {
+    var c = String(code || '');
+    if (!c) return '';
+    if (LANGS[c]) return LANGS[c];
+    var n = c;
+    try { if (root.Intl && Intl.DisplayNames) n = new Intl.DisplayNames(['en'], { type: 'language', fallback: 'code' }).of(c) || c; } catch (e) { n = c; }
+    LANGS[c] = n;
+    return n;
+  };
+  // the average to the nearest star, or none
+  function ratingBand(e) { var s = NR[e.id]; return s ? String(Math.max(1, Math.min(3, Math.round(s.avg)))) : 'none'; }
+  function facetLabel(f, v) {
+    if (f === 'lang') return L.langName(v);
+    if (f === 'rating') return v === 'none' ? 'Not rated' : new Array(+v + 1).join('★');
+    return v;
+  }
+  function facetTitle(f, v) {
+    if (f === 'lang') return v;
+    if (f === 'rating' && v !== 'none') return v + (v === '1' ? ' star' : ' stars') + ' on average, to the nearest star';
+    return '';
+  }
   function facetValues(e, f) {
     if (f === 'kind') return e.kind ? [String(e.kind)] : [];
     if (f === 'decade') { var y = L.year(e.date); return [y == null ? 'No date' : Math.floor(y / 10) * 10 + 's']; }
     if (f === 'author') return e.author ? String(e.author).split(/\s*(?:;|&|\band\b)\s*/).map(function (a) { return L.surname(a); }).filter(Boolean) : [];
     if (f === 'lang') return e.lang ? [String(e.lang)] : [];
+    if (f === 'rating') return [ratingBand(e)];
     return (e.tags || []).map(String);
   }
   function facetsOn() { return Object.keys(F.facets).some(function (f) { return Object.keys(F.facets[f] || {}).length; }); }
@@ -406,10 +430,12 @@
       Object.keys(on).forEach(function (v) { if (!c[v]) c[v] = 0; });
       var vs = Object.keys(c);
       if (vs.length < 2 && !Object.keys(on).length) return '';
-      vs.sort(f === 'decade' ? function (a, b) { return a === 'No date' ? 1 : b === 'No date' ? -1 : a < b ? 1 : -1; } : function (a, b) { return (c[b] - c[a]) || AZ(a, b); });
+      var last = f === 'decade' ? 'No date' : 'none';
+      vs.sort(f === 'decade' || f === 'rating' ? function (a, b) { return a === last ? 1 : b === last ? -1 : a < b ? 1 : -1; } : function (a, b) { return (c[b] - c[a]) || AZ(a, b); });
       var cap = f === 'decade' || F.more[f] ? vs.length : 8, shown = vs.filter(function (v, i) { return i < cap || on[v]; });
       return '<details class="lib-facet" open><summary>' + x[1] + '</summary>' + shown.map(function (v) {
-        return '<button class="lib-f' + (on[v] ? ' on' : '') + '" data-facet="' + f + '" data-val="' + esc(v) + '" aria-pressed="' + (on[v] ? 'true' : 'false') + '"><span>' + esc(v) + '</span><i>' + c[v] + '</i></button>';
+        var tip = facetTitle(f, v);
+        return '<button class="lib-f' + (on[v] ? ' on' : '') + '" data-facet="' + f + '" data-val="' + esc(v) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + ' aria-pressed="' + (on[v] ? 'true' : 'false') + '"><span>' + esc(facetLabel(f, v)) + '</span><i>' + c[v] + '</i></button>';
       }).join('') + (vs.length > 8 && f !== 'decade' ? '<button class="lib-fmore" data-fmore="' + f + '">' + (F.more[f] ? 'Fewer' : 'All ' + vs.length) + '</button>' : '') + '</details>';
     }).join('');
   }
@@ -422,17 +448,21 @@
       if (F.show === 'added' && !isAdded(e)) return false;
       if (F.show === 'noted' && !NC[e.id]) return false;
       if (!inFacets(e, skip)) return false;
-      if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, (e.tags || []).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
+      if (q && [e.id, e.title, e.author, e.contributor, e.in, e.publisher, e.date, e.kind, e.note, e.licence, e.source, L.langName(e.lang), (e.tags || []).join(' ')].join(' ').toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
   }
   // ---------- notes on the entries ----------
-  var NC = {}, NR = {};
+  var NC = {}, NR = {}, NRS = '{}';
   function itemNotes() { return SW.notes && SW.notes.itemNotes ? SW.notes : null; }
   function paintCounts(view) {
     var N = itemNotes(); if (!N) return;
     if (N.itemRatings) N.itemRatings().then(function (r) {
-      NR = r;
+      var sig = JSON.stringify(r), moved = sig !== NRS;
+      NR = r; NRS = sig;
+      // ratings arrive after the first drawing: redraw where they decide what shows, or its order
+      if (moved && F.view !== 'notes' && (F.order === 'rating' || Object.keys(F.facets.rating || {}).length)) { list(view); return; }
+      var fb0 = SW.$('.lib-fbody', view); if (moved && fb0 && F.view !== 'notes') fb0.innerHTML = facetHTML();
       var box0 = SW.$('.lib-list', view); if (!box0) return;
       SW.$$('[data-lib]', box0).forEach(function (x) {
         var s = r[x.dataset.lib], at = SW.$('.lib-cap .lib-m', x) || SW.$('.lib-m', x), old = SW.$('.lib-rt', x);
@@ -551,8 +581,8 @@
       ['Finding a work', ul([
         '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), and <b>☰</b> a list. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view, size and order is kept in this browser.',
-        'The search reads the title, author, date, kind, note, licence, source and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
-        '<b>Filters</b> beside the list narrow by kind, decade, author, language and tag, each value with its count. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
+        'The search reads the title, author, date, kind, note, licence, source, language and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
+        '<b>Filters</b> beside the list narrow by kind, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
       ['Opening a work', ul([
         'Click a cover or a row: the record opens in a box over the bench, with its citation (<b>Copy</b> copies it), the file where you can read it, and a link to where it is published.',
         'A work may have other forms, such as a transcript: a button below it opens one under the work, so you can read it while a recording plays.',
@@ -628,7 +658,7 @@
       var alts = (e.alts || []).filter(function (a) { return a && a.file && (!isPrivate(a) || L.member()); });
       var fam = L.family(e), player = e.url && SW.embedPlayer ? SW.embedPlayer(e.url, e.title, fam, 'lib-embed') : null;
       var cite = L.citation(e);
-      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', e.lang], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +

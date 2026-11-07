@@ -159,7 +159,7 @@ The entry and its note stay as written. The record goes from `catalogue.json` in
 
 ## A large library
 
-The tab's **Filters** narrow by kind, decade, author, language and tag, with counts. They come from the entries' `kind`, `date`, `author`, `lang` and `tags`, so a large library is easier to search where those are filled in consistently, with one spelling for a kind and for a surname. A facet with only one value does not show.
+The tab's **Filters** narrow by kind, language, rating, decade, author and tag, with counts. They come from the entries' `kind`, `lang`, `date`, `author` and `tags`, so a large library is easier to search where those are filled in consistently, with one spelling for a kind and for a surname. Give `lang` as a language code (`ja`, `de`): readers see its English name, here and in the record, where the browser knows it, and the code where it does not. Rating comes from the group's stars: the average to the nearest star, or Not rated. A facet with only one value does not show, so a bench with no ratings has no Rating filter.
 
 Tried with 1,000 link-only entries in a browser: searching, filtering, ordering and switching view each took about 50 milliseconds or less, measured to the end of layout. There is no limit in the covers. A page of 1,000 covers is long to scroll, so search, the filters and the list do that work; `library: { view: 'list' }` starts a large library as a list.
 

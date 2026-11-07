@@ -60,6 +60,7 @@
       T.eq('any other address does not', play('https://example.org/a'), null);
       T.yes('in the frame class it is given', /class="lib-embed"/.test(play('https://vimeo.com/123') || ''));
       T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
+      T.eq('a language by name, or its code', [L.langName('ja'), L.langName('simple'), L.langName('')], ['Japanese', 'simple', '']);
       T.eq('kinds a literature search uses', [{ kind: 'preprint' }, { kind: 'conference' }, { kind: 'news' }, { kind: 'magazine' }, { kind: 'encyclopedia' }].map(L.family), ['article', 'article', 'news', 'news', 'web']);
       T.eq('or from the file', [{ file: 'a.mp3' }, { file: 'a.webm' }, { file: 'a.pdf' }, { url: 'https://example.org' }].map(L.family), ['audio', 'film', 'article', 'web']);
     }
@@ -463,6 +464,28 @@
       return N.itemCounts();
     }).then(function (c2) {
       T.eq('ratings are not counted as notes', c2['P-AAAAA'], 1);
+      if (!document.getElementById('view-library')) document.body.appendChild(Object.assign(document.createElement('section'), { id: 'view-library', className: 'view' }));
+      SW.paratexts = undefined;
+      B.library = { items: [{ id: 'P-AAAAA', title: 'Rated', lang: 'ja' }, { id: 'P-OTHER', title: 'Another', lang: 'en' }] };
+      SW.store.set('library.order', 'rating');
+      return load().then(function () { SW.store.set('library.order', ''); return SW.library.load(); }).then(function () {
+        SW.views.library.show();
+        return wait(120);
+      }).then(function () {
+        var vw = document.getElementById('view-library');
+        function facet(f, val) { return vw.querySelector('[data-facet="' + f + '"][data-val="' + val + '"]'); }
+        function shown() { return Array.prototype.map.call(vw.querySelectorAll('[data-lib]'), function (x) { return x.dataset.lib; }).join(' '); }
+        T.eq('a kept order of Rating, once the ratings have come', shown(), 'P-AAAAA P-OTHER');
+        T.eq('the Rating filter', [facet('rating', '3').textContent, facet('rating', 'none').textContent], ['★★★1', 'Not rated1']);
+        T.eq('language by name in the filter', facet('lang', 'ja').querySelector('span').textContent, 'Japanese');
+        facet('rating', 'none').click();
+        T.eq('filtered by rating', shown(), 'P-OTHER');
+        vw.querySelector('[data-fclear]').click();
+        facet('lang', 'ja').click();
+        T.eq('filtered by language', shown(), 'P-AAAAA');
+        vw.querySelector('[data-fclear]').click();
+      });
+    }).then(function () {
       restore();
     }, function (e) { restore(); throw e; });
   }
