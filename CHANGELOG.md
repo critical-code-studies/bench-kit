@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **By relevance in the Library** (David, 2026-11-07, through ELIZA and SHRDLU): a `relevance` field on an entry (`about`, `section`, `mention`, `unread`) gives an order and a filter. Where entries have it, that order comes first and replaces As listed in the menu, and `library.order: 'listed'` shows it. Without the field, nothing changes.
+- The S M L buttons no longer show in the Library's list view, where they do nothing.
 - **A Preprint badge in the Library** (David, 2026-11-07, through ELIZA), on the cover, in the list and in the box, for an entry with `kind: 'preprint'`. No new field.
 
 ## 1.7.0 (2026-11-07)

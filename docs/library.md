@@ -157,6 +157,10 @@ node research/kit/tools/library-move.js ../my-paratexts --adopt P-AAAAA,P-BBBBB 
 
 The entry and its note stay as written. The record goes from `catalogue.json` into `library/moved.json`, and its files stay where they are in the private repository, for `--back`. `--back` then restores the record and takes out the entry and any public copies the entry named.
 
+## Relevance
+
+`relevance` on an entry says how far it concerns the bench's subject: `about`, `section`, `mention` or `unread`. Where any entry has it, **By relevance** is the first order, by author within each group, and there is a **Relevance** filter and a line in the record. An entry without it comes last. It replaces **As listed** in the menu on that bench, so `library: { order: 'listed' }` shows By relevance there, and a bench that sorted its manifest by hand can stop. A bench whose `library.order` names another order keeps it as what a reader sees first. Without the field, nothing changes.
+
 ## Preprints
 
 An entry with `kind: 'preprint'` carries a **Preprint** badge on its cover, in the list and in its box. A preprint kept beside its published version is a second entry, with the note on each naming the other.
@@ -177,7 +181,7 @@ An image should be 1200 by 630 pixels. Sites keep a card for a while, so a chang
 
 ## A large library
 
-The tab's **Filters** narrow by kind, language, rating, decade, author and tag, with counts. They come from the entries' `kind`, `lang`, `date`, `author` and `tags`, so a large library is easier to search where those are filled in consistently, with one spelling for a kind and for a surname. Give `lang` as a language code (`ja`, `de`): readers see its English name, here and in the record, where the browser knows it, and the code where it does not. Rating comes from the group's stars: the average to the nearest star, or Not rated. A facet with only one value does not show, so a bench with no ratings has no Rating filter.
+The tab's **Filters** narrow by kind, relevance, language, rating, decade, author and tag, with counts. They come from the entries' `kind`, `relevance`, `lang`, `date`, `author` and `tags`, so a large library is easier to search where those are filled in consistently, with one spelling for a kind and for a surname. Give `lang` as a language code (`ja`, `de`): readers see its English name, here and in the record, where the browser knows it, and the code where it does not. Rating comes from the group's stars: the average to the nearest star, or Not rated. A facet with only one value does not show, so a bench with no ratings has no Rating filter.
 
 Tried with 1,000 link-only entries in a browser: searching, filtering, ordering and switching view each took about 50 milliseconds or less, measured to the end of layout. There is no limit in the covers. A page of 1,000 covers is long to scroll, so search, the filters and the list do that work; `library: { view: 'list' }` starts a large library as a list.
 

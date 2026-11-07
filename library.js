@@ -39,6 +39,7 @@
  *   thumb     an image for its cover: a path from the page, or a link. Without one, a public image file
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter
+ *   relevance 'about', 'section', 'mention' or 'unread': an order, the first shown where any entry has it, and a filter
  * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search,
  * filters (held, linked, annotated) and facets with their counts (kind, language, rating, decade, author, tag); an
  * entry opens
@@ -311,18 +312,22 @@
   // the title as filed: without an opening article or quotation mark
   function titleKey(t) { return String(t == null ? '' : t).replace(/^[\s"'“‘«(\[]+/, '').replace(/^(the|an?|le|la|les|der|die|das)\s+/i, ''); }
   var AZ = root.Intl && Intl.Collator ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare : function (a, b) { return a < b ? -1 : a > b ? 1 : 0; };
+  var RELEVANCE = ['about', 'section', 'mention', 'unread'], REL_NAMES = { about: 'About it', section: 'A section on it', mention: 'A passing mention', unread: 'Not yet read' };
+  function relRank(e) { var i = RELEVANCE.indexOf(e.relevance); return i < 0 ? RELEVANCE.length : i; }
   L.sorted = function (items, order) {
     var byTitle = function (a, b) { return AZ(titleKey(a.title), titleKey(b.title)); };
     // what has no value for this order goes after what has
     function by(key, then) { return function (a, b) { var x = key(a), y = key(b); if (!x !== !y) return x ? -1 : 1; return (x && AZ(x, y)) || then(a, b); }; }
     function byYear(sign) { return function (a, b) { var x = L.year(a.date), y = L.year(b.date); if ((x == null) !== (y == null)) return x == null ? 1 : -1; return (x == null ? 0 : sign * (x - y)) || byTitle(a, b); }; }
+    var byAuthor = by(function (e) { return L.surname(e.author); }, byYear(1));
     var fn = order === 'title' ? byTitle : order === 'new' ? byYear(-1) : order === 'old' ? byYear(1) :
       order === 'kind' ? by(function (e) { return e.kind; }, byTitle) : order === 'lang' ? by(function (e) { return e.lang; }, byTitle) :
-      order === 'author' ? by(function (e) { return L.surname(e.author); }, byYear(1)) :
+      order === 'author' ? byAuthor :
+      order === 'relevance' ? function (a, b) { return (relRank(a) - relRank(b)) || byAuthor(a, b); } :
       order === 'rating' ? function (a, b) { var x = NR[a.id] ? NR[a.id].avg : 0, y = NR[b.id] ? NR[b.id].avg : 0; return (y - x) || byTitle(a, b); } : null;
     return fn ? items.slice().sort(fn) : items.slice();
   };
-  var ORDERS = [['author', 'Author'], ['title', 'Title'], ['new', 'Date, newest first'], ['old', 'Date, oldest first'], ['kind', 'Kind'], ['lang', 'Language'], ['rating', 'Rating'], ['listed', 'As listed']];
+  var ORDERS = [['relevance', 'By relevance'], ['author', 'Author'], ['title', 'Title'], ['new', 'Date, newest first'], ['old', 'Date, oldest first'], ['kind', 'Kind'], ['lang', 'Language'], ['rating', 'Rating'], ['listed', 'As listed']];
 
   // ---------- covers ----------
   // what a cover is drawn as: a kind's own word first, then what the file is
@@ -385,7 +390,7 @@
   }
   // ---------- facets ----------
   // An entry's values for each facet. Values within a facet widen the choice, and facets narrow one another.
-  var FACETS = [['kind', 'Kind'], ['lang', 'Language'], ['rating', 'Rating'], ['decade', 'Decade'], ['author', 'Author'], ['tag', 'Tag']];
+  var FACETS = [['kind', 'Kind'], ['relevance', 'Relevance'], ['lang', 'Language'], ['rating', 'Rating'], ['decade', 'Decade'], ['author', 'Author'], ['tag', 'Tag']];
   // a language's English name from its code, or the code where the browser has no name for it
   var LANGS = {};
   L.langName = function (code) {
@@ -401,6 +406,7 @@
   function ratingBand(e) { var s = NR[e.id]; return s ? String(Math.max(1, Math.min(3, Math.round(s.avg)))) : 'none'; }
   function facetLabel(f, v) {
     if (f === 'lang') return L.langName(v);
+    if (f === 'relevance') return REL_NAMES[v] || v;
     if (f === 'rating') return v === 'none' ? 'Not rated' : new Array(+v + 1).join('★');
     return v;
   }
@@ -415,6 +421,7 @@
     if (f === 'author') return e.author ? String(e.author).split(/\s*(?:;|&|\band\b)\s*/).map(function (a) { return L.surname(a); }).filter(Boolean) : [];
     if (f === 'lang') return e.lang ? [String(e.lang)] : [];
     if (f === 'rating') return [ratingBand(e)];
+    if (f === 'relevance') return REL_NAMES[e.relevance] ? [e.relevance] : [];
     return (e.tags || []).map(String);
   }
   function facetsOn() { return Object.keys(F.facets).some(function (f) { return Object.keys(F.facets[f] || {}).length; }); }
@@ -434,7 +441,7 @@
       var vs = Object.keys(c);
       if (vs.length < 2 && !Object.keys(on).length) return '';
       var last = f === 'decade' ? 'No date' : 'none';
-      vs.sort(f === 'decade' || f === 'rating' ? function (a, b) { return a === last ? 1 : b === last ? -1 : a < b ? 1 : -1; } : function (a, b) { return (c[b] - c[a]) || AZ(a, b); });
+      vs.sort(f === 'relevance' ? function (a, b) { return RELEVANCE.indexOf(a) - RELEVANCE.indexOf(b); } : f === 'decade' || f === 'rating' ? function (a, b) { return a === last ? 1 : b === last ? -1 : a < b ? 1 : -1; } : function (a, b) { return (c[b] - c[a]) || AZ(a, b); });
       var cap = f === 'decade' || F.more[f] ? vs.length : 8, shown = vs.filter(function (v, i) { return i < cap || on[v]; });
       return '<details class="lib-facet" open><summary>' + x[1] + '</summary>' + shown.map(function (v) {
         var tip = facetTitle(f, v);
@@ -535,11 +542,15 @@
     L.load().then(function (m) {
       // a kept order of Rating waits in the store for a reader with the group's token
       if (F.order === 'rating' && !canRate()) F.order = C.order && C.order !== 'rating' ? C.order : 'author';
+      // relevance is the first order where entries have it, and stands in for As listed there
+      var hasRel = m.items.some(function (e) { return e.relevance; });
+      if (hasRel && (F.order === 'listed' || (!SW.store.get('library.order', '') && !C.order))) F.order = 'relevance';
+      if (!hasRel && F.order === 'relevance') F.order = C.order && C.order !== 'relevance' ? C.order : 'author';
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
         ((C.intro || m.intro) ? '<div class="lib-intro">' + (C.intro || m.intro) + '</div>' : '') +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
-        '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canRate()); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+        '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canRate()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
@@ -586,9 +597,9 @@
       ['What it holds', '<p>The secondary literature on the project: the books, articles, talks, podcasts and documentaries the group reads and cites. Each entry has a record. Some have a file held here, some a file the group keeps privately, and some a link to where the work is published.</p>'],
       ['Finding a work', ul([
         '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), and <b>☰</b> a list. A preprint carries a badge in each, and in its box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
-        '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Your choice of view, size and order is kept in this browser.',
+        '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Where entries say how far they concern the subject, <b>By relevance</b> comes first: works about it, then those with a section on it, passing mentions, and those not yet read, by author within each. Your choice of view, size and order is kept in this browser.',
         'The search reads the title, author, date, kind, note, licence, source, language and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
-        '<b>Filters</b> beside the list narrow by kind, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
+        '<b>Filters</b> beside the list narrow by kind, relevance, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
       ['Opening a work', ul([
         'Click a cover or a row: the record opens in a box over the bench, with its citation (<b>Copy</b> copies it), the file where you can read it, and a link to where it is published.',
         'A work may have other forms, such as a transcript: a button below it opens one under the work, so you can read it while a recording plays.',
@@ -676,7 +687,7 @@
       var cite = L.citation(e);
       // a real cover; a public image used as its own cover already shows below
       var boxCover = e.thumb && e.thumb !== e.file ? e.thumb : '';
-      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', REL_NAMES[e.relevance]], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
