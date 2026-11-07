@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.9 (2026-11-07)
 
 - The Library's intro under its title is its first sentence, in small type, with the whole in the tooltip (David, 2026-11-08). A bench can shorten its `intro` to one brief sentence.
 - A library card's dates read NOV 07 26 (David, 2026-11-08).
