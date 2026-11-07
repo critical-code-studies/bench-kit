@@ -182,7 +182,7 @@ An entry's box shows a citation with a Copy button, in Harvard form, built from 
 
 The panel in an entry's box, and in a paratext's, holds notes in the bench's Hypothesis group, with replies and reactions as on a text, so they need that group's token and are visible to the group only. Without one, a note stays a draft in that browser. A note is an annotation with `item:<code>` in place of a version, tagged `bk:kind:item`, and pinned if wanted by `bk:at:t:<seconds>`, `bk:at:p:<page>` or `bk:at:q` with the quoted words. The code stays when an item moves from Paratexts to the Library, so its notes go with it.
 
-Members also give an entry one to three stars and an emoji, in the same panel. Each is a reaction in the group with no parent, with `★1` to `★3` or the emoji as its text, and a person's latest rating counts. The average shows on the cover and **Order** can sort by it. A paratext keeps its own ratings in its catalogue, so a rating there does not follow an item to the Library unless someone moves it by hand.
+Members also give an entry one to three stars and an emoji, in the same panel. Each is a reaction in the group with no parent, with `★1` to `★3` or the emoji as its text, and a person's latest rating counts. The average shows on the cover and **Order** can sort by it, an option offered only to a reader with the group's token. A paratext keeps its own ratings in its catalogue, so a rating there does not follow an item to the Library unless someone moves it by hand.
 
 A cover shows a count, **Annotated** filters to those, and ✎ lists all the notes across the Library and Paratexts. Paratexts' cards show the count too. Paratexts' own comments and ratings remain as they were, kept in its catalogue and separate from these notes.
 

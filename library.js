@@ -525,15 +525,18 @@
     var n = SW.$('.lib-n', view); if (n) n.textContent = rs.length + ' of ' + L.items().length;
     paintCounts(view);
   }
+  function canRate() { var N = itemNotes(); return !!(N && N.configured()); }
   function draw() {
     var view = SW.$('#view-library'); if (!view) return;
     view.innerHTML = '<p class="hint pad">Reading the library…</p>';
     L.load().then(function (m) {
+      // a kept order of Rating waits in the store for a reader with the group's token
+      if (F.order === 'rating' && !canRate()) F.order = C.order && C.order !== 'rating' ? C.order : 'author';
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
         ((C.intro || m.intro) ? '<div class="lib-intro">' + (C.intro || m.intro) + '</div>' : '') +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
-        '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return o[0] !== 'lang' || m.items.some(function (e) { return e.lang; }); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+        '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canRate()); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +

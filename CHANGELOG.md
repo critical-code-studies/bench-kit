@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- The Library's **Order** menu offers Rating only to a reader with the group's Hypothesis token (the translation session's report on 1.5.0). Without one there are no ratings to sort by. A kept order of Rating falls back to the bench's order, or Author, and stays in the store for when a token is set.
+
 ## 1.5.0 (2026-11-07)
 
 - **A Rating filter in the Library** (David, 2026-11-07): three stars, two, one, or Not rated, from the group's average to the nearest star. Shown once a work has a rating. An order or a filter by rating now redraws when the ratings arrive, so a kept order of Rating is right on opening the tab.

@@ -116,6 +116,7 @@
         T.yes('its picture over it', v.querySelector('[data-lib="c3"] img.lib-thumb'));
         T.yes('an article as an article', v.querySelector('[data-lib="c2"] .lib-cover.lib-c-article'));
         T.eq('by author first', v.querySelector('.lib-order select').value, 'author');
+        T.eq('no Rating to order by without a group', v.querySelector('.lib-order select option[value="rating"]'), null);
         if (SW.guideAdd) { SW.library.help(); var hd = document.querySelector('dialog h3'); T.yes('the guide opens, from the Help menu or the ?', hd && /holds/.test(hd.textContent)); hd.closest('dialog').close(); }
         v.querySelector('[data-libsize="l"]').click();
         T.yes('large covers', v.querySelector('.lib-list.lib-shelf.lib-l'));
@@ -476,6 +477,7 @@
         function facet(f, val) { return vw.querySelector('[data-facet="' + f + '"][data-val="' + val + '"]'); }
         function shown() { return Array.prototype.map.call(vw.querySelectorAll('[data-lib]'), function (x) { return x.dataset.lib; }).join(' '); }
         T.eq('a kept order of Rating, once the ratings have come', shown(), 'P-AAAAA P-OTHER');
+        T.yes('Rating to order by, with a group', vw.querySelector('.lib-order select option[value="rating"]'));
         T.eq('the Rating filter', [facet('rating', '3').textContent, facet('rating', 'none').textContent], ['★★★1', 'Not rated1']);
         T.eq('language by name in the filter', facet('lang', 'ja').querySelector('span').textContent, 'Japanese');
         facet('rating', 'none').click();
@@ -484,6 +486,17 @@
         facet('lang', 'ja').click();
         T.eq('filtered by language', shown(), 'P-AAAAA');
         vw.querySelector('[data-fclear]').click();
+        SW.store.set('token', ''); N.forget();
+        SW.store.set('library.order', 'rating');
+        return load();
+      }).then(function () { return SW.library.load(); }).then(function () {
+        SW.views.library.show();
+        return wait(80);
+      }).then(function () {
+        var sel = document.querySelector('#view-library .lib-order select');
+        T.eq('a kept order of Rating, with no token: Author', sel.value, 'author');
+        T.eq('and it stays kept', SW.store.get('library.order', ''), 'rating');
+        SW.store.set('library.order', '');
       });
     }).then(function () {
       restore();
