@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Relevance set with a drop-down in a Library entry's box** (David, 2026-11-08), kept as a tag in the group's annotations, so members can change a level at once. A tag naming a level comes before the `relevance` field, which stays what readers outside the group see. The level shows in its drop-down and filter, not among the tags.
+
 ## 1.8.2 (2026-11-07)
 
 - **Relevance levels are now Essential, High, Medium, Low, Minimal and Not Checked** (David, 2026-11-08), with the values `essential`, `high`, `medium`, `low`, `minimal` and `unchecked`. The values from 1.8.0 still read: `about` as High, `section` as Medium, `mention` as Low and `unread` as Not Checked.

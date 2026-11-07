@@ -41,7 +41,8 @@
  *   tags      [word], for the filter and the box. Members of the annotation group add and take off tags in the box,
  *             for the group: see N.itemTags in notes.js
  *   relevance 'essential', 'high', 'medium', 'low', 'minimal' or 'unchecked': an order, the first shown where any entry
- *             has it, and a filter. 'about', 'section', 'mention' and 'unread' from 1.8.0 read as high, medium, low, unchecked
+ *             has it, and a filter. 'about', 'section', 'mention' and 'unread' from 1.8.0 read as high, medium, low, unchecked.
+ *             A tag naming a level (High, Not Checked) comes before this field: the drop-down in the box writes one
  *   key       a number (1, 2, 3…): a key work, marked as one, and ahead of the groups in that order. Members of the
  *             annotation group add and take off the mark in the box, for the group: see N.itemKeys in notes.js
  * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search,
@@ -318,7 +319,14 @@
   var AZ = root.Intl && Intl.Collator ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare : function (a, b) { return a < b ? -1 : a > b ? 1 : 0; };
   var RELEVANCE = ['essential', 'high', 'medium', 'low', 'minimal', 'unchecked'], REL_NAMES = { essential: 'Essential', high: 'High', medium: 'Medium', low: 'Low', minimal: 'Minimal', unchecked: 'Not Checked' };
   var REL_OLD = { about: 'high', section: 'medium', mention: 'low', unread: 'unchecked' };
-  function relOf(e) { var r = String(e.relevance || '').trim().toLowerCase(); r = REL_OLD[r] || r; return REL_NAMES[r] ? r : ''; }
+  function levelOfWord(w) { var t = String(w).trim().toLowerCase(); return RELEVANCE.filter(function (r) { return REL_NAMES[r].toLowerCase() === t; })[0] || ''; }
+  // a level given as a tag, the highest if there are two; else the field
+  function relOf(e) {
+    var from = tagsOf(e).map(levelOfWord).filter(Boolean).sort(function (a, b) { return RELEVANCE.indexOf(a) - RELEVANCE.indexOf(b); })[0];
+    if (from) return from;
+    var r = String(e.relevance || '').trim().toLowerCase(); r = REL_OLD[r] || r;
+    return REL_NAMES[r] ? r : '';
+  }
   function relRank(e) { var i = RELEVANCE.indexOf(relOf(e)); return i < 0 ? RELEVANCE.length : i; }
   // the group's marks over the list's: a mark added goes after the list's key works, by when it was made
   var KM = {}, KADD = {}, KMINE = {}, KS = '{}';
@@ -346,7 +354,11 @@
     var fn = order === 'title' ? byTitle : order === 'new' ? byYear(-1) : order === 'old' ? byYear(1) :
       order === 'kind' ? by(function (e) { return e.kind; }, byTitle) : order === 'lang' ? by(function (e) { return e.lang; }, byTitle) :
       order === 'author' ? byAuthor :
-      order === 'relevance' ? function (a, b) { var x = keyOf(a), y = keyOf(b); if (x !== y) return x < y ? -1 : 1; return (relRank(a) - relRank(b)) || byAuthor(a, b); } :
+      order === 'relevance' ? (function () {
+        var rk = {};
+        items.forEach(function (e) { rk[e.id] = relRank(e); });
+        return function (a, b) { var x = keyOf(a), y = keyOf(b); if (x !== y) return x < y ? -1 : 1; return (rk[a.id] - rk[b.id]) || byAuthor(a, b); };
+      })() :
       order === 'rating' ? function (a, b) { var x = NR[a.id] ? NR[a.id].avg : 0, y = NR[b.id] ? NR[b.id].avg : 0; return (y - x) || byTitle(a, b); } : null;
     return fn ? items.slice().sort(fn) : items.slice();
   };
@@ -411,9 +423,17 @@
     TM = t; TS = sig;
     return moved;
   }
+  // the level has its own drop-down and filter
+  function plainTags(e) { return tagsOf(e).filter(function (w) { return !levelOfWord(w); }); }
+  // a bench whose only levels are tags gains the order when the first one comes, so the menu is drawn again
+  var relShown = false;
+  function afterTags(view) {
+    if (L.items().some(function (e) { return relOf(e); }) !== relShown) redraw();
+    else if (F.view !== 'notes') list(view);
+  }
   function allTags() {
     var seen = {};
-    L.items().forEach(function (e) { tagsOf(e).forEach(function (w) { seen[w] = 1; }); });
+    L.items().forEach(function (e) { plainTags(e).forEach(function (w) { seen[w] = 1; }); });
     return Object.keys(seen).sort(AZ);
   }
   function marksOf(e) { return ppBadge(e) + (keyOf(e) < Infinity ? '<span class="lib-key" title="A key work">Key work</span>' : ''); }
@@ -468,7 +488,7 @@
     if (f === 'lang') return e.lang ? [String(e.lang)] : [];
     if (f === 'rating') return [ratingBand(e)];
     if (f === 'relevance') return relOf(e) ? [relOf(e)] : [];
-    return tagsOf(e);
+    return plainTags(e);
   }
   function facetsOn() { return Object.keys(F.facets).some(function (f) { return Object.keys(F.facets[f] || {}).length; }); }
   function inFacets(e, skip) {
@@ -514,7 +534,7 @@
   function paintCounts(view) {
     var N = itemNotes(); if (!N) return;
     if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
-    if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t) && F.view !== 'notes') list(view); }, function () {});
+    if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t)) afterTags(view); }, function () {});
     if (N.itemRatings) N.itemRatings().then(function (r) {
       var sig = JSON.stringify(r), moved = sig !== NRS;
       NR = r; NRS = sig;
@@ -593,6 +613,7 @@
       if (F.order === 'rating' && !canRate()) F.order = C.order && C.order !== 'rating' ? C.order : 'author';
       // relevance is the first order where entries have it, and stands in for As listed there
       var hasRel = m.items.some(function (e) { return relOf(e); });
+      relShown = hasRel;
       if (hasRel && (F.order === 'listed' || (!SW.store.get('library.order', '') && !C.order))) F.order = 'relevance';
       if (!hasRel && F.order === 'relevance') F.order = C.order && C.order !== 'relevance' ? C.order : 'author';
       view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
@@ -655,7 +676,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
-        'Members of the group add <b>tags</b> to a work in its box, and take them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
+        'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
         '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
@@ -738,7 +759,7 @@
       var cite = L.citation(e);
       // a real cover; a public image used as its own cover already shows below
       var boxCover = e.thumb && e.thumb !== e.file ? e.thumb : '';
-      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', REL_NAMES[relOf(e)]], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
+      var rec = [['Author', e.author], ['With', e.contributor], ['Date', e.date], ['Kind', e.kind], ['Relevance', canRate() ? '' : REL_NAMES[relOf(e)]], ['In', inOf(e)], ['Publisher', e.publisher], ['Pages', e.pages], ['Extent', e.extent], ['DOI', e.doi], ['Language', L.langName(e.lang)], ['Licence', e.licence], ['Source', e.source], ['Note', e.note]]
         .concat(isAdded(e) && e.added ? [['Added', [e.added.by, e.added.date].filter(Boolean).join(', ') + '; not yet in the public list']] : [])
         .filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + doiLinks(esc(r[1])) + '</dd>'; }).join('');
       var acts = (canOpen && !priv ? '<a class="btn ghost" href="' + esc(e.file) + '" target="_blank" rel="noopener">Open in a new tab ↗</a><a class="btn ghost" href="' + esc(e.file) + '" download>⤓ Download</a>' : '') +
@@ -769,10 +790,11 @@
       paintKey();
       if (canRate()) itemNotes().itemKeys().then(function (k) { setKeys(k); paintKey(); }, function () {});
       function paintTags() {
-        var at = SW.$('.lib-tags', d), can = canRate(), ws = tagsOf(e), was = SW.$('.lib-taginput', d), typed = was ? was.value : '';
+        var at = SW.$('.lib-tags', d), can = canRate(), ws = plainTags(e), was = SW.$('.lib-taginput', d), typed = was ? was.value : '', lvl = relOf(e);
         if (!at) return;
         at.hidden = !ws.length && !can;
-        at.innerHTML = (ws.length || can ? '<span class="lib-tags-h">Tags</span>' : '') + ws.map(function (w) {
+        at.innerHTML = (can ? '<label class="lib-rel">Relevance <select class="lib-relsel" aria-label="Relevance"><option value="">No level</option>' + RELEVANCE.map(function (r) { return '<option value="' + r + '"' + (r === lvl ? ' selected' : '') + '>' + REL_NAMES[r] + '</option>'; }).join('') + '</select></label>' : '') +
+          (ws.length || can ? '<span class="lib-tags-h">Tags</span>' : '') + ws.map(function (w) {
           return '<span class="lib-tag">' + esc(w) + (can ? '<button type="button" data-tagoff="' + esc(w) + '" title="Take this tag off, for the group" aria-label="Take off ' + esc(w) + '">×</button>' : '') + '</span>';
         }).join('') + (can ? '<input class="lib-taginput" list="lib-alltags" placeholder="Add a tag" aria-label="Add a tag" value="' + esc(typed) + '"><datalist id="lib-alltags">' + allTags().map(function (w) { return '<option value="' + esc(w) + '">'; }).join('') + '</datalist>' : '');
       }
@@ -782,9 +804,16 @@
           TMINE[e.id][word] = { on: on, date: new Date().toISOString(), by: 'you' };
           setTags(JSON.parse(JSON.stringify(TM)));
           paintTags();
-          var v1 = SW.$('#view-library'); if (v1 && SW.$('.lib-list', v1)) list(v1);
+          var v1 = SW.$('#view-library'); if (v1 && SW.$('.lib-list', v1)) afterTags(v1);
         }, function (err) { if (err.message !== 'no initials') SW.toast(err.message, 5000); });
       }
+      // one level: the others come off as this goes on
+      function setLevel(r) {
+        var word = r ? REL_NAMES[r] : '', steps = tagsOf(e).filter(function (w) { return levelOfWord(w) && w !== word; }).map(function (w) { return [w, false]; });
+        if (word && tagsOf(e).indexOf(word) < 0) steps.push([word, true]);
+        return steps.reduce(function (p, s) { return p.then(function () { return changeTag(s[0], s[1]); }); }, Promise.resolve());
+      }
+      d.addEventListener('change', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-relsel')) setLevel(ev.target.value); });
       paintTags();
       if (canRate()) itemNotes().itemTags().then(function (t) { setTags(t); paintTags(); }, function () {});
       d.addEventListener('keydown', function (ev) {
@@ -792,6 +821,7 @@
         ev.preventDefault();
         var inp = ev.target, typed = inp.value.replace(/\s+/g, ' ').trim();
         if (!typed) return;
+        if (levelOfWord(typed)) { inp.value = ''; setLevel(levelOfWord(typed)); return; }
         // the spelling already in use, whatever the case
         var same = allTags().filter(function (w) { return w.toLowerCase() === typed.toLowerCase(); })[0] || typed;
         if (tagsOf(e).indexOf(same) >= 0) { inp.value = ''; return; }

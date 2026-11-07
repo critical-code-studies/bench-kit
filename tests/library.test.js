@@ -658,6 +658,34 @@
                   });
                 }).then(function (c4) {
                   T.eq('tags are not counted as notes', c4['K-2'], undefined);
+                  B.library = { items: [{ id: 'V-1', title: 'A', relevance: 'low', tags: ['plain'] }, { id: 'V-2', title: 'B', tags: ['High'] }, { id: 'V-3', title: 'C' }] };
+                  return load().then(function () { return SW.library.load(); });
+                }).then(function () {
+                  function ord() { return SW.library.sorted(SW.library.items(), 'relevance').map(function (e) { return e.id; }).join(' '); }
+                  T.eq('a level as a tag, and as the field', ord(), 'V-2 V-1 V-3');
+                  return SW.library.open('V-1').then(function () { return wait(60); }).then(function () {
+                    var x8 = box(), s0 = x8.querySelector('.lib-relsel');
+                    T.eq('the drop-down shows the field’s level', s0.value, 'low');
+                    function pick(v) { var sel = x8.querySelector('.lib-relsel'); sel.value = v; sel.dispatchEvent(new Event('change', { bubbles: true })); return wait(200); }
+                    return pick('essential').then(function () {
+                      T.eq('kept as a tag in the group', rows.filter(function (a) { return a.text === 'tag:on:Essential'; }).length, 1);
+                      T.eq('a tag comes before the field', ord(), 'V-1 V-2 V-3');
+                      T.eq('and not among the tags', Array.prototype.map.call(x8.querySelectorAll('.lib-tag'), function (t) { return t.firstChild.textContent; }), ['plain']);
+                      return pick('minimal');
+                    }).then(function () {
+                      T.eq('one level: the last comes off', [rows.filter(function (a) { return a.text === 'tag:off:Essential'; }).length, x8.querySelector('.lib-relsel').value, SW.library.tagsOf(SW.library.items()[0])], [1, 'minimal', ['plain', 'Minimal']]);
+                      return pick('');
+                    }).then(function () {
+                      T.eq('No level goes back to the field', [rows.filter(function (a) { return a.text === 'tag:off:Minimal'; }).length, x8.querySelector('.lib-relsel').value], [1, 'low']);
+                      var ti = x8.querySelector('.lib-taginput');
+                      ti.value = 'not checked';
+                      ti.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+                      return wait(200);
+                    }).then(function () {
+                      T.eq('a level typed as a tag sets the drop-down', x8.querySelector('.lib-relsel').value, 'unchecked');
+                      x8.close();
+                    });
+                  });
                 });
               });
             });
