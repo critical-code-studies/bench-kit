@@ -1265,9 +1265,12 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-md { max-height: 72vh; overflow: auto; padding: 4px 12px; border: 1px solid var(--line); border-radius: 4px; }
 @media (max-width: 760px) { .lib-row { grid-template-columns: 30px minmax(0, 1fr); } .lib-row .lib-h { grid-column: 2; grid-row: auto; } .lib-frame { height: 64vh; } }
 .lib-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
-@media (min-width: 860px) { .lib-body { grid-template-columns: 190px minmax(0, 1fr); } .lib-body > .lib-facets[hidden] + .lib-list { grid-column: 1 / -1; } .lib-facets > summary { display: none; } }
+.lib-fbody { display: none; margin-top: 6px; }
+.lib-facets.open .lib-fbody { display: block; }
+.lib-facets[hidden] { display: none; }
+/* a wide window always shows them, whatever its width when the page was drawn */
+@media (min-width: 860px) { .lib-body { grid-template-columns: 190px minmax(0, 1fr); } .lib-body > .lib-facets[hidden] + .lib-list { grid-column: 1 / -1; } .lib-ftoggle { display: none; } .lib-fbody { display: block; margin-top: 0; } }
 .lib-facets { font-size: 13px; min-width: 0; }
-.lib-facets > summary { cursor: pointer; font-weight: 600; margin-bottom: 6px; }
 .lib-facet { margin: 0 0 10px; }
 .lib-facet > summary { cursor: pointer; font-weight: 600; color: var(--text-dim); font-size: 12px; margin-bottom: 3px; }
 .lib-f { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 2px 6px; border: 0; border-radius: 3px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }

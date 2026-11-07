@@ -509,7 +509,7 @@
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span></div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
-        '<div class="lib-body"><details class="lib-facets"' + (root.innerWidth >= 860 ? ' open' : '') + '><summary>Filters</summary><div class="lib-fbody"></div></details><div class="lib-list"></div></div></div>';
+        '<div class="lib-body"><div class="lib-facets"><button class="btn ghost lib-ftoggle" data-ftoggle aria-expanded="false">Filters</button><div class="lib-fbody"></div></div><div class="lib-list"></div></div></div>';
       list(view);
       L.canAdd().then(function (yes) {
         var bar = SW.$('.lib-bar', view);
@@ -524,6 +524,7 @@
           if (ev.target.closest('.lib-help')) { L.help(); return; }
           var fv = ev.target.closest('[data-facet]');
           if (fv) { var fk = fv.dataset.facet, fo = F.facets[fk] = F.facets[fk] || {}; if (fo[fv.dataset.val]) delete fo[fv.dataset.val]; else fo[fv.dataset.val] = 1; list(view); return; }
+          var ft = ev.target.closest('[data-ftoggle]'); if (ft) { ft.setAttribute('aria-expanded', ft.parentNode.classList.toggle('open') ? 'true' : 'false'); return; }
           var fm = ev.target.closest('[data-fmore]'); if (fm) { F.more[fm.dataset.fmore] = !F.more[fm.dataset.fmore]; list(view); return; }
           if (ev.target.closest('[data-fclear]')) { F.facets = {}; list(view); return; }
           var no = ev.target.closest('[data-noteopen]'); if (no) { SW.notes.openItem(no.dataset.noteopen); return; }

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The Library's filters no longer vanish on a wide window (the translation session's report on 1.3.0). A page drawn narrow and then widened left an empty column with no way to open them. They now show or fold by the window's width at any moment.
 - **Star ratings and emoji in the Library** (David, 2026-11-06, as Paratexts has them), in the panel with its notes, which are the comment box for an entry. Kept in the group's Hypothesis annotations, so a Library entry needs no write to the public repository. The average on the cover, and Rating in the order menu. `N.itemRatings` in `notes.js`.
 - **Small, medium and large covers in the Library** (David, 2026-11-06), beside the list, with `library.size` for a bench's first view; a reader's choice is kept.
 
