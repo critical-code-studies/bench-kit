@@ -436,7 +436,7 @@
     L.items().forEach(function (e) { plainTags(e).forEach(function (w) { seen[w] = 1; }); });
     return Object.keys(seen).sort(AZ);
   }
-  function marksOf(e) { return ppBadge(e) + (keyOf(e) < Infinity ? '<span class="lib-key" title="A key work">Key work</span>' : ''); }
+  function marksOf(e) { return ppBadge(e) + (keyOf(e) < Infinity ? '<span class="lib-key" title="A key work">Key<span class="lib-kw"> work</span></span>' : ''); }
   // a picture that will not load leaves the drawn cover under it
   function tile(e) {
     var pic = thumbOf(e), said = [e.title, e.author, e.date, e.kind].filter(Boolean).join(', '), marks = marksOf(e);

@@ -587,6 +587,7 @@
                   function mark(id) { return vk.querySelectorAll('[data-lib="' + id + '"] .lib-key').length; }
                   T.eq('a key work marked on its cover, with no token', [mark('K-1'), mark('K-2')], [1, 0]);
                   T.yes('a preprint that is a key work has both', vk.querySelector('[data-lib="K-3"] .lib-marks .lib-pp') && vk.querySelector('[data-lib="K-3"] .lib-marks .lib-key'));
+                  T.eq('the words kept', vk.querySelector('[data-lib="K-1"] .lib-key').textContent, 'Key work');
                   vk.querySelector('[data-libview="list"]').click();
                   T.eq('and in the list', [mark('K-1'), mark('K-2')], [1, 0]);
                   vk.querySelector('[data-libview="icons"]').click();

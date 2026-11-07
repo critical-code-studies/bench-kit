@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- A cover with both the Preprint and Key work badges keeps them on one row, as Preprint and Key, so they no longer cover the title (ELIZA's report on 1.8.3). The list and the box still say Key work.
 - **The bench's name on one line in the top bar by default** (David, 2026-11-08). The kit's rule now wins over a bench's own stylesheet that stacks the name, as SHRDLU's, ELIZA's and CCSbench's did. A bench that wants it stacked sets `.bar .brand-name` itself.
 
 ## 1.8.3 (2026-11-07)
