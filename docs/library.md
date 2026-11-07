@@ -159,7 +159,16 @@ The entry and its note stay as written. The record goes from `catalogue.json` in
 
 ## Relevance
 
-`relevance` on an entry says how far it concerns the bench's subject: `about`, `section`, `mention` or `unread`. Where any entry has it, **By relevance** is the first order, by author within each group, and there is a **Relevance** filter and a line in the record. An entry without it comes last. An entry with a number in `key` (1, 2, 3…) is a key work: in this order, key works come first by that number, ahead of the groups and whatever their relevance. Other orders ignore `key`. It replaces **As listed** in the menu on that bench, so `library: { order: 'listed' }` shows By relevance there, and a bench that sorted its manifest by hand can stop. A bench whose `library.order` names another order keeps it as what a reader sees first. Without the field, nothing changes.
+`relevance` on an entry says how far it concerns the bench's subject: `about`, `section`, `mention` or `unread`. Where any entry has it, **By relevance** is the first order, by author within each group, and there is a **Relevance** filter and a line in the record. An entry without it comes last. An entry with a number in `key` (1, 2, 3…) is a key work: in this order, key works come first by that number, ahead of the groups and whatever their relevance. Other orders ignore `key` for sorting. It replaces **As listed** in the menu on that bench, so `library: { order: 'listed' }` shows By relevance there, and a bench that sorted its manifest by hand can stop. A bench whose `library.order` names another order keeps it as what a reader sees first. Without the field, nothing changes.
+
+## Key works
+
+A key work carries a **Key work** badge on its cover, in the list and in its box, on any bench. There are two sources:
+
+- `key` in `library.json`, which every reader sees.
+- The mark in an entry's box, for members with the group's Hypothesis token. It is an annotation in the group (`key:on`, `key:off`), so members see it and readers outside the group do not. Any member can take off a mark, including one from `library.json`, and the latest mark counts. A mark added comes after the list's key works, in the order the marks were made.
+
+To show a mark to every reader, set `key` in `library.json`. A bench with no annotation group has no button. The box does not change the order of key works: edit the numbers in `key` for that.
 
 ## Preprints
 

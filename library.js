@@ -40,7 +40,8 @@
  *             is its own cover, and otherwise a cover is drawn from the kind
  *   tags      [word], for the filter
  *   relevance 'about', 'section', 'mention' or 'unread': an order, the first shown where any entry has it, and a filter
- *   key       a number (1, 2, 3…): a key work, ahead of the groups in that order, in this order
+ *   key       a number (1, 2, 3…): a key work, marked as one, and ahead of the groups in that order. Members of the
+ *             annotation group add and take off the mark in the box, for the group: see N.itemKeys in notes.js
  * The tab shows the entries as covers on a shelf, or as a list, in an order the reader picks, with a search,
  * filters (held, linked, annotated) and facets with their counts (kind, language, rating, decade, author, tag); an
  * entry opens
@@ -315,7 +316,23 @@
   var AZ = root.Intl && Intl.Collator ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare : function (a, b) { return a < b ? -1 : a > b ? 1 : 0; };
   var RELEVANCE = ['about', 'section', 'mention', 'unread'], REL_NAMES = { about: 'About it', section: 'A section on it', mention: 'A passing mention', unread: 'Not yet read' };
   function relRank(e) { var i = RELEVANCE.indexOf(e.relevance); return i < 0 ? RELEVANCE.length : i; }
-  function keyOf(e) { var k = Number(e.key); return k > 0 ? k : Infinity; }
+  // the group's marks over the list's: a mark added goes after the list's key works, by when it was made
+  var KM = {}, KADD = {}, KMINE = {}, KS = '{}';
+  function keyOf(e) {
+    var m = KM[e.id], k = Number(e.key);
+    if (m && !m.on) return Infinity;
+    return k > 0 ? k : m ? KADD[e.id] : Infinity;
+  }
+  function setKeys(k) {
+    Object.keys(KMINE).forEach(function (id) { if (!k[id] || String(k[id].date) < String(KMINE[id].date)) k[id] = KMINE[id]; });
+    var sig = JSON.stringify(k), moved = sig !== KS;
+    KM = k; KS = sig;
+    var top = L.items().reduce(function (t, e) { var n = Number(e.key); return n > t ? n : t; }, 0);
+    KADD = {};
+    Object.keys(k).filter(function (id) { return k[id].on; }).sort(function (a, b) { return String(k[a].date) < String(k[b].date) ? -1 : 1; })
+      .forEach(function (id, i) { KADD[id] = top + i + 1; });
+    return moved;
+  }
   L.sorted = function (items, order) {
     var byTitle = function (a, b) { return AZ(titleKey(a.title), titleKey(b.title)); };
     // what has no value for this order goes after what has
@@ -373,11 +390,12 @@
   }
   function isPreprint(e) { return /^pre-?print$/i.test(String(e.kind || '').trim()); }
   function ppBadge(e) { return isPreprint(e) ? '<span class="lib-pp" title="A preprint, before or outside publication">Preprint</span>' : ''; }
+  function marksOf(e) { return ppBadge(e) + (keyOf(e) < Infinity ? '<span class="lib-key" title="A key work">Key work</span>' : ''); }
   // a picture that will not load leaves the drawn cover under it
   function tile(e) {
-    var pic = thumbOf(e), said = [e.title, e.author, e.date, e.kind].filter(Boolean).join(', ');
+    var pic = thumbOf(e), said = [e.title, e.author, e.date, e.kind].filter(Boolean).join(', '), marks = marksOf(e);
     return '<button class="lib-tile" data-lib="' + esc(e.id) + '" title="' + esc(said) + '" aria-label="' + esc(said + '. ' + heldAs(e)) + '">' +
-      '<span class="lib-stand' + (isPreprint(e) ? ' lib-has-pp' : '') + '">' + coverOf(e) + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + ppBadge(e) + '</span>' +
+      '<span class="lib-stand' + (marks ? ' lib-has-mark' : '') + '">' + coverOf(e) + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + (marks ? '<span class="lib-marks">' + marks + '</span>' : '') + '</span>' +
       '<span class="lib-cap">' + (pic ? '<span class="lib-t">' + esc(e.title) + '</span>' : '') +
       '<span class="lib-m">' + [e.author, L.year(e.date) || e.date].filter(Boolean).map(esc).join(', ') + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></span></button>';
@@ -387,7 +405,7 @@
   function row(e) {
     var pic = thumbOf(e);
     return '<button class="lib-row" data-lib="' + esc(e.id) + '"><span class="lib-mini lib-c-' + L.family(e) + '">' + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : glyph(L.family(e))) + '</span>' +
-      '<span class="lib-t">' + ppBadge(e) + esc(e.title) + '</span><span class="lib-m">' + meta(e) + '</span>' +
+      '<span class="lib-t">' + marksOf(e) + esc(e.title) + '</span><span class="lib-m">' + meta(e) + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></button>';
   }
   // ---------- facets ----------
@@ -469,6 +487,7 @@
   function itemNotes() { return SW.notes && SW.notes.itemNotes ? SW.notes : null; }
   function paintCounts(view) {
     var N = itemNotes(); if (!N) return;
+    if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemRatings) N.itemRatings().then(function (r) {
       var sig = JSON.stringify(r), moved = sig !== NRS;
       NR = r; NRS = sig;
@@ -507,7 +526,8 @@
     N.itemNotes().then(function (all) {
       if (F.view !== 'notes') return;
       var by = {}, q = F.q.toLowerCase();
-      all.forEach(function (n) { var c = N.itemCode(n.vid); (by[c] = by[c] || []).push(n); });
+      // a rating or a key work mark on its own is no note to list
+      all.forEach(function (n) { if (N.isReaction(n) && !n.parent) return; var c = N.itemCode(n.vid); (by[c] = by[c] || []).push(n); });
       function latest(c) { return by[c].reduce(function (m, n) { return String(n.date) > m ? String(n.date) : m; }, ''); }
       var codes = Object.keys(by).filter(function (c) {
         return !q || (c + ' ' + titleOf(c)).toLowerCase().indexOf(q) >= 0 || by[c].some(function (n) { return (String(n.text) + ' ' + n.by + ' ' + (n.quote || '')).toLowerCase().indexOf(q) >= 0; });
@@ -598,7 +618,7 @@
     SW.guideAdd('library', [C.label || 'The Library', [
       ['What it holds', '<p>The secondary literature on the project: the books, articles, talks, podcasts and documentaries the group reads and cites. Each entry has a record. Some have a file held here, some a file the group keeps privately, and some a link to where the work is published.</p>'],
       ['Finding a work', ul([
-        '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), and <b>☰</b> a list. A preprint carries a badge in each, and in its box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
+        '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), and <b>☰</b> a list. A preprint and a key work carry a badge in each, and in the box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Where entries say how far they concern the subject, <b>By relevance</b> comes first: works about it, then those with a section on it, passing mentions, and those not yet read, by author within each. Your choice of view, size and order is kept in this browser.',
         'The search reads the title, author, date, kind, note, licence, source, language and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
         '<b>Filters</b> beside the list narrow by kind, relevance, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
@@ -608,6 +628,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
+        'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
         '<b>Share</b> opens your system’s share sheet (Mail, Messages, AirDrop…) with a link that opens this box. A browser with no share sheet copies the link.',
         '<b>🔗 Copy link</b> copies a link to the entry.'])],
       ['Notes on a work', ul([
@@ -696,9 +717,10 @@
         (canOpen && priv ? '<button class="btn ghost" data-a="dl">⤓ Download</button>' : '') +
         (e.url ? '<a class="btn' + (e.file ? ' ghost' : '') + '" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + (e.file ? 'Where it is published ↗' : 'Open where it is published ↗') + '</a>' : '') +
         '<button class="btn ghost" data-a="share" title="Share a link to this entry">' + (SW.SHARE_ICON || '') + ' Share</button>' +
+        (canRate() ? '<button class="btn ghost" data-a="key"></button>' : '') +
         '<button class="btn ghost" data-a="link" title="Copies a link to this entry">🔗 Copy link</button>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
-      d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> ' + ppBadge(e) + '<b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
+      d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <span class="lib-dmarks"></span><b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
         '<div class="lib-cols"><div class="lib-main"><div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
         (boxCover ? '<div class="lib-head"><img class="lib-boxcover" src="' + esc(boxCover) + '" alt="" referrerpolicy="no-referrer"><div class="lib-head-t">' : '') +
         '<div class="lib-cite"><span class="lib-cite-t">' + cite.html + '</span> <button class="btn ghost" data-a="cite" title="Copy this citation">Copy</button></div>' +
@@ -710,10 +732,29 @@
         (alts.length || (canOpen && player) ? '<div class="lib-alts">' + (canOpen && player ? '<button class="btn ghost" data-play>▶ Play from ' + esc(hostName(e.url)) + '</button>' : '') + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '') +
         '</div><div class="lib-side"></div></div>';
       document.body.appendChild(d);
+      function paintKey() {
+        var on = keyOf(e) < Infinity, kb = SW.$('[data-a="key"]', d), dm = SW.$('.lib-dmarks', d);
+        if (dm) dm.innerHTML = marksOf(e);
+        if (kb) { kb.textContent = on ? '⚑ Key work' : '⚐ Mark as a key work'; kb.classList.toggle('on', on); kb.setAttribute('aria-pressed', on ? 'true' : 'false'); kb.title = on ? 'A key work for the group. Press to take the mark off' : 'Mark this as a key work for the group'; }
+      }
+      paintKey();
+      if (canRate()) itemNotes().itemKeys().then(function (k) { setKeys(k); paintKey(); }, function () {});
       d.addEventListener('close', function () { d.remove(); });
       d.addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-boxcover')) ev.target.remove(); }, true);
       d.addEventListener('click', function (ev) {
         if (ev.target === d || ev.target.closest('[data-x]')) { d.close(); return; }
+        var kb = ev.target.closest('[data-a="key"]');
+        if (kb) {
+          var want = !(keyOf(e) < Infinity), N0 = itemNotes();
+          kb.disabled = true;
+          N0.setItemKey(e.id, want).then(function () {
+            KMINE[e.id] = { on: want, date: new Date().toISOString(), by: 'you' };
+            setKeys(Object.assign({}, KM));
+            paintKey();
+            var v0 = SW.$('#view-library'); if (v0 && SW.$('.lib-list', v0)) list(v0);
+          }, function (err) { if (err.message !== 'no initials') SW.toast(err.message, 5000); }).then(function () { kb.disabled = false; });
+          return;
+        }
         if (ev.target.closest('[data-a="share"]')) { SW.share({ title: e.title, url: linkTo(e.id) }); return; }
         if (ev.target.closest('[data-a="link"]')) { SW.copyText(linkTo(e.id), 'the link'); return; }
         if (ev.target.closest('[data-a="cite"]')) { SW.copyText(cite.text, 'the citation'); return; }

@@ -574,6 +574,56 @@
                   var x2 = box();
                   T.yes('in the record', /About it/.test(x2.querySelector('.lib-rec').textContent));
                   x2.close();
+                  B.library = { items: [{ id: 'K-1', title: 'Listed key', key: 1 }, { id: 'K-2', title: 'Plain' }, { id: 'K-3', title: 'Early', kind: 'preprint', key: 2 }] };
+                  return load().then(function () { return SW.library.load(); });
+                }).then(function () {
+                  SW.views.library.show();
+                  return wait(60);
+                }).then(function () {
+                  var vk = document.getElementById('view-library');
+                  function mark(id) { return vk.querySelectorAll('[data-lib="' + id + '"] .lib-key').length; }
+                  T.eq('a key work marked on its cover, with no token', [mark('K-1'), mark('K-2')], [1, 0]);
+                  T.yes('a preprint that is a key work has both', vk.querySelector('[data-lib="K-3"] .lib-marks .lib-pp') && vk.querySelector('[data-lib="K-3"] .lib-marks .lib-key'));
+                  vk.querySelector('[data-libview="list"]').click();
+                  T.eq('and in the list', [mark('K-1'), mark('K-2')], [1, 0]);
+                  vk.querySelector('[data-libview="icons"]').click();
+                  SW.store.set('library.view', '');
+                  return SW.library.open('K-1').then(function () { return wait(30); });
+                }).then(function () {
+                  var x3 = box();
+                  T.eq('in the box, and no button without the group', [x3.querySelectorAll('.lib-dmarks .lib-key').length, x3.querySelectorAll('[data-a="key"]').length], [1, 0]);
+                  x3.close();
+                  SW.store.set('token', 'x'); N.forget();
+                  return SW.library.open('K-2').then(function () { return wait(60); });
+                }).then(function () {
+                  var x4 = box(), kb = x4.querySelector('[data-a="key"]');
+                  T.eq('with the group, a button to mark', [kb && kb.getAttribute('aria-pressed'), /Mark as/.test(kb && kb.textContent)], ['false', true]);
+                  kb.click();
+                  return wait(150).then(function () {
+                    T.eq('kept in the group, for that entry', rows.filter(function (a) { return a.text === 'key:on'; }).length, 1);
+                    T.eq('the button and the box show it', [kb.getAttribute('aria-pressed'), x4.querySelectorAll('.lib-dmarks .lib-key').length], ['true', 1]);
+                    x4.close();
+                    return N.itemKeys();
+                  });
+                }).then(function (k) {
+                  T.eq('read back from the group', k['K-2'] && k['K-2'].on, true);
+                  T.eq('a mark added comes after the list\u2019s', SW.library.sorted(SW.library.items(), 'relevance').map(function (e) { return e.id; }), ['K-1', 'K-3', 'K-2']);
+                  return SW.library.open('K-1').then(function () { return wait(60); });
+                }).then(function () {
+                  var x5 = box();
+                  x5.querySelector('[data-a="key"]').click();
+                  return wait(150).then(function () {
+                    T.eq('a key from the list can be taken off', [rows.filter(function (a) { return a.text === 'key:off'; }).length, x5.querySelectorAll('.lib-dmarks .lib-key').length], [1, 0]);
+                    x5.close();
+                    return N.itemCounts();
+                  });
+                }).then(function (c3) {
+                  T.eq('marks are not counted as notes', c3['K-1'], undefined);
+                  rows.push({ id: 'h-late', created: '2999-01-01T00:00:00Z', user: 'acct:other@hypothes.is', uri: rows.filter(function (a) { return a.text === 'key:off'; })[0].uri, text: 'key:on', tags: rows.filter(function (a) { return a.text === 'key:off'; })[0].tags, references: [] });
+                  N.invalidate('item:K-1');
+                  return N.itemKeys();
+                }).then(function (k2) {
+                  T.eq('the latest mark counts, whoever made it', k2['K-1'] && k2['K-1'].on, true);
                 });
               });
             });

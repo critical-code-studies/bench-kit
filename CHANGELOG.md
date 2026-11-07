@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A Key work mark in the Library** (David, 2026-11-07), on the cover, in the list and in the box, for an entry with `key`. Members with the group's Hypothesis token add and take off the mark in the box. It is kept in the group's annotations, so members see it and readers outside the group see only `key` in `library.json`. `N.itemKeys`, `N.setItemKey` in `notes.js`.
+- The Library's notes view no longer lists a work that has only a rating or an emoji.
+
 ## 1.8.1 (2026-11-07)
 
 - **Key works first in By relevance** (David, 2026-11-07, through ELIZA): an entry with a number in `key` comes ahead of the groups, by that number. Other orders ignore it.
