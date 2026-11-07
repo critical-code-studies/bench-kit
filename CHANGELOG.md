@@ -4,6 +4,7 @@
 
 - The Library's intro under its title is its first sentence, in small type, with the whole in the tooltip (David, 2026-11-08). A bench can shorten its `intro` to one brief sentence.
 - A library card's dates read NOV 07 26 (David, 2026-11-08).
+- In a Library entry's box, "To read for" reads "Add to To Read:" before the 1, 2 and 3 months (David, 2026-11-08, through ELIZA).
 
 ## 1.8.8 (2026-11-07)
 

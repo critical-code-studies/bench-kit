@@ -988,7 +988,7 @@
       function paintLoan() {
         var lb = SW.$('.lib-loanbox', d), cur = onLoan(e.id), oth = othersOut(e.id); if (!lb) return;
         lb.innerHTML = (oth.length ? '<span class="lib-loanst lib-loan-oth">Out to ' + oth.map(function (r) { return esc(r.by) + (r.due ? ' till ' + dueShort(r.due) : ''); }).join(', ') + '.</span> ' : '') + (cur ? '<span class="lib-loanst">On your To read shelf, due ' + stampOf(cur.due) + '</span> <button class="btn ghost" data-a="return">Return</button>'
-          : '<span class="lib-loanst">To read for</span> <button class="btn ghost" data-a="co" data-m="1">1</button><button class="btn ghost" data-a="co" data-m="2">2</button><button class="btn ghost" data-a="co" data-m="3" title="Check it out to your To read shelf">3 months</button>');
+          : '<span class="lib-loanst">Add to To Read:</span> <button class="btn ghost" data-a="co" data-m="1">1</button><button class="btn ghost" data-a="co" data-m="2">2</button><button class="btn ghost" data-a="co" data-m="3" title="Check it out to your To read shelf">3 months</button>');
       }
       function afterLoan() { paintLoan(); var v2 = SW.$('#view-library'); if (v2 && SW.$('.lib-list', v2)) list(v2); }
       sweepLoans(); paintLoan();
