@@ -12,7 +12,8 @@
  * manifest is public, so everyone sees every entry's record, and a private entry's shelf and file path
  * are in it; without a token the entry shows its record and its link out.
  * SW.BENCH.library: true (the manifest at library/library.json), or
- *   { url, label, intro, items, load, private, view, order, size, card }: card { title, description, image } for
+ *   { url, label, intro, items, load, private, view, order, size, card, snapshot }: snapshot true reads
+ *   library/group.json (tools/library-snapshot.js), asked for only then; card { title, description, image } for
  *   the preview card that tools/release.js writes into library/index.html; url the manifest (from the page); items the entries given here
  *   instead; load() a promise of the manifest (a bench that makes it from another list, such as a
  *   translation's corpus/SOURCES.md); label the tab's name (Library); intro HTML above the list; view, order and
@@ -91,7 +92,7 @@
   // the group's ratings, marks and tags for readers with no token, written by tools/library-snapshot.js. A member's
   // live reading replaces it; no note text is in it
   function readSnapshot() {
-    if (C.items || C.load) return Promise.resolve();
+    if (C.items || C.load || !C.snapshot) return Promise.resolve();
     return fetch(URL0.replace(/[^/]*$/, 'group.json'), { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
       if (!s || typeof s !== 'object') return;
       if (s.ratings) { NR = s.ratings; NRS = JSON.stringify(NR); }

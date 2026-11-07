@@ -733,7 +733,7 @@
                     if (/snap\/group\.json/.test(u)) return Promise.resolve(new Response(JSON.stringify(snap)));
                     return f3.apply(window, arguments);
                   };
-                  B.library = { url: 'snap/library.json' };
+                  B.library = { url: 'snap/library.json', snapshot: true };
                   return load().then(function () { return SW.library.load(); }).then(function () {
                     SW.views.library.show();
                     return wait(80);

@@ -191,7 +191,7 @@ It holds, for entries in the public `library.json`, the average rating and how m
 HYPOTHESIS_TOKEN=... node research/kit/tools/library-snapshot.js --dry-run
 ```
 
-To run it each day, copy `templates/library-snapshot.yml` to `.github/workflows/library-snapshot.yml` and add a repository secret `HYPOTHESIS_TOKEN`, from a Hypothesis account in the group. A token reaches every group its account belongs to, so an account made for this and in this group alone is safer than a person's own. A token that is not a member, or any failed read, writes nothing.
+Set `library: { snapshot: true }` in `js/config.js` once the file exists; the Library asks for it only then. To run it each day, copy `templates/library-snapshot.yml` to `.github/workflows/library-snapshot.yml` and add a repository secret `HYPOTHESIS_TOKEN`, from a Hypothesis account in the group. A token reaches every group its account belongs to, so an account made for this and in this group alone is safer than a person's own. A token that is not a member, or any failed read, writes nothing.
 
 ## Preprints
 
