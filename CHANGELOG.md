@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.15 (2026-11-08)
 
 - A view no longer repeats its menu item as a heading (David, 2026-11-08): the Library, Paratexts, Findings, Glossary, Changes, Search and a catalogue's title are kept for screen readers only, a line saved on each. The menu's current item is marked plainly instead: bold, with a heavier underline in the bench's colour and a tint behind it.
 - The Library's description under its title is gone (David, 2026-11-08); a bench's `intro` still serves the preview card. **Library** and **To read** are drawn as tabs that look it: raised, the open one joined to the page with a coloured top (David).
