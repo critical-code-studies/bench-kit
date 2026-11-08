@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **The back of a book card is the front's paper** (David): the back took a fixed cream; it now takes the card's own paper, its yellowing with use and its worn edges, with the ruled lines over them. A catalogue card's back takes its white.
+- **The Renew menu on a card reads in dark themes** (David): it took the theme's dark ground under the card's dark ink; on a card it is now a slip of light paper in every theme.
 
 ## 1.8.25 (2026-11-08)
 

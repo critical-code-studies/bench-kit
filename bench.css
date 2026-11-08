@@ -1521,6 +1521,11 @@ ul.reading a { overflow-wrap: anywhere; }
 /* due within the week, or past it: a red stamp across the card's head */
 .lib-card-soonstamp { position: absolute; top: 9px; right: 44px; z-index: 2; padding: 1px 6px; border: 2px solid #b0302a; border-radius: 3px; color: #b0302a; font: 700 11px/1.3 var(--mono); letter-spacing: 1px; transform: rotate(-6deg); opacity: 0.85; pointer-events: none; mix-blend-mode: multiply; }
 .lib-card-acts .lib-loanbox .lib-loanmenu { top: auto; bottom: calc(100% + 4px); }
+/* on a card the menu is a slip of the same light paper, whatever the theme, so its dark ink reads */
+.lib-card-acts .lib-loanmenu { background: #fffdf6; border-color: rgba(42, 42, 42, 0.25); color: #2a2a2a; }
+.lib-card-acts .lib-loanmenu .lib-loanst { color: #5a5348; }
+.lib-card-acts .lib-loanmenu .btn { background: transparent; border-color: rgba(42, 42, 42, 0.3); color: #2a2a2a; }
+.lib-card-acts .lib-loanmenu .btn:hover { background: rgba(42, 42, 42, 0.08); }
 .lib-card-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 10px; font-size: 12px; color: #555; }
 .lib-card-acts .btn { padding: 1px 7px; font-size: 12px; color: #2a2a2a; }
 .lib-loanst { color: var(--text-dim); font-size: 13px; }
