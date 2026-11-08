@@ -617,6 +617,9 @@
                   return SW.library.open('K-1').then(function () { return wait(30); });
                 }).then(function () {
                   var x3 = box();
+                  T.eq('an export of this work in its box, its menu shut', [x3.querySelectorAll('[data-a="ref"]').length, x3.querySelector('.lib-refmenu').hidden], [1, true]);
+                  x3.querySelector('[data-a="ref"]').click();
+                  T.eq('and opening', x3.querySelector('.lib-refmenu').hidden, false);
                   T.eq('in the box, and no button without the group', [x3.querySelectorAll('.lib-dmarks .lib-key').length, x3.querySelectorAll('[data-a="key"]').length], [1, 0]);
                   T.eq('tags shown, with no way to change them without the group', [x3.querySelectorAll('.lib-tag').length, x3.querySelectorAll('[data-tagoff]').length, x3.querySelectorAll('.lib-taginput').length], [1, 0, 0]);
                   x3.close();

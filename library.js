@@ -971,8 +971,6 @@
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' && F.view !== 'notes' && F.view !== 'cat' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button><button class="btn' + (F.view === 'cat' ? ' on' : '') + '" data-libview="cat" title="A card catalogue, in drawers" aria-label="Catalogue"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><rect x="2" y="2" width="12" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h12M6.5 5h3M6.5 11h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
-        '<span class="lib-exp"><button class="btn ghost lib-ib" data-export aria-haspopup="true" aria-expanded="false" title="Export what is shown, for Zotero" aria-label="Export what is shown, for Zotero"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 12.5v1h11v-1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-          '<div class="lib-expmenu" hidden><span class="lib-loanst">Export what is shown</span><button class="btn ghost" data-exp="ris" title="Opens in Zotero, EndNote and Mendeley">Download RIS</button><button class="btn ghost" data-exp="bib">Download BibTeX</button><button class="btn ghost" data-exp="copybib" title="For Zotero’s Import from Clipboard">Copy BibTeX</button></div></span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span></div>' +
         (m.addErr && SW.store.get('library.addErrHidden', '') !== tokenOf().slice(-6) ? '<p class="hint lib-adderr">' + (m.addStatus === 401 ? 'Works the group added are kept on GitHub, which no longer accepts the GitHub token saved in this browser; a new one in ⚙ Settings shows them.' : 'Works the group added could not be read: ' + esc(m.addErr) + '.') + ' <button class="btn ghost" data-hideadderr title="Until the token changes">Hide</button></p>' : '') +
@@ -1016,10 +1014,6 @@
           var he = ev.target.closest('[data-hideadderr]'); if (he) { SW.store.set('library.addErrHidden', tokenOf().slice(-6)); he.parentNode.remove(); return; }
           if (ev.target.closest('[data-mynotes]')) { ev.preventDefault(); showMyNotes(); return; }
           var lg = ev.target.closest('.lib-log > summary'); if (lg) { setTimeout(function () { LOGOPEN = lg.parentNode.open; }, 0); }
-          var xm = SW.$('.lib-expmenu', view), xb = ev.target.closest('[data-export]');
-          if (xb) { xm.hidden = !xm.hidden; xb.setAttribute('aria-expanded', xm.hidden ? 'false' : 'true'); return; }
-          var xp = ev.target.closest('[data-exp]'); if (xp) { xm.hidden = true; exportShown(xp.dataset.exp, view); return; }
-          if (xm && !xm.hidden && !ev.target.closest('.lib-expmenu')) xm.hidden = true;
           var an = ev.target.closest('[data-addnote]'); if (an) { addNote(an.dataset.addnote); return; }
           var tn = ev.target.closest('[data-turn]');
           if (tn) {
@@ -1066,7 +1060,7 @@
       ['Finding a work', ul([
         '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), <b>☰</b> a list, and the drawer button a card catalogue: drawers by author, title, subject (the tags) or relevance, with a typed card for each work. Pull out a drawer, flick through with the arrow keys, open a work with Enter, and close the drawer with Escape. A search opens the drawer holding the first it finds. A preprint and a key work carry a badge in each, and in the box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Where entries say how far they concern the subject, <b>By relevance</b> comes first: key works, then Essential, High, Medium, Low, Minimal and Not Checked, by author within each. Your choice of view, size and order is kept in this browser.',
-        'The search reads the title, author, date, kind, note, licence, source, language and tags. The download button exports what is shown, the whole library, a search or filter, or your To read shelf, as RIS (which Zotero, EndNote and Mendeley open) or BibTeX, downloaded or copied for Zotero’s Import from Clipboard. <b>Show</b> narrows to the works held here, those for the group, those linked to where they are published, or those with notes. <b>Library</b> and <b>To read</b> above it switch between the whole library and your own shelf.',
+        'The search reads the title, author, date, kind, note, licence, source, language and tags. The export icon in a work’s box gives it as RIS (which Zotero, EndNote and Mendeley open) or BibTeX, downloaded or copied for Zotero’s Import from Clipboard. <b>Show</b> narrows to the works held here, those for the group, those linked to where they are published, or those with notes. <b>Library</b> and <b>To read</b> above it switch between the whole library and your own shelf.',
         '<b>Filters</b> beside the list narrow by kind, relevance, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
       ['Opening a work', ul([
         'Click a cover or a row: the record opens in a box over the bench, with its citation (<b>Copy</b> copies it), the file where you can read it, and a link to where it is published.',
@@ -1146,10 +1140,7 @@
       return '@' + t + '{' + k + ',\n' + f.join(',\n') + '\n}';
     }).join('\n\n') + '\n';
   };
-  function exportShown(how, view) {
-    var es = F.show === 'loans' ? rows() : L.sorted(rows(), F.order);
-    if (!es.length) { SW.toast('Nothing is shown to export.', 3000); return; }
-    var name = String(B.name || 'library').toLowerCase().replace(/[^a-z0-9]+/g, '-') + (F.show === 'loans' ? '-to-read' : '-library');
+  function exportList(es, how, name) {
     if (how === 'copybib') { SW.copyText(L.toBibTeX(es), es.length + (es.length === 1 ? ' work' : ' works') + ' as BibTeX'); return; }
     var text = how === 'bib' ? L.toBibTeX(es) : L.toRIS(es), a = SW.el('a', { href: URL.createObjectURL(new Blob([text], { type: how === 'bib' ? 'application/x-bibtex' : 'application/x-research-info-systems' })), download: name + (how === 'bib' ? '.bib' : '.ris') });
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -1202,6 +1193,7 @@
   function ico(d, fill) { return '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="' + d + '" fill="' + (fill ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   var ICON = {
     tab: ico('M9 2.5h4.5V7M13.5 2.5 7.5 8.5M12 9.5v4H2.5V4h4'),
+    ref: ico('M3 2.5h7l3 3v8H3zM10 2.5v3h3M5.5 8h5M5.5 10.5h3.5'),
     down: ico('M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 12.5v1h11v-1'),
     globe: ico('M8 1.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 8 1.8zM1.8 8h12.4M8 1.8c1.8 1.7 2.6 3.8 2.6 6.2S9.8 12.5 8 14.2C6.2 12.5 5.4 10.4 5.4 8S6.2 3.5 8 1.8z'),
     link: ico('M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.4-2.4a2.6 2.6 0 0 0-3.7-3.7l-.9.9M9.4 6.6a2.6 2.6 0 0 0-3.7 0L3.3 9a2.6 2.6 0 0 0 3.7 3.7l.9-.9'),
@@ -1230,6 +1222,8 @@
         (canOpen && priv ? ib({ 'data-a': 'dl' }, ICON.down, 'Download') : '') +
         (e.url && e.file ? ib({ href: e.url, target: '_blank', rel: 'noopener noreferrer' }, ICON.globe, 'Where it is published') : '') +
         ib({ 'data-a': 'share' }, SW.SHARE_ICON || ICON.globe, 'Share a link to this entry') +
+        '<span class="lib-refbox">' + ib({ 'data-a': 'ref', 'aria-haspopup': 'true', 'aria-expanded': 'false' }, ICON.ref, 'Export this work for Zotero') +
+          '<div class="lib-refmenu" hidden><span class="lib-loanst">Export this work</span><button class="btn ghost" data-a="refris" title="Opens in Zotero, EndNote and Mendeley">Download RIS</button><button class="btn ghost" data-a="refbib">Download BibTeX</button><button class="btn ghost" data-a="refcopy" title="For Zotero’s Import from Clipboard">Copy BibTeX</button></div></span>' +
         (canRate() ? ib({ 'data-a': 'key' }, ICON.flag(false), 'Mark this as a key work for the group') : '') +
         '<span class="lib-loanbox"></span>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
@@ -1312,6 +1306,11 @@
         var lo = ev.target.closest('[data-a="loan"]');
         if (lo) { var mn = SW.$('.lib-loanmenu', d); mn.hidden = !mn.hidden; lo.setAttribute('aria-expanded', mn.hidden ? 'false' : 'true'); return; }
         if (!ev.target.closest('.lib-loanmenu')) { var mn0 = SW.$('.lib-loanmenu', d); if (mn0) mn0.hidden = true; }
+        var rf = ev.target.closest('[data-a="ref"]'), rm = SW.$('.lib-refmenu', d);
+        if (rf) { rm.hidden = !rm.hidden; rf.setAttribute('aria-expanded', rm.hidden ? 'false' : 'true'); return; }
+        var rx = ev.target.closest('[data-a="refris"], [data-a="refbib"], [data-a="refcopy"]');
+        if (rx) { rm.hidden = true; exportList([e], { refris: 'ris', refbib: 'bib', refcopy: 'copybib' }[rx.dataset.a], e.id); return; }
+        if (rm && !rm.hidden && !ev.target.closest('.lib-refmenu')) rm.hidden = true;
         var co = ev.target.closest('[data-a="co"]'); if (co) { L.checkOut(e.id, +co.dataset.m); afterLoan(); return; }
         if (ev.target.closest('[data-a="return"]')) { L.giveBack(e.id); afterLoan(); return; }
         var tf = ev.target.closest('[data-tagoff]'); if (tf) { changeTag(tf.dataset.tagoff, false); return; }

@@ -183,7 +183,7 @@ To show a tag to every reader, put it in `library.json`. A bench with no annotat
 
 ## Export
 
-The download button beside **?** exports what is shown: the whole library, a search, the filters, or the reader's To read shelf. **Download RIS** saves a file that Zotero, EndNote and Mendeley open; **Download BibTeX** and **Copy BibTeX** give BibTeX, and copied it goes into Zotero by File ▸ Import from Clipboard. Each work carries its authors, title, the journal or book it is in, year and date, publisher, pages, DOI, link, language, note and tags, and its code as the RIS `ID`. The kind sets the type (book, chapter, journal article, thesis, film, and so on); a kind the kit does not know is exported as a generic item.
+The export icon beside **Share** in an entry's box gives that work as RIS or BibTeX. **Download RIS** saves a file that Zotero, EndNote and Mendeley open; **Download BibTeX** and **Copy BibTeX** give BibTeX, and copied it goes into Zotero by File ▸ Import from Clipboard. The work carries its authors, title, the journal or book it is in, year and date, publisher, pages, DOI, link, language, note and tags, and its code as the RIS `ID`. The kind sets the type (book, chapter, journal article, thesis, film, and so on); a kind the kit does not know is exported as a generic item.
 
 ## The card catalogue
 

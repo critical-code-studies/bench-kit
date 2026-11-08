@@ -1244,10 +1244,6 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-tab:hover { color: var(--text); }
 .lib-tab.on { border-color: var(--line); border-bottom-color: var(--bg, var(--surface)); background: var(--bg, var(--surface)); color: var(--text); font-weight: 600; }
 .lib-show[hidden] { display: none; }
-.lib-exp { position: relative; display: inline-flex; }
-.lib-expmenu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 6; display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: max-content; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
-.lib-expmenu[hidden] { display: none; }
-.lib-expmenu .btn { text-align: left; }
 .lib-q { flex: 1 1 16em; min-width: 10em; }
 .lib-n { margin-left: auto; font-size: 12px; }
 .lib-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
@@ -1267,6 +1263,10 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-loandue { color: #b0302a; font: 700 10px/1 var(--mono); letter-spacing: 0.5px; }
 .lib-loanmenu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; width: max-content; max-width: min(320px, 80vw); padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
 .lib-loanmenu[hidden] { display: none; }
+.lib-refbox { position: relative; display: inline-flex; }
+.lib-refmenu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 6; display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: max-content; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
+.lib-refmenu[hidden] { display: none; }
+.lib-refmenu .btn { text-align: left; }
 .lib-loan-oth { flex-basis: 100%; }
 .lib-copies { display: inline-flex; gap: 6px; align-items: center; margin-left: 6px; }
 .lib-rec { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 14px; margin: 0 0 12px; font-size: 14px; }
