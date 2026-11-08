@@ -379,7 +379,7 @@
     view = SW.$('#view-paratexts'); if (!view) return;
     done = true;
     var esc = SW.esc;
-    view.innerHTML = '<div class="pad px"><div class="px-head"><h2>' + SW.px('Many') + '</h2><button class="icon-btn px-ib" aria-expanded="false" title="About Paratexts">ⓘ</button></div><p class="hint px-lede" hidden>The scans, clippings, photographs and documents around the program, kept for the crew in a private repository (' + esc(REPO) + '). Click one to read it; add with ＋. To link to one from an annotation, note or finding, write its code (P-XXXXX).</p><div class="px-body"></div></div>';
+    view.innerHTML = '<div class="pad px"><div class="px-head"><h2 class="view-title">' + SW.px('Many') + '</h2><button class="icon-btn px-ib" aria-expanded="false" title="About Paratexts">ⓘ</button></div><p class="hint px-lede" hidden>The scans, clippings, photographs and documents around the program, kept for the crew in a private repository (' + esc(REPO) + '). Click one to read it; add with ＋. To link to one from an annotation, note or finding, write its code (P-XXXXX).</p><div class="px-body"></div></div>';
     var body = SW.$('.px-body', view), ib = SW.$('.px-ib', view), lede = SW.$('.px-lede', view);
     ib.onclick = function () { lede.hidden = !lede.hidden; ib.setAttribute('aria-expanded', String(!lede.hidden)); };
     if (!P.configured()) {

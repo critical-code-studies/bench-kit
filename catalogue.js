@@ -96,7 +96,7 @@
     }).join('');
     var srcHTML = C.source ? '<label title="' + esc(C.source.title || '') + '">' + esc(C.source.label) + ' <select id="cat-src"><option value="">Any</option><option value="true"' + (f.src === 'true' ? ' selected' : '') + '>' + esc(C.source.yes || C.source.label) + '</option><option value="false"' + (f.src === 'false' ? ' selected' : '') + '>' + esc(C.source.no || 'not in ' + C.source.label) + '</option></select></label>' : '';
     view.innerHTML = '<div class="pad catalogue">' +
-      (C.title ? '<h2>' + C.title + '</h2>' : '') +
+      (C.title ? '<h2 class="view-title">' + C.title + '</h2>' : '') +
       (C.intro ? '<div class="hint flow">' + (typeof C.intro === 'function' ? C.intro(api) : C.intro) + '</div>' : '') +
       (SUBS.length > 1 ? '<div class="cat-subset"><label>Subset <select id="cat-sub">' + SUBS.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === subId ? ' selected' : '') + '>' + esc(x.label) + '</option>'; }).join('') + '</select></label>' +
         (sub.note ? '<span class="hint flow">' + esc(sub.note) + (sub.line && !(SW.menuOff && SW.menuOff('versions', 'genealogy')) ? ' Versions › Genealogy › Flow follows it.' : '') + '</span>' : '') + '</div>' : '') +

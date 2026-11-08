@@ -69,7 +69,9 @@ header.bar .bench-ver, header.bar .vlang, header.bar #vref { color: color-mix(in
   color: var(--text-dim); font-size: 14px; white-space: nowrap;
 }
 .tabs button:hover { color: var(--text); }
-.tabs button.on { color: var(--text); border-bottom-color: var(--beam); }
+.tabs button.on { color: var(--text); border-bottom: 3px solid var(--beam); padding-bottom: 7px; background: color-mix(in srgb, var(--beam) 9%, transparent); text-shadow: 0.35px 0 0 currentColor, -0.35px 0 0 currentColor; }
+/* a view's own heading repeats the menu item it opened from: kept for screen readers, not drawn */
+.view-title { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* ---------- main + views ---------- */
 main { position: relative; overflow: hidden; min-height: 0; }
@@ -1239,10 +1241,12 @@ ul.reading a { overflow-wrap: anywhere; }
 #view-library .lib h2 { margin: 0 0 6px; }
 .lib-intro { color: var(--text-dim); margin: 0 0 10px; max-width: 48em; font-size: 12px; line-height: 1.4; }
 .lib-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
-.lib-tabs { display: flex; gap: 2px; margin: 0 0 10px; border-bottom: 1px solid var(--line); }
-.lib-tab { margin-bottom: -1px; padding: 6px 14px; border: 1px solid transparent; border-radius: 6px 6px 0 0; background: none; color: var(--text-dim); font: inherit; font-size: 14px; cursor: pointer; }
-.lib-tab:hover { color: var(--text); }
-.lib-tab.on { border-color: var(--line); border-bottom-color: var(--bg, var(--surface)); background: var(--bg, var(--surface)); color: var(--text); font-weight: 600; }
+.lib-tabs { display: flex; gap: 6px; margin: 0 0 12px; padding-left: 2px; border-bottom: 2px solid var(--line); }
+/* tabs that look like tabs: a raised card each, the open one joined to the page below, with a coloured top */
+.lib-tab { position: relative; margin-bottom: -2px; padding: 8px 20px; border: 1px solid var(--line); border-bottom: 2px solid var(--line); border-radius: 8px 8px 0 0; background: var(--surface-2); color: var(--text-dim); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.12s, color 0.12s; }
+.lib-tab:hover { background: var(--surface); color: var(--text); }
+.lib-tab:focus-visible { outline: 2px solid var(--beam, var(--accent, #3d63ad)); outline-offset: 2px; }
+.lib-tab.on { border-color: var(--line); border-top: 3px solid var(--beam, var(--accent, #3d63ad)); border-bottom-color: var(--bg, var(--surface)); background: var(--bg, var(--surface)); color: var(--text); font-weight: 650; cursor: default; }
 .lib-show[hidden] { display: none; }
 .lib-q { flex: 1 1 16em; min-width: 10em; }
 .lib-n { margin-left: auto; font-size: 12px; }

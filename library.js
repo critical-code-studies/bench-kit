@@ -977,8 +977,7 @@
       relShown = hasRel;
       if (hasRel && (F.order === 'listed' || (!SW.store.get('library.order', '') && !C.order))) F.order = 'relevance';
       if (!hasRel && F.order === 'relevance') F.order = C.order && C.order !== 'relevance' ? C.order : 'author';
-      view.innerHTML = '<div class="lib"><h2>' + esc(m.title || C.label || 'Library') + '</h2>' +
-        ((C.intro || m.intro) ? '<div class="lib-intro" title="' + esc(introText(C.intro || m.intro)) + '">' + esc(firstSentence(introText(C.intro || m.intro))) + '</div>' : '') +
+      view.innerHTML = '<div class="lib"><h2 class="view-title">' + esc(m.title || C.label || 'Library') + '</h2>' +
         '<div class="lib-tabs" role="tablist"><button role="tab" class="lib-tab' + (F.show !== 'loans' ? ' on' : '') + '" data-show="all" aria-selected="' + (F.show !== 'loans') + '">Library</button><button role="tab" class="lib-tab' + (F.show === 'loans' ? ' on' : '') + '" data-show="loans" aria-selected="' + (F.show === 'loans') + '">To read</button></div>' +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<label class="lib-show faint"' + (F.show === 'loans' ? ' hidden' : '') + '>Show <select aria-label="Show">' + [['all', 'All works'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<option value="' + s[0] + '"' + (F.show === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select></label>' +

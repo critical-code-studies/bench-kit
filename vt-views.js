@@ -128,7 +128,7 @@
         });
         return order.map(function (s) { return [s, out[s]]; });
       }
-      view.innerHTML = '<div class="vt-pad"><h2>Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the translation, section by section (a count opens the text at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
+      view.innerHTML = '<div class="vt-pad"><h2 class="view-title">Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the translation, section by section (a count opens the text at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
         '<div class="toolbar"><input type="search" class="vt-q" placeholder="Filter: a source term, a reading or an English word" aria-label="Filter the glossary"><span class="faint vt-n"></span></div>' +
         '<table class="vt-table vt-gloss"><thead><tr><th>Source</th><th>Reading</th><th>English</th><th>Where, in the translation</th></tr></thead><tbody>' +
         gl.map(function (g, i) {
@@ -169,7 +169,7 @@
       var origins = {}, states = {};
       cs.forEach(function (c) { origins[okey(c)] = (origins[okey(c)] || 0) + 1; var s = c.kind === 'PROBLEM' ? 'problem' : c.state || 'unknown'; states[s] = (states[s] || 0) + 1; });
       function chips(name, obj, cur) { return Object.keys(obj).sort().map(function (k) { return '<button class="btn' + (cur === k ? ' on' : '') + '" data-f="' + name + '" data-v="' + esc(k) + '">' + esc(k) + ' <span class="faint">' + obj[k] + '</span></button>'; }).join(''); }
-      view.innerHTML = '<div class="vt-pad"><h2>Changes</h2><p class="hint">Every change in the change lists, by its origin (made in the text, or from a witness), and whether it is in the text now.</p>' +
+      view.innerHTML = '<div class="vt-pad"><h2 class="view-title">Changes</h2><p class="hint">Every change in the change lists, by its origin (made in the text, or from a witness), and whether it is in the text now.</p>' +
         '<div class="toolbar vt-filters"><span class="faint">Origin</span>' + chips('origin', origins, CF.origin) + '<span class="sep"></span><span class="faint">State</span>' + chips('state', states, CF.state) +
         '<span class="sep"></span><input type="search" class="vt-q" placeholder="Search the changes" value="' + esc(CF.q) + '"><span class="faint vt-n"></span></div><div class="vt-changes"></div></div>';
       var box = SW.$('.vt-changes', view);
@@ -205,7 +205,7 @@
   // ---------- a source word ----------
   function drawSearch() {
     var view = SW.$('#view-search'); if (!view) return;
-    view.innerHTML = '<div class="vt-pad"><h2>Search the source</h2><p class="hint">A source word in the source’s OCR (old character forms read as new), and in the translation’s texts. The OCR misreads some words; One character wrong finds those it reads with one mistake.</p>' +
+    view.innerHTML = '<div class="vt-pad"><h2 class="view-title">Search the source</h2><p class="hint">A source word in the source’s OCR (old character forms read as new), and in the translation’s texts. The OCR misreads some words; One character wrong finds those it reads with one mistake.</p>' +
       '<div class="toolbar"><input type="search" class="vt-sq" lang="' + esc(B.textLang || 'ja') + '" placeholder="A source word: 偶然性" aria-label="A source word"><label class="check"><input type="checkbox" class="vt-fuzzy"> One character wrong</label><button class="btn vt-go">Search</button></div><div class="vt-res"></div></div>';
     var q = SW.$('.vt-sq', view), res = SW.$('.vt-res', view), fz = SW.$('.vt-fuzzy', view);
     function run() {

@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- A view no longer repeats its menu item as a heading (David, 2026-11-08): the Library, Paratexts, Findings, Glossary, Changes, Search and a catalogue's title are kept for screen readers only, a line saved on each. The menu's current item is marked plainly instead: bold, with a heavier underline in the bench's colour and a tint behind it.
+- The Library's description under its title is gone (David, 2026-11-08); a bench's `intro` still serves the preview card. **Library** and **To read** are drawn as tabs that look it: raised, the open one joined to the page with a coloured top (David).
+
 ## 1.8.14 (2026-11-08)
 
 - A check-out with the group's token no longer shows twice on its card (David's report on 1.8.13). The catch-up for loans made before a token was set took a loan just sent for one the group did not have, while Hypothesis's search was a moment behind, and sent it again. A loan made with a token is now marked as sent, this browser's record of a loan stands for a minute after sending, and two check-outs of a work on the same day with the same due date read as one, which also mends cards already doubled. Each check-out and renewal now carries a reference, and an event whose reference has been read is not read again (David's suggestion), so a loan sent twice shows once. Where the group can be read it is the record, and this browser's copy serves a reader with no token or offline.

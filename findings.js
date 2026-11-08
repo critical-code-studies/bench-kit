@@ -470,7 +470,7 @@
     more.appendChild(mb);
     right.appendChild(more);
     tb.appendChild(right);
-    pad.insertAdjacentHTML('beforeend', '<h2>Findings</h2><p class="prose">' + (B.findingsIntro || '') + '</p>');
+    pad.insertAdjacentHTML('beforeend', '<h2 class="view-title">Findings</h2><p class="prose">' + (B.findingsIntro || '') + '</p>');
     pad.appendChild(tb);
     legend([]);
     // Crew (the group's findings, by member) | Bench (the bench's own, and its checks)
