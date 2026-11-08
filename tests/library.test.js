@@ -459,6 +459,16 @@
     }
     return N.itemPanel(el, 'P-AAAAA', { host: host, rate: true }).then(function () {
       T.yes('the panel draws, open for a member', el.querySelector('details[open] textarea'));
+      T.eq('a work with no notes shows only Add note', [el.querySelector('.in-fold').hidden, el.querySelector('.in-add').hidden, el.classList.contains('in-none')], [true, false, true]);
+      el.querySelector('.in-add').click();
+      T.eq('which opens the notes and the box to write in', [el.querySelector('.in-fold').hidden, el.querySelector('.in-add').hidden, el.classList.contains('in-none')], [false, true, false]);
+      var el5 = document.createElement('div'), bar5 = document.createElement('div');
+      document.body.appendChild(bar5); document.body.appendChild(el5);
+      N.itemPanel(el5, 'P-AAAAA', { rate: true, bar: bar5 });
+      T.eq('given a bar, the stars and Add note go in it', [!!bar5.querySelector('.in-rate'), !!bar5.querySelector('.in-add'), !!el5.querySelector('.in-rate, .in-add')], [true, true, false]);
+      bar5.querySelector('.in-add').click();
+      T.yes('and Add note there opens the panel', !el5.querySelector('.in-fold').hidden && !el5.classList.contains('in-none'));
+      el5.remove(); bar5.remove();
       el.querySelector('textarea').value = 'At this moment.';
       if (el.querySelector('.md-rich')) el.querySelector('.md-rich').textContent = 'At this moment.';
       el.querySelector('.in-at').value = '12:46';

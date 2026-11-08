@@ -1569,11 +1569,25 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-nhead { display: block; width: 100%; text-align: left; padding: 6px 0; margin-bottom: 6px; border: 0; border-bottom: 1px solid var(--line); background: none; color: inherit; font: inherit; cursor: pointer; }
 .item-notes .in-fold > summary { cursor: pointer; }
 .in-new { margin-top: 8px; }
+.item-notes .in-add { display: block; margin-top: 8px; }
+.item-notes .in-add[hidden], .item-notes .in-fold[hidden] { display: none; }
+/* a work's box: the stars and Add note at the end of its row of actions; the notes' panel is put away while the
+   work has none, and slides out when one is added */
+.lib-notebar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-left: auto; }
+.lib-notebar .fd-rxbar { margin: 0; }
+.lib-notebar .in-add { margin: 0; }
+.lib-cols { transition: grid-template-columns 0.3s ease, column-gap 0.3s ease; }
+.lib-side { transition: opacity 0.3s ease, transform 0.3s ease; }
+.lib-dlg .lib-side.in-none { padding: 0; background: none; opacity: 0; transform: translateX(24px); overflow: hidden; }
+.lib-cols:has(> .lib-side.in-none) { grid-template-columns: minmax(0, 3fr) minmax(0, 0fr); column-gap: 0; row-gap: 0; }
+.lib-pane .lib-cols:has(> .lib-side.in-none) { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 999px) { .lib-cols:has(> .lib-side.in-none) { grid-template-columns: minmax(0, 1fr); } }
 .in-new textarea { width: 100%; box-sizing: border-box; font: inherit; }
 .in-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
 .in-foot [data-in="save"] { margin-left: auto; }
 .in-quote { display: flex; gap: 6px; align-items: flex-start; padding: 4px 8px; margin-bottom: 4px; border-left: 3px solid var(--line); font: italic 13px/1.4 var(--serif, Georgia, serif); }
 .in-quote span { flex: 1; min-width: 0; }
+.in-quote[hidden] { display: none; }
 .note-at { display: inline-block; margin-bottom: 2px; padding: 0 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); color: inherit; font: 11px var(--mono); cursor: pointer; }
 .note-quote { margin: 2px 0 4px; padding: 2px 8px; border-left: 3px solid var(--line); color: var(--text-dim); font: italic 13.5px/1.4 var(--serif, Georgia, serif); cursor: pointer; }
 .lib-head { display: flex; gap: 14px; align-items: flex-start; }

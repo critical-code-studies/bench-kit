@@ -1517,7 +1517,13 @@
     o = o || {};
     var vid = 'item:' + code, host = o.host || null, sel = '', me = SW.me(), ts = types();
     el.classList.add('item-notes');
-    el.innerHTML = (o.rate && N.configured() ? '<div class="fd-rxbar in-rate"></div>' : '') + '<details class="in-fold"' + (N.configured() || drafts().some(function (x) { return x.vid === vid && !x.deleted; }) ? ' open' : '') + '><summary class="fd-rh">Notes <span class="faint in-n"></span></summary>' +
+    // a work with no notes shows only the button; the notes' frame and the box to write in come when it is pressed.
+    // o.bar, where given, takes the stars and the button, so the panel itself can be put away while it is empty
+    var bar = o.bar || el, top = (o.rate && N.configured() ? '<div class="fd-rxbar in-rate"></div>' : '') + '<button type="button" class="btn ghost in-add" data-in="add">Add note</button>';
+    if (o.bar) o.bar.innerHTML = top;
+    // until the notes are read the work is taken to have none: the button shows, and the panel slides out if notes come
+    el.classList.add('in-none');
+    el.innerHTML = (o.bar ? '' : top) + '<details class="in-fold" hidden' + (N.configured() || drafts().some(function (x) { return x.vid === vid && !x.deleted; }) ? ' open' : '') + '><summary class="fd-rh">Notes <span class="faint in-n"></span></summary>' +
       (N.configured() ? '' : '<p class="hint">Notes are kept in the annotation group (Help ▸ Getting set up). Until you have joined, one stays a draft in this browser.</p>') +
       '<div class="in-list"></div><div class="in-new"><div class="in-quote" hidden><span></span> <button type="button" class="icon-btn" data-in="unquote" title="Without the words">✕</button></div>' +
       '<textarea rows="3" placeholder="A note on this work. Select words in it to quote them."></textarea>' +
@@ -1525,6 +1531,8 @@
       (ts.length ? ' <select class="in-type" aria-label="Type"><option value="">No type</option>' + ts.map(function (t) { return '<option value="' + SW.esc(t[0]) + '">' + SW.esc(t[1]) + '</option>'; }).join('') + '</select>' : '') +
       ' <button type="button" class="btn" data-in="save">Add note</button></div></div></details>';
     var list = SW.$('.in-list', el), ta = SW.$('textarea', el), atIn = SW.$('.in-at', el), now = SW.$('[data-in="now"]', el), qBox = SW.$('.in-quote', el);
+    var fold = SW.$('.in-fold', el), addB = SW.$('.in-add', bar), writing = false;
+    function shown(n) { var none = !n && !writing; fold.hidden = none; addB.hidden = !none; el.classList.toggle('in-none', none); }
     if (SW.mdTools) SW.mdTools(ta);
     function draw() {
       if (!el.isConnected && list.childNodes.length) return;
@@ -1536,14 +1544,15 @@
         var fail = N.readFailed(vid);
         list.innerHTML = (fail ? '<p class="hint in-fail" title="' + SW.esc(fail) + '"><span class="in-fail-t">Notes not updated</span> <button type="button" class="btn ghost" data-in="retry">Try again</button></p>' : '') + th.map(function (t) { return N.renderThread(t); }).join('');
         N.wire(list, vid, all);
-      });
+        shown(th.length || fail);
+      }, function () { shown(0); });
     }
     var roots = [];
     function rated(all) {
-      var bar = SW.$('.in-rate', el); if (!bar) return;
+      var rbar = SW.$('.in-rate', bar); if (!rbar) return;
       roots = all.filter(function (n) { return N.isReaction(n) && !n.parent; });
       var mineStar = roots.filter(function (r) { return isStar(r.text) && myReaction(r); }).pop(), have = mineStar ? +mineStar.text.slice(1) : 0, s = starsOf(roots);
-      bar.innerHTML = '<span class="fd-rate" title="Your rating, one to three stars (again to take it back)">' + [1, 2, 3].map(function (k) { return '<button type="button" data-star="' + k + '" class="' + (have >= k ? 'on' : '') + '" aria-label="' + k + (k > 1 ? ' stars' : ' star') + '">★</button>'; }).join('') + '</span>' +
+      rbar.innerHTML = '<span class="fd-rate" title="Your rating, one to three stars (again to take it back)">' + [1, 2, 3].map(function (k) { return '<button type="button" data-star="' + k + '" class="' + (have >= k ? 'on' : '') + '" aria-label="' + k + (k > 1 ? ' stars' : ' star') + '">★</button>'; }).join('') + '</span>' +
         (s ? '<span class="hint" title="' + SW.esc(s.who.join('; ')) + '">' + (Math.round(s.avg * 10) / 10) + ' from ' + s.n + '</span>' : '') +
         N.EMOJI.map(function (e) {
           var rs = roots.filter(function (r) { return r.text === e; }), mine = rs.some(myReaction);
@@ -1572,11 +1581,19 @@
       if (t && t.length < 1200) setQuote(t);
     });
     el.addEventListener('focusin', showNow);
-    el.addEventListener('click', function (e) {
+    function onClick(e) {
       if (rateClick(e)) return;
       var go = e.target.closest('[data-at]');
       if (go) { var nt = e.target.closest('.note'), q = go.dataset.at === 'q' ? go.textContent : ''; N.itemGo(go.dataset.at, q, host); if (nt) return; return; }
       var b = e.target.closest('[data-in]'); if (!b) return;
+      if (b.dataset.in === 'add') {
+        writing = true; shown(1); fold.open = true;
+        // the box to write in takes the cursor, and whatever holds the panel stays where the reader had it
+        var keep = []; for (var p = el.parentElement; p; p = p.parentElement) keep.push([p, p.scrollTop, p.scrollLeft]);
+        ta.focus({ preventScroll: true });
+        keep.forEach(function (k) { k[0].scrollTop = k[1]; k[0].scrollLeft = k[2]; });
+        return;
+      }
       if (b.dataset.in === 'retry') { N.invalidate(vid); return; }
       if (b.dataset.in === 'unquote') { setQuote(''); return; }
       if (b.dataset.in === 'now') { var m = media(); if (m) atIn.value = N.atLabel('t:' + Math.floor(m.currentTime)); return; }
@@ -1588,7 +1605,9 @@
       N.create({ vid: vid, kind: 'item', at: at || (sel ? 'q' : null), quote: sel, text: text, tags: ty && ty.value ? ['type:' + ty.value] : [] }).then(function () {
         b.disabled = false; ta.value = ''; if (ta._mdReset) ta._mdReset(); atIn.value = ''; setQuote('');
       }, function (err) { b.disabled = false; if (err.message !== 'no initials') SW.toast(err.message, 5000); });
-    });
+    }
+    el.addEventListener('click', onClick);
+    if (o.bar) o.bar.addEventListener('click', onClick);
     if (SW.on) SW.on('notes', function (v) { if (v === vid && el.isConnected) draw(); });
     showNow();
     setTimeout(showNow, 1500);

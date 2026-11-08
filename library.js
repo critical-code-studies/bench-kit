@@ -1621,7 +1621,7 @@
         '<span class="lib-refbox">' + ib({ 'data-a': 'ref', 'aria-haspopup': 'true', 'aria-expanded': 'false' }, ICON.ref, 'Export this work for Zotero') +
           '<div class="lib-refmenu" hidden><span class="lib-loanst">Export this work</span><button class="btn ghost" data-a="refris" title="Opens in Zotero, EndNote and Mendeley">Download RIS</button><button class="btn ghost" data-a="refbib">Download BibTeX</button><button class="btn ghost" data-a="refcopy" title="For Zotero’s Import from Clipboard">Copy BibTeX</button></div></span>' +
         (canRate() ? ib({ 'data-a': 'key' }, ICON.flag(false), 'Mark this as a key work for the group') : '') +
-        '<span class="lib-loanbox"></span>' +
+        '<span class="lib-loanbox"></span><span class="lib-notebar"></span>' +
         (isAdded(e) && L.member() ? '<button class="btn ghost" data-a="edit">Correct</button><button class="btn ghost" data-a="rm">Remove</button>' : '');
       d.innerHTML = '<div class="tray-bighead"><span class="px-code mono">' + esc(e.id) + '</span> <span class="lib-dmarks"></span><b>' + esc(e.title) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
         '<div class="lib-cols"><div class="lib-main"><div class="lib-acts">' + acts + '<span class="lib-copies"></span></div>' +
@@ -1762,7 +1762,7 @@
       });
       if (o.into) o.into.scrollTop = 0; else d.showModal();
       if (canOpen) show(SW.$('.lib-file', d), e, k, priv);
-      if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.lib-side', d), e.id, { host: SW.$('.lib-main', d), rate: true });
+      if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.lib-side', d), e.id, { host: SW.$('.lib-main', d), rate: true, bar: SW.$('.lib-notebar', d) });
       L.copies(e.id).then(function (cs) {
         var box = SW.$('.lib-copies', d); if (!box || !cs.length) return;
         box.innerHTML = '<span class="faint">The group’s copy:</span> ' + cs.map(function (c) { return '<button class="btn ghost" data-px="' + esc(c.code) + '" title="' + esc(c.title || '') + '">' + esc(c.code) + ' in ' + SW.px('Many') + '</button>'; }).join(' ');
