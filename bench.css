@@ -1245,6 +1245,11 @@ ul.reading a { overflow-wrap: anywhere; }
 /* the tabs and the toolbar, pinned together at the top of the view */
 .lib-top { position: sticky; top: 0; z-index: 5; margin-bottom: 10px; padding-top: 6px; background: var(--bg); }
 .lib-top .lib-bar { position: static; margin-bottom: 0; }
+/* on one line where there is room: the tabs on the left, the toolbar beside them. Where it does not fit, the
+   toolbar goes whole onto the line below and the tabs' rule runs the width, as before */
+.lib-top { display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 14px; }
+.lib-top .lib-tabs { flex: 1 0 auto; margin: 0; }
+.lib-top .lib-bar { flex: 1000 1 auto; min-width: 0; padding: 6px 0 8px; }
 .lib-tabs { display: flex; gap: 6px; margin: 0 0 12px; padding-left: 2px; border-bottom: 2px solid var(--line); }
 /* tabs that look like tabs: a raised card each, the open one joined to the page below, with a coloured top */
 .lib-tab { position: relative; margin-bottom: -2px; padding: 8px 20px; border: 1px solid var(--line); border-bottom: 2px solid var(--line); border-radius: 8px 8px 0 0; background: var(--surface-2); color: var(--text-dim); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.12s, color 0.12s; }

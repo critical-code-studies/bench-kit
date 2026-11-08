@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The Library's head on one line** (David): the Library and To read tabs and the toolbar share a line where the window has room, under one rule, and wrap to two only when it is narrow.
+
 ## 1.8.20 (2026-11-08)
 
 - **The gallery's pane at narrower widths** (kuki-bench's report): the box's columns follow the pane's width, so Notes go under the record until the pane is 820 px wide, and the cover goes above the citation below 480 px; at 1024 px the citation had been squeezed to about one word a line.
