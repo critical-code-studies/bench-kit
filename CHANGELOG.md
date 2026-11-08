@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.12 (2026-11-08)
 
 - On the To read shelf, **Order** works, with Date due first, and the search box says it searches the shelf (David's report).
 - On the To read shelf, the reading log folds behind a chevron, shut at first, and the filters column is gone (David, 2026-11-08).
