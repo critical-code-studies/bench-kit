@@ -41,6 +41,11 @@
       T.eq('by language, those without last', ids('lang'), 'dbca');
       T.eq('as listed', ids('listed'), 'abcd');
       var idc = document.createElement('div'); idc.innerHTML = L.idCard('AB', 'Ada Byron', '');
+      var idw = document.createElement('div'), tw = SW.BENCH.title; idw.style.width = '320px'; document.body.appendChild(idw);
+      SW.BENCH.title = 'The Vector Humanities Translation and Interpretation Research Bench'; idw.innerHTML = L.idCard('AB', 'Ada Byron', ''); L.fitIdTitle(idw);
+      var idt = idw.querySelector('.lib-idcard-t');
+      T.yes('a long bench name is shown whole on the card', !idt.clientWidth || (idt.scrollWidth <= idt.clientWidth + 1 && idt.scrollHeight <= idt.clientHeight + 1 && idt.classList.contains('lib-idcard-t2')));
+      SW.BENCH.title = tw; idw.remove();
       T.eq('a library card: the bench, the initials, the name in capitals, a five-figure number', [!!idc.querySelector('.lib-idcard-t').textContent, idc.querySelector('.lib-idcard-i').textContent, idc.querySelector('.lib-idcard-name').textContent, /^L \d \d \d \d \d/.test(idc.querySelector('.lib-idcard-n').textContent)], [true, 'AB', 'ADA BYRON', true]);
       var idc2 = document.createElement('div'); idc2.innerHTML = L.idCard('AB', 'Ada Byron', '');
       T.eq('and the same card each time', idc2.innerHTML, idc.innerHTML);

@@ -4,6 +4,8 @@
 
 - **A work's notes panel only when it has notes** (David): a work with none opens in one column, with Add note and the stars at the end of its row of actions; pressing Add note slides the notes' panel out with the box to write in ready. A work with notes opens with its panel as before. In Paratexts, a work with no notes shows Add note in place of the empty frame. The empty quotation bar (a rule and a ✕) no longer shows above the box to write in when no words are quoted.
 
+- **The library card, smaller, with the bench's whole name** (David): the card in Settings ▸ Library is 320 px across (was 380); the bench's name across its top is sized to its length and then to what it measures, on two lines where one would make it too small, so it is never cut off.
+
 ## 1.8.23 (2026-11-08)
 
 - **Rating, key work and level in the lists** (David): the gallery's rows show a work's Key Work mark, its stars and its level (Essential, High, Medium, Low, Minimal; nothing for Not Checked); the list view adds the level to what it already showed. Essential stands out in red, High in the theme's accent, the rest fainter.

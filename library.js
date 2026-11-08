@@ -809,13 +809,24 @@
   function idCard(ini, name, acct) {
     var title = String(B.title || B.name || 'The Bench'), len = title.length;
     var n = cardNo(ini, name, acct), d = new Date(), y0 = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
-    var fs = len <= 14 ? 8.6 : len <= 20 ? 7 : len <= 28 ? 5.6 : 4.4;
+    // the bench's name across the top, whole: sized to its length (92 of the card's 100 across, about 0.7 of the size
+    // to a letter), on two lines where one would make it too small; fitIdTitle then shrinks it to what it measures
+    var two = len > 28, fs = Math.max(3.2, Math.min(8.6, 92 / ((two ? Math.ceil(len / 2) + 2 : len) * 0.7)));
     return '<div class="lib-idcard" role="img" aria-label="' + esc(title + ' library card' + (name || ini ? ': ' + (name || ini) : '')) + '">' +
-      '<div class="lib-idcard-red"><div class="lib-idcard-t" style="font-size:' + fs + 'cqw">' + esc(title) + '</div>' + SEAL + '<div class="lib-idcard-k">Library<br>Card</div></div>' +
+      '<div class="lib-idcard-red"><div class="lib-idcard-t' + (two ? ' lib-idcard-t2' : '') + '" style="font-size:' + (Math.round(fs * 10) / 10) + 'cqw">' + esc(title) + '</div>' + SEAL + '<div class="lib-idcard-k">Library<br>Card</div></div>' +
       '<div class="lib-idcard-w"><div class="lib-idcard-n"><span class="lib-idcard-s">L</span> ' + n.split('').join(' ') + '<span class="lib-idcard-i">' + esc(ini || '') + '</span></div>' +
       '<div class="lib-idcard-name">' + esc(String(name || '').toUpperCase()) + '</div><div class="lib-idcard-y">' + y0 + '–' + String(y0 + 1).slice(2) + '</div></div></div>';
   }
   L.idCard = idCard;
+  // the name as drawn: made smaller, a step at a time, until it fits across the card (not while the card is out of sight)
+  function fitIdTitle(at) {
+    SW.$$('.lib-idcard-t', at).forEach(function (t) {
+      var fs = parseFloat(t.style.fontSize) || 8.6, guard = 0;
+      if (!t.clientWidth) return;
+      while ((t.scrollWidth > t.clientWidth + 1 || t.scrollHeight > t.clientHeight + 1) && fs > 2.6 && guard++ < 60) { fs -= 0.2; t.style.fontSize = (Math.round(fs * 10) / 10) + 'cqw'; }
+    });
+  }
+  L.fitIdTitle = fitIdTitle;
   if (SW.settings && SW.settings.add) {
     SW.settings.addTab('library', 'Library', 3);
     var paintId = function () {
@@ -824,6 +835,8 @@
       var was = SW.$('.lib-idflip', at), turned = !!(was && was.classList.contains('turned'));
       at.innerHTML = '<div class="lib-idflip' + (turned ? ' turned' : '') + '" role="button" tabindex="0" aria-pressed="' + turned + '" title="Turn the card over" aria-label="Turn the card over">' +
         '<div class="lib-idflip-in">' + idCard(iv, nv, acct) + idBack(iv, nv, acct) + '</div></div>';
+      fitIdTitle(at);
+      if (root.ResizeObserver && !at._fitRO) { at._fitRO = new ResizeObserver(function () { fitIdTitle(at); }); at._fitRO.observe(at); }
       var fl = SW.$('.lib-idflip', at), turn = function () { var t = fl.classList.toggle('turned'); fl.setAttribute('aria-pressed', String(t)); };
       fl.addEventListener('click', turn);
       fl.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); turn(); } });
