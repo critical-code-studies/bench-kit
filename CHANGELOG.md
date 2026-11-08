@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.21 (2026-11-08)
 
 - **The Library's head on one line** (David): the Library and To read tabs and the toolbar share a line where the window has room, under one rule, and wrap to two only when it is narrow.
 
