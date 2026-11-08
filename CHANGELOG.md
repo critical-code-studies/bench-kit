@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The back of a card (David, 2026-11-08): blank where the group has no notes on the work, and a small **Add Annotation** at its lower right on every back, the same in the catalogue and on To read, opening the work's box ready to write. The turn button no longer shows through from the other side.
+- The Library's tests set aside a reader's stored view, order, size, catalogue browsing and loans while they run, and put them back after, so they pass on a bench someone has used (Melville's report).
 - A library card's typed label keeps one size: the call number and code, one line of author and two of title, the rest in the tooltip (David, 2026-11-08).
 - A cover no longer carries a count of its notes, which collided with the due stamp (David, 2026-11-08). The list still shows the count, and Show ▸ Annotated finds the works with notes.
 - **A tidier Library toolbar** (David, 2026-11-08): **Library** and **To read** are tabs above it, switching between the whole library and the reader's own shelf, and All works, Held, For the group, Linked, Added and Annotated are one **Show** menu, hidden on To read.

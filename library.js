@@ -582,8 +582,8 @@
   var TURN = '<button class="lib-turn" data-turn title="Turn the card over: the notes on its back" aria-label="Turn the card over">↻</button>';
   function backOf(code) {
     return '<div class="lib-face lib-back" aria-label="The back of the card">' + TURN.replace('Turn the card over: the notes on its back', 'Turn the card back').replace('Turn the card over', 'Turn the card back') +
-      '<div class="lib-scrawls">' + (BACK[code] || '<p class="lib-scrawl faint">Reading the back…</p>') + '</div>' +
-      '<button class="lib-back-open" data-lib="' + esc(code) + '">Open the work to add a note</button></div>';
+      '<div class="lib-scrawls">' + (BACK[code] || '') + '</div>' +
+      '<button class="lib-addnote" data-addnote="' + esc(code) + '" title="Write a note on this work">Add Annotation</button></div>';
   }
   function fillBack(code, view) {
     var N = itemNotes();
@@ -592,12 +592,23 @@
       var ns = all.filter(function (n) { return !N.isReaction(n) && N.itemCode(n.vid) === code; }).sort(function (a, b) { return String(a.date) < String(b.date) ? -1 : 1; });
       BACK[code] = ns.length ? ns.map(function (n, i) {
         return '<div class="lib-scrawl" style="--r:' + ((i % 3) - 1) * 0.6 + 'deg">' + (n.parent ? '↳ ' : '') + '<span class="lib-scrawl-t">' + SW.md(String(n.text)) + '</span> <span class="lib-scrawl-by">' + esc(n.by || '') + ', ' + esc(SW.fmtDate(n.date)) + '</span></div>';
-      }).join('') : '<p class="lib-scrawl faint">Nothing written on the back yet.</p>';
+      }).join('') : '';
     }, function (err) { BACK[code] = '<p class="lib-scrawl faint">' + esc(err.message) + '</p>'; }).then(function () {
       SW.$$('[data-face="' + code + '"] .lib-scrawls', view || document).forEach(function (s) { s.innerHTML = BACK[code]; });
     });
   }
   L.flipped = FLIP;
+  // Add Annotation: the work's box, its notes open and the writing place ready
+  function addNote(code) {
+    return L.open(code).then(function () {
+      setTimeout(function () {
+        var ds = document.querySelectorAll('dialog.lib-dlg'), d = ds[ds.length - 1]; if (!d) return;
+        var f = SW.$('.in-fold', d); if (f) f.open = true;
+        var t = SW.$('.in-new .md-rich', d) || SW.$('.in-new textarea', d);
+        if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); }
+      }, 150);
+    });
+  }
   // ---------- the card catalogue: drawers by author, title, subject or relevance ----------
   var CAT = { by: '', open: -1, card: 0, q: null };
   function catBy() { return CAT.by || SW.store.get('library.catby', '') || 'author'; }
@@ -963,6 +974,7 @@
           var zb = ev.target.closest('[data-libsize]'); if (zb) { setting('size', 'size', zb.dataset.libsize); SW.$$('[data-libsize]', view).forEach(function (b) { b.classList.toggle('on', b === zb); }); list(view); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
           if (ev.target.closest('[data-mynotes]')) { showMyNotes(); return; }
+          var an = ev.target.closest('[data-addnote]'); if (an) { addNote(an.dataset.addnote); return; }
           var tn = ev.target.closest('[data-turn]');
           if (tn) {
             var face = tn.closest('[data-face]'), code = face.dataset.face;
@@ -1014,7 +1026,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
-        'A library card, and a card in the catalogue, turns over with <b>↻</b> to show the group’s notes on the work scribbled on its back.',
+        'A library card, and a card in the catalogue, turns over with <b>↻</b> to show the group’s notes on the work scribbled on its back, and <b>Add Annotation</b> there writes one. Without the group’s token it stays a draft in this browser.',
         '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. Below the cards, your reading log lists every work you have had out, with your rating, and <b>Your notes</b> opens the notes you have written on works in the library. It is kept in this browser. With the group’s Hypothesis token it follows you to your other browsers and the group’s members can see it, and a work’s card and box show who else in the group has it out.',
         'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',

@@ -786,7 +786,8 @@
                     T.yes('as DUE and the month and day', /^DUE [A-Z]{3} \d{1,2}$/.test(vl.querySelector('[data-lib="S-2"] .lib-due').textContent));
                     vl.querySelector('[data-show="loans"]').click();
                     T.eq('To read: a card for it', [vl.querySelectorAll('.lib-card').length, vl.querySelector('[data-show="loans"]').textContent], [1, 'To read (1)']);
-                    T.eq('its code and title open the work', vl.querySelectorAll('.lib-card [data-lib="S-2"]').length, 4);
+                    T.eq('its code and title open the work', vl.querySelectorAll('.lib-card [data-lib="S-2"]').length, 3);
+                    T.eq('Add Annotation on its back', vl.querySelectorAll('.lib-card .lib-back [data-addnote="S-2"]').length, 1);
                     vl.querySelector('.lib-card .lib-front [data-turn]').click();
                     T.yes('the card turns over', vl.querySelector('.lib-card').classList.contains('flipped') && SW.library.flipped['S-2']);
                     vl.querySelector('.lib-card .lib-back [data-turn]').click();
@@ -859,5 +860,12 @@
       restore();
     }, function (e) { restore(); throw e; });
   }
-  T.later('the Library', function () { return (T.fetchChain || Promise.resolve()).then(run).then(itemNotes); });
+  // a reader's own Library settings would change what the checks see: kept aside while they run, then put back
+  var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance'];
+  function aside() { var kept = {}; OWN.forEach(function (k) { kept[k] = SW.store.get(k, null); SW.store.set(k, k === 'library.loans' ? {} : ''); }); return kept; }
+  function putBack(kept) { OWN.forEach(function (k) { if (kept[k] == null) SW.store.remove(k); else SW.store.set(k, kept[k]); }); }
+  T.later('the Library', function () {
+    var kept = aside();
+    return (T.fetchChain || Promise.resolve()).then(run).then(itemNotes).then(function () { putBack(kept); }, function (e) { putBack(kept); throw e; });
+  });
 })();

@@ -185,7 +185,7 @@ To show a tag to every reader, put it in `library.json`. A bench with no annotat
 
 The drawer button beside the covers, the list and the notes shows the Library as a card catalogue. Drawers are made from the list as it stands, about fifteen of them, each with a brass plate giving the first and last names in it and its count, so they rebalance as works are added. **Browse by** Author, Title, Subject or Relevance remakes them: by subject a work has a card under each of its tags, and by relevance there is a drawer for the key works and one for each level. Pulling a drawer out shows its cards standing on the rod, the tops of those behind with a tab each and the front card in full, typed: call number, author, title, imprint and kind, the subject tracings (the tags) numbered, the Key work and Preprint marks and the group's stars. The arrow keys flick through, Enter opens the work, Escape closes the drawer. A search and the filters narrow the drawers, and a search opens the drawer holding the first it finds.
 
-A card in the catalogue, and a library card on the To read shelf, turns over with **↻**: its back has the group's notes on the work, in the order they were written, scribbled by hand, with a link to the work to add one. A reader with no token sees the notes in their own browser only.
+A card in the catalogue, and a library card on the To read shelf, turns over with **↻**: its back has the group's notes on the work, in the order they were written, scribbled by hand, or is blank. **Add Annotation** at the foot of every back opens the work's box ready to write one; without the group's token it stays a draft in that browser. A reader with no token sees the notes in their own browser only.
 
 ## To read
 
