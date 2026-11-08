@@ -1239,6 +1239,11 @@ ul.reading a { overflow-wrap: anywhere; }
 #view-library .lib h2 { margin: 0 0 6px; }
 .lib-intro { color: var(--text-dim); margin: 0 0 10px; max-width: 48em; font-size: 12px; line-height: 1.4; }
 .lib-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.lib-tabs { display: flex; gap: 2px; margin: 0 0 10px; border-bottom: 1px solid var(--line); }
+.lib-tab { margin-bottom: -1px; padding: 6px 14px; border: 1px solid transparent; border-radius: 6px 6px 0 0; background: none; color: var(--text-dim); font: inherit; font-size: 14px; cursor: pointer; }
+.lib-tab:hover { color: var(--text); }
+.lib-tab.on { border-color: var(--line); border-bottom-color: var(--bg, var(--surface)); background: var(--bg, var(--surface)); color: var(--text); font-weight: 600; }
+.lib-show[hidden] { display: none; }
 .lib-q { flex: 1 1 16em; min-width: 10em; }
 .lib-n { margin-left: auto; font-size: 12px; }
 .lib-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
@@ -1359,15 +1364,16 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-stand .lib-due { position: absolute; z-index: 2; top: 15px; right: calc(50% - var(--cw) / 2 - 4px); }
 .lib-s .lib-stand .lib-due { font-size: 6.5px; top: 13px; }
 .lib-t .lib-due { margin-left: 8px; vertical-align: 1px; }
-.lib-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; padding: 6px 4px 20px; }
+.lib-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); align-items: start; gap: 22px; padding: 6px 4px 20px; }
 .lib-card { position: relative; padding: 14px 14px 10px; background: #f4ecd4; color: #2a2a2a; border-radius: 3px; box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12); font-family: Helvetica, Arial, sans-serif; }
 .lib-card-lib { margin: 0 0 10px 6px; font-weight: 700; font-size: 15px; line-height: 1.1; color: #444; }
 .lib-card-lib span { font-weight: 400; font-size: 13px; }
 .lib-card-call { font-weight: 700; }
 .lib-card-code, .lib-card-title { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .lib-card-code:hover, .lib-card-title:hover { text-decoration: underline; }
-.lib-cards-s { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
-.lib-cards-s .lib-card { zoom: 0.82; }
+.lib-cards-s { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 14px; }
+.lib-cards-s .lib-card { zoom: 0.62; }
+.lib-cards-s .lib-card-acts > span { display: none; }
 .lib-cards-l { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
 .lib-cards-l .lib-card { zoom: 1.2; }
 .lib-loanlist { width: 100%; border-collapse: collapse; font-size: 13px; margin: 4px 0 8px; }

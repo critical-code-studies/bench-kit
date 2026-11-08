@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- A cover no longer carries a count of its notes, which collided with the due stamp (David, 2026-11-08). The list still shows the count, and Show ▸ Annotated finds the works with notes.
+- **A tidier Library toolbar** (David, 2026-11-08): **Library** and **To read** are tabs above it, switching between the whole library and the reader's own shelf, and All works, Held, For the group, Linked, Added and Annotated are one **Show** menu, hidden on To read.
+- Small library cards on the To read shelf are now about half the width of medium ones, with the last three lines of the card (David, 2026-11-08).
+
 ## 1.8.10 (2026-11-08)
 
 - **A card catalogue in the Library** (David, 2026-11-08): a fourth view, drawers by author, title, subject or relevance with brass plates and counts, a drawer pulled out to its cards on the rod, and a typed front card with call number, imprint, tracings, marks and stars. Arrow keys, Enter and Escape; a search opens the drawer holding the first it finds.
