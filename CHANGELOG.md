@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **Export fixes** (kuki-bench's report): in `contributor`, a segment with no role word carries on the role before it, so editors and translators can be written family name first, one to a segment (`eds Amano, Teiyū; Omodaka, Hisayuki`); a role with no export field (introduction, essay, commentary) goes whole into the note instead of losing its words, and is not split at "and"; bracketed original script leaves no empty brackets; `parallel text`, `edited volume` and `anthology` export as books; `library-check.js --dir DIR`, or a folder given in place of a file, reads that bench's `library.json`.
+- **To read cards head "Library Card | <author>"** (David): the reader knows which library they are in; a work with no author shows what leads its reference, and a work led by its title shows "Library Card" alone.
 - **Works with no author, by Cite Them Right Harvard** (David, through ELIZA): the citation leads with the editors ("(ed.)"/"(eds)", from `contributor`), a newspaper or magazine's name (`in`), a web page's or report's organisation (`publisher`), or else the title with the year after it; a chapter gives "in", its editors and the book. Author order, By relevance, To read and the card catalogue sort on what leads, so these works file among the rest instead of at the end. Call numbers are unchanged.
 ## 1.8.16 (2026-11-08)
 

@@ -1390,6 +1390,7 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-card { position: relative; padding: 14px 14px 10px; background: #f4ecd4; color: #2a2a2a; border-radius: 3px; box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12); font-family: Helvetica, Arial, sans-serif; }
 .lib-card-lib { margin: 0 0 10px 6px; font-weight: 700; font-size: 15px; line-height: 1.1; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 26px; }
 .lib-card-lib span { font-weight: 400; }
+.lib-card-lib .lib-card-bar { margin: 0 3px; color: #8a8270; }
 .lib-card-call { font-weight: 700; }
 .lib-card-code, .lib-card-title { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 /* the typed label keeps one size: the call number and code, one line of author, two of title */

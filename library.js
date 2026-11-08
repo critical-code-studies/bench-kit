@@ -379,18 +379,26 @@
     if (String(e.author || '').trim()) return { by: 'author', text: String(e.author).trim() };
     var fam = L.family(e), k = String(e.kind || '').trim().toLowerCase();
     if (fam !== 'chapter' && e.contributor && rolesOf(e).editor.length) return { by: 'editors', text: editorsText(e) };
-    if (fam === 'news' && inOf(e)) return { by: 'publication', text: inOf(e) };
+    if (fam === 'news' && inOf(e)) return { by: 'publication', text: pubName(inOf(e)) };
     if ((fam === 'web' || k === 'report') && String(e.publisher || '').trim()) return { by: 'org', text: String(e.publisher).trim() };
     return { by: 'title', text: String(e.title || '').trim() };
   }
   L.leadOf = leadOf;
+  // a publication's name without its issue: "Creative Computing 4(1)", "BYTE, June 1977", "Financial Times, no. 27293"
+  function pubName(w) {
+    w = String(w || '').trim();
+    var n = w.replace(/\s*[,;:]\s*(?:vol\b|vol\.|volume\b|no\b|no\.|nos?\.|issue\b|number\b|n[º°]|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?(?=\s|$)|\d).*$/i, '')
+      .replace(/\s+\d[\d()\/.\-–]*(?:\s.*)?$/, '').trim();
+    return n || w;
+  }
+  L.pubName = pubName;
   // the name a work files under: whatever leads its reference, an author's or editor's surname, else the name
   // or title without its opening article, so works with no author file among those with one
   L.sortName = function (e) {
     var ld = leadOf(e);
     if (ld.by === 'author') return L.surname(e.author);
     if (ld.by === 'editors') return L.surname(rolesOf(e).editor[0]);
-    return titleKey(ld.text).replace(/^[^0-9A-Za-zÀ-ÿĀ-ž]+/, '');
+    return titleKey(ld.text).replace(/^[\s"'“”‘’«»„(\[{¿¡*.,:;!?\-–—]+/, '');
   };
   L.sorted = function (items, order) {
     var byTitle = function (a, b) { return AZ(titleKey(a.title), titleKey(b.title)); };
@@ -652,7 +660,8 @@
     var soon = cur && cur.due && cur.due <= plusDays(t, 7) ? (cur.due < t ? 'OVERDUE' : 'DUE SOON') : '';
     return '<article class="lib-card' + (FLIP[e.id] ? ' flipped' : '') + (soon ? ' lib-card-soon' : '') + '" data-card="' + esc(e.id) + '" data-face="' + esc(e.id) + '" style="' + paperOf(e.id, stamps) + '"><div class="lib-face lib-front">' + TURN +
       (soon ? '<span class="lib-card-soonstamp">' + soon + '</span>' : '') +
-      '<div class="lib-card-lib">Library: <span>' + esc(B.name || B.title || '') + '</span></div>' +
+      // the reader knows which library they are in: the card names who the work is by
+      '<div class="lib-card-lib">Library Card' + (function () { var ld = leadOf(e); return ld.by === 'title' ? '' : ' <span class="lib-card-bar">|</span> <span>' + esc(ld.text) + '</span>'; })() + '</div>' +
       '<div class="lib-card-label">' + (L.callNo(e) ? '<span class="lib-card-call">' + esc(L.callNo(e)) + '</span> ' : '') + '<button class="lib-card-code" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.id) + '</button><span class="lib-cl-a" title="' + esc(e.author || '') + '">' + esc(e.author || '') + '</span><button class="lib-card-title" data-lib="' + esc(e.id) + '" title="' + esc(e.title) + '">' + esc(e.title) + '</button></div>' +
       cardGrid(e.id, h) +
       '<div class="lib-card-acts">' + (cur ? '<span class="lib-loanbox"><button class="btn ghost lib-ib on" data-cardloan aria-haspopup="true" aria-expanded="false" title="Renew or return" aria-label="Renew or return">' + ICON.mark(true) + '</button><span class="lib-loandue">' + (cur.due ? 'DUE ' + dueShort(cur.due) : 'ON LOAN') + '</span>' +
@@ -1311,14 +1320,14 @@
     var pp = where && /\d/.test(pages) ? (/^(pp?\.)/i.test(pages) ? pages : (/[-–]/.test(pages) ? 'pp. ' : 'p. ') + pages) : '';
     // an article's pages follow its journal, a newspaper piece's its title; a chapter's follow the book's publisher
     var after = (fam === 'article' || ld.by === 'publication') && pp ? ', ' + pp : '';
-    // the publication that leads is not said again
-    var shown = ld.by === 'publication' ? '' : where;
+    // the publication that leads is not said again, only its issue
+    var shown = ld.by === 'publication' ? where.slice(ld.text.length).replace(/^[\s,;:]+/, '') : where;
     var tT, tH, wT = '', wH = '';
     if (part) { tT = '‘' + t + '’'; tH = esc(tT); } else { tT = t; tH = '<i>' + esc(t) + '</i>'; }
     if (part && shown) {
       // a chapter: in, its editors where known, and the book
       var eds = fam === 'chapter' ? editorsText(e) : '', lead = fam === 'chapter' ? 'in ' + (eds ? eds + ' ' : '') : '';
-      wT = lead + shown + after; wH = esc(lead) + '<i>' + esc(shown) + '</i>' + esc(after);
+      wT = lead + shown + after; wH = esc(lead) + (ld.by === 'publication' ? esc(shown) : '<i>' + esc(shown) + '</i>') + esc(after);
     } else if (after) { wT = after.slice(2); wH = esc(wT); }
     if (ld.by === 'title') {
       // no one to lead: the title, then the year, then where it appeared
