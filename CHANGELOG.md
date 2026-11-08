@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.10 (2026-11-08)
 
 - **A card catalogue in the Library** (David, 2026-11-08): a fourth view, drawers by author, title, subject or relevance with brass plates and counts, a drawer pulled out to its cards on the rod, and a typed front card with call number, imprint, tracings, marks and stars. Arrow keys, Enter and Escape; a search opens the drawer holding the first it finds.
 - A library card and a catalogue card turn over (↻) to the group's notes on the work, scribbled on the back (David, 2026-11-08).
