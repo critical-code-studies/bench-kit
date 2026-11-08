@@ -1841,7 +1841,7 @@
         P.load(true).then(function () {
           var code = newCode();
           return save(SW.px('One') + ' ' + code + ': ' + o.title + ' (missing, a stub), catalogued by ' + me(), function (c) {
-            c.items.push(Object.assign({ code: code, kind: 'missing' }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me() }));
+            c.items.push(Object.assign({ code: code, kind: 'missing' }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me(), check: 'unchecked' }));
           }).then(function () { return code; });
         }).then(function (code) { d.close(); refresh(); SW.toast(code + ' added'); openItem(code); }, function (err) { a.disabled = false; msg.textContent = err.message; });
         return;
@@ -1858,7 +1858,7 @@
         P.load(true).then(function () {
           var code = newCode();
           return save(SW.px('One') + ' ' + code + ': ' + o.title + ' (a link), catalogued by ' + me(), function (c) {
-            c.items.push(Object.assign({ code: code, kind: lk }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me() }));
+            c.items.push(Object.assign({ code: code, kind: lk }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me(), check: 'unchecked' }));
           }).then(function () { return code; });
         }).then(function (code) { d.close(); refresh(); SW.toast(code + ' added'); openItem(code); }, function (err) { a.disabled = false; msg.textContent = err.message; });
         return;
@@ -1881,7 +1881,7 @@
           fileSha = r && r.content && r.content.sha;
           msg.textContent = 'Recording it in the catalogue…';
           return save(SW.px('One') + ' ' + code + ': catalogued, by ' + me(), function (c) {
-            c.items.push(Object.assign({ code: code, file: path, name: file.name, kind: kind, mime: mime, size: file.size }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me() }));
+            c.items.push(Object.assign({ code: code, file: path, name: file.name, kind: kind, mime: mime, size: file.size }, o, { added: now(), addedBy: me(), updated: now(), updatedBy: me(), check: 'unchecked' }));
           }).then(function () { return code; }, function (err) {
             // the record could not be saved: the file just uploaded is taken out again, so none is left without a record
             if (!fileSha) throw err;

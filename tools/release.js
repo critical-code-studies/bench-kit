@@ -217,5 +217,17 @@ if (!NOLOG) {
   }
 }
 
+// the Library's records a person should look over (tools/library-check.js)
+{
+  const lj = path.join(dir, 'library', 'library.json');
+  if (fs.existsSync(lj)) {
+    try {
+      const chk = require(path.join(__dirname, 'library-check.js'));
+      const j = JSON.parse(fs.readFileSync(lj, 'utf8')), n = (j.items || []).filter((e) => chk.problemsOf(e).length).length;
+      if (n) console.log('Library: ' + n + ' record' + (n === 1 ? '' : 's') + ' to look over: node ' + path.join(path.relative(process.cwd(), path.dirname(__dirname)), 'tools', 'library-check.js') + ' ' + lj);
+    } catch (e) { /* a manifest that does not parse is reported elsewhere */ }
+  }
+}
+
 console.log((DRY ? 'would release ' : 'released ') + cur + ' → ' + next + ', bench-kit ' + kv + ':\n' + changes.map((c) => '  ' + c).join('\n'));
 if (!DRY) console.log('\nNext: look over git diff, then commit and push:\n  git add ' + touched.filter((p, i, a) => a.indexOf(p) === i).join(' '));

@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Export fixes** (kuki-bench's report): editors and translators from `contributor` (RIS `ED` and `A4`, BibTeX `editor` and `translator`), other roles in a note; a book's or thesis's page count from `extent`; a name in its own script after a romanised form exports as the romanised form, so Zotero reads it; `kind: 'translation'` exports as a book.
+- **A hidden needs-checking mark** (David, 2026-11-08): a work added by hand in the Library or Paratexts carries `check: "unchecked"`, unseen by readers. `tools/library-check.js` lists those, and role words in `author`, `pages` that is not a page or range, a missing title, and a scholarly work's missing author or date; `--checked` clears marks. The release tool says how many records want a look.
+- Below 860 pixels, the Library's Filters button can be pressed again with medium covers (kuki-bench's report). The medium size and the line under a title share the class `lib-m`, and the line's rule put the whole shelf in a second column over the Filters button, since 1.4.0.
+
 ## 1.8.15 (2026-11-08)
 
 - A view no longer repeats its menu item as a heading (David, 2026-11-08): the Library, Paratexts, Findings, Glossary, Changes, Search and a catalogue's title are kept for screen readers only, a line saved on each. The menu's current item is marked plainly instead: bold, with a heavier underline in the bench's colour and a tint behind it.

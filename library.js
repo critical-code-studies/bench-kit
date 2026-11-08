@@ -203,7 +203,7 @@
       if (file && file.size > MAXUP) throw new Error('Too large to add from here (40 MB at most)');
       return L.load().then(function () {
         var id = newId(), x = file ? (String(file.name).match(/\.[A-Za-z0-9]+$/) || [''])[0].toLowerCase() : '', path = 'library/' + id + x;
-        var entry = Object.assign({ id: id }, o, file ? { shelf: 'private', file: path } : {}, { added: Object.assign(who() === '?' ? {} : { by: who() }, { date: new Date().toISOString().slice(0, 10) }) });
+        var entry = Object.assign({ id: id }, o, file ? { shelf: 'private', file: path } : {}, { added: Object.assign(who() === '?' ? {} : { by: who() }, { date: new Date().toISOString().slice(0, 10) }), check: 'unchecked' });
         var message = 'Library ' + id + ': ' + o.title + ', added by ' + who();
         function record2(fileSha) {
           return saveAdds(message, function (items) { items.push(entry); }).then(function () { return id; }, function (err) {
@@ -226,7 +226,7 @@
         if (i < 0) throw new Error('That entry is no longer among the additions');
         var was = items[i], next = { id: id };
         Object.keys(o).forEach(function (k) { next[k] = o[k]; });
-        ['shelf', 'file', 'added'].forEach(function (k) { if (was[k]) next[k] = was[k]; });
+        ['shelf', 'file', 'added', 'check'].forEach(function (k) { if (was[k]) next[k] = was[k]; });
         items[i] = next;
       }).then(function () { return id; });
     });
@@ -1112,21 +1112,54 @@
   // something else, in italics where it stands alone. e.citation, written by hand, is used as it is.
   function inOf(e) { var s = String(e.in || '').trim(); return /^\(.*\)$/.test(s) ? '' : s; }   // "(monograph)": a note, not a place
   // ---------- export: RIS and BibTeX for Zotero and the like ----------
-  function authorsOf(e) { return String(e.author || '').split(/\s*;\s*|\s+and\s+|\s*&\s*/).map(function (a) { return a.trim(); }).filter(Boolean); }
+  // a name with a romanised form goes out in it: "Kuki, Shūzō 九鬼周造" as "Kuki, Shūzō"; a name in its own script alone stays
+  function exportName(n) {
+    n = String(n || '').trim();
+    if (!/[A-Za-z\u00c0-\u024f]/.test(n)) return n;
+    return n.replace(/[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef\u3000-\u303f]+/g, ' ').replace(/\s+,/g, ',').replace(/\s{2,}/g, ' ').replace(/^[\s,]+|[\s,]+$/g, '');
+  }
+  function authorsOf(e) { return String(e.author || '').split(/\s*;\s*|\s+and\s+|\s*&\s*/).map(exportName).filter(Boolean); }
+  // contributor as "eds A B, C D; translated by E F": editors, translators, and others, by the words before them.
+  // Names after a role are split at commas only where each piece has a space in it, so "Surname, Given" holds
+  function splitNames(s) {
+    return s.split(/\s*,?\s+and\s+|\s*&\s*|\s*;\s*/).reduce(function (all, part) {
+      var bits = part.split(/\s*,\s*/);
+      return all.concat(bits.length > 1 && bits.every(function (b) { return /\S\s+\S/.test(b); }) ? bits : [part]);
+    }, []).map(exportName).filter(Boolean);
+  }
+  function rolesOf(e) {
+    var out = { editor: [], translator: [], other: [] };
+    String(e.contributor || '').split(/\s*;\s*/).forEach(function (seg) {
+      seg = seg.trim(); if (!seg) return;
+      var m, role = 'other';
+      if ((m = /^(?:eds?\.?|editors?|edited)(?:\s+by)?\s+/i.exec(seg))) role = 'editor';
+      else if ((m = /^(?:trans(?:\.|lated)?|translators?|tr\.)(?:\s+by)?\s+/i.exec(seg))) role = 'translator';
+      else m = /^(?:foreword|introduction|preface|afterword|notes)(?:\s+by)?\s+/i.exec(seg);
+      splitNames(m ? seg.slice(m[0].length) : seg).forEach(function (n) { out[role].push(n); });
+    });
+    return out;
+  }
+  L.rolesOf = rolesOf;
+  // a volume's size as a page count: the first number in extent ("331 p.; 23 cm")
+  function pageCount(e) { var m = /(\d+)\s*(?:p\b|pp\b|pages\b)/i.exec(String(e.extent || '')) || /^\s*(\d+)/.exec(String(e.extent || '')); return m ? m[1] : ''; }
   function risType(e) {
     var k = String(e.kind || '').toLowerCase().trim();
-    return { book: 'BOOK', edition: 'BOOK', monograph: 'BOOK', thesis: 'THES', dissertation: 'THES', chapter: 'CHAP', article: 'JOUR', review: 'JOUR', preprint: 'UNPB', magazine: 'MGZN', news: 'NEWS', newspaper: 'NEWS', 'web page': 'ELEC', web: 'ELEC', website: 'ELEC', blog: 'BLOG', film: 'VIDEO', video: 'VIDEO', documentary: 'VIDEO', podcast: 'SOUND', audio: 'SOUND', talk: 'SOUND', report: 'RPRT', conference: 'CPAPER', encyclopaedia: 'ENCYC', encyclopedia: 'ENCYC' }[k] || 'GEN';
+    return { book: 'BOOK', edition: 'BOOK', monograph: 'BOOK', translation: 'BOOK', thesis: 'THES', dissertation: 'THES', chapter: 'CHAP', article: 'JOUR', review: 'JOUR', preprint: 'UNPB', magazine: 'MGZN', news: 'NEWS', newspaper: 'NEWS', 'web page': 'ELEC', web: 'ELEC', website: 'ELEC', blog: 'BLOG', film: 'VIDEO', video: 'VIDEO', documentary: 'VIDEO', podcast: 'SOUND', audio: 'SOUND', talk: 'SOUND', report: 'RPRT', conference: 'CPAPER', encyclopaedia: 'ENCYC', encyclopedia: 'ENCYC' }[k] || 'GEN';
   }
   function pagesOf(e) { var m = /(\d+)\s*[-–]\s*(\d+)/.exec(String(e.pages || '')); return m ? [m[1], m[2]] : null; }
   L.toRIS = function (es) {
     return es.map(function (e) {
       var out = ['TY  - ' + risType(e)], line = function (k, v) { if (v != null && String(v).trim()) out.push(k + '  - ' + String(v).replace(/\s+/g, ' ').trim()); }, pp = pagesOf(e);
+      var roles = rolesOf(e);
       authorsOf(e).forEach(function (a) { line('AU', a); });
+      roles.editor.forEach(function (a) { line('ED', a); });
+      roles.translator.forEach(function (a) { line('A4', a); });
       line('TI', e.title);
       line(risType(e) === 'JOUR' || risType(e) === 'MGZN' || risType(e) === 'NEWS' ? 'JO' : 'T2', e.in);
       line('PY', L.year(e.date)); line('DA', e.date); line('PB', e.publisher);
-      if (pp) { line('SP', pp[0]); line('EP', pp[1]); } else line('SP', e.pages);
+      if (pp) { line('SP', pp[0]); line('EP', pp[1]); } else if (e.pages) line('SP', e.pages); else if (/^(BOOK|THES)$/.test(risType(e))) line('SP', pageCount(e));
       line('DO', e.doi); line('UR', e.url); line('LA', e.lang); line('N1', e.note);
+      if (roles.other.length) line('N1', 'With ' + roles.other.join('; '));
       plainTags(e).forEach(function (t) { line('KW', t); });
       line('ID', e.id);
       out.push('ER  - ');
@@ -1143,11 +1176,15 @@
       while (used[k]) k = key + String.fromCharCode(96 + (++n));
       used[k] = 1;
       var t = bibType(e), f = [], put = function (name, v) { if (v != null && String(v).trim()) f.push('  ' + name + ' = {' + bibEsc(v) + '}'); }, pp = pagesOf(e);
+      var bRoles = rolesOf(e);
       put('author', authorsOf(e).join(' and '));
+      put('editor', bRoles.editor.join(' and '));
+      put('translator', bRoles.translator.join(' and '));
       f.push('  title = {{' + bibEsc(e.title) + '}}');
       put(t === 'article' ? 'journal' : t === 'incollection' || t === 'inproceedings' ? 'booktitle' : 'howpublished', e.in);
       put('year', L.year(e.date)); put('publisher', e.publisher);
       put('pages', pp ? pp[0] + '--' + pp[1] : e.pages);
+      if (!e.pages && (t === 'book' || t === 'phdthesis')) put('pagetotal', pageCount(e));
       put('doi', e.doi); put('url', e.url); put('language', e.lang); put('note', e.note);
       put('keywords', plainTags(e).join(', '));
       return '@' + t + '{' + k + ',\n' + f.join(',\n') + '\n}';

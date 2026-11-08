@@ -185,6 +185,17 @@ To show a tag to every reader, put it in `library.json`. A bench with no annotat
 
 The export icon beside **Share** in an entry's box gives that work as RIS or BibTeX. **Download RIS** saves a file that Zotero, EndNote and Mendeley open; **Download BibTeX** and **Copy BibTeX** give BibTeX, and copied it goes into Zotero by File ▸ Import from Clipboard. The work carries its authors, title, the journal or book it is in, year and date, publisher, pages, DOI, link, language, note and tags, and its code as the RIS `ID`. The kind sets the type (book, chapter, journal article, thesis, film, and so on); a kind the kit does not know is exported as a generic item.
 
+`author` holds authors only. Editors, translators and the like go in `contributor`, each group after its role: `eds Amano Teiyū, Omodaka Hisayuki; translated by Takeshi Morisato`. Export reads `eds`/`edited by` as editors (RIS `ED`, BibTeX `editor`) and `trans.`/`translated by` as translators (RIS `A4`, BibTeX `translator`). Names after a role are split at commas only where each has a space in it, so `Surname, Given` holds; `and` and `&` also split. Other roles go in a note. `pages` is a page or a range; a volume's size goes in `extent` (`331 p.; 23 cm`), and a book or thesis exports its first number as the page count. A name written in its own script after a romanised form (`Kuki, Shūzō 九鬼周造`) exports as the romanised form, so Zotero reads surname and given name; a name in its own script alone is kept. `kind: 'translation'` exports as a book.
+
+## Checking records
+
+A work added by hand, through Add a work in the Library or added in Paratexts, carries a hidden `check: "unchecked"`, which readers never see and publishing keeps. `tools/library-check.js` lists those, and in any record a role word in `author`, `pages` that is not a page or range, a missing title, and a book's, chapter's, article's or thesis's missing author or date. Run it on `library.json`, or a private repository's `additions.json` or `catalogue.json`; `--checked ID,ID` clears the mark once a record has been looked at. The release tool says how many records in `library.json` want a look.
+
+```bash
+node research/kit/tools/library-check.js research/library/library.json
+node research/kit/tools/library-check.js research/library/library.json --checked L-ABCDE
+```
+
 ## The card catalogue
 
 The drawer button beside the covers, the list and the notes shows the Library as a card catalogue. Drawers are made from the list as it stands, about fifteen of them, each with a brass plate giving the first and last names in it and its count, so they rebalance as works are added. **Browse by** Author, Title, Subject or Relevance remakes them: by subject a work has a card under each of its tags, and by relevance there is a drawer for the key works and one for each level. Pulling a drawer out shows its cards standing on the rod, the tops of those behind with a tab each and the front card in full, typed: call number, author, title, imprint and kind, the subject tracings (the tags) numbered, the Key work and Preprint marks and the group's stars. The arrow keys flick through, Enter opens the work, Escape closes the drawer. A search and the filters narrow the drawers, and a search opens the drawer holding the first it finds.

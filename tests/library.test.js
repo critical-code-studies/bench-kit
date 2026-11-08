@@ -61,6 +61,11 @@
       T.yes('in the frame class it is given', /class="lib-embed"/.test(play('https://vimeo.com/123') || ''));
       T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
       var ex = [{ id: 'X-1', kind: 'article', title: 'The {Big} Idea', author: 'Weizenbaum, Joseph; Berry, David M.', date: '1966-01', in: 'Communications of the ACM', pages: '36–45', doi: '10.1145/365153.365168', url: 'https://example.org', tags: ['ELIZA', 'High'] }, { id: 'X-2', kind: 'oddity', title: 'Bare', author: 'Weizenbaum, Joseph', date: '1966' }];
+      var kx = [{ id: 'K-1', kind: 'translation', title: 'The Structure of Iki', author: 'Kuki, Shūzō 九鬼周造', contributor: 'eds 天野貞祐 Amano Teiyū, 澤瀉久敬 Omodaka Hisayuki; translated by Takeshi Morisato; foreword by Ann Other', extent: '331 p.; 23 cm', date: '2015' }];
+      var kris = L.toRIS(kx), kbib = L.toBibTeX(kx);
+      T.yes('RIS: the romanised name, editors, a translator, other roles in a note, a page count, a book', /AU  - Kuki, Shūzō\r\n/.test(kris) && /ED  - Amano Teiyū\r\nED  - Omodaka Hisayuki/.test(kris) && /A4  - Takeshi Morisato/.test(kris) && /N1  - With Ann Other/.test(kris) && /SP  - 331/.test(kris) && /TY  - BOOK/.test(kris));
+      T.yes('BibTeX: editor, translator, pagetotal', /editor = \{Amano Teiyū and Omodaka Hisayuki\}/.test(kbib) && /translator = \{Takeshi Morisato\}/.test(kbib) && /pagetotal = \{331\}/.test(kbib) && /@book\{/.test(kbib));
+      T.eq('Surname, Given holds after a role', L.rolesOf({ contributor: 'ed. Smith, John' }).editor, ['Smith, John']);
       var ris = L.toRIS(ex);
       T.yes('RIS: type, authors, journal, pages, DOI, tags and code', /TY  - JOUR/.test(ris) && /AU  - Weizenbaum, Joseph\r\nAU  - Berry, David M\./.test(ris) && /JO  - Communications of the ACM/.test(ris) && /SP  - 36\r\nEP  - 45/.test(ris) && /DO  - 10\.1145/.test(ris) && /KW  - ELIZA/.test(ris) && !/KW  - High/.test(ris) && /ID  - X-1/.test(ris) && /TY  - GEN/.test(ris));
       var bib = L.toBibTeX(ex);

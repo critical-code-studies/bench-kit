@@ -1254,7 +1254,8 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 2px 12px; text-align: left; padding: 9px 6px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--text); cursor: pointer; font: inherit; }
 .lib-row:hover { background: var(--surface-2); }
 .lib-t { font-weight: 600; }
-.lib-m { grid-column: 2; color: var(--text-dim); font-size: 13px; }
+/* the line under a title; not the medium cover size, which shares the name */
+.lib-m:not(.lib-list) { grid-column: 2; color: var(--text-dim); font-size: 13px; }
 .lib-h { grid-column: 3; grid-row: 1 / span 2; align-self: center; font: 11px var(--mono); color: var(--text-faint); white-space: nowrap; }
 .lib-h.held { color: var(--text-dim); }
 .lib-acts { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 10px; }
