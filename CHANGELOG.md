@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.22 (2026-11-08)
 
 - **A long library drawn a part at a time** (David): the covers and the list draw the first 150 works, and the next 150 as the reader comes within two screens of the end, instead of every work at once (Melville's 3,929 were all drawn on opening); the gallery's rows off screen are not laid out until near.
 - **Covers show at once** (David): a cover's image fades in when it has come, the drawn cover (its kind, title and author) standing until then, and in place of one that does not come; in a work's box the cover's place is held, on the paper's colour, until it arrives.
