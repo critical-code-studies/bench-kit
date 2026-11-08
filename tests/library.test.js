@@ -845,16 +845,19 @@
                     return wait(200);
                   }).then(function () {
                     function plus1() { var d = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + 1); return d.toISOString().slice(0, 10); }
-                    var p = posted.filter(function (x) { return x.text === 'loan:out:' + plus1(); })[0];
+                    var today1 = new Date().toISOString().slice(0, 10), outs = posted.filter(function (x) { return x.text.indexOf('loan:out:' + plus1() + ':' + today1 + ':') === 0; }), p = outs[0];
                     T.eq('with a token, kept in the group', [!!p, p && p.permissions && p.permissions.read], [true, ['group:grp']]);
+                    T.eq('and sent once, with its reference, however soon the shelf reads the group again', [outs.length, (p && p.text.split(':')[4] || '').length > 4], [1, true]);
+                    T.eq('the same reference twice reads as one', SW.library.loanHistory([{ text: 'loan:out:2026-12-01:2026-11-01:abc12', date: '2026-11-01T10:00:00Z', by: 'DB' }, { text: 'loan:out:2026-12-01:2026-11-01:abc12', date: '2026-11-02T10:00:00Z', by: 'DB' }]).length, 1);
+                    T.eq('the same check-out twice reads as one', SW.library.loanHistory([{ text: 'loan:out:2026-12-01', date: '2026-11-01T10:00:00Z', by: 'DB' }, { text: 'loan:out:2026-12-01:2026-11-01', date: '2026-11-01T10:00:05Z', by: 'DB' }]).length, 1);
                     var today0 = new Date().toISOString().slice(0, 10), d2 = new Date(today0 + 'T00:00:00Z'); d2.setUTCMonth(d2.getUTCMonth() + 2);
-                    T.eq('a loan made before the token is sent up, with its date', posted.filter(function (x) { return x.text === 'loan:out:' + d2.toISOString().slice(0, 10) + ':' + today0; }).length, 1);
+                    T.eq('a loan made before the token is sent up, with its date', posted.filter(function (x) { return x.text.indexOf('loan:out:' + d2.toISOString().slice(0, 10) + ':' + today0 + ':') === 0; }).length, 1);
                     box().close();
                     SW.store.set('library.loans', {});
                     N.invalidate('item:S-1');
                     return load().then(function () { return SW.library.load(); }).then(function () { SW.views.library.show(); return wait(200); }).then(function () {
                       T.eq('and read back in another browser', SW.library.onLoan('S-1') && SW.library.onLoan('S-1').due, plus1());
-                      var mine = rows.filter(function (a) { return a.text === 'loan:out:' + plus1(); })[0];
+                      var mine = rows.filter(function (a) { return a.text.indexOf('loan:out:' + plus1() + ':') === 0; })[0];
                       rows.push({ id: 'h-oth', created: '2026-01-02T00:00:00Z', user: 'acct:other@hypothes.is', uri: mine.uri, text: 'loan:out:2099-03-04', tags: ['bk:v:item:S-1', 'bk:kind:reaction', 'bk:by:OT'], references: [] });
                       N.invalidate('item:S-1');
                       return SW.library.open('S-1').then(function () { return wait(200); });

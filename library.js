@@ -448,14 +448,19 @@
   }
   function onLoan(id) { var h = loans()[id] || [], cur = h[h.length - 1]; return cur && !cur.back ? cur : null; }
   L.onLoan = onLoan;
+  L.loanHistory = function (evs) { return fromEvents(evs); };
   // the group's record of this reader's loans, where they have a token: events in order make the history
   function fromEvents(evs) {
-    var h = [];
+    var h = [], seen = {};
     evs.forEach(function (ev) {
-      // loan:out:<due>[:<out>], the out date where a loan made in a browser was sent up later
-      var day = String(ev.date || '').slice(0, 10), m = /^loan:(out|ext|back)(?::(.*))?$/.exec(ev.text) || [], parts = String(m[2] || '').split(':'), due = parts[0] && parts[0] !== 'none' ? parts[0] : null, cur = h[h.length - 1];
-      if (m[1] === 'out') { if (cur && !cur.back) cur.back = day; h.push({ out: /^\d{4}-\d\d-\d\d$/.test(parts[1] || '') ? parts[1] : day, due: due, by: ev.by }); }
-      else if (m[1] === 'ext' && cur && !cur.back) { cur.back = day; cur.renewed = true; h.push({ out: day, due: due, by: ev.by, renewal: true }); }
+      // loan:out:<due>[:<out>[:<ref>]], the out date where a loan made in a browser was sent up later, and a
+      // reference that makes the same check-out sent twice read once
+      var day = String(ev.date || '').slice(0, 10), m = /^loan:(out|ext|back)(?::(.*))?$/.exec(ev.text) || [], parts = String(m[2] || '').split(':'), due = parts[0] && parts[0] !== 'none' ? parts[0] : null, cur = h[h.length - 1], ref = parts[2] || '';
+      if (ref) { if (seen[ref]) return; seen[ref] = true; }
+      var outDay = /^\d{4}-\d\d-\d\d$/.test(parts[1] || '') ? parts[1] : day;
+      if (m[1] === 'out' && !ref && cur && !cur.back && cur.due === due && cur.out === outDay) return;
+      if (m[1] === 'out') { if (cur && !cur.back) cur.back = day; h.push({ out: outDay, due: due, by: ev.by, ref: ref, sent: true }); }
+      else if (m[1] === 'ext' && cur && !cur.back) { cur.back = day; cur.renewed = true; h.push({ out: day, due: due, by: ev.by, renewal: true, ref: ref, sent: true }); }
       else if (m[1] === 'back' && cur && !cur.back) cur.back = day;
     });
     return h;
@@ -475,23 +480,30 @@
   }
   function othersOut(id) { return (OTH[id] || []).filter(function (r) { return !r.back; }); }
   // a loan made in this browser before the reader had a token goes up to the group the first time they have one
+  // the group is the record where it can be read; this browser's is for a reader with no token, or offline. A loan
+  // the group lacks is sent, under its own reference, so sending it again does no harm
   var UP = {};
+  function newRef() { return Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5); }
   function sendUp(byCode) {
-    var l = loans();
+    var l = loans(), now = Date.now();
     Object.keys(l).forEach(function (c) {
-      var cur = onLoan(c); if (!cur || UP[c]) return;
-      var srv = fromEvents(byCode[c] || []), last = srv[srv.length - 1];
+      var cur = onLoan(c); if (!cur || UP[c] || (PEND[c] && now - PEND[c] < 60000)) return;
+      var evs = byCode[c] || [], srv = fromEvents(evs), last = srv[srv.length - 1];
+      if (cur.ref && evs.some(function (ev) { return String(ev.text).split(':')[4] === cur.ref; })) return;
       if (last && !last.back) return;
       UP[c] = true;
-      var text = 'loan:out:' + (cur.due || 'none') + ':' + cur.out;
+      cur.ref = cur.ref || newRef(); saveLoans();
+      var text = 'loan:out:' + (cur.due || 'none') + ':' + cur.out + ':' + cur.ref;
       byCode[c] = (byCode[c] || []).concat([{ text: text, date: new Date().toISOString(), by: cur.by }]);
       synced(text, c);
     });
   }
   var LS = '';
+  // the group's search can be a moment behind a loan just sent: for a minute, this browser's record of it stands
+  var PEND = {};
   function setLoans(byCode) {
-    var l = loans();
-    Object.keys(byCode).forEach(function (c) { l[c] = fromEvents(byCode[c]); });
+    var l = loans(), now = Date.now();
+    Object.keys(byCode).forEach(function (c) { if (!(PEND[c] && now - PEND[c] < 60000)) l[c] = fromEvents(byCode[c]); });
     saveLoans(); sweepLoans();
     var sig = JSON.stringify(l), moved = sig !== LS; LS = sig;
     return moved;
@@ -499,19 +511,21 @@
   function synced(text, id) {
     var N = itemNotes();
     if (!N || !N.setLoan || !canRate()) return;
+    PEND[id] = Date.now();
     N.setLoan(id, text).catch(function (err) { SW.toast('Kept in this browser; the group did not take it: ' + err.message, 5000); });
   }
   L.checkOut = function (id, months) {
-    var l = loans(), h = l[id] = l[id] || [], due = months ? plusMonths(today(), months) : null;
-    h.push({ out: today(), due: due, by: borrower() }); saveLoans();
-    synced('loan:out:' + (due || 'none'), id);
+    var l = loans(), h = l[id] = l[id] || [], due = months ? plusMonths(today(), months) : null, ref = newRef();
+    h.push({ out: today(), due: due, by: borrower(), ref: ref, sent: canRate() }); saveLoans();
+    synced('loan:out:' + (due || 'none') + ':' + today() + ':' + ref, id);
   };
   L.renew = function (id, months) {
     var l = loans(), h = l[id] || [], cur = h[h.length - 1]; if (!cur || cur.back) return;
     var due = months ? plusMonths(cur.due && cur.due > today() ? cur.due : today(), months) : null;
     cur.back = today(); cur.renewed = true;
-    h.push({ out: today(), due: due, by: borrower(), renewal: true }); saveLoans();
-    synced('loan:ext:' + (due || 'none'), id);
+    var ref = newRef();
+    h.push({ out: today(), due: due, by: borrower(), renewal: true, ref: ref, sent: canRate() }); saveLoans();
+    synced('loan:ext:' + (due || 'none') + ':' + today() + ':' + ref, id);
   };
   L.giveBack = function (id) {
     var cur = onLoan(id); if (!cur) return;

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- A check-out with the group's token no longer shows twice on its card (David's report on 1.8.13). The catch-up for loans made before a token was set took a loan just sent for one the group did not have, while Hypothesis's search was a moment behind, and sent it again. A loan made with a token is now marked as sent, this browser's record of a loan stands for a minute after sending, and two check-outs of a work on the same day with the same due date read as one, which also mends cards already doubled. Each check-out and renewal now carries a reference, and an event whose reference has been read is not read again (David's suggestion), so a loan sent twice shows once. Where the group can be read it is the record, and this browser's copy serves a reader with no token or offline.
+
 ## 1.8.13 (2026-11-08)
 
 - **Export from a work's box** (David, 2026-11-08): an icon beside Share gives RIS or BibTeX for that work, downloaded or copied. The toolbar's export, from 1.8.12, is gone.
