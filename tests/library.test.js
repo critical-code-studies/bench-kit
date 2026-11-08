@@ -815,7 +815,7 @@
                     T.eq('To read: a card for it', [vl.querySelectorAll('.lib-card').length, vl.querySelector('[data-show="loans"]').textContent], [1, 'To read (1)']);
                     T.eq('its code and title open the work', vl.querySelectorAll('.lib-card [data-lib="S-2"]').length, 3);
                     var s2 = SW.library.items().filter(function (x) { return x.id === 'S-2'; })[0], hd = vl.querySelector('.lib-card .lib-card-lib').textContent;
-                    T.yes('its head: Library Card, and who the work is by', /^Library Card/.test(hd) && (SW.library.leadOf(s2).by === 'title' || hd.indexOf(SW.library.leadOf(s2).text) > 0));
+                    T.yes('its head: Book Card, and who the work is by', /^Book Card/.test(hd) && (SW.library.leadOf(s2).by === 'title' || hd.indexOf(SW.library.leadOf(s2).text) > 0));
                     T.eq('Add Annotation on its back', vl.querySelectorAll('.lib-card .lib-back [data-addnote="S-2"]').length, 1);
                     vl.querySelector('.lib-card .lib-front [data-turn]').click();
                     T.yes('the card turns over', vl.querySelector('.lib-card').classList.contains('flipped') && SW.library.flipped['S-2']);

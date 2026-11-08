@@ -661,7 +661,7 @@
     return '<article class="lib-card' + (FLIP[e.id] ? ' flipped' : '') + (soon ? ' lib-card-soon' : '') + '" data-card="' + esc(e.id) + '" data-face="' + esc(e.id) + '" style="' + paperOf(e.id, stamps) + '"><div class="lib-face lib-front">' + TURN +
       (soon ? '<span class="lib-card-soonstamp">' + soon + '</span>' : '') +
       // the reader knows which library they are in: the card names who the work is by
-      '<div class="lib-card-lib">Library Card' + (function () { var ld = leadOf(e); return ld.by === 'title' ? '' : ' <span class="lib-card-bar">|</span> <span>' + esc(ld.text) + '</span>'; })() + '</div>' +
+      '<div class="lib-card-lib">Book Card' + (function () { var ld = leadOf(e); return ld.by === 'title' ? '' : ' <span class="lib-card-bar">|</span> <span>' + esc(ld.text) + '</span>'; })() + '</div>' +
       '<div class="lib-card-label">' + (L.callNo(e) ? '<span class="lib-card-call">' + esc(L.callNo(e)) + '</span> ' : '') + '<button class="lib-card-code" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.id) + '</button><span class="lib-cl-a" title="' + esc(e.author || '') + '">' + esc(e.author || '') + '</span><button class="lib-card-title" data-lib="' + esc(e.id) + '" title="' + esc(e.title) + '">' + esc(e.title) + '</button></div>' +
       cardGrid(e.id, h) +
       '<div class="lib-card-acts">' + (cur ? '<span class="lib-loanbox"><button class="btn ghost lib-ib on" data-cardloan aria-haspopup="true" aria-expanded="false" title="Renew or return" aria-label="Renew or return">' + ICON.mark(true) + '</button><span class="lib-loandue">' + (cur.due ? 'DUE ' + dueShort(cur.due) : 'ON LOAN') + '</span>' +
