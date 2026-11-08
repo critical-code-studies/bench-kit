@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.18 (2026-11-08)
 
 - **A report's or web page's title in italics** (ELIZA, against Cite Them Right): a report and a web page stand alone in a citation, as a book does, their titles in italics rather than quoted.
 - **Settings ▸ Library** (David): at the top, centred, the reader’s library card, after a 1969–70 student card: the bench's name over a red ground, a seal with an open book, LIBRARY CARD, and a window with a number, the reader's initials and name embossed, and the year; it follows the You tab as it is typed. Below, sign book cards with your name or your initials, and when a work is due back soon (only when overdue, or 3, 7 or 14 days before).
