@@ -50,6 +50,7 @@
       for (var hi = 0; hi < 400; hi++) { try { L.inksOf({ out: '2026-11-0' + (hi % 9 + 1), due: '2027-0' + (hi % 9 + 1) + '-08', by: 'Reader ' + hi }); } catch (er) { noInk.push(hi); } }
       T.eq('a line with no ink of its own (a loan from before inks were kept) is drawn in a pen and stamp of its own', noInk, []);
       T.yes('an aged card has no filter, which would keep it from turning over', !/filter/.test(L.paperOf('L-AGED', 6)));
+      T.yes('its worn edges are given to the back too', /--lib-edge:inset/.test(L.paperOf('L-AGED', 6)));
       var idw = document.createElement('div'), tw = SW.BENCH.title; idw.style.width = '320px'; document.body.appendChild(idw);
       SW.BENCH.title = 'The Vector Humanities Translation and Interpretation Research Bench'; idw.innerHTML = L.idCard('AB', 'Ada Byron', ''); L.fitIdTitle(idw);
       var idt = idw.querySelector('.lib-idcard-t');

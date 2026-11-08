@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The back of a book card is the front's paper** (David): the back took a fixed cream; it now takes the card's own paper, its yellowing with use and its worn edges, with the ruled lines over them. A catalogue card's back takes its white.
+
 ## 1.8.25 (2026-11-08)
 
 - **To read shelf fixed for loans from before 1.8.16** (David): a line with no ink of its own was given a stamp colour through a signed shift, which for many lines found no colour, and the shelf stopped drawing; the library's covers were left in the list without their shelf, under the To read tab, counted as the library. Fixed, and the shelf is now made whole before the list is touched.

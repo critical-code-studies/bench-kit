@@ -608,7 +608,8 @@
     // a card in heavy use yellows, and its edges darken where hands have held it. The yellowing is mixed into the paper's
     // colour: a filter on the card would flatten it, and turned over it would show neither side
     return 'background-color:' + (age ? 'color-mix(in srgb, ' + kept.paper + ', #b08a4e ' + Math.round(age * 3.5) + '%)' : kept.paper) + ';' +
-      'box-shadow:inset 0 0 ' + (6 + age * 5) + 'px rgba(120, 78, 20, ' + (age * 0.045).toFixed(3) + '), 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12)';
+      '--lib-edge:inset 0 0 ' + (6 + age * 5) + 'px rgba(120, 78, 20, ' + (age * 0.045).toFixed(3) + ');' +
+      'box-shadow:var(--lib-edge), 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12)';
   }
   // each line in its own pen, and its dates in the desk's stamp ink
   var PENS = ['#1f2c6b', '#1f2c6b', '#2a2a2a', '#2f4f8f', '#1f2c6b', '#3b2a6b'], STAMPS = ['#3a3a5a', '#4b2f6b', '#2a2a2a', '#3a3a5a'];
