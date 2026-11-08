@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.25 (2026-11-08)
 
 - **To read shelf fixed for loans from before 1.8.16** (David): a line with no ink of its own was given a stamp colour through a signed shift, which for many lines found no colour, and the shelf stopped drawing; the library's covers were left in the list without their shelf, under the To read tab, counted as the library. Fixed, and the shelf is now made whole before the list is touched.
 - **Wipe my loan history** (David): Settings ▸ Library has a button that takes every work off the reader's To read shelf and clears their reading log and their lines on the book cards, in this browser and, for a member, their loan records in the group, one at a time. It asks first, with the count; other members' loans are kept.
