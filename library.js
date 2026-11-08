@@ -467,7 +467,10 @@
   var MON3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   function dueShort(day) { var d = new Date(day + 'T00:00:00Z'); return MON3[d.getUTCMonth()] + ' ' + d.getUTCDate(); }
   function plusMonths(day, n) { var d = new Date((day || today()) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); }
-  function borrower() { var me = SW.me(); return me.name || me.initials || 'You'; }
+  function borrower() { var me = SW.me(); return SW.store.get('library.sign', 'name') === 'initials' ? me.initials || me.name || 'You' : me.name || me.initials || 'You'; }
+  // how many days before its date a work is due soon; 0, only when overdue
+  function soonDays() { var n = parseInt(SW.store.get('library.dueSoon', 7), 10); return isNaN(n) || n < 0 ? 7 : n; }
+  function dueSoon(due, t) { return !!due && (due < t || (soonDays() > 0 && due <= plusDays(t, soonDays()))); }
   var LOANS = null;
   function loans() { if (!LOANS) { var l = SW.store.get('library.loans', {}); LOANS = l && typeof l === 'object' && !Array.isArray(l) ? l : {}; } return LOANS; }
   function saveLoans() { SW.store.set('library.loans', LOANS || {}); }
@@ -571,11 +574,11 @@
   function plusDays(day, n) { var d = new Date((day || today()) + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
   L.dueNews = function () {
     sweepLoans();
-    var t = today(), soon = plusDays(t, 7), since = plusDays(t, -7), l = loans(), out = [];
+    var t = today(), since = plusDays(t, -7), l = loans(), out = [];
     Object.keys(l).forEach(function (c) {
       var h = l[c] || [], cur = onLoan(c), last = h[h.length - 1], e = byId(c), name = e ? e.title : c;
       var line = function (head, day) { return { day: day, html: '<div class="news-item news-due"><div class="news-meta"><b>' + head + '</b> · <button class="news-due-w" data-newslib="' + esc(c) + '">' + esc(name) + '</button></div></div>' }; };
-      if (cur && cur.due && cur.due <= soon) { var a = line(cur.due < t ? 'Overdue' : 'Due back ' + dueShort(cur.due), cur.due); a.alert = true; out.push(a); }
+      if (cur && dueSoon(cur.due, t)) { var a = line(cur.due < t ? 'Overdue' : 'Due back ' + dueShort(cur.due), cur.due); a.alert = true; out.push(a); }
       else if (!cur && last && last.back && last.due && last.back === last.due && last.back >= since) out.push(line('Gone back to the library ' + dueShort(last.back), last.back));
     });
     return out.sort(function (a, b) { return (!!b.alert - !!a.alert) || (a.day < b.day ? -1 : 1); });
@@ -657,7 +660,7 @@
     var h = cardLines(e.id), cur = onLoan(e.id), t = today();
     var stamps = (loans()[e.id] || []).length + (OTH[e.id] || []).length;
     // within a week of its date, or past it, the card is stamped to say so
-    var soon = cur && cur.due && cur.due <= plusDays(t, 7) ? (cur.due < t ? 'OVERDUE' : 'DUE SOON') : '';
+    var soon = cur && dueSoon(cur.due, t) ? (cur.due < t ? 'OVERDUE' : 'DUE SOON') : '';
     return '<article class="lib-card' + (FLIP[e.id] ? ' flipped' : '') + (soon ? ' lib-card-soon' : '') + '" data-card="' + esc(e.id) + '" data-face="' + esc(e.id) + '" style="' + paperOf(e.id, stamps) + '"><div class="lib-face lib-front">' + TURN +
       (soon ? '<span class="lib-card-soonstamp">' + soon + '</span>' : '') +
       // the reader knows which library they are in: the card names who the work is by
@@ -756,6 +759,57 @@
         var t = SW.$('.in-new .md-rich', d) || SW.$('.in-new textarea', d);
         if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); }
       }, 150);
+    });
+  }
+  // ---------- the reader's library card, and the Library's settings ----------
+  // after the plastic student cards of the late 1960s: the bench's name over a red ground, a seal, and a
+  // window with the card's number, the reader's initials and name embossed
+  var SEAL = '<svg class="lib-idcard-e" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><circle cx="32" cy="32" r="24"/>' +
+    '<path d="M15 24c7-2.5 12.5-1.5 17 2.5 4.5-4 10-5 17-2.5v19c-7-2.5-12.5-1.5-17 2.5-4.5-4-10-5-17-2.5zM32 26.5v19M19 29c4-1 7-.5 10 1M19 34c4-1 7-.5 10 1M35 30c3-1.5 6-2 10-1M35 35c3-1.5 6-2 10-1"/></svg>';
+  function idCard(ini, name, acct) {
+    var title = String(B.title || B.name || 'The Bench'), len = title.length;
+    var n = ('00000' + (hashOf(acct || (ini + '|' + name)) % 100000)).slice(-5), d = new Date(), y0 = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
+    var fs = len <= 14 ? 8.6 : len <= 20 ? 7 : len <= 28 ? 5.6 : 4.4;
+    return '<div class="lib-idcard" role="img" aria-label="' + esc(title + ' library card' + (name || ini ? ': ' + (name || ini) : '')) + '">' +
+      '<div class="lib-idcard-red"><div class="lib-idcard-t" style="font-size:' + fs + 'cqw">' + esc(title) + '</div>' + SEAL + '<div class="lib-idcard-k">Library<br>Card</div></div>' +
+      '<div class="lib-idcard-w"><div class="lib-idcard-n"><span class="lib-idcard-s">L</span> ' + n.split('').join(' ') + '<span class="lib-idcard-i">' + esc(ini || '') + '</span></div>' +
+      '<div class="lib-idcard-name">' + esc(String(name || '').toUpperCase()) + '</div><div class="lib-idcard-y">' + y0 + '–' + String(y0 + 1).slice(2) + '</div></div></div>';
+  }
+  L.idCard = idCard;
+  if (SW.settings && SW.settings.add) {
+    SW.settings.addTab('library', 'Library', 3);
+    var paintId = function () {
+      var at = SW.$('#set-libcard'); if (!at) return;
+      var i = SW.$('#set-initials'), n = SW.$('#set-name');
+      at.innerHTML = idCard(i ? i.value.trim() : SW.me().initials, n ? n.value.trim() : SW.me().name, SW.notes && SW.notes.me);
+    };
+    var idHooked = false;
+    SW.settings.add({
+      tab: 'library',
+      html: '<div id="set-libcard" class="set-libcard"></div>' +
+        '<p class="hint">Your card for the library, with your initials and name from the You tab.</p>' +
+        '<label>Sign book cards with <select id="set-libsign"><option value="name">Your name</option><option value="initials">Your initials</option></select></label>' +
+        '<p class="hint">What is written in the Borrower’s name column when you take a work for your To read shelf. Lines already written keep their name.</p>' +
+        '<label>Due back soon <select id="set-libsoon"><option value="0">Only when overdue</option><option value="3">3 days before</option><option value="7">7 days before</option><option value="14">14 days before</option></select></label>' +
+        '<p class="hint">When a work on your To read shelf is stamped DUE SOON, and named at the top of What’s new.</p>',
+      load: function () {
+        SW.$('#set-libsign').value = SW.store.get('library.sign', 'name') === 'initials' ? 'initials' : 'name';
+        var sv = String(soonDays()), so = SW.$('#set-libsoon');
+        if (!SW.$('option[value="' + sv + '"]', so)) so.appendChild(SW.el('option', { value: sv }, sv + ' days before'));
+        so.value = sv;
+        paintId();
+        if (!idHooked) {
+          idHooked = true;
+          ['#set-initials', '#set-name'].forEach(function (q) { var x = SW.$(q); if (x) x.addEventListener('input', paintId); });
+          var tabs = SW.$('#dlg-settings .set-tabs'); if (tabs) tabs.addEventListener('click', function () { setTimeout(paintId, 0); });
+        }
+      },
+      save: function () {
+        SW.store.set('library.sign', SW.$('#set-libsign').value);
+        SW.store.set('library.dueSoon', +SW.$('#set-libsoon').value);
+        var v = SW.$('#view-library'); if (v && man) list(v);
+        if (SW.notes && SW.notes.paintNews) SW.notes.paintNews();
+      }
     });
   }
   // ---------- the card catalogue: drawers by author, title, subject or relevance ----------
@@ -1310,7 +1364,9 @@
   }
   L.citation = function (e) {
     if (e.citation) return { text: String(e.citation), html: esc(e.citation) };
-    var where = inOf(e), fam = L.family(e), part = !!where || fam === 'article' || fam === 'chapter' || fam === 'news';
+    // a report and a web page stand alone, their titles in italics, as a book's (Cite Them Right)
+    var where = inOf(e), fam = L.family(e), alone = fam === 'web' || /^(report|technical report)$/i.test(String(e.kind || '').trim());
+    var part = !alone && (!!where || fam === 'article' || fam === 'chapter' || fam === 'news');
     var plain = [], rich = [];
     function add(t, h) { plain.push(t); rich.push(h == null ? esc(t) : h); }
     function stop(s) { return /[.?!]['’"”]?$/.test(s) ? s : s + '.'; }

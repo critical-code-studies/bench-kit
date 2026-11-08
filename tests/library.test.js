@@ -40,6 +40,10 @@
       T.eq('by kind', ids('kind'), 'bdac');
       T.eq('by language, those without last', ids('lang'), 'dbca');
       T.eq('as listed', ids('listed'), 'abcd');
+      var idc = document.createElement('div'); idc.innerHTML = L.idCard('AB', 'Ada Byron', '');
+      T.eq('a library card: the bench, the initials, the name in capitals, a five-figure number', [!!idc.querySelector('.lib-idcard-t').textContent, idc.querySelector('.lib-idcard-i').textContent, idc.querySelector('.lib-idcard-name').textContent, /^L \d \d \d \d \d/.test(idc.querySelector('.lib-idcard-n').textContent)], [true, 'AB', 'ADA BYRON', true]);
+      var idc2 = document.createElement('div'); idc2.innerHTML = L.idCard('AB', 'Ada Byron', '');
+      T.eq('and the same card each time', idc2.innerHTML, idc.innerHTML);
       var eds = es.concat([{ id: 'e', title: 'A Reader', contributor: 'eds C. Pine, D. Elm; translated by E. Ash', date: '2000', kind: 'book' }]);
       T.eq('an edited volume with no author files under its first editor', [L.sortName(eds[4]), L.sorted(eds, 'author').map(function (e) { return e.id; }).join('')], ['Pine', 'cdbea']);
       T.eq('and others with none under what leads their reference', [L.sortName({ title: 'A Piece', kind: 'news', in: 'The Guardian' }), L.sortName({ title: 'X', kind: 'web page', publisher: 'OpenAI' }), L.sortName({ title: '“The Last” Word', kind: 'talk' }), L.sortName({ title: 'Как первый в мире чат-бот', kind: 'web page' })], ['Guardian', 'OpenAI', 'Last” Word', 'Как первый в мире чат-бот']);
@@ -60,6 +64,7 @@
       T.eq('a publication leads by its name; its issue stays after the title', [L.pubName('Creative Computing 4(1)'), L.pubName('BYTE, June 1977'), L.pubName('Financial Times, no. 27293'), L.pubName('Quaderni di informatica 36 (Bull Italia)'), L.pubName('The Guardian'), cite({ title: 'Eliza', in: 'Creative Computing 4(1)', date: '1978', kind: 'magazine', pages: '10–12', publisher: 'Ahl Computing' })], ['Creative Computing', 'BYTE', 'Financial Times', 'Quaderni di informatica', 'The Guardian', 'Creative Computing (1978) ‘Eliza’, 4(1), pp. 10–12.']);
       T.eq('no author: an organisation’s web page', cite({ title: 'About us', publisher: 'A Lab', date: '2023', kind: 'web page', url: 'https://example.org/' }), 'A Lab (2023) About us. https://example.org/');
       T.yes('and the title in italics after it', /^A Lab \(2023\) <i>About us<\/i>\./.test(L.citation({ title: 'About us', publisher: 'A Lab', date: '2023', kind: 'web page' }).html));
+      T.eq('a report and a web page: their titles in italics, not quoted', [L.citation({ title: 'Design Recommendations', publisher: 'Defense Technical Information Center', date: '1980', kind: 'report', in: 'AD-A115894' }).html.indexOf('<i>Design Recommendations</i>') > 0, /^<i>A Page<\/i> \(2019\)/.test(L.citation({ title: 'A Page', in: 'iGuides', date: '2019', kind: 'web page' }).html)], [true, true]);
       T.eq('no author, in a journal: the title, the year, the journal', cite({ title: 'On It', in: 'A Journal 3', date: '2001', kind: 'article', pages: '1–4' }), '‘On It’ (2001) A Journal 3, pp. 1–4.');
       T.eq('as written, where it is', cite({ title: 'x', citation: 'By hand.' }), 'By hand.');
       T.yes('and escaped in the page', !/<script/.test(L.citation({ title: '<script>', kind: 'book' }).html));
@@ -833,6 +838,10 @@
                     var nd = SW.library.dueNews().length;
                     var cur0 = SW.library.onLoan('S-2'), was0 = cur0.due, d3 = new Date(); d3.setUTCDate(d3.getUTCDate() + 3); cur0.due = d3.toISOString().slice(0, 10);
                     var dn0 = SW.library.dueNews();
+                    SW.store.set('library.dueSoon', 0);
+                    var dnOff = SW.library.dueNews().length;
+                    SW.store.set('library.dueSoon', 7);
+                    T.eq('due soon can be only when overdue', dnOff, 0);
                     vl.querySelector('[data-show="loans"]').click();
                     T.eq('due within the week: the card is stamped, and the news is an alert', [vl.querySelectorAll('.lib-card-soon').length, (vl.querySelector('.lib-card-soonstamp') || {}).textContent, dn0[0] && dn0[0].alert], [1, 'DUE SOON', true]);
                     T.eq('What’s new: a work due back within the week', [nd, dn0.length, /Due back [A-Z]{3} \d+/.test(dn0[0] && dn0[0].html), /data-newslib="S-2"/.test(dn0[0] && dn0[0].html)], [0, 1, true, true]);
@@ -922,7 +931,7 @@
     }, function (e) { restore(); throw e; });
   }
   // a reader's own Library settings would change what the checks see: kept aside while they run, then put back
-  var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance', 'library.cards'];
+  var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance', 'library.cards', 'library.sign', 'library.dueSoon'];
   function aside() { var kept = {}; OWN.forEach(function (k) { kept[k] = SW.store.get(k, null); SW.store.set(k, k === 'library.loans' ? {} : ''); }); return kept; }
   function putBack(kept) { OWN.forEach(function (k) { if (kept[k] == null) SW.store.remove(k); else SW.store.set(k, kept[k]); }); }
   T.later('the Library', function () {

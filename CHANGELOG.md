@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A report's or web page's title in italics** (ELIZA, against Cite Them Right): a report and a web page stand alone in a citation, as a book does, their titles in italics rather than quoted.
+- **Settings ▸ Library** (David): at the top, the reader's library card, after a 1969–70 student card: the bench's name over a red ground, a seal with an open book, LIBRARY CARD, and a window with a number, the reader's initials and name embossed, and the year; it follows the You tab as it is typed. Below, sign book cards with your name or your initials, and when a work is due back soon (only when overdue, or 3, 7 or 14 days before).
 ## 1.8.17 (2026-11-08)
 
 - **Export fixes** (kuki-bench's report): in `contributor`, a segment with no role word carries on the role before it, so editors and translators can be written family name first, one to a segment (`eds Amano, Teiyū; Omodaka, Hisayuki`); a role with no export field (introduction, essay, commentary) goes whole into the note instead of losing its words, and is not split at "and"; bracketed original script leaves no empty brackets; `parallel text`, `edited volume` and `anthology` export as books; `library-check.js --dir DIR`, or a folder given in place of a file, reads that bench's `library.json`.
