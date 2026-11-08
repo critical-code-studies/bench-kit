@@ -455,12 +455,12 @@
     evs.forEach(function (ev) {
       // loan:out:<due>[:<out>[:<ref>]], the out date where a loan made in a browser was sent up later, and a
       // reference that makes the same check-out sent twice read once
-      var day = String(ev.date || '').slice(0, 10), m = /^loan:(out|ext|back)(?::(.*))?$/.exec(ev.text) || [], parts = String(m[2] || '').split(':'), due = parts[0] && parts[0] !== 'none' ? parts[0] : null, cur = h[h.length - 1], ref = parts[2] || '';
+      var day = String(ev.date || '').slice(0, 10), m = /^loan:(out|ext|back)(?::(.*))?$/.exec(ev.text) || [], parts = String(m[2] || '').split(':'), due = parts[0] && parts[0] !== 'none' ? parts[0] : null, cur = h[h.length - 1], ref = parts[2] || '', ink = parts[3] || '';
       if (ref) { if (seen[ref]) return; seen[ref] = true; }
       var outDay = /^\d{4}-\d\d-\d\d$/.test(parts[1] || '') ? parts[1] : day;
       if (m[1] === 'out' && !ref && cur && !cur.back && cur.due === due && cur.out === outDay) return;
-      if (m[1] === 'out') { if (cur && !cur.back) cur.back = day; h.push({ out: outDay, due: due, by: ev.by, ref: ref, sent: true }); }
-      else if (m[1] === 'ext' && cur && !cur.back) { cur.back = day; cur.renewed = true; h.push({ out: day, due: due, by: ev.by, renewal: true, ref: ref, sent: true }); }
+      if (m[1] === 'out') { if (cur && !cur.back) cur.back = day; h.push({ out: outDay, due: due, by: ev.by, ref: ref, ink: ink, sent: true }); }
+      else if (m[1] === 'ext' && cur && !cur.back) { cur.back = day; cur.renewed = true; h.push({ out: day, due: due, by: ev.by, renewal: true, ref: ref, ink: ink, sent: true }); }
       else if (m[1] === 'back' && cur && !cur.back) cur.back = day;
     });
     return h;
@@ -492,8 +492,8 @@
       if (cur.ref && evs.some(function (ev) { return String(ev.text).split(':')[4] === cur.ref; })) return;
       if (last && !last.back) return;
       UP[c] = true;
-      cur.ref = cur.ref || newRef(); saveLoans();
-      var text = 'loan:out:' + (cur.due || 'none') + ':' + cur.out + ':' + cur.ref;
+      cur.ref = cur.ref || newRef(); cur.ink = cur.ink || newInk(); saveLoans();
+      var text = 'loan:out:' + (cur.due || 'none') + ':' + cur.out + ':' + cur.ref + ':' + cur.ink;
       byCode[c] = (byCode[c] || []).concat([{ text: text, date: new Date().toISOString(), by: cur.by }]);
       synced(text, c);
     });
@@ -515,17 +515,17 @@
     N.setLoan(id, text).catch(function (err) { SW.toast('Kept in this browser; the group did not take it: ' + err.message, 5000); });
   }
   L.checkOut = function (id, months) {
-    var l = loans(), h = l[id] = l[id] || [], due = months ? plusMonths(today(), months) : null, ref = newRef();
-    h.push({ out: today(), due: due, by: borrower(), ref: ref, sent: canRate() }); saveLoans();
-    synced('loan:out:' + (due || 'none') + ':' + today() + ':' + ref, id);
+    var l = loans(), h = l[id] = l[id] || [], due = months ? plusMonths(today(), months) : null, ref = newRef(), ink = newInk();
+    h.push({ out: today(), due: due, by: borrower(), ref: ref, ink: ink, sent: canRate() }); saveLoans();
+    synced('loan:out:' + (due || 'none') + ':' + today() + ':' + ref + ':' + ink, id);
   };
   L.renew = function (id, months) {
     var l = loans(), h = l[id] || [], cur = h[h.length - 1]; if (!cur || cur.back) return;
     var due = months ? plusMonths(cur.due && cur.due > today() ? cur.due : today(), months) : null;
     cur.back = today(); cur.renewed = true;
-    var ref = newRef();
-    h.push({ out: today(), due: due, by: borrower(), renewal: true, ref: ref, sent: canRate() }); saveLoans();
-    synced('loan:ext:' + (due || 'none') + ':' + today() + ':' + ref, id);
+    var ref = newRef(), ink = newInk();
+    h.push({ out: today(), due: due, by: borrower(), renewal: true, ref: ref, ink: ink, sent: canRate() }); saveLoans();
+    synced('loan:ext:' + (due || 'none') + ':' + today() + ':' + ref + ':' + ink, id);
   };
   L.giveBack = function (id) {
     var cur = onLoan(id); if (!cur) return;
@@ -544,10 +544,10 @@
     Object.keys(l).forEach(function (c) {
       var h = l[c] || [], cur = onLoan(c), last = h[h.length - 1], e = byId(c), name = e ? e.title : c;
       var line = function (head, day) { return { day: day, html: '<div class="news-item news-due"><div class="news-meta"><b>' + head + '</b> · <button class="news-due-w" data-newslib="' + esc(c) + '">' + esc(name) + '</button></div></div>' }; };
-      if (cur && cur.due && cur.due <= soon) out.push(line(cur.due < t ? 'Overdue' : 'Due back ' + dueShort(cur.due), cur.due));
+      if (cur && cur.due && cur.due <= soon) { var a = line(cur.due < t ? 'Overdue' : 'Due back ' + dueShort(cur.due), cur.due); a.alert = true; out.push(a); }
       else if (!cur && last && last.back && last.due && last.back === last.due && last.back >= since) out.push(line('Gone back to the library ' + dueShort(last.back), last.back));
     });
-    return out.sort(function (a, b) { return a.day < b.day ? -1 : 1; });
+    return out.sort(function (a, b) { return (!!b.alert - !!a.alert) || (a.day < b.day ? -1 : 1); });
   };
   if (SW.notes && SW.notes.addNewsSource) {
     SW.notes.addNewsSource(L.dueNews);
@@ -556,17 +556,84 @@
   }
   document.addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('[data-newslib]'); if (b) L.open(b.dataset.newslib); });
   // the card in the book's pocket, after the old library cards
+  // old library cards came in tints, and yellowed with use: a paper for each work, a little older for each line
+  // creams and buffs a shade apart, and now and then an orange card, as some libraries had
+  var PAPERS = ['#f4ecd4', '#f2e8cc', '#f6efdc', '#efe5cb', '#f3eacf', '#f1ead9', '#f5ebd3'], ODD = '#e9b97a';
+  function hashOf(s) { var h = 0; String(s).split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return h; }
+  // a card keeps its paper once chosen, and its age only grows, whatever later kits or a trimmed history say
+  function cardKept(code, stamps) {
+    var all = SW.store.get('library.cards', {}) || {}, k = all[code] || {}, h = hashOf(code), age = Math.min(Math.max(stamps - 1, 0), 8), moved = false;
+    if (!k.paper) { k.paper = h % 11 === 3 ? ODD : PAPERS[h % PAPERS.length]; moved = true; }
+    if (!(k.age >= age)) { k.age = age; moved = true; }
+    if (moved) { all[code] = k; SW.store.set('library.cards', all); }
+    return k;
+  }
+  L.cardKept = cardKept;
+  function paperOf(code, stamps) {
+    var kept = cardKept(code, stamps), age = kept.age;
+    // a card in heavy use yellows, and its edges darken where hands have held it
+    return 'background-color:' + kept.paper + ';filter:sepia(' + (age * 0.07).toFixed(2) + ') brightness(' + (1 - age * 0.015).toFixed(3) + ');' +
+      'box-shadow:inset 0 0 ' + (6 + age * 5) + 'px rgba(120, 78, 20, ' + (age * 0.045).toFixed(3) + '), 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12)';
+  }
+  // each line in its own pen, and its dates in the desk's stamp ink
+  var PENS = ['#1f2c6b', '#1f2c6b', '#2a2a2a', '#2f4f8f', '#1f2c6b', '#3b2a6b'], STAMPS = ['#3a3a5a', '#4b2f6b', '#2a2a2a', '#3a3a5a'];
+  function aged(hex) {
+    var n = parseInt(hex, 16), r = (n >> 16) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn, s = d ? d / (1 - Math.abs(2 * l - 1)) : 0, hh = 0;
+    if (d) hh = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    hh = hh * 60; if (hh < 0) hh += 360;
+    if (s < 0.08) { hh = 30; s = 0.28; }
+    l = l + (0.74 - l) * 0.42; s = s * 0.8;
+    var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((hh / 60) % 2 - 1)), m = l - c / 2, k = Math.floor(hh / 60) % 6;
+    var rgb = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][k];
+    return rgb.map(function (v) { return ('0' + Math.round((v + m) * 255).toString(16)).slice(-2); }).join('');
+  }
+  L.aged = aged;
+  function newInk() { var h = Math.floor(Math.random() * 1e6); return PENS[h % PENS.length].slice(1) + '.' + STAMPS[(h >> 3) % STAMPS.length].slice(1); }
+  function inksOf(r) {
+    var ink = /^[0-9a-f]{6}\.[0-9a-f]{6}$/i.test(r.ink || '') ? r.ink.split('.') : null, h = hashOf((r.by || '') + (r.out || '') + (r.due || ''));
+    var pen = ink ? ink[0] : PENS[h % PENS.length].slice(1), stamp = ink ? ink[1] : STAMPS[(h >> 3) % STAMPS.length].slice(1);
+    // a line crossed out has had time to fade, in its own colour
+    if (r.back) { pen = aged(pen); stamp = aged(stamp); }
+    return 'style="color:#' + pen + '"|style="color:#' + stamp + '"';
+  }
+  function cardLines(id) { return (loans()[id] || []).concat(OTH[id] || []).sort(function (a, b) { return a.out < b.out ? -1 : a.out > b.out ? 1 : 0; }); }
+  function cardRow(r) {
+    var ink = inksOf(r).split('|');
+    return '<tr class="' + (r.back ? 'lib-card-done' : '') + (r.other ? ' lib-card-other' : '') + '"><td class="lib-card-d" ' + ink[1] + '>' + stampOf(r.out) + '</td><td class="lib-card-who"><span ' + ink[0] + '>' + esc(r.by || '') + '</span></td><td class="lib-card-d" ' + ink[1] + '>' + stampOf(r.due) + '</td></tr>';
+  }
+  var CARD_HEAD = '<thead><tr><th>Date<br>loaned</th><th>Borrower’s name</th><th>Date<br>due</th></tr></thead>';
+  function cardGrid(id, h) {
+    var per = F.size === 's' ? 3 : 6, sheets = Math.max(1, Math.ceil(h.length / per));
+    var rows = function (list) { var x = list.map(cardRow); while (x.length < per) x.push('<tr><td></td><td></td><td></td></tr>'); return '<tbody>' + x.join('') + '</tbody>'; };
+    var top = '<table class="lib-card-t">' + CARD_HEAD + rows(h.slice((sheets - 1) * per)) + '</table>';
+    if (sheets < 2) return top;
+    return '<div class="lib-card-sheet"><table class="lib-card-t lib-card-under" aria-hidden="true">' + CARD_HEAD + rows(h.slice((sheets - 2) * per, (sheets - 1) * per)) + '</table>' +
+      '<div class="lib-sticker' + (sheets > 2 ? ' lib-sticker-more' : '') + '" role="button" tabindex="0" data-cardall="' + esc(id) + '" title="Every line on this card (' + h.length + ')" aria-label="Every line on this card (' + h.length + ')">' + top + '</div></div>';
+  }
+  // every line on a card, stickers lifted
+  function showCardAll(id) {
+    var e = byId(id), h = cardLines(id), d = SW.el('dialog', { class: 'tray-big lib-dlg lib-cardall-dlg' });
+    d.innerHTML = '<div class="tray-bighead"><b>' + esc(e ? e.title : id) + '</b><button class="icon-btn" data-x title="Close (Esc)">✕</button></div>' +
+      '<div class="lib-card-all" style="' + paperOf(id, h.length) + '"><table class="lib-card-t">' + CARD_HEAD + '<tbody>' + h.map(cardRow).join('') + '</tbody></table></div>';
+    document.body.appendChild(d);
+    d.addEventListener('close', function () { d.remove(); });
+    d.addEventListener('click', function (ev) { if (ev.target === d || ev.target.closest('[data-x]')) d.close(); });
+    d.showModal();
+    return d;
+  }
+  L.showCardAll = showCardAll;
   function cardOf(e) {
-    var h = (loans()[e.id] || []).concat(OTH[e.id] || []).sort(function (a, b) { return a.out < b.out ? -1 : a.out > b.out ? 1 : 0; }), cur = onLoan(e.id), lines = h.slice(-10).map(function (r) {
-      return '<tr class="' + (r.back ? 'lib-card-done' : '') + (r.other ? ' lib-card-other' : '') + '"><td class="lib-card-d">' + stampOf(r.out) + '</td><td class="lib-card-who"><span>' + esc(r.by || '') + '</span></td><td class="lib-card-d">' + stampOf(r.due) + '</td></tr>';
-    });
-    if (F.size === 's') lines = lines.slice(-3);
-    while (lines.length < (F.size === 's' ? 2 : 6)) lines.push('<tr><td></td><td></td><td></td></tr>');
-    return '<article class="lib-card' + (FLIP[e.id] ? ' flipped' : '') + '" data-card="' + esc(e.id) + '" data-face="' + esc(e.id) + '"><div class="lib-face lib-front">' + TURN +
-      '<div class="lib-card-lib">Library<br><span>' + esc(B.name || B.title || '') + '</span></div>' +
+    var h = cardLines(e.id), cur = onLoan(e.id), t = today();
+    var stamps = (loans()[e.id] || []).length + (OTH[e.id] || []).length;
+    // within a week of its date, or past it, the card is stamped to say so
+    var soon = cur && cur.due && cur.due <= plusDays(t, 7) ? (cur.due < t ? 'OVERDUE' : 'DUE SOON') : '';
+    return '<article class="lib-card' + (FLIP[e.id] ? ' flipped' : '') + (soon ? ' lib-card-soon' : '') + '" data-card="' + esc(e.id) + '" data-face="' + esc(e.id) + '" style="' + paperOf(e.id, stamps) + '"><div class="lib-face lib-front">' + TURN +
+      (soon ? '<span class="lib-card-soonstamp">' + soon + '</span>' : '') +
+      '<div class="lib-card-lib">Library: <span>' + esc(B.name || B.title || '') + '</span></div>' +
       '<div class="lib-card-label">' + (L.callNo(e) ? '<span class="lib-card-call">' + esc(L.callNo(e)) + '</span> ' : '') + '<button class="lib-card-code" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.id) + '</button><span class="lib-cl-a" title="' + esc(e.author || '') + '">' + esc(e.author || '') + '</span><button class="lib-card-title" data-lib="' + esc(e.id) + '" title="' + esc(e.title) + '">' + esc(e.title) + '</button></div>' +
-      '<table class="lib-card-t"><thead><tr><th>Date<br>loaned</th><th>Borrower’s name</th><th>Date<br>due</th></tr></thead><tbody>' + lines.join('') + '</tbody></table>' +
-      '<div class="lib-card-acts">' + (cur ? '<span>Renew for</span> <button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3 months</button><button class="btn ghost" data-ext="0" title="Keep it with no return date">No date</button> <button class="btn ghost" data-ret>Return</button> ' : '') +
+      cardGrid(e.id, h) +
+      '<div class="lib-card-acts">' + (cur ? '<span class="lib-loanbox"><button class="btn ghost lib-ib on" data-cardloan aria-haspopup="true" aria-expanded="false" title="Renew or return" aria-label="Renew or return">' + ICON.mark(true) + '</button><span class="lib-loandue">' + (cur.due ? 'DUE ' + dueShort(cur.due) : 'ON LOAN') + '</span>' +
+        '<div class="lib-loanmenu" hidden><span class="lib-loanst">Renew for:</span><button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3 months</button><button class="btn ghost" data-ext="0" title="Keep it with no return date">No date</button><button class="btn ghost" data-ret>Return</button></div></span> ' : '') +
       '<button class="btn ghost" data-lib="' + esc(e.id) + '">Open</button></div></div>' + backOf(e.id) + '</article>';
   }
   var LOGOPEN = false;
@@ -578,7 +645,7 @@
     var dueOpt = SW.$('option[value="due"]', o);
     if (shelf && !dueOpt) o.insertBefore(SW.el('option', { value: 'due' }, 'Date due'), o.firstChild);
     if (!shelf && dueOpt) dueOpt.remove();
-    o.value = shelf ? (F.loanOrder || 'due') : F.order;
+    o.value = shelf ? (F.loanOrder || 'author') : F.order;
   }
   // every work this reader has had out, with their own rating where the group has one from them
   function logHTML() {
@@ -942,7 +1009,7 @@
     if (fb) fb.innerHTML = facetHTML();
     if (F.show === 'loans') {
       var due = function (e) { return (onLoan(e.id) || {}).due || '9999'; };
-      var lo = F.loanOrder || 'due';
+      var lo = F.loanOrder || 'author';
       var ls = lo === 'due' ? rows().sort(function (a, b) { return due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0; }) : L.sorted(rows(), lo);
       var asList = F.view === 'list';
       box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
@@ -1042,6 +1109,10 @@
           var cc = ev.target.closest('[data-catcard]'); if (cc) { CAT.card = +cc.dataset.catcard; list(view); tray0(); return; }
           var cn = ev.target.closest('[data-catnav]'); if (cn) { catMove(+cn.dataset.catnav); list(view); tray0(); return; }
           if (ev.target.closest('[data-catclose]')) { CAT.open = -1; list(view); return; }
+          var ca = ev.target.closest('[data-cardall]'); if (ca) { if (!ev.cardAll && cardLines(ca.dataset.cardall).length) { ev.cardAll = true; showCardAll(ca.dataset.cardall); } return; }
+          var cl = ev.target.closest('[data-cardloan]');
+          if (cl) { var cm = cl.parentNode.querySelector('.lib-loanmenu'), card = cl.closest('.lib-card'); cm.hidden = !cm.hidden; cl.setAttribute('aria-expanded', cm.hidden ? 'false' : 'true'); card.classList.toggle('menu-open', !cm.hidden); return; }
+          SW.$$('.lib-card .lib-loanmenu', view).forEach(function (m) { if (!m.hidden && !m.contains(ev.target)) { m.hidden = true; m.closest('.lib-card').classList.remove('menu-open'); } });
           var cd = ev.target.closest('[data-card]');
           if (cd && ev.target.closest('[data-ext]')) { L.renew(cd.dataset.card, +ev.target.closest('[data-ext]').dataset.ext); list(view); return; }
           if (cd && ev.target.closest('[data-ret]')) { L.giveBack(cd.dataset.card); list(view); return; }
@@ -1054,6 +1125,10 @@
             list(view); return;
           }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
+        });
+        view.addEventListener('keydown', function (ev) {
+          var ca = (ev.key === 'Enter' || ev.key === ' ') && ev.target.closest && ev.target.closest('[data-cardall]');
+          if (ca && !ev.cardAll && cardLines(ca.dataset.cardall).length) { ev.cardAll = true; ev.preventDefault(); showCardAll(ca.dataset.cardall); }
         });
       }
       var o = SW.$('.lib-order select', view); o.addEventListener('change', function () { if (F.show === 'loans') F.loanOrder = o.value; else setting('order', 'order', o.value); list(view); });

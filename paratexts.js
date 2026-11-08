@@ -325,6 +325,7 @@
       if (skip !== 'tag' && F.tag && (it.tags || []).indexOf(F.tag) < 0) return false;
       if (skip !== 'v' && F.v && (it.versions || []).indexOf(F.v) < 0) return false;
       if (skip !== 'kind' && F.kind && it.kind !== F.kind) return false;
+      if (skip !== 'noted' && F.noted && !!NCOUNT[it.code] !== (F.noted === 'yes')) return false;   // the group's notes on it
       if (skip !== 'genre' && F.genre && it.genre !== F.genre) return false;
       if (skip !== 'lang' && F.lang && readIn(it).indexOf(F.lang) < 0) return false;   // its own language or a translation's
       if (F.q) { var t = [it.code, it.title, (genreOf(it) || [])[1], langOfRec(it) ? langLabel(langOfRec(it)) : '', it.date, it.creator, it.source, it.archive, it.archiveId, it.publisher, (it.contributor || []).join(' '), it.coverage, it.url, altList(it).map(function (a) { return [a.lang, a.label, a.note, a.by].filter(Boolean).join(' '); }).join(' '), it.description, (it.tags || []).join(' '), it.name, inColl(it).map(pathName).join(' '), gapHay(it), gapHay(it, true)].join(' ').toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
@@ -350,10 +351,11 @@
       if (k === 'genre') return 'Type: ' + ((genreOf({ genre: F.genre }) || [])[1] || F.genre);
       if (k === 'lang') return 'Language: ' + langLabel(F.lang);
       if (k === 'kind') return 'Kind: ' + F.kind;
+      if (k === 'noted') return F.noted === 'yes' ? 'Annotated' : 'Not annotated';
       if (k === 'corpus') return 'Corpus: ' + corpusName(F.corpus || '') + ' only';
       return k;
     }
-    ['corpus', 'tag', 'v', 'genre', 'lang', 'kind'].forEach(function (k) {
+    ['corpus', 'tag', 'v', 'genre', 'lang', 'kind', 'noted'].forEach(function (k) {
       // the corpus is in force at its default too, where '' means the paratexts only; it is told
       // only while something narrows the list (a search, a filter, a collection), since the
       // left panel and the menu already give each corpus's count
@@ -417,6 +419,7 @@
       '<label class="check">Version <select data-f="v">' + opt('', 'All', F.v || '') + vids.map(function (v) { return opt(v, vShort(v), F.v); }).join('') + '</select></label>' +
       '<label class="check" title="What the items are">Type <select data-f="genre">' + opt('', 'All', F.genre || '') + genresIn().map(function (g) { return opt(g[0], g[1], F.genre); }).join('') + '</select></label>' +
       (languagesIn().length > 1 || F.lang ? '<label class="check" title="The languages it can be read in: its own, and any translation held beside it (a card marks a translation)">Language <select data-f="lang">' + opt('', 'All', F.lang || '') + languagesIn().map(function (l) { return opt(l[0], l[1], F.lang); }).join('') + '</select></label>' : '') +
+      (SW.notes && SW.notes.itemCounts ? '<label class="check" title="Items with the group’s notes on them, or without">Notes <select data-f="noted">' + opt('', 'All', F.noted || '') + opt('yes', 'Annotated', F.noted || '') + opt('no', 'Not annotated', F.noted || '') + '</select></label>' : '') +
       '<label class="check" title="The format of the file, or how a link shows">Kind <select data-f="kind">' + opt('', 'All', F.kind || '') + kinds.map(function (k) { return opt(k, k, F.kind); }).join('') + '</select></label>' +
       '<label class="check">Sort <select data-px="sort">' + SORTS.map(function (s) { return opt(s[0], s[1], VW.sort); }).join('') + '</select></label>' +
       '<span class="px-seg">' + seg('view', 'grid', '▦', VW.mode !== 'list', 'Grid') + seg('view', 'list', '☰', VW.mode === 'list', 'List') + '</span>' +

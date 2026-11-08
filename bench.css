@@ -927,6 +927,7 @@ body.dev-on .dev-only { display: revert !important; }
 .note .by .ncode:hover { color: var(--text); border-color: var(--line); }
 .fd.note-flash, .tray-item.note-flash { animation: note-flash 1.6s ease-out; }
 .news-btn.has-mine { color: var(--amber); }
+.news-btn.has-due { color: #b0302a; }
 .news-item.news-mine { border-left: 3px solid var(--amber); padding-left: 8px; }
 .pop .code-in { width: 100%; font-size: 14px; padding: 5px 8px; margin: 4px 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
 .fd .st, .fd-big .st { font: 700 9.5px/1 var(--sans); letter-spacing: .05em; padding: 2px 5px; border-radius: 3px; vertical-align: 2px; }
@@ -1321,6 +1322,7 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-adderr { font-size: 12px; }
 .lib-adderr .btn { padding: 0 7px; font-size: 11px; }
 .news-extra { margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.news-alert { position: sticky; top: 0; z-index: 1; padding: 6px 10px; border: 1px solid rgba(176, 48, 42, 0.45); border-left: 3px solid #b0302a; border-radius: 4px; background: var(--surface); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
 .news-due .news-meta b { color: #b0302a; font: 700 11px var(--mono); letter-spacing: 0.4px; }
 .news-due-w { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .news-due-w:hover { text-decoration: underline; }
@@ -1386,8 +1388,8 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-t .lib-due { margin-left: 8px; vertical-align: 1px; }
 .lib-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); align-items: start; gap: 22px; padding: 6px 4px 20px; }
 .lib-card { position: relative; padding: 14px 14px 10px; background: #f4ecd4; color: #2a2a2a; border-radius: 3px; box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12); font-family: Helvetica, Arial, sans-serif; }
-.lib-card-lib { margin: 0 0 10px 6px; font-weight: 700; font-size: 15px; line-height: 1.1; color: #444; }
-.lib-card-lib span { font-weight: 400; font-size: 13px; }
+.lib-card-lib { margin: 0 0 10px 6px; font-weight: 700; font-size: 15px; line-height: 1.1; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 26px; }
+.lib-card-lib span { font-weight: 400; }
 .lib-card-call { font-weight: 700; }
 .lib-card-code, .lib-card-title { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 /* the typed label keeps one size: the call number and code, one line of author, two of title */
@@ -1419,7 +1421,23 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-card-t td + td { border-left: 1px solid #3d63ad; }
 .lib-card-d { font: 700 11px/1.4 var(--mono); color: #3a3a5a; white-space: nowrap; }
 .lib-card-who span { font: 17px/1.1 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; color: #1f2c6b; }
-.lib-card-done .lib-card-who span, .lib-card-done .lib-card-d { text-decoration: line-through; text-decoration-color: #1f2c6b; }
+.lib-card-done .lib-card-who span, .lib-card-done .lib-card-d { text-decoration: line-through; text-decoration-color: currentColor; }
+/* lines crossed out fade, as old ink does */
+.lib-card.menu-open { z-index: 6; }
+/* a full card: a white sticker over the old lines, which show faintly through it */
+.lib-card-sheet { position: relative; }
+.lib-sticker { position: absolute; inset: -3px -4px -3px -2px; padding: 3px 4px 3px 2px; background: rgba(255, 255, 253, 0.76); border-radius: 1px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transform: rotate(-0.5deg); cursor: pointer; }
+.lib-sticker-more { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 2px 3px 0 -1px rgba(255, 255, 253, 0.9), 2px 3px 2px -1px rgba(0, 0, 0, 0.18); }
+.lib-sticker .lib-card-t th { color: #4a4a4a; border-color: #6a6a6a; }
+.lib-sticker .lib-card-t td { border-color: #a8a8a8; }
+.lib-sticker .lib-card-t td + td { border-left-color: #8a8a8a; }
+.lib-sticker:hover { background: rgba(255, 255, 253, 0.9); }
+.lib-sticker:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lib-cardall-dlg { width: min(96vw, 520px); }
+.lib-card-all { padding: 12px 14px; border-radius: 3px; color: #2a2a2a; font-family: Helvetica, Arial, sans-serif; }
+/* due within the week, or past it: a red stamp across the card's head */
+.lib-card-soonstamp { position: absolute; top: 9px; right: 44px; z-index: 2; padding: 1px 6px; border: 2px solid #b0302a; border-radius: 3px; color: #b0302a; font: 700 11px/1.3 var(--mono); letter-spacing: 1px; transform: rotate(-6deg); opacity: 0.85; pointer-events: none; mix-blend-mode: multiply; }
+.lib-card-acts .lib-loanbox .lib-loanmenu { top: auto; bottom: calc(100% + 4px); }
 .lib-card-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 10px; font-size: 12px; color: #555; }
 .lib-card-acts .btn { padding: 1px 7px; font-size: 12px; color: #2a2a2a; }
 .lib-loanst { color: var(--text-dim); font-size: 13px; }

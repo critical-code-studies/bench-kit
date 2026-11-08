@@ -360,6 +360,7 @@
     n.textContent = all ? (all > 99 ? '99+' : String(all)) : '';
     btn.classList.toggle('has-news', !!all);
     btn.classList.toggle('has-mine', !!newsMine);
+    btn.classList.toggle('has-due', extraNews().some(function (x) { return x.alert; }));
     btn.title = newsItems.length ? newsItems.length + ' new in the group’s annotations since ' + SW.fmtDate(newsSince()) + (newsMine ? '; ' + newsMine + ' answer' + (newsMine === 1 ? 's' : '') + ' you' : '') : 'What’s new in the group’s annotations';
   }
   function newsLine(n, byId) {
@@ -382,7 +383,8 @@
   N.showNews = function () {
     var body = SW.drawer('What’s new', '<p class="hint">Looking…</p>');
     N.news().then(function (items) {
-      var ex = extraNews(), exHTML = ex.length ? '<section class="news-extra">' + ex.map(function (x) { return x.html; }).join('') + '</section>' : '';
+      // alerts (works due back) come first, and stay until dealt with: Mark all as read does not clear them
+      var ex = extraNews(), exHTML = ex.length ? '<section class="news-extra' + (ex.some(function (x) { return x.alert; }) ? ' news-alert' : '') + '">' + ex.map(function (x) { return x.html; }).join('') + '</section>' : '';
       if (!N.configured()) { body.innerHTML = exHTML + '<p class="hint">Set the Hypothesis group and token in ⚙ to see what others have added.</p>'; return; }
       var byId = {};
       newsAll.forEach(function (n) { byId[n.id] = n; });

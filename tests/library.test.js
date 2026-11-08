@@ -817,14 +817,28 @@
                     var nd = SW.library.dueNews().length;
                     var cur0 = SW.library.onLoan('S-2'), was0 = cur0.due, d3 = new Date(); d3.setUTCDate(d3.getUTCDate() + 3); cur0.due = d3.toISOString().slice(0, 10);
                     var dn0 = SW.library.dueNews();
+                    vl.querySelector('[data-show="loans"]').click();
+                    T.eq('due within the week: the card is stamped, and the news is an alert', [vl.querySelectorAll('.lib-card-soon').length, (vl.querySelector('.lib-card-soonstamp') || {}).textContent, dn0[0] && dn0[0].alert], [1, 'DUE SOON', true]);
                     T.eq('What’s new: a work due back within the week', [nd, dn0.length, /Due back [A-Z]{3} \d+/.test(dn0[0] && dn0[0].html), /data-newslib="S-2"/.test(dn0[0] && dn0[0].html)], [0, 1, true, true]);
                     cur0.due = was0;
                     T.eq('renewed: a second line, the first struck through, a month on', [vl.querySelectorAll('.lib-card tbody tr.lib-card-done').length, SW.library.onLoan('S-2').due], [1, plus(3)]);
+                    var aged = vl.querySelector('.lib-card tr.lib-card-done .lib-card-who span').getAttribute('style');
+                    T.yes('a crossed-out line fades in its own ink, not grey', /color:#[0-9a-f]{6}/.test(aged) && !/1f2c6b|2a2a2a|2f4f8f|3b2a6b/.test(aged) && SW.library.aged('1f2c6b') !== SW.library.aged('3b2a6b'));
+                    for (var rn = 0; rn < 6; rn++) vl.querySelector('.lib-card [data-ext="1"]').click();
+                    var cardH = vl.querySelector('.lib-card').offsetHeight;
+                    T.eq('a full card does not grow: a sticker over the old lines, the new ones on it', [vl.querySelectorAll('.lib-card .lib-sticker').length, vl.querySelectorAll('.lib-card .lib-sticker tbody tr').length, vl.querySelectorAll('.lib-card .lib-sticker tbody tr.lib-card-done, .lib-card .lib-sticker tbody tr:not(.lib-card-done) td.lib-card-d:not(:empty)').length > 0, vl.querySelectorAll('.lib-card .lib-card-under tbody tr').length], [1, 6, true, 6]);
+                    vl.querySelector('.lib-card [data-cardall]').click();
+                    var cad = document.querySelector('.lib-cardall-dlg');
+                    T.eq('the sticker opens every line', [!!cad, cad && cad.querySelectorAll('tbody tr').length], [true, 8]);
+                    if (cad) cad.close();
+                    vl.querySelector('.lib-card [data-ext="1"]').click();
+                    // where the kit's stylesheet is loaded the sticker lies over the old lines; the page height is checked there
+                    if (getComputedStyle(vl.querySelector('.lib-sticker')).position === 'absolute') T.eq('and the card stays its size', vl.querySelector('.lib-card').offsetHeight, cardH);
                     vl.querySelector('.lib-card [data-ext="0"]').click();
                     T.eq('and with no date', [SW.library.onLoan('S-2').due, /NO DATE/.test(vl.querySelector('.lib-card').textContent)], [null, true]);
                     vl.querySelector('.lib-card [data-ret]').click();
                     T.eq('returned', [SW.library.onLoan('S-2'), vl.querySelectorAll('.lib-card').length], [null, 0]);
-                    T.eq('To read: Order by date due, and the search names the shelf', [vl.querySelector('.lib-order select').value, vl.querySelector('.lib-q').placeholder], ['due', 'Search your To read shelf']);
+                    T.eq('To read: by author, and the search names the shelf', [vl.querySelector('.lib-order select').value, vl.querySelector('.lib-q').placeholder], ['author', 'Search your To read shelf']);
                     T.eq('the reading log, shut at first, and no filters on To read', [vl.querySelector('.lib-log').open, vl.querySelector('.lib-facets').hidden], [false, true]);
                     T.eq('the reading log keeps it', [vl.querySelectorAll('.lib-log tbody tr').length, /Two/.test(vl.querySelector('.lib-log').textContent), vl.querySelector('.lib-log tbody td:nth-child(4)').textContent], [1, true, '1']);
                     vl.querySelector('[data-mynotes]').click();
@@ -853,6 +867,9 @@
                     var today1 = new Date().toISOString().slice(0, 10), outs = posted.filter(function (x) { return x.text.indexOf('loan:out:' + plus1() + ':' + today1 + ':') === 0; }), p = outs[0];
                     T.eq('with a token, kept in the group', [!!p, p && p.permissions && p.permissions.read], [true, ['group:grp']]);
                     T.eq('and sent once, with its reference, however soon the shelf reads the group again', [outs.length, (p && p.text.split(':')[4] || '').length > 4], [1, true]);
+                    T.yes('the check-out carries its inks', /^[0-9a-f]{6}\.[0-9a-f]{6}$/.test(p && p.text.split(':')[5] || ''));
+                    var ck = SW.library.cardKept('S-1', 1), ck2 = SW.library.cardKept('S-1', 0);
+                    T.eq('a card keeps its paper, and its age does not go back', [ck2.paper === ck.paper, ck2.age >= ck.age], [true, true]);
                     T.eq('the same reference twice reads as one', SW.library.loanHistory([{ text: 'loan:out:2026-12-01:2026-11-01:abc12', date: '2026-11-01T10:00:00Z', by: 'DB' }, { text: 'loan:out:2026-12-01:2026-11-01:abc12', date: '2026-11-02T10:00:00Z', by: 'DB' }]).length, 1);
                     T.eq('the same check-out twice reads as one', SW.library.loanHistory([{ text: 'loan:out:2026-12-01', date: '2026-11-01T10:00:00Z', by: 'DB' }, { text: 'loan:out:2026-12-01:2026-11-01', date: '2026-11-01T10:00:05Z', by: 'DB' }]).length, 1);
                     var today0 = new Date().toISOString().slice(0, 10), d2 = new Date(today0 + 'T00:00:00Z'); d2.setUTCMonth(d2.getUTCMonth() + 2);
@@ -872,7 +889,7 @@
                       xo.close();
                       var vo = document.getElementById('view-library');
                       vo.querySelector('[data-show="loans"]').click();
-                      T.eq('and the card has their line', [vo.querySelectorAll('.lib-card tr.lib-card-other').length, /OT/.test(vo.querySelector('.lib-card').textContent)], [1, true]);
+                      T.eq('and the card has their line', [vo.querySelectorAll('.lib-card tr.lib-card-other').length, /OT/.test(vo.querySelector('.lib-card[data-card="S-1"]').textContent)], [1, true]);
                     });
                   }).then(function () {
                     SW.store.set('library.loans', {}); SW.store.set('token', ''); N.forget();
@@ -889,7 +906,7 @@
     }, function (e) { restore(); throw e; });
   }
   // a reader's own Library settings would change what the checks see: kept aside while they run, then put back
-  var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance'];
+  var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance', 'library.cards'];
   function aside() { var kept = {}; OWN.forEach(function (k) { kept[k] = SW.store.get(k, null); SW.store.set(k, k === 'library.loans' ? {} : ''); }); return kept; }
   function putBack(kept) { OWN.forEach(function (k) { if (kept[k] == null) SW.store.remove(k); else SW.store.set(k, kept[k]); }); }
   T.later('the Library', function () {
