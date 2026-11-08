@@ -1011,10 +1011,13 @@
   }
   // a reader's own Library settings would change what the checks see: kept aside while they run, then put back
   var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance', 'library.cards', 'library.sign', 'library.dueSoon', 'library.fopen', 'library.joined', 'library.filters'];
-  function aside() { var kept = {}; OWN.forEach(function (k) { kept[k] = SW.store.get(k, null); SW.store.set(k, k === 'library.loans' ? {} : ''); }); return kept; }
-  function putBack(kept) { OWN.forEach(function (k) { if (kept[k] == null) SW.store.remove(k); else SW.store.set(k, kept[k]); }); }
+  // the library's record in memory is let go each way, or a later save would write the checks' loans (S-1, S-2, by TT)
+  // into the bench's own store; putting back waits for anything the checks set going to finish first
+  function forget() { if (SW.library && SW.library.forgetLoans) SW.library.forgetLoans(); }
+  function aside() { var kept = {}; OWN.forEach(function (k) { kept[k] = SW.store.get(k, null); SW.store.set(k, k === 'library.loans' ? {} : ''); }); forget(); return kept; }
+  function putBack(kept) { return wait(400).then(function () { OWN.forEach(function (k) { if (kept[k] == null) SW.store.remove(k); else SW.store.set(k, kept[k]); }); forget(); }); }
   T.later('the Library', function () {
     var kept = aside();
-    return (T.fetchChain || Promise.resolve()).then(run).then(itemNotes).then(wipeGroup).then(function () { putBack(kept); }, function (e) { putBack(kept); throw e; });
+    return (T.fetchChain || Promise.resolve()).then(run).then(itemNotes).then(wipeGroup).then(function () { return putBack(kept); }, function (e) { return putBack(kept).then(function () { throw e; }); });
   });
 })();

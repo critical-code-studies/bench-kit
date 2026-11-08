@@ -474,6 +474,11 @@
   var LOANS = null;
   function loans() { if (!LOANS) { var l = SW.store.get('library.loans', {}); LOANS = l && typeof l === 'object' && !Array.isArray(l) ? l : {}; } return LOANS; }
   function saveLoans() { SW.store.set('library.loans', LOANS || {}); }
+  // the record held in memory let go, to be read again from the store (the test page, which sets the store aside and puts
+  // it back, would otherwise write its own loans into the bench's)
+  // said as an event, so every copy of this script on the page lets go (the test page loads it more than once)
+  L.forgetLoans = function () { if (SW.emit && SW.on) SW.emit('library:forget'); else { LOANS = null; UP = {}; PEND = {}; } };
+  if (SW.on) SW.on('library:forget', function () { LOANS = null; UP = {}; PEND = {}; });
   // past its date a work goes back into the library
   function sweepLoans() {
     var l = loans(), t = today(), moved = false;
@@ -1129,8 +1134,10 @@
   function paintCounts(view) {
     if (!canRate()) paintRatings(view, NR);
     var N = itemNotes(); if (!N) return;
-    if (N.itemLoans && canRate()) N.itemLoans().then(function (h) { sendUp(h); if (setLoans(h) && F.view !== 'notes') list(view); }, function () {});
-    if (N.itemLoansOthers && canRate()) N.itemLoansOthers().then(function (o) { if (setOthers(o) && F.show === 'loans' && F.view !== 'notes') list(view); }, function () {});
+    // what the group sends back is used only while this view is still on the page: a view taken away (a bench
+    // rebuilding its views, the test page putting its own back) neither draws nor writes the reader's loans
+    if (N.itemLoans && canRate()) N.itemLoans().then(function (h) { if (!view.isConnected) return; sendUp(h); if (setLoans(h) && F.view !== 'notes') list(view); }, function () {});
+    if (N.itemLoansOthers && canRate()) N.itemLoansOthers().then(function (o) { if (!view.isConnected) return; if (setOthers(o) && F.show === 'loans' && F.view !== 'notes') list(view); }, function () {});
     if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t)) afterTags(view); }, function () {});
     if (N.itemRatings && canRate()) N.itemRatings().then(function (r) {
@@ -1211,6 +1218,7 @@
   L.chunk = function () { return CHUNK; };
   function wideLib() { return !root.matchMedia || root.matchMedia('(min-width: 860px)').matches; }
   function list(view) {
+    if (!view || !view.isConnected) return;
     var box = SW.$('.lib-list', view); if (!box) return;
     var fp = SW.$('.lib-facets', view), fb = SW.$('.lib-fbody', view);
     // the filters serve the library; the To read shelf is short enough without them. The funnel on the bar shows or

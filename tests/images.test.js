@@ -35,12 +35,14 @@
       return wait(150).then(function () { T.eq('closing the box starts no download', saved, []); T.eq('✕ closes it', !!(d.open), false); });
     }).then(function () { return SW.images.openFigure('fig-01'); }).then(function () { return wait(50); }).then(function () {
       var d = box();
+      // waited for, not timed: drawing the PNG takes a few timers, which a page in the background slows to a second each
+      function saves(n) { var t0 = Date.now(); return (function look() { return saved.length >= n || Date.now() - t0 > 15000 ? Promise.resolve() : wait(50).then(look); })(); }
       d.querySelector('[data-exp="png"]').click();
-      return wait(400).then(function () {
+      return wait(400).then(function () { return saves(1); }).then(function () {
         T.eq('PNG saves one file', saved.length, 1);
         T.eq('and leaves the box open', !!d.open, true);
         d.querySelector('[data-exp="svg"]').click();
-        return wait(400).then(function () {
+        return wait(400).then(function () { return saves(2); }).then(function () {
           T.eq('SVG saves one file', saved.length, 2);
           T.eq('as an .svg', /\.svg$/.test(saved[1] || ''), true);
           T.eq('and leaves the box open', !!d.open, true);
