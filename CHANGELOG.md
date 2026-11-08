@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.19 (2026-11-08)
 
 - **The Library's tabs pinned** (David): Library and To read stay at the top with the toolbar as the list scrolls.
 - **Filters in a pane of their own** (David): on a wide screen the filters stay in view beside the list, under the pinned tabs, and scroll on their own; each heading is shut until opened (one with a choice in it opens), and stays as left. A funnel on the bar shows or hides them: hidden, the list takes the full width, and the choice is kept; on a narrow screen it opens and folds them above the list.
