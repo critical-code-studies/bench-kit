@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.13 (2026-11-08)
 
 - **Export from a work's box** (David, 2026-11-08): an icon beside Share gives RIS or BibTeX for that work, downloaded or copied. The toolbar's export, from 1.8.12, is gone.
 - When GitHub no longer accepts the token saved in a browser, the Library says so in one small line (works the group added are kept there, and a new token shows them), with **Hide** until the token changes (David's report).
