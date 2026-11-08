@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.23 (2026-11-08)
 
 - **Rating, key work and level in the lists** (David): the gallery's rows show a work's Key Work mark, its stars and its level (Essential, High, Medium, Low, Minimal; nothing for Not Checked); the list view adds the level to what it already showed. Essential stands out in red, High in the theme's accent, the rest fainter.
 
