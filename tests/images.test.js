@@ -139,7 +139,12 @@
       var ran = 0, q3 = make({ max: 1, wait: 80, tries: 3 }), t0 = Date.now(), second = 0, attempts = 0;
       q3.add({ start: function (ok, err) { attempts++; if (attempts === 1) err(); else { second = Date.now() - t0; ok(); } } });
       var q4 = make({ max: 2 }); q4.add({ live: function () { return false; }, start: function (ok) { ran++; ok(); } });
-      return wait(700).then(function () {
+      // waited for, not timed: a page in the background has its timers slowed to a second or more each, and the
+      // queue's chained waits then run past any fixed time (Melville's tests, run in a hidden pane, failed so)
+      var t1 = Date.now();
+      function settled() { return done.length === 6 && gaveUp === 1 && second > 0; }
+      function until() { return settled() || Date.now() - t1 > 15000 ? Promise.resolve() : wait(50).then(until); }
+      return wait(200).then(until).then(function () {
         T.group('Images: asking a library’s service');
         T.eq('all asked for in the end', done.length, 6);
         T.eq('never more than the limit at once', most, 2);
