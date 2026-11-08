@@ -356,6 +356,11 @@ body.drawer-open .notes-tab { display: none; }
 .react-pick { display: inline-flex; gap: 2px; }
 .react-pick[hidden] { display: none; }
 .react-pick .react { border-color: transparent; background: none; }
+/* in a rating bar the reactions are the annotations' pills, not the bar's round buttons */
+.fd-rxbar .react { padding: 0 6px; border-radius: 10px; font-size: 13px; line-height: 1.6; color: var(--text); background: var(--bg); }
+.fd-rxbar .react.add { color: var(--text-dim); }
+.fd-rxbar .react-pick .react { border-color: transparent; background: none; }
+.fd-rxbar .react.mine { border-color: var(--beam); background: color-mix(in srgb, var(--beam) 12%, transparent); }
 .note .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .note .acts button.ico { font-size: 14px; color: var(--text-dim); padding: 0 5px; }
 .note .acts button.ico:hover { color: var(--beam); }

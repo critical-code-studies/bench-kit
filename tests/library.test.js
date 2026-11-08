@@ -539,10 +539,14 @@
       return N.itemRatings();
     }).then(function (rt) {
       T.eq('the average, by code', rt['P-AAAAA'] && [rt['P-AAAAA'].avg, rt['P-AAAAA'].n], [3, 1]);
+      T.eq('no reaction shows until someone has left one; ☺+ opens them all', [el.querySelectorAll('.in-rate .reacts > [data-rx]').length, el.querySelectorAll('.in-rate .react-pick [data-rx]').length, el.querySelector('.in-rate .react-pick').hidden], [0, 9, true]);
+      el.querySelector('.in-rate [data-rxpick]').click();
+      T.yes('☺+ opens the rest', !el.querySelector('.in-rate .react-pick').hidden);
       el.querySelector('[data-rx="👍"]').click();
       return wait(80);
     }).then(function () {
       T.eq('an emoji', rows.filter(function (a) { return a.text === '👍'; }).length, 1);
+      T.eq('and it shows, with who left it', el.querySelectorAll('.in-rate .reacts > [data-rx="👍"]').length, 1);
       el.querySelector('[data-rx="👍"]').click();
       return wait(80);
     }).then(function () {

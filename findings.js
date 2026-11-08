@@ -202,7 +202,7 @@
     var R = ratingOf(t);
     return '<div class="fd-rxbar"><span class="fd-rate" title="Your rating (one to three stars); the crew’s average beside it">' + [1, 2, 3].map(function (k) { return '<button data-rate="' + k + '" class="' + (R && R.mine >= k ? 'on' : '') + '">★</button>'; }).join('') +
       (R ? ' <span class="hint" title="' + SW.esc(R.who.join('; ')) + '">' + (Math.round(R.avg * 10) / 10) + ' from ' + R.n + '</span>' : '') + '</span>' +
-      N.EMOJI.map(function (e) { return '<button class="fd-emo' + (mineE[e] ? ' on' : '') + '" data-emoji="' + e + '" title="' + SW.esc((by[e] || []).join(', ') || 'React') + '">' + e + (by[e] ? '<sup>' + by[e].length + '</sup>' : '') + '</button>'; }).join('') + '</div>';
+      N.reactRow(by, mineE, 'data-emoji') + '</div>';
   }
   function refreshThreads() {
     return N.listAll({ reactions: true }).then(function (all) { live.threads = N.threads(all.filter(function (x) { return x.source !== 'buildlog'; })); if (live.box) checkNotes(live.box, true); });

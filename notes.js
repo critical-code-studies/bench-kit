@@ -746,6 +746,23 @@
     if (r.source === 'draft') return r.by === SW.me().initials;
     return r.source === 'hypothesis' && !!N.me && r.user === N.me;
   }
+  // a row of reactions as the annotations show them: only those someone has left, each with who left it, then ☺+ to open
+  // the rest. by: { emoji: [names] }; mine: { emoji: true }; attr: the data attribute the clicks are read from
+  N.reactRow = function (by, mine, attr) {
+    var esc = SW.esc, h = '<span class="reacts">';
+    N.EMOJI.forEach(function (e) {
+      var who = (by[e] || []).filter(function (x, i, a) { return a.indexOf(x) === i; });
+      if (!who.length) return;
+      h += '<button type="button" class="react' + (mine[e] ? ' mine' : '') + '" ' + attr + '="' + esc(e) + '" title="' + esc(who.join(', ') + (mine[e] ? ' (click to take yours back)' : ' (click to add yours)')) + '">' + esc(e) + '<small>' + esc(who.join(' ')) + '</small></button>';
+    });
+    return h + '<button type="button" class="react add" data-rxpick aria-expanded="false" title="Add a reaction">☺<small>+</small></button>' +
+      '<span class="react-pick" hidden>' + N.EMOJI.map(function (e) { return '<button type="button" class="react' + (mine[e] ? ' mine' : '') + '" ' + attr + '="' + e + '" title="React ' + e + '">' + e + '</button>'; }).join('') + '</span></span>';
+  };
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-rxpick]'); if (!b) return;
+    var pk = b.nextElementSibling; if (!pk || !pk.classList.contains('react-pick')) return;
+    pk.hidden = !pk.hidden; b.setAttribute('aria-expanded', String(!pk.hidden));
+  });
   function renderReactions(n, reactions) {
     if (n.source === 'buildlog') return '';
     var by = {};
@@ -1560,10 +1577,11 @@
       var mineStar = roots.filter(function (r) { return isStar(r.text) && myReaction(r); }).pop(), have = mineStar ? +mineStar.text.slice(1) : 0, s = starsOf(roots);
       rbar.innerHTML = '<span class="fd-rate" title="Your rating, one to three stars (again to take it back)">' + [1, 2, 3].map(function (k) { return '<button type="button" data-star="' + k + '" class="' + (have >= k ? 'on' : '') + '" aria-label="' + k + (k > 1 ? ' stars' : ' star') + '">★</button>'; }).join('') + '</span>' +
         (s ? '<span class="hint" title="' + SW.esc(s.who.join('; ')) + '">' + (Math.round(s.avg * 10) / 10) + ' from ' + s.n + '</span>' : '') +
-        N.EMOJI.map(function (e) {
-          var rs = roots.filter(function (r) { return r.text === e; }), mine = rs.some(myReaction);
-          return '<button type="button" data-rx="' + SW.esc(e) + '" class="' + (mine ? 'on' : '') + '" title="' + SW.esc(rs.map(function (r) { return r.by; }).join(', ') || 'React') + '">' + SW.esc(e) + (rs.length ? '<sup>' + rs.length + '</sup>' : '') + '</button>';
-        }).join('');
+        (function () {
+          var by = {}, mine = {};
+          roots.forEach(function (r) { if (N.EMOJI.indexOf(r.text) < 0) return; (by[r.text] = by[r.text] || []).push(r.by); if (myReaction(r)) mine[r.text] = true; });
+          return N.reactRow(by, mine, 'data-rx');
+        })();
     }
     function react(text) { return N.create({ vid: vid, kind: 'reaction', text: text, tags: [], quiet: true }); }
     function rateClick(e) {
