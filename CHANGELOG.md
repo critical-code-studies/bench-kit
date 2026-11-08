@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A card catalogue in the Library** (David, 2026-11-08): a fourth view, drawers by author, title, subject or relevance with brass plates and counts, a drawer pulled out to its cards on the rod, and a typed front card with call number, imprint, tracings, marks and stars. Arrow keys, Enter and Escape; a search opens the drawer holding the first it finds.
+- A library card and a catalogue card turn over (↻) to the group's notes on the work, scribbled on the back (David, 2026-11-08).
+- A loan made in a browser before the reader set the group's token is sent to the group, with its date, the first time the token is there (David's question).
+
 ## 1.8.9 (2026-11-07)
 
 - The Library's intro under its title is its first sentence, in small type, with the whole in the tooltip (David, 2026-11-08). A bench can shorten its `intro` to one brief sentence.

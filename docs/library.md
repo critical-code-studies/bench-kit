@@ -181,13 +181,19 @@ An entry's tags show in its box, and **Filters** and the search read them. There
 
 To show a tag to every reader, put it in `library.json`. A bench with no annotation group shows its tags with no way to change them.
 
+## The card catalogue
+
+The drawer button beside the covers, the list and the notes shows the Library as a card catalogue. Drawers are made from the list as it stands, about fifteen of them, each with a brass plate giving the first and last names in it and its count, so they rebalance as works are added. **Browse by** Author, Title, Subject or Relevance remakes them: by subject a work has a card under each of its tags, and by relevance there is a drawer for the key works and one for each level. Pulling a drawer out shows its cards standing on the rod, the tops of those behind with a tab each and the front card in full, typed: call number, author, title, imprint and kind, the subject tracings (the tags) numbered, the Key work and Preprint marks and the group's stars. The arrow keys flick through, Enter opens the work, Escape closes the drawer. A search and the filters narrow the drawers, and a search opens the drawer holding the first it finds.
+
+A card in the catalogue, and a library card on the To read shelf, turns over with **↻**: its back has the group's notes on the work, in the order they were written, scribbled by hand, with a link to the work to add one. A reader with no token sees the notes in their own browser only.
+
 ## To read
 
 Each reader has a **To read** shelf, a part of the Library to attend to. A work is checked out from its box for one, two or three months, and its cover then carries a due stamp in its upper right corner, in that reader's view only. **To read** beside **All** shows a library card for each work, after the cards once kept in a book's pocket: the work's code, author and title, and a line for each loan and renewal, with the date loaned, the borrower's name and the date due. A card renews a loan for one, two or three months as often as the reader likes, takes the date away, or returns the work. Past its date a work goes back into the library. Below the cards, a reading log lists every work the reader has had out, with when it first went out, when it came back, how many loans, and the reader's own rating where they gave one. **Your notes** there opens, in a box, every note the reader has written on works in the library, drafts included, each with a link to its work.
 
 The cards come small, medium or large (**S M L**), and **☰** shows the shelf as a list with the same renewals. A card's code and title open the work. Each card's label, and the spine of a drawn book, carries a call number after the old shelf marks: the year, the author's initial and two figures from the next letters, and the title's first letter (`1966 W48e`). It is a guide to the shelf, not a classification.
 
-Loans are kept in the reader's browser. With the group's Hypothesis token they are also kept as annotations the group can read (`loan:out:<date>`, `loan:ext:<date>`, `loan:back`), so they follow the reader to other browsers. A work's card then has a line for each member's loan of it, and its box says who in the group has it out and till when. A reader with no token sees only their own. `tools/library-snapshot.js` never publishes loans.
+Loans are kept in the reader's browser. With the group's Hypothesis token they are also kept as annotations the group can read (`loan:out:<date>`, `loan:ext:<date>`, `loan:back`), so they follow the reader to other browsers. A loan made in a browser before the reader had a token is sent up, with its date, the first time they have one. A work's card then has a line for each member's loan of it, and its box says who in the group has it out and till when. A reader with no token sees only their own. `tools/library-snapshot.js` never publishes loans.
 
 ## For readers with no token
 

@@ -129,6 +129,21 @@
         v.querySelector('[data-libview="list"]').click();
         T.eq('the switch: a list', v.querySelectorAll('.lib-row').length, 6);
         T.yes('and no sizes to choose', v.querySelector('.lib-sizes').hidden);
+        v.querySelector('[data-libview="cat"]').click();
+        T.yes('the catalogue: drawers, none pulled out', v.querySelectorAll('.lib-drawer').length >= 1 && !v.querySelector('.lib-tray'));
+        v.querySelector('[data-drawer="0"]').click();
+        var cfirst = v.querySelector('.lib-ccard .lib-cc-code').textContent;
+        T.yes('a drawer pulled out, its front card typed', v.querySelector('.lib-tray .lib-ccard') && v.querySelector('.lib-cc-cn'));
+        v.querySelector('[data-catnav="1"]').click();
+        T.yes('the next card', v.querySelector('.lib-ccard .lib-cc-code').textContent !== cfirst);
+        v.querySelector('.lib-tray').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+        T.eq('and back with the arrow key', v.querySelector('.lib-ccard .lib-cc-code').textContent, cfirst);
+        v.querySelector('.lib-tray').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        T.eq('Escape closes the drawer', v.querySelectorAll('.lib-tray').length, 0);
+        v.querySelector('[data-catby="relevance"]').click();
+        T.yes('browse by relevance', v.querySelector('.lib-drawer'));
+        SW.store.set('library.catby', '');
+        v.querySelector('[data-libview="list"]').click();
         T.eq('which is kept', SW.store.get('library.view', ''), 'list');
         var o = v.querySelector('.lib-order select'); o.value = 'title'; o.dispatchEvent(new Event('change'));
         T.eq('in the order chosen', Array.prototype.map.call(v.querySelectorAll('.lib-row .lib-t'), function (x) { return x.textContent; }).join('|'), 'Bare|Cloth|A film|A jacket|A podcast|A talk');
@@ -771,7 +786,11 @@
                     T.yes('as DUE and the month and day', /^DUE [A-Z]{3} \d{1,2}$/.test(vl.querySelector('[data-lib="S-2"] .lib-due').textContent));
                     vl.querySelector('[data-show="loans"]').click();
                     T.eq('To read: a card for it', [vl.querySelectorAll('.lib-card').length, vl.querySelector('[data-show="loans"]').textContent], [1, 'To read (1)']);
-                    T.eq('its code and title open the work', vl.querySelectorAll('.lib-card [data-lib="S-2"]').length, 3);
+                    T.eq('its code and title open the work', vl.querySelectorAll('.lib-card [data-lib="S-2"]').length, 4);
+                    vl.querySelector('.lib-card .lib-front [data-turn]').click();
+                    T.yes('the card turns over', vl.querySelector('.lib-card').classList.contains('flipped') && SW.library.flipped['S-2']);
+                    vl.querySelector('.lib-card .lib-back [data-turn]').click();
+                    T.yes('and back', !vl.querySelector('.lib-card').classList.contains('flipped'));
                     vl.querySelector('[data-libview="list"]').click();
                     T.eq('as a list', [vl.querySelectorAll('.lib-loanlist tbody tr').length, vl.querySelectorAll('.lib-card').length], [1, 0]);
                     vl.querySelector('[data-libview="icons"]').click();
@@ -796,15 +815,19 @@
                     return load().then(function () { return SW.library.load(); });
                   }).then(function () {
                     T.eq('past its date it goes back', [SW.library.onLoan('S-3'), (SW.store.get('library.loans', {})['S-3'] || [{}])[0].back], [null, '2000-01-01']);
-                    SW.store.set('library.loans', {}); SW.store.set('token', 'x'); N.forget();
+                    SW.store.set('library.loans', {});
+                    SW.library.checkOut('S-2', 2);
+                    SW.store.set('token', 'x'); N.forget();
                     return SW.library.open('S-1').then(function () { return wait(30); });
                   }).then(function () {
                     box().querySelector('[data-a="co"][data-m="1"]').click();
                     return wait(200);
                   }).then(function () {
                     function plus1() { var d = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + 1); return d.toISOString().slice(0, 10); }
-                    var p = posted[posted.length - 1];
-                    T.eq('with a token, kept in the group', [p && p.text, p && p.permissions && p.permissions.read], ['loan:out:' + plus1(), ['group:grp']]);
+                    var p = posted.filter(function (x) { return x.text === 'loan:out:' + plus1(); })[0];
+                    T.eq('with a token, kept in the group', [!!p, p && p.permissions && p.permissions.read], [true, ['group:grp']]);
+                    var today0 = new Date().toISOString().slice(0, 10), d2 = new Date(today0 + 'T00:00:00Z'); d2.setUTCMonth(d2.getUTCMonth() + 2);
+                    T.eq('a loan made before the token is sent up, with its date', posted.filter(function (x) { return x.text === 'loan:out:' + d2.toISOString().slice(0, 10) + ':' + today0; }).length, 1);
                     box().close();
                     SW.store.set('library.loans', {});
                     N.invalidate('item:S-1');

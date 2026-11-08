@@ -452,8 +452,9 @@
   function fromEvents(evs) {
     var h = [];
     evs.forEach(function (ev) {
-      var day = String(ev.date || '').slice(0, 10), m = /^loan:(out|ext|back)(?::(.*))?$/.exec(ev.text) || [], due = m[2] && m[2] !== 'none' ? m[2] : null, cur = h[h.length - 1];
-      if (m[1] === 'out') { if (cur && !cur.back) cur.back = day; h.push({ out: day, due: due, by: ev.by }); }
+      // loan:out:<due>[:<out>], the out date where a loan made in a browser was sent up later
+      var day = String(ev.date || '').slice(0, 10), m = /^loan:(out|ext|back)(?::(.*))?$/.exec(ev.text) || [], parts = String(m[2] || '').split(':'), due = parts[0] && parts[0] !== 'none' ? parts[0] : null, cur = h[h.length - 1];
+      if (m[1] === 'out') { if (cur && !cur.back) cur.back = day; h.push({ out: /^\d{4}-\d\d-\d\d$/.test(parts[1] || '') ? parts[1] : day, due: due, by: ev.by }); }
       else if (m[1] === 'ext' && cur && !cur.back) { cur.back = day; cur.renewed = true; h.push({ out: day, due: due, by: ev.by, renewal: true }); }
       else if (m[1] === 'back' && cur && !cur.back) cur.back = day;
     });
@@ -473,6 +474,20 @@
     return moved;
   }
   function othersOut(id) { return (OTH[id] || []).filter(function (r) { return !r.back; }); }
+  // a loan made in this browser before the reader had a token goes up to the group the first time they have one
+  var UP = {};
+  function sendUp(byCode) {
+    var l = loans();
+    Object.keys(l).forEach(function (c) {
+      var cur = onLoan(c); if (!cur || UP[c]) return;
+      var srv = fromEvents(byCode[c] || []), last = srv[srv.length - 1];
+      if (last && !last.back) return;
+      UP[c] = true;
+      var text = 'loan:out:' + (cur.due || 'none') + ':' + cur.out;
+      byCode[c] = (byCode[c] || []).concat([{ text: text, date: new Date().toISOString(), by: cur.by }]);
+      synced(text, c);
+    });
+  }
   var LS = '';
   function setLoans(byCode) {
     var l = loans();
@@ -513,12 +528,12 @@
       return '<tr class="' + (r.back ? 'lib-card-done' : '') + (r.other ? ' lib-card-other' : '') + '"><td class="lib-card-d">' + stampOf(r.out) + '</td><td class="lib-card-who"><span>' + esc(r.by || '') + '</span></td><td class="lib-card-d">' + stampOf(r.due) + '</td></tr>';
     });
     while (lines.length < 6) lines.push('<tr><td></td><td></td><td></td></tr>');
-    return '<article class="lib-card" data-card="' + esc(e.id) + '">' +
+    return '<article class="lib-card' + (FLIP[e.id] ? ' flipped' : '') + '" data-card="' + esc(e.id) + '" data-face="' + esc(e.id) + '"><div class="lib-face lib-front">' + TURN +
       '<div class="lib-card-lib">Library<br><span>' + esc(B.name || B.title || '') + '</span></div>' +
       '<div class="lib-card-label">' + (L.callNo(e) ? '<span class="lib-card-call">' + esc(L.callNo(e)) + '</span> ' : '') + '<button class="lib-card-code" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.id) + '</button><br>' + esc(e.author || '') + '<br><button class="lib-card-title" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.title) + '</button></div>' +
       '<table class="lib-card-t"><thead><tr><th>Date<br>loaned</th><th>Borrower’s name</th><th>Date<br>due</th></tr></thead><tbody>' + lines.join('') + '</tbody></table>' +
       '<div class="lib-card-acts">' + (cur ? '<span>Renew for</span> <button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3 months</button><button class="btn ghost" data-ext="0" title="Keep it with no return date">No date</button> <button class="btn ghost" data-ret>Return</button> ' : '') +
-      '<button class="btn ghost" data-lib="' + esc(e.id) + '">Open</button></div></article>';
+      '<button class="btn ghost" data-lib="' + esc(e.id) + '">Open</button></div></div>' + backOf(e.id) + '</article>';
   }
   // every work this reader has had out, with their own rating where the group has one from them
   function logHTML() {
@@ -561,6 +576,79 @@
     }, function (err) { at.innerHTML = '<p class="hint in-fail"><span class="in-fail-t">Notes not updated</span> ' + esc(err.message) + '</p>'; });
   }
   L.showMyNotes = showMyNotes;
+  // ---------- the back of a card: the group's notes on the work, scribbled ----------
+  var FLIP = {}, BACK = {};
+  var TURN = '<button class="lib-turn" data-turn title="Turn the card over: the notes on its back" aria-label="Turn the card over">↻</button>';
+  function backOf(code) {
+    return '<div class="lib-face lib-back" aria-label="The back of the card">' + TURN.replace('Turn the card over: the notes on its back', 'Turn the card back').replace('Turn the card over', 'Turn the card back') +
+      '<div class="lib-scrawls">' + (BACK[code] || '<p class="lib-scrawl faint">Reading the back…</p>') + '</div>' +
+      '<button class="lib-back-open" data-lib="' + esc(code) + '">Open the work to add a note</button></div>';
+  }
+  function fillBack(code, view) {
+    var N = itemNotes();
+    if (!N) { BACK[code] = '<p class="lib-scrawl faint">This bench has no annotation group.</p>'; return Promise.resolve(); }
+    return N.itemNotes().then(function (all) {
+      var ns = all.filter(function (n) { return !N.isReaction(n) && N.itemCode(n.vid) === code; }).sort(function (a, b) { return String(a.date) < String(b.date) ? -1 : 1; });
+      BACK[code] = ns.length ? ns.map(function (n, i) {
+        return '<div class="lib-scrawl" style="--r:' + ((i % 3) - 1) * 0.6 + 'deg">' + (n.parent ? '↳ ' : '') + '<span class="lib-scrawl-t">' + SW.md(String(n.text)) + '</span> <span class="lib-scrawl-by">' + esc(n.by || '') + ', ' + esc(SW.fmtDate(n.date)) + '</span></div>';
+      }).join('') : '<p class="lib-scrawl faint">Nothing written on the back yet.</p>';
+    }, function (err) { BACK[code] = '<p class="lib-scrawl faint">' + esc(err.message) + '</p>'; }).then(function () {
+      SW.$$('[data-face="' + code + '"] .lib-scrawls', view || document).forEach(function (s) { s.innerHTML = BACK[code]; });
+    });
+  }
+  L.flipped = FLIP;
+  // ---------- the card catalogue: drawers by author, title, subject or relevance ----------
+  var CAT = { by: '', open: -1, card: 0, q: null };
+  function catBy() { return CAT.by || SW.store.get('library.catby', '') || 'author'; }
+  function catShort(k) { k = String(k || '').replace(/^[^A-Za-z0-9\u00c0-\uffff]+/, '').trim(); return k ? k.charAt(0).toUpperCase() + k.slice(1, 3) : '?'; }
+  function catDrawers(rs) {
+    var by = catBy(), cards = [];
+    if (by === 'subject') rs.forEach(function (e) { var ts = plainTags(e); (ts.length ? ts : ['No subject']).forEach(function (t) { cards.push({ e: e, k: t, tab: t }); }); });
+    else rs.forEach(function (e) { var who = L.surname(e.author) || ''; cards.push({ e: e, k: by === 'title' ? titleKey(e.title) : who || titleKey(e.title), tab: by === 'title' ? titleKey(e.title) : who || e.title }); });
+    if (by === 'relevance') {
+      var groups = {}, order = ['key'].concat(RELEVANCE, ['none']);
+      cards.forEach(function (c) { var g = keyOf(c.e) < Infinity ? 'key' : relOf(c.e) || 'none'; (groups[g] = groups[g] || []).push(c); });
+      return order.filter(function (g) { return groups[g]; }).map(function (g) {
+        var cs = groups[g].sort(function (a, b) { return g === 'key' ? keyOf(a.e) - keyOf(b.e) : AZ(a.k, b.k); });
+        return { label: g === 'key' ? 'Key works' : g === 'none' ? 'No level' : REL_NAMES[g], cards: cs };
+      });
+    }
+    cards.sort(function (a, b) { return AZ(a.k, b.k) || AZ(titleKey(a.e.title), titleKey(b.e.title)); });
+    var per = Math.max(8, Math.ceil(cards.length / 15)), out = [];
+    for (var i = 0; i < cards.length; i += per) { var cs = cards.slice(i, i + per); out.push({ label: catShort(cs[0].k) + ' – ' + catShort(cs[cs.length - 1].k), cards: cs }); }
+    return out;
+  }
+  function catCard(e) {
+    var s = NR[e.id], ts = plainTags(e), imp = [e.publisher || e.in, L.year(e.date) || 'n.d.'].filter(Boolean).join(', ');
+    return '<div class="lib-ccard' + (FLIP[e.id] ? ' flipped' : '') + '" data-face="' + esc(e.id) + '"><div class="lib-face lib-front">' +
+      '<div class="lib-cc-top">' + TURN + marksOf(e) + (s ? '<span class="lib-stars" title="' + esc(starTitle(s)) + '">' + starText(s) + '</span>' : '') + '<button class="lib-cc-code" data-lib="' + esc(e.id) + '" title="Open this work">' + esc(e.id) + '</button></div>' +
+      '<div class="lib-cc-cn">' + esc(L.callNo(e)) + '</div>' +
+      '<div class="lib-cc-body"><div>' + esc(e.author || '') + '</div><button class="lib-cc-ti" data-lib="' + esc(e.id) + '">' + esc(e.title) + '</button><div>' + esc(imp) + '.</div><div class="lib-cc-k">' + esc(e.kind ? e.kind.charAt(0).toUpperCase() + e.kind.slice(1) : '') + '</div></div>' +
+      (ts.length ? '<div class="lib-cc-tr">' + ts.slice(0, 4).map(function (t, i) { return (i + 1) + '. ' + esc(t); }).join('&nbsp;&nbsp;') + '</div>' : '') +
+      '<span class="lib-cc-hole" aria-hidden="true"></span></div>' + backOf(e.id) + '</div>';
+  }
+  function drawCatalogue(view, box) {
+    var rs = rows(), ds = catDrawers(rs), by = catBy();
+    // a search opens the drawer holding the first it finds
+    if (F.q !== CAT.q) { CAT.q = F.q; if (F.q && ds.length) { CAT.open = 0; CAT.card = 0; } }
+    if (CAT.open >= ds.length) CAT.open = -1;
+    var d = ds[CAT.open], i = d ? Math.max(0, Math.min(CAT.card, d.cards.length - 1)) : 0;
+    CAT.card = i;
+    var tray = '';
+    if (d) {
+      var behind = d.cards.slice(i + 1, i + 7).map(function (c, j) { return { c: c, at: i + 1 + j }; }).reverse();
+      tray = '<div class="lib-tray" tabindex="0" aria-label="Drawer ' + esc(d.label) + ', card ' + (i + 1) + ' of ' + d.cards.length + '. Arrow keys flick through, Enter opens the work, Escape closes the drawer.">' +
+        '<div class="lib-tray-in">' + behind.map(function (b, k) { return '<button class="lib-cback" style="--k:' + k + ';--n:' + behind.length + '" data-catcard="' + b.at + '" title="' + esc(b.c.e.title) + '"><span>' + esc(String(b.c.tab).slice(0, 22)) + '</span></button>'; }).join('') + catCard(d.cards[i].e) + '</div>' +
+        '<div class="lib-tray-nav"><button class="btn ghost" data-catnav="-1" aria-label="The card before">←</button><span>' + (i + 1) + ' of ' + d.cards.length + (by === 'subject' ? ' · ' + esc(d.cards[i].tab) : '') + '</span><button class="btn ghost" data-catnav="1" aria-label="The next card">→</button><button class="btn ghost" data-catclose>Close the drawer</button></div></div>';
+    }
+    box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
+    box.innerHTML = rs.length ? '<div class="lib-cat"><div><p class="lib-cat-by">Browse by ' + [['author', 'Author'], ['title', 'Title'], ['subject', 'Subject'], ['relevance', 'Relevance']].map(function (b) { return '<button class="btn' + (by === b[0] ? ' on' : '') + '" data-catby="' + b[0] + '">' + b[1] + '</button>'; }).join('') + '</p>' +
+      '<div class="lib-cab"><div class="lib-cab-grid">' + ds.map(function (dr, k) { return '<button class="lib-drawer' + (k === CAT.open ? ' open' : '') + '" data-drawer="' + k + '" aria-pressed="' + (k === CAT.open ? 'true' : 'false') + '" aria-label="Drawer ' + esc(dr.label) + ', ' + dr.cards.length + ' cards"><span class="lib-plate"><span>' + esc(dr.label) + '</span></span><span class="lib-pull"></span><span class="lib-dcount">' + dr.cards.length + '</span></button>'; }).join('') + '</div></div></div>' +
+      (tray || '<p class="hint lib-cat-hint">Pull out a drawer to see its cards.</p>') + '</div>' : '<p class="hint pad">Nothing in the library answers the search.</p>';
+    var n = SW.$('.lib-n', view); if (n) n.textContent = rs.length + ' of ' + L.items().length;
+  }
+  function catMove(step) { CAT.card = Math.max(0, CAT.card + step); }
+  L.catalogue = CAT;
   // a work on the To read shelf as a line of the list
   function loanRow(e) {
     var cur = onLoan(e.id) || {};
@@ -727,7 +815,7 @@
   function paintCounts(view) {
     if (!canRate()) paintRatings(view, NR);
     var N = itemNotes(); if (!N) return;
-    if (N.itemLoans && canRate()) N.itemLoans().then(function (h) { if (setLoans(h) && F.view !== 'notes') list(view); }, function () {});
+    if (N.itemLoans && canRate()) N.itemLoans().then(function (h) { sendUp(h); if (setLoans(h) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemLoansOthers && canRate()) N.itemLoansOthers().then(function (o) { if (setOthers(o) && F.show === 'loans' && F.view !== 'notes') list(view); }, function () {});
     if (N.itemKeys && canRate()) N.itemKeys().then(function (k) { if (setKeys(k) && F.view !== 'notes') list(view); }, function () {});
     if (N.itemTags && canRate()) N.itemTags().then(function (t) { if (setTags(t)) afterTags(view); }, function () {});
@@ -798,6 +886,7 @@
       var nl = SW.$('.lib-n', view); if (nl) nl.textContent = ls.length + ' to read';
       return;
     }
+    if (F.view === 'cat') { var zc = SW.$('.lib-sizes', view); if (zc) zc.hidden = true; drawCatalogue(view, box); paintCounts(view); return; }
     var rs = L.sorted(rows(), F.order), icons = F.view !== 'list';
     box.classList.toggle('lib-shelf', icons);
     ['s', 'm', 'l'].forEach(function (z) { box.classList.toggle('lib-' + z, icons && F.size === z); });
@@ -828,7 +917,7 @@
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<span class="lib-show">' + [['all', 'All'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).concat([['loans', 'To read']]).map(function (s) { return '<button class="btn' + (F.show === s[0] ? ' on' : '') + '" data-show="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</span>' +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
-        '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button></span>' +
+        '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' && F.view !== 'notes' && F.view !== 'cat' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button><button class="btn' + (F.view === 'cat' ? ' on' : '') + '" data-libview="cat" title="A card catalogue, in drawers" aria-label="Catalogue"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><rect x="2" y="2" width="12" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h12M6.5 5h3M6.5 11h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span></div>' +
@@ -843,6 +932,20 @@
       q.addEventListener('input', function () { F.q = q.value; list(view); });
       if (view.libFor !== L) {
         view.libFor = L;
+        if (!view._catKeys) {
+          view._catKeys = true;
+          view.addEventListener('keydown', function (ev) {
+            if (F.view !== 'cat' || CAT.open < 0 || !ev.target.closest('.lib-tray')) return;
+            var k = ev.key;
+            if (k === 'ArrowRight' || k === 'ArrowDown') { catMove(1); } else if (k === 'ArrowLeft' || k === 'ArrowUp') { catMove(-1); }
+            else if (k === 'Escape') { CAT.open = -1; }
+            else if (k === 'Enter') { var fc = SW.$('.lib-ccard [data-lib]', view); if (fc) L.open(fc.dataset.lib); ev.preventDefault(); return; }
+            else return;
+            ev.preventDefault();
+            list(view);
+            var t = SW.$('.lib-tray', view); if (t) t.focus({ preventScroll: true });
+          });
+        }
         view.addEventListener('click', function (ev) {
           if (ev.target.closest('.lib-add')) { L.form(); return; }
           if (ev.target.closest('.lib-help')) { L.help(); return; }
@@ -857,6 +960,20 @@
           var zb = ev.target.closest('[data-libsize]'); if (zb) { setting('size', 'size', zb.dataset.libsize); SW.$$('[data-libsize]', view).forEach(function (b) { b.classList.toggle('on', b === zb); }); list(view); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
           if (ev.target.closest('[data-mynotes]')) { showMyNotes(); return; }
+          var tn = ev.target.closest('[data-turn]');
+          if (tn) {
+            var face = tn.closest('[data-face]'), code = face.dataset.face;
+            FLIP[code] = !FLIP[code];
+            face.classList.toggle('flipped', !!FLIP[code]);
+            if (FLIP[code]) fillBack(code, view);
+            return;
+          }
+          var tray0 = function () { var t = SW.$('.lib-tray', view); if (t) t.focus({ preventScroll: true }); };
+          var cby = ev.target.closest('[data-catby]'); if (cby) { CAT.by = cby.dataset.catby; SW.store.set('library.catby', CAT.by); CAT.open = -1; list(view); return; }
+          var dr = ev.target.closest('[data-drawer]'); if (dr) { var di = +dr.dataset.drawer; CAT.open = CAT.open === di ? -1 : di; CAT.card = 0; list(view); tray0(); return; }
+          var cc = ev.target.closest('[data-catcard]'); if (cc) { CAT.card = +cc.dataset.catcard; list(view); tray0(); return; }
+          var cn = ev.target.closest('[data-catnav]'); if (cn) { catMove(+cn.dataset.catnav); list(view); tray0(); return; }
+          if (ev.target.closest('[data-catclose]')) { CAT.open = -1; list(view); return; }
           var cd = ev.target.closest('[data-card]');
           if (cd && ev.target.closest('[data-ext]')) { L.renew(cd.dataset.card, +ev.target.closest('[data-ext]').dataset.ext); list(view); return; }
           if (cd && ev.target.closest('[data-ret]')) { L.giveBack(cd.dataset.card); list(view); return; }
@@ -877,7 +994,7 @@
     SW.guideAdd('library', [C.label || 'The Library', [
       ['What it holds', '<p>The secondary literature on the project: the books, articles, talks, podcasts and documentaries the group reads and cites. Each entry has a record. Some have a file held here, some a file the group keeps privately, and some a link to where the work is published.</p>'],
       ['Finding a work', ul([
-        '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), and <b>☰</b> a list. A preprint and a key work carry a badge in each, and in the box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
+        '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), <b>☰</b> a list, and the drawer button a card catalogue: drawers by author, title, subject (the tags) or relevance, with a typed card for each work. Pull out a drawer, flick through with the arrow keys, open a work with Enter, and close the drawer with Escape. A search opens the drawer holding the first it finds. A preprint and a key work carry a badge in each, and in the box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Where entries say how far they concern the subject, <b>By relevance</b> comes first: key works, then Essential, High, Medium, Low, Minimal and Not Checked, by author within each. Your choice of view, size and order is kept in this browser.',
         'The search reads the title, author, date, kind, note, licence, source, language and tags. <b>Held</b>, <b>For the group</b> and <b>Linked</b> show those entries only.',
         '<b>Filters</b> beside the list narrow by kind, relevance, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
@@ -887,6 +1004,7 @@
         'PDFs, text, Markdown, HTML, images, audio and video show in the box. Any other file can be downloaded.',
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
+        'A library card, and a card in the catalogue, turns over with <b>↻</b> to show the group’s notes on the work scribbled on its back.',
         '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. Below the cards, your reading log lists every work you have had out, with your rating, and <b>Your notes</b> opens the notes you have written on works in the library. It is kept in this browser. With the group’s Hypothesis token it follows you to your other browsers and the group’s members can see it, and a work’s card and box show who else in the group has it out.',
         'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',
