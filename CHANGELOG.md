@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.27 (2026-11-08)
 
 - **The card catalogue and the gallery put away on the To read shelf** (David): they are ways into the whole library, and the shelf showed its cards under them; on the To read tab their buttons are hidden and Covers is marked, and they come back with the Library tab.
 - **The chosen button in a group shows its whole border** (David): the next button's border was drawn over its right edge (the M of S M L, for one).
