@@ -1316,7 +1316,8 @@
     function stop(s) { return /[.?!]['’"”]?$/.test(s) ? s : s + '.'; }
     var ld = leadOf(e), yr = '(' + (L.year(e.date) || e.date || 'n.d.') + ')';
     var t = String(e.title || '').trim();
-    var pub = (fam === 'article' && where) || ld.by === 'org' ? '' : String(e.publisher || '').trim(), pages = String(e.pages || '').trim();
+    // a journal's, newspaper's or magazine's publisher is not given; the publication is enough
+    var pub = ((fam === 'article' || fam === 'news') && where) || ld.by === 'org' ? '' : String(e.publisher || '').trim(), pages = String(e.pages || '').trim();
     var pp = where && /\d/.test(pages) ? (/^(pp?\.)/i.test(pages) ? pages : (/[-–]/.test(pages) ? 'pp. ' : 'p. ') + pages) : '';
     // an article's pages follow its journal, a newspaper piece's its title; a chapter's follow the book's publisher
     var after = (fam === 'article' || ld.by === 'publication') && pp ? ', ' + pp : '';
