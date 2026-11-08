@@ -1731,6 +1731,10 @@ ul.reading a { overflow-wrap: anywhere; }
 .im-seg .btn { border-radius: 0; }
 .im-seg .btn:first-child { border-radius: 4px 0 0 4px; }
 .im-seg .btn:last-child { border-radius: 0 4px 4px 0; margin-left: -1px; }
+/* the chosen one's border over its neighbours', so it shows on all four sides */
+.im-seg .btn.on { position: relative; z-index: 1; }
+.im-seg .btn[hidden] { display: none; }
+.im-seg .btn:not([hidden]):has(+ .btn[hidden]) { border-radius: 0 4px 4px 0; }
 .im-exp { position: relative; display: inline-block; }
 .im-exp > div { position: absolute; right: 0; top: 100%; z-index: 2; display: flex; gap: 4px; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
 .im-exp summary { list-style: none; }

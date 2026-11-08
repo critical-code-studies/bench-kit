@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The card catalogue and the gallery put away on the To read shelf** (David): they are ways into the whole library, and the shelf showed its cards under them; on the To read tab their buttons are hidden and Covers is marked, and they come back with the Library tab.
+- **The chosen button in a group shows its whole border** (David): the next button's border was drawn over its right edge (the M of S M L, for one).
+
 ## 1.8.26 (2026-11-08)
 
 - **The back of a book card is the front's paper** (David): the back took a fixed cream; it now takes the card's own paper, its yellowing with use and its worn edges, with the ruled lines over them. A catalogue card's back takes its white.

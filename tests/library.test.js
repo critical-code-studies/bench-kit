@@ -46,6 +46,16 @@
       L.wipeLoans();
       T.eq('wiping the loan history empties this browser’s record and the cards', [SW.store.get('library.loans', {}), SW.store.get('library.cards', {}), !!L.onLoan('L-WIPE')], [{}, {}, false]);
       SW.store.set('library.loans', wl0); SW.store.set('library.cards', wc0);
+      var lv = document.getElementById('view-library');
+      if (lv && lv.querySelector('[data-show="loans"]') && lv.querySelector('[data-libview="cat"]')) {
+        var v0 = (lv.querySelector('[data-libview].on') || { dataset: { libview: 'icons' } }).dataset.libview;
+        lv.querySelector('[data-libview="cat"]').click();
+        lv.querySelector('[data-show="loans"]').click();
+        T.eq('on the To read shelf the card catalogue and the gallery are put away, and Covers is marked', [lv.querySelector('[data-libview="cat"]').hidden, lv.querySelector('[data-libview="gallery"]').hidden, lv.querySelector('[data-libview="icons"]').classList.contains('on')], [true, true, true]);
+        lv.querySelector('[data-show="all"]').click();
+        T.eq('and back in the library they return, the catalogue marked', [lv.querySelector('[data-libview="cat"]').hidden, lv.querySelector('[data-libview="cat"]').classList.contains('on')], [false, true]);
+        lv.querySelector('[data-libview="' + v0 + '"]').click();
+      }
       var noInk = [];
       for (var hi = 0; hi < 400; hi++) { try { L.inksOf({ out: '2026-11-0' + (hi % 9 + 1), due: '2027-0' + (hi % 9 + 1) + '-08', by: 'Reader ' + hi }); } catch (er) { noInk.push(hi); } }
       T.eq('a line with no ink of its own (a loan from before inks were kept) is drawn in a pen and stamp of its own', noInk, []);

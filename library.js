@@ -1219,6 +1219,11 @@
     if (fp) fp.hidden = noF || (fOff && wideLib());
     var fbtn = SW.$('.lib-fbtn', view);
     if (fbtn) { var fShown = wideLib() ? !fOff : !!(fp && fp.classList.contains('open')); fbtn.hidden = noF; fbtn.classList.toggle('on', fShown); fbtn.setAttribute('aria-pressed', String(fShown)); }
+    // the card catalogue and the gallery are ways into the whole library: on the To read shelf they are put away, and
+    // the shelf shows its cards, with Covers marked
+    var shelfOnly = F.show === 'loans', asCards = shelfOnly && (F.view === 'cat' || F.view === 'gallery');
+    SW.$$('[data-libview="cat"], [data-libview="gallery"]', view).forEach(function (b) { b.hidden = shelfOnly; });
+    SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b.dataset.libview === (asCards ? 'icons' : F.view === 'list' || F.view === 'notes' || F.view === 'cat' || F.view === 'gallery' ? F.view : 'icons')); });
     if (F.view === 'notes') { drawNotes(view, box); paintCounts(view); return; }
     sweepLoans(); paintLoanCount(view);
     if (fb) fb.innerHTML = facetHTML();
