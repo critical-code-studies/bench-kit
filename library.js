@@ -605,8 +605,9 @@
   L.cardKept = cardKept;
   function paperOf(code, stamps) {
     var kept = cardKept(code, stamps), age = kept.age;
-    // a card in heavy use yellows, and its edges darken where hands have held it
-    return 'background-color:' + kept.paper + ';filter:sepia(' + (age * 0.07).toFixed(2) + ') brightness(' + (1 - age * 0.015).toFixed(3) + ');' +
+    // a card in heavy use yellows, and its edges darken where hands have held it. The yellowing is mixed into the paper's
+    // colour: a filter on the card would flatten it, and turned over it would show neither side
+    return 'background-color:' + (age ? 'color-mix(in srgb, ' + kept.paper + ', #b08a4e ' + Math.round(age * 3.5) + '%)' : kept.paper) + ';' +
       'box-shadow:inset 0 0 ' + (6 + age * 5) + 'px rgba(120, 78, 20, ' + (age * 0.045).toFixed(3) + '), 1px 2px 3px rgba(0, 0, 0, 0.18), 4px 6px 14px rgba(0, 0, 0, 0.12)';
   }
   // each line in its own pen, and its dates in the desk's stamp ink
@@ -622,10 +623,12 @@
     return rgb.map(function (v) { return ('0' + Math.round((v + m) * 255).toString(16)).slice(-2); }).join('');
   }
   L.aged = aged;
+  L.inksOf = function (r) { return inksOf(r); };
+  L.paperOf = function (code, stamps) { return paperOf(code, stamps); };
   function newInk() { var h = Math.floor(Math.random() * 1e6); return PENS[h % PENS.length].slice(1) + '.' + STAMPS[(h >> 3) % STAMPS.length].slice(1); }
   function inksOf(r) {
     var ink = /^[0-9a-f]{6}\.[0-9a-f]{6}$/i.test(r.ink || '') ? r.ink.split('.') : null, h = hashOf((r.by || '') + (r.out || '') + (r.due || ''));
-    var pen = ink ? ink[0] : PENS[h % PENS.length].slice(1), stamp = ink ? ink[1] : STAMPS[(h >> 3) % STAMPS.length].slice(1);
+    var pen = ink ? ink[0] : PENS[h % PENS.length].slice(1), stamp = ink ? ink[1] : STAMPS[(h >>> 3) % STAMPS.length].slice(1);
     // a line crossed out has had time to fade, in its own colour
     if (r.back) { pen = aged(pen); stamp = aged(stamp); }
     return 'style="color:#' + pen + '"|style="color:#' + stamp + '"';
@@ -1200,9 +1203,12 @@
       var lo = F.loanOrder || 'author';
       var ls = lo === 'due' ? rows().sort(function (a, b) { return due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0; }) : L.sorted(rows(), lo);
       var asList = F.view === 'list';
+      // made before the list is touched, so a card that cannot be drawn leaves the library as it was, not half of each
+      var shelfHTML = (ls.length ? (asList ? '<table class="lib-loanlist"><thead><tr><th>Code</th><th>Work</th><th>Due</th><th></th></tr></thead><tbody>' + ls.map(loanRow).join('') + '</tbody></table>' : '<div class="lib-cards lib-cards-' + (F.size || 'm') + '">' + ls.map(cardOf).join('') + '</div>') : '<p class="hint pad">Nothing on your To read shelf. Open a work and check it out for one, two or three months.</p>') + logHTML();
+      if (MOREIO) { MOREIO.disconnect(); MOREIO = null; }
       box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
       var zl = SW.$('.lib-sizes', view); if (zl) zl.hidden = asList;
-      box.innerHTML = (ls.length ? (asList ? '<table class="lib-loanlist"><thead><tr><th>Code</th><th>Work</th><th>Due</th><th></th></tr></thead><tbody>' + ls.map(loanRow).join('') + '</tbody></table>' : '<div class="lib-cards lib-cards-' + (F.size || 'm') + '">' + ls.map(cardOf).join('') + '</div>') : '<p class="hint pad">Nothing on your To read shelf. Open a work and check it out for one, two or three months.</p>') + logHTML();
+      box.innerHTML = shelfHTML;
       var nl = SW.$('.lib-n', view); if (nl) nl.textContent = ls.length + ' to read';
       return;
     }
