@@ -818,6 +818,13 @@
                     var vl = document.getElementById('view-library');
                     T.eq('a due stamp on its cover, and no other', [vl.querySelectorAll('[data-lib="S-2"] .lib-due').length, vl.querySelectorAll('[data-lib="S-1"] .lib-due').length], [1, 0]);
                     T.yes('as DUE and the month and day', /^DUE [A-Z]{3} \d{1,2}$/.test(vl.querySelector('[data-lib="S-2"] .lib-due').textContent));
+                    vl.querySelector('[data-libview="gallery"]').click();
+                    var galRows = vl.querySelectorAll('.lib-gal-r'), galPane = vl.querySelector('.lib-gal-pane');
+                    T.eq('the gallery: the works in a list, the first chosen', [galRows.length > 1, galRows[0].classList.contains('on')], [true, true]);
+                    galRows[1].click();
+                    T.eq('choosing another marks it', vl.querySelector('.lib-gal-r.on').dataset.gsel, galRows[1].dataset.gsel);
+                    vl.querySelector('.lib-gal-list').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+                    T.eq('and the arrow keys move through them', vl.querySelector('.lib-gal-r.on').dataset.gsel, galRows[0].dataset.gsel);
                     vl.querySelector('[data-show="loans"]').click();
                     T.eq('filter headings shut at first', vl.querySelectorAll('.lib-facet[open]').length, 0);
                     var fb0 = vl.querySelector('.lib-fbtn').getAttribute('aria-pressed');
@@ -836,6 +843,7 @@
                     vl.querySelector('.lib-card .lib-back .lib-scrawls').innerHTML = 'stale';
                     SW.emit('notes', 'item:S-2');
                     return wait(80).then(function () {
+                    T.eq('the chosen work in its box in the gallery pane, not over the bench', [!!galPane.querySelector('.lib-pane'), (galPane.querySelector('.px-code') || {}).textContent, document.querySelectorAll('dialog.lib-dlg[open]').length], [true, galRows[0].dataset.gsel, 0]);
                     T.yes('its back follows a note added', vl.querySelector('.lib-card .lib-back .lib-scrawls').innerHTML !== 'stale');
                     vl.querySelector('.lib-card .lib-back [data-turn]').click();
                     T.yes('and back', !vl.querySelector('.lib-card').classList.contains('flipped'));

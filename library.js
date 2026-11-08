@@ -1158,6 +1158,7 @@
       return;
     }
     if (F.view === 'cat') { var zc = SW.$('.lib-sizes', view); if (zc) zc.hidden = true; drawCatalogue(view, box); paintCounts(view); return; }
+    if (F.view === 'gallery') { drawGallery(view, box); paintCounts(view); return; }
     var rs = L.sorted(rows(), F.order), icons = F.view !== 'list';
     box.classList.toggle('lib-shelf', icons);
     ['s', 'm', 'l'].forEach(function (z) { box.classList.toggle('lib-' + z, icons && F.size === z); });
@@ -1166,6 +1167,34 @@
     var n = SW.$('.lib-n', view); if (n) n.textContent = rs.length + ' of ' + L.items().length;
     paintCounts(view);
   }
+  // the gallery, as a file browser with a preview: the works on the left, the one chosen in its box on the right;
+  // the arrow keys move through them, Enter opens the box over the bench
+  var GSEL = '';
+  function galRow(e) {
+    var y = L.year(e.date), who = L.leadOf(e).by === 'title' ? '' : L.leadOf(e).text;
+    return '<div class="lib-gal-r' + (e.id === GSEL ? ' on' : '') + '" role="option" aria-selected="' + (e.id === GSEL) + '" data-gsel="' + esc(e.id) + '">' +
+      '<svg class="lib-gal-g" viewBox="0 0 24 24" aria-hidden="true">' + (GLYPH[L.family(e)] || GLYPH.article) + '</svg>' +
+      '<span class="lib-gal-t"><b>' + esc(e.title || e.id) + '</b><span>' + esc([who, y].filter(Boolean).join(', ')) + '</span></span></div>';
+  }
+  function drawGallery(view, box) {
+    var zg = SW.$('.lib-sizes', view); if (zg) zg.hidden = true;
+    box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
+    var gs = L.sorted(rows(), F.order);
+    if (!gs.some(function (e) { return e.id === GSEL; })) GSEL = gs.length ? gs[0].id : '';
+    box.innerHTML = gs.length ? '<div class="lib-gal"><div class="lib-gal-list" role="listbox" tabindex="0" aria-label="Works">' + gs.map(galRow).join('') + '</div><div class="lib-gal-pane"></div></div>' :
+      '<p class="hint pad">Nothing in the library answers the search.</p>';
+    var n = SW.$('.lib-n', view); if (n) n.textContent = gs.length + ' of ' + L.items().length;
+    if (GSEL) galShow(view, GSEL);
+  }
+  function galShow(view, id, scroll) {
+    var pane = SW.$('.lib-gal-pane', view); if (!pane) return;
+    GSEL = id;
+    SW.$$('.lib-gal-r', view).forEach(function (r) { var on = r.dataset.gsel === id; r.classList.toggle('on', on); r.setAttribute('aria-selected', String(on)); if (on && scroll) r.scrollIntoView({ block: 'nearest' }); });
+    if (pane.dataset.shown === id) return;
+    pane.dataset.want = id; pane.dataset.shown = id;
+    L.open(id, { into: pane });
+  }
+  L.gallery = function () { return GSEL; };
   function canRate() { var N = itemNotes(); return !!(N && N.configured()); }
   function canSortRating() { return canRate() || Object.keys(NR).length > 0; }
   // the intro under the tab's title: its first sentence, small; the whole in the tooltip
@@ -1189,7 +1218,7 @@
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<label class="lib-show faint"' + (F.show === 'loans' ? ' hidden' : '') + '>Show <select aria-label="Show">' + [['all', 'All works'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<option value="' + s[0] + '"' + (F.show === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select></label>' +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
-        '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' && F.view !== 'notes' && F.view !== 'cat' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button><button class="btn' + (F.view === 'cat' ? ' on' : '') + '" data-libview="cat" title="A card catalogue, in drawers" aria-label="Catalogue"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><rect x="2" y="2" width="12" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h12M6.5 5h3M6.5 11h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></span>' +
+        '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' && F.view !== 'notes' && F.view !== 'cat' && F.view !== 'gallery' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button><button class="btn' + (F.view === 'cat' ? ' on' : '') + '" data-libview="cat" title="A card catalogue, in drawers" aria-label="Catalogue"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><rect x="2" y="2" width="12" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h12M6.5 5h3M6.5 11h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button><button class="btn' + (F.view === 'gallery' ? ' on' : '') + '" data-libview="gallery" title="A gallery: the works on the left, the one chosen shown on the right" aria-label="Gallery"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><rect x="1.5" y="2" width="13" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6 2v12M3 5h1.5M3 8h1.5M3 11h1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
         '<button class="btn ghost lib-fbtn" data-fpane title="Show or hide the filters" aria-label="Filters" aria-pressed="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></svg></button>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
@@ -1225,6 +1254,7 @@
           if (ev.target.closest('.lib-help')) { L.help(); return; }
           var fv = ev.target.closest('[data-facet]');
           if (fv) { var fk = fv.dataset.facet, fo = F.facets[fk] = F.facets[fk] || {}; if (fo[fv.dataset.val]) delete fo[fv.dataset.val]; else fo[fv.dataset.val] = 1; list(view); return; }
+          var gr = ev.target.closest('[data-gsel]'); if (gr) { if (!ev.galDone && byId(gr.dataset.gsel)) { ev.galDone = true; galShow(view, gr.dataset.gsel); } return; }
           if (ev.target.closest('[data-fpane]')) {
             // once per click, however many times the Library has been set up on this page
             if (!ev.fpaneDone) {
@@ -1283,6 +1313,16 @@
           var o = fOpen(); if (ev.target.open) o[g] = 1; else delete o[g]; SW.store.set('library.fopen', o);
         }, true);
         view.addEventListener('keydown', function (ev) {
+          var gl = ev.target.closest && ev.target.closest('.lib-gal-list');
+          if (gl && !ev.galDone && /^(ArrowUp|ArrowDown|Home|End|Enter)$/.test(ev.key)) {
+            // the row marked in the page, which is where the reader is
+            var rs = SW.$$('.lib-gal-r', gl), i = rs.indexOf(SW.$('.lib-gal-r.on', gl));
+            var to = ev.key === 'Enter' ? i : ev.key === 'Home' ? 0 : ev.key === 'End' ? rs.length - 1 : Math.max(0, Math.min(rs.length - 1, i + (ev.key === 'ArrowDown' ? 1 : -1)));
+            var tid = rs[to] && rs[to].dataset.gsel; if (!tid || !byId(tid)) return;
+            ev.galDone = true; ev.preventDefault();
+            if (ev.key === 'Enter') L.open(tid); else galShow(view, tid, true);
+            return;
+          }
           var ca = (ev.key === 'Enter' || ev.key === ' ') && ev.target.closest && ev.target.closest('[data-cardall]');
           if (ca && !ev.cardAll && cardLines(ca.dataset.cardall).length) { ev.cardAll = true; ev.preventDefault(); showCardAll(ca.dataset.cardall); }
         });
@@ -1500,13 +1540,16 @@
     mark: function (on) { return ico('M4 2h8v12l-4-3-4 3z', on); }
   };
   function ib(attrs, icon, words) { return '<' + (attrs.href ? 'a' : 'button') + ' class="btn ghost lib-ib"' + Object.keys(attrs).map(function (k) { return ' ' + k + '="' + esc(attrs[k]) + '"'; }).join('') + ' title="' + esc(words) + '" aria-label="' + esc(words) + '">' + icon + '</' + (attrs.href ? 'a' : 'button') + '>'; }
-  L.open = function (id) {
+  // o.into: an element to show the box in, as the gallery's pane, in place of a dialog over the bench
+  L.open = function (id, o) {
+    o = o || {};
     checkCard();
     return L.load().then(function () {
       var e = byId(id);
       if (!e) { SW.toast('No entry ' + id + ' in the library.', 3000); return; }
       var priv = isPrivate(e), canOpen = !!e.file && (!priv || L.member());
-      var k = canOpen ? kindOfFile(e.file) : null, d = SW.el('dialog', { class: 'tray-big lib-dlg' });
+      var k = canOpen ? kindOfFile(e.file) : null, d = o.into ? SW.el('div', { class: 'lib-dlg lib-pane' }) : SW.el('dialog', { class: 'tray-big lib-dlg' });
+      if (o.into) d.close = function () {};
       var alts = (e.alts || []).filter(function (a) { return a && a.file && (!isPrivate(a) || L.member()); });
       var fam = L.family(e), player = e.url && SW.embedPlayer ? SW.embedPlayer(e.url, e.title, fam, 'lib-embed') : null;
       var cite = L.citation(e);
@@ -1538,7 +1581,11 @@
           player || '<p class="hint">' + (e.url ? 'Copy not held in the library, use the link above to view it.' : 'Copy not held in the library.') + '</p>') +
         (alts.length || (canOpen && player) ? '<div class="lib-alts">' + (canOpen && player ? '<button class="btn ghost" data-play>▶ Play from ' + esc(hostName(e.url)) + '</button>' : '') + alts.map(function (a, i) { return '<button class="btn ghost" data-alt="' + i + '">' + esc(a.label || a.lang || 'Another version') + '</button>'; }).join('') + '</div><div class="lib-alt"></div>' : '') +
         '</div><div class="lib-side"></div></div>';
-      document.body.appendChild(d);
+      if (o.into) {
+        // a later choice in the gallery has the pane, and this box is dropped
+        if (o.into.dataset.want && o.into.dataset.want !== id) return;
+        o.into.innerHTML = ''; o.into.appendChild(d);
+      } else document.body.appendChild(d);
       function paintKey() {
         var on = keyOf(e) < Infinity, kb = SW.$('[data-a="key"]', d), dm = SW.$('.lib-dmarks', d);
         if (dm) dm.innerHTML = marksOf(e);
@@ -1659,7 +1706,7 @@
         var c = ev.target.closest('[data-px]'); if (c) { d.close(); SW.paratexts.peek(c.dataset.px); return; }
         if (ev.target.closest('[data-a="dl"]')) privateFile(e.file).then(function (b) { var a = SW.el('a', { href: URL.createObjectURL(b), download: String(e.file).split('/').pop() }); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }, function (err) { SW.toast('The file could not be read: ' + err.message + '.', 4000); });
       });
-      d.showModal();
+      if (o.into) o.into.scrollTop = 0; else d.showModal();
       if (canOpen) show(SW.$('.lib-file', d), e, k, priv);
       if (SW.notes && SW.notes.itemPanel) SW.notes.itemPanel(SW.$('.lib-side', d), e.id, { host: SW.$('.lib-main', d), rate: true });
       L.copies(e.id).then(function (cs) {
