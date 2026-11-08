@@ -536,19 +536,31 @@
       '<div class="lib-card-acts">' + (cur ? '<span>Renew for</span> <button class="btn ghost" data-ext="1">1</button><button class="btn ghost" data-ext="2">2</button><button class="btn ghost" data-ext="3">3 months</button><button class="btn ghost" data-ext="0" title="Keep it with no return date">No date</button> <button class="btn ghost" data-ret>Return</button> ' : '') +
       '<button class="btn ghost" data-lib="' + esc(e.id) + '">Open</button></div></div>' + backOf(e.id) + '</article>';
   }
+  var LOGOPEN = false;
+  // the search box and the Order menu follow the tab: To read has its own order, by date due first
+  function syncShelf(view) {
+    var shelf = F.show === 'loans', o = SW.$('.lib-order select', view), q = SW.$('.lib-q', view);
+    if (q) { q.placeholder = shelf ? 'Search your To read shelf' : 'Search the library'; q.setAttribute('aria-label', q.placeholder); }
+    if (!o) return;
+    var dueOpt = SW.$('option[value="due"]', o);
+    if (shelf && !dueOpt) o.insertBefore(SW.el('option', { value: 'due' }, 'Date due'), o.firstChild);
+    if (!shelf && dueOpt) dueOpt.remove();
+    o.value = shelf ? (F.loanOrder || 'due') : F.order;
+  }
   // every work this reader has had out, with their own rating where the group has one from them
   function logHTML() {
     var l = loans(), codes = Object.keys(l).filter(function (c) { return (l[c] || []).length && byId(c); });
     codes.sort(function (a, b) { var x = l[a][l[a].length - 1].out, y = l[b][l[b].length - 1].out; return x < y ? 1 : x > y ? -1 : 0; });
-    var head = '<h3 class="lib-log-h">Your reading log <button class="btn ghost" data-mynotes title="The notes you have written on works in the library">Your notes</button></h3>';
-    if (!codes.length) return '<section class="lib-log">' + head + '<p class="hint">Works you check out are kept here, with your rating of each.</p></section>';
-    return '<section class="lib-log">' + head + '<table class="lib-log-t"><thead><tr><th>Work</th><th>First out</th><th>Back</th><th>Loans</th><th>Your rating</th></tr></thead><tbody>' + codes.map(function (c) {
+    // folded by default; opened, it stays open while the reader is here
+    var head = '<details class="lib-log"' + (LOGOPEN ? ' open' : '') + '><summary class="lib-log-h">Your reading log <button class="btn ghost" data-mynotes title="The notes you have written on works in the library">Your notes</button></summary>';
+    if (!codes.length) return head + '<p class="hint">Works you check out are kept here, with your rating of each.</p></details>';
+    return head + '<table class="lib-log-t"><thead><tr><th>Work</th><th>First out</th><th>Back</th><th>Loans</th><th>Your rating</th></tr></thead><tbody>' + codes.map(function (c) {
       var h = l[c], e = byId(c), last = h[h.length - 1], mine = NR[c] && canRate() ? myStars(NR[c]) : 0;
       return '<tr><td><button class="lib-log-w" data-lib="' + esc(c) + '">' + esc(e.title) + '</button><span class="faint"> ' + esc(e.author || '') + '</span></td>' +
         '<td class="mono">' + stampOf(h[0].out) + '</td><td class="mono">' + (onLoan(c) ? 'ON LOAN' : stampOf(last.back)) + '</td>' +
         '<td>' + h.filter(function (r) { return !r.renewal; }).length + '</td>' +
         '<td>' + (mine ? '<span class="lib-stars">' + stars(mine) + '</span>' : '<span class="faint">' + (canRate() ? 'not rated' : '') + '</span>') + '</td></tr>';
-    }).join('') + '</tbody></table></section>';
+    }).join('') + '</tbody></table></details>';
   }
   // the notes this reader has written on works in the library, in a box of their own
   function showMyNotes() {
@@ -598,11 +610,16 @@
     });
   }
   L.flipped = FLIP;
+  // a card's back follows its notes: a note added, changed or removed is written on it at once
+  function refreshBack(code) { delete BACK[code]; if (FLIP[code]) fillBack(code, SW.$('#view-library')); }
+  if (SW.on) SW.on('notes', function (vid) { if (/^item:/.test(String(vid || ''))) refreshBack(String(vid).slice(5)); });
   // Add Annotation: the work's box, its notes open and the writing place ready
   function addNote(code) {
     return L.open(code).then(function () {
       setTimeout(function () {
         var ds = document.querySelectorAll('dialog.lib-dlg'), d = ds[ds.length - 1]; if (!d) return;
+        // and once more as the box closes, for a group whose search is a moment behind
+        d.addEventListener('close', function () { setTimeout(function () { refreshBack(code); }, 600); });
         var f = SW.$('.in-fold', d); if (f) f.open = true;
         var t = SW.$('.in-new .md-rich', d) || SW.$('.in-new textarea', d);
         if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); }
@@ -885,13 +902,15 @@
   function list(view) {
     var box = SW.$('.lib-list', view); if (!box) return;
     var fp = SW.$('.lib-facets', view), fb = SW.$('.lib-fbody', view);
-    if (fp) fp.hidden = F.view === 'notes';
+    // the filters serve the library; the To read shelf is short enough without them
+    if (fp) fp.hidden = F.view === 'notes' || F.show === 'loans';
     if (F.view === 'notes') { drawNotes(view, box); paintCounts(view); return; }
     sweepLoans(); paintLoanCount(view);
     if (fb) fb.innerHTML = facetHTML();
     if (F.show === 'loans') {
       var due = function (e) { return (onLoan(e.id) || {}).due || '9999'; };
-      var ls = rows().sort(function (a, b) { return due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0; });
+      var lo = F.loanOrder || 'due';
+      var ls = lo === 'due' ? rows().sort(function (a, b) { return due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0; }) : L.sorted(rows(), lo);
       var asList = F.view === 'list';
       box.classList.remove('lib-shelf', 'lib-s', 'lib-m', 'lib-l');
       var zl = SW.$('.lib-sizes', view); if (zl) zl.hidden = asList;
@@ -933,6 +952,8 @@
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' && F.view !== 'notes' && F.view !== 'cat' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button><button class="btn' + (F.view === 'cat' ? ' on' : '') + '" data-libview="cat" title="A card catalogue, in drawers" aria-label="Catalogue"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><rect x="2" y="2" width="12" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h12M6.5 5h3M6.5 11h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
+        '<span class="lib-exp"><button class="btn ghost lib-ib" data-export aria-haspopup="true" aria-expanded="false" title="Export what is shown, for Zotero" aria-label="Export what is shown, for Zotero"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 12.5v1h11v-1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+          '<div class="lib-expmenu" hidden><span class="lib-loanst">Export what is shown</span><button class="btn ghost" data-exp="ris" title="Opens in Zotero, EndNote and Mendeley">Download RIS</button><button class="btn ghost" data-exp="bib">Download BibTeX</button><button class="btn ghost" data-exp="copybib" title="For Zotero’s Import from Clipboard">Copy BibTeX</button></div></span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span></div>' +
         (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
@@ -973,7 +994,12 @@
           if (ng && sec) { var nq = ng.dataset.at === 'q' ? ng.textContent : '', nat = ng.dataset.at; SW.notes.openItem(sec.dataset.code).then(function () { setTimeout(function () { var ds = SW.$$('dialog[open]'); SW.notes.itemGo(nat, nq, ds[ds.length - 1]); }, 800); }); return; }
           var zb = ev.target.closest('[data-libsize]'); if (zb) { setting('size', 'size', zb.dataset.libsize); SW.$$('[data-libsize]', view).forEach(function (b) { b.classList.toggle('on', b === zb); }); list(view); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
-          if (ev.target.closest('[data-mynotes]')) { showMyNotes(); return; }
+          if (ev.target.closest('[data-mynotes]')) { ev.preventDefault(); showMyNotes(); return; }
+          var lg = ev.target.closest('.lib-log > summary'); if (lg) { setTimeout(function () { LOGOPEN = lg.parentNode.open; }, 0); }
+          var xm = SW.$('.lib-expmenu', view), xb = ev.target.closest('[data-export]');
+          if (xb) { xm.hidden = !xm.hidden; xb.setAttribute('aria-expanded', xm.hidden ? 'false' : 'true'); return; }
+          var xp = ev.target.closest('[data-exp]'); if (xp) { xm.hidden = true; exportShown(xp.dataset.exp, view); return; }
+          if (xm && !xm.hidden && !ev.target.closest('.lib-expmenu')) xm.hidden = true;
           var an = ev.target.closest('[data-addnote]'); if (an) { addNote(an.dataset.addnote); return; }
           var tn = ev.target.closest('[data-turn]');
           if (tn) {
@@ -997,12 +1023,14 @@
             F.show = s.dataset.show;
             SW.$$('.lib-tab', view).forEach(function (b) { var on = b === s; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
             var sl = SW.$('.lib-show', view); if (sl) { sl.hidden = F.show === 'loans'; SW.$('select', sl).value = 'all'; }
+            syncShelf(view);
             list(view); return;
           }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
         });
       }
-      var o = SW.$('.lib-order select', view); o.addEventListener('change', function () { setting('order', 'order', o.value); list(view); });
+      var o = SW.$('.lib-order select', view); o.addEventListener('change', function () { if (F.show === 'loans') F.loanOrder = o.value; else setting('order', 'order', o.value); list(view); });
+      syncShelf(view);
       var sh = SW.$('.lib-show select', view); if (sh) sh.addEventListener('change', function () { F.show = sh.value; list(view); });
       // a picture that will not load: the drawn cover under it, or the row's mark
       SW.$('.lib-list', view).addEventListener('error', function (ev) { if (ev.target.classList && ev.target.classList.contains('lib-thumb')) ev.target.remove(); }, true);
@@ -1018,7 +1046,7 @@
       ['Finding a work', ul([
         '<b>▦</b> shows covers on a shelf, small, medium or large (<b>S M L</b>), <b>☰</b> a list, and the drawer button a card catalogue: drawers by author, title, subject (the tags) or relevance, with a typed card for each work. Pull out a drawer, flick through with the arrow keys, open a work with Enter, and close the drawer with Escape. A search opens the drawer holding the first it finds. A preprint and a key work carry a badge in each, and in the box. A cover is drawn from the kind of work, or is an image of it where the entry has one.',
         '<b>Order</b> sorts by author, title, date, kind or language, or as the library lists them. Where entries say how far they concern the subject, <b>By relevance</b> comes first: key works, then Essential, High, Medium, Low, Minimal and Not Checked, by author within each. Your choice of view, size and order is kept in this browser.',
-        'The search reads the title, author, date, kind, note, licence, source, language and tags. <b>Show</b> narrows to the works held here, those for the group, those linked to where they are published, or those with notes. <b>Library</b> and <b>To read</b> above it switch between the whole library and your own shelf.',
+        'The search reads the title, author, date, kind, note, licence, source, language and tags. The download button exports what is shown, the whole library, a search or filter, or your To read shelf, as RIS (which Zotero, EndNote and Mendeley open) or BibTeX, downloaded or copied for Zotero’s Import from Clipboard. <b>Show</b> narrows to the works held here, those for the group, those linked to where they are published, or those with notes. <b>Library</b> and <b>To read</b> above it switch between the whole library and your own shelf.',
         '<b>Filters</b> beside the list narrow by kind, relevance, language, rating, decade, author and tag, each value with its count. A work’s rating is the group’s average to the nearest star, and Rating shows once a work in the group has one. Several values in one group widen it, and each group narrows the others. <b>Clear these filters</b> takes them all off.'])],
       ['Opening a work', ul([
         'Click a cover or a row: the record opens in a box over the bench, with its citation (<b>Copy</b> copies it), the file where you can read it, and a link to where it is published.',
@@ -1055,6 +1083,57 @@
   // Harvard, from what the record has: the author as written; the title quoted where it appeared in
   // something else, in italics where it stands alone. e.citation, written by hand, is used as it is.
   function inOf(e) { var s = String(e.in || '').trim(); return /^\(.*\)$/.test(s) ? '' : s; }   // "(monograph)": a note, not a place
+  // ---------- export: RIS and BibTeX for Zotero and the like ----------
+  function authorsOf(e) { return String(e.author || '').split(/\s*;\s*|\s+and\s+|\s*&\s*/).map(function (a) { return a.trim(); }).filter(Boolean); }
+  function risType(e) {
+    var k = String(e.kind || '').toLowerCase().trim();
+    return { book: 'BOOK', edition: 'BOOK', monograph: 'BOOK', thesis: 'THES', dissertation: 'THES', chapter: 'CHAP', article: 'JOUR', review: 'JOUR', preprint: 'UNPB', magazine: 'MGZN', news: 'NEWS', newspaper: 'NEWS', 'web page': 'ELEC', web: 'ELEC', website: 'ELEC', blog: 'BLOG', film: 'VIDEO', video: 'VIDEO', documentary: 'VIDEO', podcast: 'SOUND', audio: 'SOUND', talk: 'SOUND', report: 'RPRT', conference: 'CPAPER', encyclopaedia: 'ENCYC', encyclopedia: 'ENCYC' }[k] || 'GEN';
+  }
+  function pagesOf(e) { var m = /(\d+)\s*[-–]\s*(\d+)/.exec(String(e.pages || '')); return m ? [m[1], m[2]] : null; }
+  L.toRIS = function (es) {
+    return es.map(function (e) {
+      var out = ['TY  - ' + risType(e)], line = function (k, v) { if (v != null && String(v).trim()) out.push(k + '  - ' + String(v).replace(/\s+/g, ' ').trim()); }, pp = pagesOf(e);
+      authorsOf(e).forEach(function (a) { line('AU', a); });
+      line('TI', e.title);
+      line(risType(e) === 'JOUR' || risType(e) === 'MGZN' || risType(e) === 'NEWS' ? 'JO' : 'T2', e.in);
+      line('PY', L.year(e.date)); line('DA', e.date); line('PB', e.publisher);
+      if (pp) { line('SP', pp[0]); line('EP', pp[1]); } else line('SP', e.pages);
+      line('DO', e.doi); line('UR', e.url); line('LA', e.lang); line('N1', e.note);
+      plainTags(e).forEach(function (t) { line('KW', t); });
+      line('ID', e.id);
+      out.push('ER  - ');
+      return out.join('\r\n');
+    }).join('\r\n\r\n') + '\r\n';
+  };
+  function bibType(e) { return { BOOK: 'book', THES: 'phdthesis', CHAP: 'incollection', JOUR: 'article', MGZN: 'article', NEWS: 'article', RPRT: 'techreport', CPAPER: 'inproceedings', UNPB: 'unpublished' }[risType(e)] || 'misc'; }
+  function bibEsc(v) { return String(v).replace(/\\/g, '\\textbackslash{}').replace(/([{}%&#_$])/g, '\\$1').replace(/\s+/g, ' ').trim(); }
+  L.toBibTeX = function (es) {
+    var used = {};
+    return es.map(function (e) {
+      var who = String(L.surname(e.author) || 'anon').normalize ? String(L.surname(e.author) || 'anon').normalize('NFD').replace(/[\u0300-\u036f]/g, '') : String(L.surname(e.author) || 'anon');
+      var key = who.replace(/[^A-Za-z]/g, '').toLowerCase() + (L.year(e.date) || '') + (titleKey(e.title).split(/\s+/)[0] || '').replace(/[^A-Za-z]/g, '').toLowerCase(), k = key, n = 1;
+      while (used[k]) k = key + String.fromCharCode(96 + (++n));
+      used[k] = 1;
+      var t = bibType(e), f = [], put = function (name, v) { if (v != null && String(v).trim()) f.push('  ' + name + ' = {' + bibEsc(v) + '}'); }, pp = pagesOf(e);
+      put('author', authorsOf(e).join(' and '));
+      f.push('  title = {{' + bibEsc(e.title) + '}}');
+      put(t === 'article' ? 'journal' : t === 'incollection' || t === 'inproceedings' ? 'booktitle' : 'howpublished', e.in);
+      put('year', L.year(e.date)); put('publisher', e.publisher);
+      put('pages', pp ? pp[0] + '--' + pp[1] : e.pages);
+      put('doi', e.doi); put('url', e.url); put('language', e.lang); put('note', e.note);
+      put('keywords', plainTags(e).join(', '));
+      return '@' + t + '{' + k + ',\n' + f.join(',\n') + '\n}';
+    }).join('\n\n') + '\n';
+  };
+  function exportShown(how, view) {
+    var es = F.show === 'loans' ? rows() : L.sorted(rows(), F.order);
+    if (!es.length) { SW.toast('Nothing is shown to export.', 3000); return; }
+    var name = String(B.name || 'library').toLowerCase().replace(/[^a-z0-9]+/g, '-') + (F.show === 'loans' ? '-to-read' : '-library');
+    if (how === 'copybib') { SW.copyText(L.toBibTeX(es), es.length + (es.length === 1 ? ' work' : ' works') + ' as BibTeX'); return; }
+    var text = how === 'bib' ? L.toBibTeX(es) : L.toRIS(es), a = SW.el('a', { href: URL.createObjectURL(new Blob([text], { type: how === 'bib' ? 'application/x-bibtex' : 'application/x-research-info-systems' })), download: name + (how === 'bib' ? '.bib' : '.ris') });
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    SW.toast(es.length + (es.length === 1 ? ' work' : ' works') + ' exported.', 3000);
+  }
   L.citation = function (e) {
     if (e.citation) return { text: String(e.citation), html: esc(e.citation) };
     var where = inOf(e), fam = L.family(e), part = !!where || fam === 'article' || fam === 'chapter' || fam === 'news';

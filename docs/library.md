@@ -181,6 +181,10 @@ An entry's tags show in its box, and **Filters** and the search read them. There
 
 To show a tag to every reader, put it in `library.json`. A bench with no annotation group shows its tags with no way to change them.
 
+## Export
+
+The download button beside **?** exports what is shown: the whole library, a search, the filters, or the reader's To read shelf. **Download RIS** saves a file that Zotero, EndNote and Mendeley open; **Download BibTeX** and **Copy BibTeX** give BibTeX, and copied it goes into Zotero by File ▸ Import from Clipboard. Each work carries its authors, title, the journal or book it is in, year and date, publisher, pages, DOI, link, language, note and tags, and its code as the RIS `ID`. The kind sets the type (book, chapter, journal article, thesis, film, and so on); a kind the kit does not know is exported as a generic item.
+
 ## The card catalogue
 
 The drawer button beside the covers, the list and the notes shows the Library as a card catalogue. Drawers are made from the list as it stands, about fifteen of them, each with a brass plate giving the first and last names in it and its count, so they rebalance as works are added. **Browse by** Author, Title, Subject or Relevance remakes them: by subject a work has a card under each of its tags, and by relevance there is a drawer for the key works and one for each level. Pulling a drawer out shows its cards standing on the rod, the tops of those behind with a tab each and the front card in full, typed: call number, author, title, imprint and kind, the subject tracings (the tags) numbered, the Key work and Preprint marks and the group's stars. The arrow keys flick through, Enter opens the work, Escape closes the drawer. A search and the filters narrow the drawers, and a search opens the drawer holding the first it finds.

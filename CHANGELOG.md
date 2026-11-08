@@ -1,5 +1,12 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- On the To read shelf, **Order** works, with Date due first, and the search box says it searches the shelf (David's report).
+- On the To read shelf, the reading log folds behind a chevron, shut at first, and the filters column is gone (David, 2026-11-08).
+- A card's back shows a note added from it as soon as the box closes, without turning the card twice (David's report).
+- **Export to Zotero** (David, 2026-11-08): a download button in the Library's toolbar exports what is shown, the library, a search or filter, or the To read shelf, as RIS or BibTeX, downloaded or copied for Zotero's Import from Clipboard. `SW.library.toRIS(entries)`, `SW.library.toBibTeX(entries)`.
+
 ## 1.8.11 (2026-11-08)
 
 - The back of a card (David, 2026-11-08): blank where the group has no notes on the work, and a small **Add Annotation** at its lower right on every back, the same in the catalogue and on To read, opening the work's box ready to write. The turn button no longer shows through from the other side.

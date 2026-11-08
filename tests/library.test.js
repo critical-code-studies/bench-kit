@@ -60,6 +60,11 @@
       T.eq('any other address does not', play('https://example.org/a'), null);
       T.yes('in the frame class it is given', /class="lib-embed"/.test(play('https://vimeo.com/123') || ''));
       T.eq('a cover from the kind, whatever its case', [{ kind: 'Book' }, { kind: 'essay' }, { kind: 'lecture' }, { kind: 'documentary' }, { kind: 'PhD oddity' }].map(L.family), ['book', 'article', 'talk', 'film', 'other']);
+      var ex = [{ id: 'X-1', kind: 'article', title: 'The {Big} Idea', author: 'Weizenbaum, Joseph; Berry, David M.', date: '1966-01', in: 'Communications of the ACM', pages: '36–45', doi: '10.1145/365153.365168', url: 'https://example.org', tags: ['ELIZA', 'High'] }, { id: 'X-2', kind: 'oddity', title: 'Bare', author: 'Weizenbaum, Joseph', date: '1966' }];
+      var ris = L.toRIS(ex);
+      T.yes('RIS: type, authors, journal, pages, DOI, tags and code', /TY  - JOUR/.test(ris) && /AU  - Weizenbaum, Joseph\r\nAU  - Berry, David M\./.test(ris) && /JO  - Communications of the ACM/.test(ris) && /SP  - 36\r\nEP  - 45/.test(ris) && /DO  - 10\.1145/.test(ris) && /KW  - ELIZA/.test(ris) && !/KW  - High/.test(ris) && /ID  - X-1/.test(ris) && /TY  - GEN/.test(ris));
+      var bib = L.toBibTeX(ex);
+      T.yes('BibTeX: a key each, authors joined, braces kept safe', /@article\{weizenbaum1966big,/.test(bib) && /@misc\{weizenbaum1966bare,/.test(bib) && /author = \{Weizenbaum, Joseph and Berry, David M\.\}/.test(bib) && /title = \{\{The \\\{Big\\\} Idea\}\}/.test(bib) && /pages = \{36--45\}/.test(bib));
       T.eq('a call number', [L.callNo({ title: 'Computer Power and Human Reason', author: 'Weizenbaum, Joseph', date: '1976' }), L.callNo({ title: 'The Thrill of the Grass', author: 'Kinsella, W. P.' }), L.callNo({ title: 'x' })], ['1976 W23c', 'K35t', 'X11x']);
       T.eq('an intro to its first sentence', [L.firstSentence('One part. Two parts.'), L.firstSentence('No end'), L.firstSentence('Billy Budd: the works. More.')], ['One part.', 'No end', 'Billy Budd: the works.']);
       T.eq('a language by name, or its code', [L.langName('ja'), L.langName('simple'), L.langName('')], ['Japanese', 'simple', '']);
@@ -790,6 +795,10 @@
                     T.eq('Add Annotation on its back', vl.querySelectorAll('.lib-card .lib-back [data-addnote="S-2"]').length, 1);
                     vl.querySelector('.lib-card .lib-front [data-turn]').click();
                     T.yes('the card turns over', vl.querySelector('.lib-card').classList.contains('flipped') && SW.library.flipped['S-2']);
+                    vl.querySelector('.lib-card .lib-back .lib-scrawls').innerHTML = 'stale';
+                    SW.emit('notes', 'item:S-2');
+                    return wait(80).then(function () {
+                    T.yes('its back follows a note added', vl.querySelector('.lib-card .lib-back .lib-scrawls').innerHTML !== 'stale');
                     vl.querySelector('.lib-card .lib-back [data-turn]').click();
                     T.yes('and back', !vl.querySelector('.lib-card').classList.contains('flipped'));
                     vl.querySelector('[data-libview="list"]').click();
@@ -802,12 +811,15 @@
                     T.eq('and with no date', [SW.library.onLoan('S-2').due, /NO DATE/.test(vl.querySelector('.lib-card').textContent)], [null, true]);
                     vl.querySelector('.lib-card [data-ret]').click();
                     T.eq('returned', [SW.library.onLoan('S-2'), vl.querySelectorAll('.lib-card').length], [null, 0]);
+                    T.eq('To read: Order by date due, and the search names the shelf', [vl.querySelector('.lib-order select').value, vl.querySelector('.lib-q').placeholder], ['due', 'Search your To read shelf']);
+                    T.eq('the reading log, shut at first, and no filters on To read', [vl.querySelector('.lib-log').open, vl.querySelector('.lib-facets').hidden], [false, true]);
                     T.eq('the reading log keeps it', [vl.querySelectorAll('.lib-log tbody tr').length, /Two/.test(vl.querySelector('.lib-log').textContent), vl.querySelector('.lib-log tbody td:nth-child(4)').textContent], [1, true, '1']);
                     vl.querySelector('[data-mynotes]').click();
                     return wait(120).then(function () {
                       var dn = box();
                       T.yes('your notes, in a box of their own', dn.querySelector('.lib-mynotes') && /Mine alone/.test(dn.querySelector('.lib-mynotes').textContent));
                       dn.close();
+                    });
                     });
                   }).then(function () {
                     var l = SW.store.get('library.loans', {});

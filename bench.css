@@ -1244,6 +1244,10 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-tab:hover { color: var(--text); }
 .lib-tab.on { border-color: var(--line); border-bottom-color: var(--bg, var(--surface)); background: var(--bg, var(--surface)); color: var(--text); font-weight: 600; }
 .lib-show[hidden] { display: none; }
+.lib-exp { position: relative; display: inline-flex; }
+.lib-expmenu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 6; display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: max-content; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
+.lib-expmenu[hidden] { display: none; }
+.lib-expmenu .btn { text-align: left; }
 .lib-q { flex: 1 1 16em; min-width: 10em; }
 .lib-n { margin-left: auto; font-size: 12px; }
 .lib-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
@@ -1410,7 +1414,10 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-loanst { color: var(--text-dim); font-size: 13px; }
 .lib-card-other .lib-card-who span { color: #5a3a7a; }
 .lib-log { margin: 8px 4px 24px; }
-.lib-log-h { display: flex; align-items: center; gap: 12px; margin: 10px 0 8px; font-size: 16px; }
+.lib-log-h { display: flex; align-items: center; gap: 12px; margin: 10px 0 8px; font-size: 16px; font-weight: 600; cursor: pointer; list-style: none; }
+.lib-log-h::-webkit-details-marker { display: none; }
+.lib-log-h::before { content: '▸'; display: inline-block; width: 12px; color: var(--text-dim); transition: transform 0.15s; }
+.lib-log[open] > .lib-log-h::before { transform: rotate(90deg); }
 .lib-log-t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .lib-log-t th { padding: 4px 8px; border-bottom: 1px solid var(--line); color: var(--text-faint); font-weight: 600; text-align: left; }
 .lib-log-t td { padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: baseline; }
