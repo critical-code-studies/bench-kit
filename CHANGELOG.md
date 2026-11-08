@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- A library card's typed label keeps one size: the call number and code, one line of author and two of title, the rest in the tooltip (David, 2026-11-08).
 - A cover no longer carries a count of its notes, which collided with the due stamp (David, 2026-11-08). The list still shows the count, and Show ▸ Annotated finds the works with notes.
 - **A tidier Library toolbar** (David, 2026-11-08): **Library** and **To read** are tabs above it, switching between the whole library and the reader's own shelf, and All works, Held, For the group, Linked, Added and Annotated are one **Show** menu, hidden on To read.
 - Small library cards on the To read shelf are now about half the width of medium ones, with the last three lines of the card (David, 2026-11-08).
