@@ -44,6 +44,8 @@
       T.eq('a library card: the bench, the initials, the name in capitals, a five-figure number', [!!idc.querySelector('.lib-idcard-t').textContent, idc.querySelector('.lib-idcard-i').textContent, idc.querySelector('.lib-idcard-name').textContent, /^L \d \d \d \d \d/.test(idc.querySelector('.lib-idcard-n').textContent)], [true, 'AB', 'ADA BYRON', true]);
       var idc2 = document.createElement('div'); idc2.innerHTML = L.idCard('AB', 'Ada Byron', '');
       T.eq('and the same card each time', idc2.innerHTML, idc.innerHTML);
+      var bk = document.createElement('div'); bk.innerHTML = L.idBack('AB', 'Ada Byron', '');
+      T.yes('its back: the holder, the card number, member since, where the bench is, Hypothesis and GitHub', /Ada Byron \(AB\)/.test(bk.textContent) && /L \d{5}/.test(bk.textContent) && /Member since/.test(bk.textContent) && /Hypothesis/.test(bk.textContent) && /GitHub/.test(bk.textContent) && !/gh\.token|github_pat/.test(bk.innerHTML));
       var eds = es.concat([{ id: 'e', title: 'A Reader', contributor: 'eds C. Pine, D. Elm; translated by E. Ash', date: '2000', kind: 'book' }]);
       T.eq('an edited volume with no author files under its first editor', [L.sortName(eds[4]), L.sorted(eds, 'author').map(function (e) { return e.id; }).join('')], ['Pine', 'cdbea']);
       T.eq('and others with none under what leads their reference', [L.sortName({ title: 'A Piece', kind: 'news', in: 'The Guardian' }), L.sortName({ title: 'X', kind: 'web page', publisher: 'OpenAI' }), L.sortName({ title: '“The Last” Word', kind: 'talk' }), L.sortName({ title: 'Как первый в мире чат-бот', kind: 'web page' })], ['Guardian', 'OpenAI', 'Last” Word', 'Как первый в мире чат-бот']);
@@ -817,6 +819,13 @@
                     T.eq('a due stamp on its cover, and no other', [vl.querySelectorAll('[data-lib="S-2"] .lib-due').length, vl.querySelectorAll('[data-lib="S-1"] .lib-due').length], [1, 0]);
                     T.yes('as DUE and the month and day', /^DUE [A-Z]{3} \d{1,2}$/.test(vl.querySelector('[data-lib="S-2"] .lib-due').textContent));
                     vl.querySelector('[data-show="loans"]').click();
+                    T.eq('filter headings shut at first', vl.querySelectorAll('.lib-facet[open]').length, 0);
+                    var fb0 = vl.querySelector('.lib-fbtn').getAttribute('aria-pressed');
+                    vl.querySelector('.lib-fbtn').click();
+                    var fb1 = vl.querySelector('.lib-fbtn').getAttribute('aria-pressed');
+                    vl.querySelector('.lib-fbtn').click();
+                    T.eq('the funnel on the bar shows and hides the filters', [fb0 !== fb1, vl.querySelector('.lib-fbtn').getAttribute('aria-pressed')], [true, fb0]);
+                    T.eq('the tabs and the toolbar are pinned together', [!!vl.querySelector('.lib-top > .lib-tabs'), !!vl.querySelector('.lib-top > .lib-bar')], [true, true]);
                     T.eq('To read: a card for it', [vl.querySelectorAll('.lib-card').length, vl.querySelector('[data-show="loans"]').textContent], [1, 'To read (1)']);
                     T.eq('its code and title open the work', vl.querySelectorAll('.lib-card [data-lib="S-2"]').length, 3);
                     var s2 = SW.library.items().filter(function (x) { return x.id === 'S-2'; })[0], hd = vl.querySelector('.lib-card .lib-card-lib').textContent;
@@ -931,7 +940,7 @@
     }, function (e) { restore(); throw e; });
   }
   // a reader's own Library settings would change what the checks see: kept aside while they run, then put back
-  var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance', 'library.cards', 'library.sign', 'library.dueSoon'];
+  var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance', 'library.cards', 'library.sign', 'library.dueSoon', 'library.fopen', 'library.joined', 'library.filters'];
   function aside() { var kept = {}; OWN.forEach(function (k) { kept[k] = SW.store.get(k, null); SW.store.set(k, k === 'library.loans' ? {} : ''); }); return kept; }
   function putBack(kept) { OWN.forEach(function (k) { if (kept[k] == null) SW.store.remove(k); else SW.store.set(k, kept[k]); }); }
   T.later('the Library', function () {

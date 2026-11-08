@@ -1,5 +1,11 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The Library's tabs pinned** (David): Library and To read stay at the top with the toolbar as the list scrolls.
+- **Filters in a pane of their own** (David): on a wide screen the filters stay in view beside the list, under the pinned tabs, and scroll on their own; each heading is shut until opened (one with a choice in it opens), and stays as left. A funnel on the bar shows or hides them: hidden, the list takes the full width, and the choice is kept; on a narrow screen it opens and folds them above the list.
+- **The library card turns over** (David): clicked, the card in Settings ▸ Library spins to its back: holder, card number, member since (the first check-out), the bench's address, the Hypothesis group and account, the GitHub repository and whether a token is held, loans now and in all, a signature strip and the card's conditions.
+
 ## 1.8.18 (2026-11-08)
 
 - **A report's or web page's title in italics** (ELIZA, against Cite Them Right): a report and a web page stand alone in a citation, as a book does, their titles in italics rather than quoted.

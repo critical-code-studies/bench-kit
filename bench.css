@@ -1242,6 +1242,9 @@ ul.reading a { overflow-wrap: anywhere; }
 #view-library .lib h2 { margin: 0 0 6px; }
 .lib-intro { color: var(--text-dim); margin: 0 0 10px; max-width: 48em; font-size: 12px; line-height: 1.4; }
 .lib-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+/* the tabs and the toolbar, pinned together at the top of the view */
+.lib-top { position: sticky; top: 0; z-index: 5; margin-bottom: 10px; padding-top: 6px; background: var(--bg); }
+.lib-top .lib-bar { position: static; margin-bottom: 0; }
 .lib-tabs { display: flex; gap: 6px; margin: 0 0 12px; padding-left: 2px; border-bottom: 2px solid var(--line); }
 /* tabs that look like tabs: a raised card each, the open one joined to the page below, with a coloured top */
 .lib-tab { position: relative; margin-bottom: -2px; padding: 8px 20px; border: 1px solid var(--line); border-bottom: 2px solid var(--line); border-radius: 8px 8px 0 0; background: var(--surface-2); color: var(--text-dim); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.12s, color 0.12s; }
@@ -1300,6 +1303,11 @@ ul.reading a { overflow-wrap: anywhere; }
 /* a wide window always shows them, whatever its width when the page was drawn */
 @media (min-width: 860px) { .lib-body { grid-template-columns: 190px minmax(0, 1fr); } .lib-body > .lib-facets[hidden] + .lib-list { grid-column: 1 / -1; } .lib-ftoggle { display: none; } .lib-fbody { display: block; margin-top: 0; } }
 .lib-facets { font-size: 13px; min-width: 0; }
+/* the funnel on the bar shows and hides the filters, so the column's own button is not needed */
+.lib-ftoggle { display: none; }
+.lib-fbtn[hidden] { display: none; }
+/* beside the list, the filters stay in view under the pinned head and scroll on their own */
+@media (min-width: 860px) { .lib-facets { position: sticky; top: calc(var(--lib-top, 0px) + 4px); max-height: calc(var(--lib-vh, 100vh) - var(--lib-top, 0px) - 16px); overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; scrollbar-width: thin; } }
 .lib-facet { margin: 0 0 10px; }
 .lib-facet > summary { cursor: pointer; font-weight: 600; color: var(--text-dim); font-size: 12px; margin-bottom: 3px; }
 .lib-f { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 2px 6px; border: 0; border-radius: 3px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
@@ -1436,6 +1444,23 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-cardall-dlg { width: min(96vw, 520px); }
 /* the reader's library card (Settings ▸ Library), after a 1960s plastic student card */
 .set-libcard { display: flex; justify-content: center; margin: 2px 0 10px; }
+/* the card turns over to its back */
+.lib-idflip { width: min(100%, 380px); perspective: 1200px; cursor: pointer; border-radius: 4.5% / 7.1%; }
+.lib-idflip:focus-visible { outline: 2px solid var(--beam, var(--accent, #3d63ad)); outline-offset: 4px; }
+.lib-idflip-in { display: grid; transition: transform 0.6s; transform-style: preserve-3d; }
+.lib-idflip.turned .lib-idflip-in { transform: rotateY(180deg); }
+.lib-idflip-in > .lib-idcard { grid-area: 1 / 1; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.lib-idflip-in > .lib-idcard-back { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: reduce) { .lib-idflip-in { transition: none; } }
+.lib-idcard-back { background: #efe7d2; color: #3a3328; font-family: Helvetica, Arial, sans-serif; }
+.lib-idb { position: absolute; inset: 5% 6%; display: flex; flex-direction: column; gap: 0.9cqw; font-size: 2.9cqw; line-height: 1.25; }
+.lib-idb-h { margin-bottom: 1cqw; padding-bottom: 1cqw; border-bottom: 2px solid #b3363b; color: #b3363b; font: 700 3.4cqw/1.2 Georgia, 'Times New Roman', serif; letter-spacing: 0.04em; text-transform: uppercase; }
+.lib-idb-r { display: flex; gap: 2cqw; white-space: nowrap; overflow: hidden; }
+.lib-idb-r span { flex: 0 0 22%; color: #7a6f5c; text-transform: uppercase; font-size: 2.3cqw; letter-spacing: 0.05em; padding-top: 0.4cqw; }
+.lib-idb-r b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; font-family: 'Courier New', Courier, monospace; }
+.lib-idb-sig { margin-top: auto; height: 6.5cqw; border-bottom: 1px solid #7a6f5c; background: repeating-linear-gradient(90deg, rgba(179, 54, 59, 0.07) 0 6px, transparent 6px 12px); position: relative; }
+.lib-idb-sig span { position: absolute; left: 0; bottom: -3.2cqw; font-size: 2cqw; color: #7a6f5c; text-transform: uppercase; letter-spacing: 0.06em; }
+.lib-idb-f { margin-top: 3.4cqw; font-size: 2.1cqw; color: #7a6f5c; }
 .lib-idcard { container-type: inline-size; position: relative; width: min(100%, 380px); aspect-ratio: 1.586; box-sizing: border-box; border-radius: 4.5% / 7.1%; background: #efe7d2; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.18); font-family: Georgia, 'Times New Roman', serif; overflow: hidden; }
 .lib-idcard-red { position: absolute; inset: 2.6cqw; border-radius: 2.4cqw; background-color: #b3363b; background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px), repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.04) 0 1px, transparent 1px 3px); color: #f2e9d4; }
 .lib-idcard-t { position: absolute; left: 4%; right: 4%; top: 3%; text-align: center; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }

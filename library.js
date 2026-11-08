@@ -761,14 +761,54 @@
       }, 150);
     });
   }
+  // the pinned head's height and the view's, so the filter column can sit under the one and fit the other
+  var PINRO = null;
+  function pinFacets(view) {
+    var top = SW.$('.lib-top', view); if (!top) return;
+    var set = function () { view.style.setProperty('--lib-top', top.offsetHeight + 'px'); view.style.setProperty('--lib-vh', view.clientHeight + 'px'); };
+    set();
+    if (PINRO) PINRO.disconnect();
+    if (root.ResizeObserver) { PINRO = new ResizeObserver(set); PINRO.observe(top); PINRO.observe(view); }
+  }
   // ---------- the reader's library card, and the Library's settings ----------
   // after the plastic student cards of the late 1960s: the bench's name over a red ground, a seal, and a
   // window with the card's number, the reader's initials and name embossed
   var SEAL = '<svg class="lib-idcard-e" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><circle cx="32" cy="32" r="24"/>' +
     '<path d="M15 24c7-2.5 12.5-1.5 17 2.5 4.5-4 10-5 17-2.5v19c-7-2.5-12.5-1.5-17 2.5-4.5-4-10-5-17-2.5zM32 26.5v19M19 29c4-1 7-.5 10 1M19 34c4-1 7-.5 10 1M35 30c3-1.5 6-2 10-1M35 35c3-1.5 6-2 10-1"/></svg>';
+  // the day the reader joined: their first check-out, else the first time the card was shown; kept once known
+  function joined() {
+    var j = SW.store.get('library.joined', ''), l = loans(), first = '';
+    Object.keys(l).forEach(function (c) { (l[c] || []).forEach(function (r) { if (r.out && (!first || r.out < first)) first = r.out; }); });
+    if (first && (!j || first < j)) j = first;
+    if (!j) j = today();
+    SW.store.set('library.joined', j);
+    return j;
+  }
+  function cardNo(ini, name, acct) { return ('00000' + (hashOf(acct || (ini + '|' + name)) % 100000)).slice(-5); }
+  // the back: who holds the card, where the bench and its records are kept, and the conditions, as on the old cards
+  function idBack(ini, name, acct) {
+    var title = String(B.title || B.name || 'The Bench'), l = loans(), on = 0, ever = 0;
+    Object.keys(l).forEach(function (c) { var h = l[c] || []; ever += h.filter(function (r) { return !r.renewal; }).length; if (onLoan(c)) on++; });
+    var grp = SW.notes && SW.notes.groupId ? SW.notes.groupId(SW.groupSet ? SW.groupSet() : '') : '', who = String(acct || '').replace(/^acct:/, '').replace(/@hypothes\.is$/, '');
+    var repo = L.privateRepo(), here = location.host + location.pathname.replace(/index\.html$/, '');
+    var row = function (k, v) { return '<div class="lib-idb-r"><span>' + k + '</span><b>' + v + '</b></div>'; };
+    return '<div class="lib-idcard lib-idcard-back" aria-hidden="true"><div class="lib-idb">' +
+      '<div class="lib-idb-h">' + esc(title) + ' · Library</div>' +
+      row('Holder', esc(name || '—') + (ini ? ' (' + esc(ini) + ')' : '')) +
+      row('Card no.', 'L ' + cardNo(ini, name, acct)) +
+      row('Member since', esc(stampOf(joined()))) +
+      row('Bench', esc(here)) +
+      row('Hypothesis', grp ? 'group ' + esc(grp) + (who ? ' · ' + esc(who) : '') : 'no group set') +
+      row('GitHub', repo ? esc(repo) + (tokenOf() ? ' · token held' : ' · no token') : 'none') +
+      row('On loan', on + ' now · ' + ever + ' taken out') +
+      '<div class="lib-idb-sig"><span>Signature</span></div>' +
+      '<div class="lib-idb-f">This card is issued for the use of the holder only and must be shown on request. If found, please return it to the library desk.</div>' +
+      '</div></div>';
+  }
+  L.idBack = idBack;
   function idCard(ini, name, acct) {
     var title = String(B.title || B.name || 'The Bench'), len = title.length;
-    var n = ('00000' + (hashOf(acct || (ini + '|' + name)) % 100000)).slice(-5), d = new Date(), y0 = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
+    var n = cardNo(ini, name, acct), d = new Date(), y0 = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
     var fs = len <= 14 ? 8.6 : len <= 20 ? 7 : len <= 28 ? 5.6 : 4.4;
     return '<div class="lib-idcard" role="img" aria-label="' + esc(title + ' library card' + (name || ini ? ': ' + (name || ini) : '')) + '">' +
       '<div class="lib-idcard-red"><div class="lib-idcard-t" style="font-size:' + fs + 'cqw">' + esc(title) + '</div>' + SEAL + '<div class="lib-idcard-k">Library<br>Card</div></div>' +
@@ -780,14 +820,19 @@
     SW.settings.addTab('library', 'Library', 3);
     var paintId = function () {
       var at = SW.$('#set-libcard'); if (!at) return;
-      var i = SW.$('#set-initials'), n = SW.$('#set-name');
-      at.innerHTML = idCard(i ? i.value.trim() : SW.me().initials, n ? n.value.trim() : SW.me().name, SW.notes && SW.notes.me);
+      var i = SW.$('#set-initials'), n = SW.$('#set-name'), iv = i ? i.value.trim() : SW.me().initials, nv = n ? n.value.trim() : SW.me().name, acct = SW.notes && SW.notes.me;
+      var was = SW.$('.lib-idflip', at), turned = !!(was && was.classList.contains('turned'));
+      at.innerHTML = '<div class="lib-idflip' + (turned ? ' turned' : '') + '" role="button" tabindex="0" aria-pressed="' + turned + '" title="Turn the card over" aria-label="Turn the card over">' +
+        '<div class="lib-idflip-in">' + idCard(iv, nv, acct) + idBack(iv, nv, acct) + '</div></div>';
+      var fl = SW.$('.lib-idflip', at), turn = function () { var t = fl.classList.toggle('turned'); fl.setAttribute('aria-pressed', String(t)); };
+      fl.addEventListener('click', turn);
+      fl.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); turn(); } });
     };
     var idHooked = false;
     SW.settings.add({
       tab: 'library',
       html: '<div id="set-libcard" class="set-libcard"></div>' +
-        '<p class="hint">Your card for the library, with your initials and name from the You tab.</p>' +
+        '<p class="hint">Your card for the library, with your initials and name from the You tab. Click it to turn it over.</p>' +
         '<label>Sign book cards with <select id="set-libsign"><option value="name">Your name</option><option value="initials">Your initials</option></select></label>' +
         '<p class="hint">What is written in the Borrower’s name column when you take a work for your To read shelf. Lines already written keep their name.</p>' +
         '<label>Due back soon <select id="set-libsoon"><option value="0">Only when overdue</option><option value="3">3 days before</option><option value="7">7 days before</option><option value="14">14 days before</option></select></label>' +
@@ -970,8 +1015,11 @@
       return f === skip || !on.length || facetValues(e, f).some(function (v) { return F.facets[f][v]; });
     });
   }
+  // which filter headings the reader has opened: shut at first, and a heading with a choice in it open
+  function fOpen() { var o = SW.store.get('library.fopen', {}); return o && typeof o === 'object' ? o : {}; }
   // each facet's counts leave out its own choice, so the others in it stay to be added
   function facetHTML() {
+    var FO = fOpen();
     var any = facetsOn();
     return (any ? '<button class="btn ghost lib-fclear" data-fclear>Clear these filters</button>' : '') + FACETS.map(function (x) {
       var f = x[0], c = {}, on = F.facets[f] || {};
@@ -982,7 +1030,7 @@
       var last = f === 'decade' ? 'No date' : 'none';
       vs.sort(f === 'relevance' ? function (a, b) { return RELEVANCE.indexOf(a) - RELEVANCE.indexOf(b); } : f === 'decade' || f === 'rating' ? function (a, b) { return a === last ? 1 : b === last ? -1 : a < b ? 1 : -1; } : function (a, b) { return (c[b] - c[a]) || AZ(a, b); });
       var cap = f === 'decade' || F.more[f] ? vs.length : 8, shown = vs.filter(function (v, i) { return i < cap || on[v]; });
-      return '<details class="lib-facet" open><summary>' + x[1] + '</summary>' + shown.map(function (v) {
+      return '<details class="lib-facet" data-fgroup="' + f + '"' + (FO[f] || Object.keys(on).length ? ' open' : '') + '><summary>' + x[1] + '</summary>' + shown.map(function (v) {
         var tip = facetTitle(f, v);
         return '<button class="lib-f' + (on[v] ? ' on' : '') + '" data-facet="' + f + '" data-val="' + esc(v) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + ' aria-pressed="' + (on[v] ? 'true' : 'false') + '"><span>' + esc(facetLabel(f, v)) + '</span><i>' + c[v] + '</i></button>';
       }).join('') + (vs.length > 8 && f !== 'decade' ? '<button class="lib-fmore" data-fmore="' + f + '">' + (F.more[f] ? 'Fewer' : 'All ' + vs.length) + '</button>' : '') + '</details>';
@@ -1085,11 +1133,16 @@
     }, function (e) { box.innerHTML = '<p class="pad badge err">' + esc(e.message) + '</p>'; });
   }
   function setting(key, name, v) { F[key] = v; SW.store.set('library.' + name, v); }
+  function wideLib() { return !root.matchMedia || root.matchMedia('(min-width: 860px)').matches; }
   function list(view) {
     var box = SW.$('.lib-list', view); if (!box) return;
     var fp = SW.$('.lib-facets', view), fb = SW.$('.lib-fbody', view);
-    // the filters serve the library; the To read shelf is short enough without them
-    if (fp) fp.hidden = F.view === 'notes' || F.show === 'loans';
+    // the filters serve the library; the To read shelf is short enough without them. The funnel on the bar shows or
+    // hides them: beside the list on a wide screen (remembered), folded above it on a narrow one
+    var noF = F.view === 'notes' || F.show === 'loans', fOff = SW.store.get('library.filters', '') === 'hidden';
+    if (fp) fp.hidden = noF || (fOff && wideLib());
+    var fbtn = SW.$('.lib-fbtn', view);
+    if (fbtn) { var fShown = wideLib() ? !fOff : !!(fp && fp.classList.contains('open')); fbtn.hidden = noF; fbtn.classList.toggle('on', fShown); fbtn.setAttribute('aria-pressed', String(fShown)); }
     if (F.view === 'notes') { drawNotes(view, box); paintCounts(view); return; }
     sweepLoans(); paintLoanCount(view);
     if (fb) fb.innerHTML = facetHTML();
@@ -1131,17 +1184,20 @@
       if (hasRel && (F.order === 'listed' || (!SW.store.get('library.order', '') && !C.order))) F.order = 'relevance';
       if (!hasRel && F.order === 'relevance') F.order = C.order && C.order !== 'relevance' ? C.order : 'author';
       view.innerHTML = '<div class="lib"><h2 class="view-title">' + esc(m.title || C.label || 'Library') + '</h2>' +
-        '<div class="lib-tabs" role="tablist"><button role="tab" class="lib-tab' + (F.show !== 'loans' ? ' on' : '') + '" data-show="all" aria-selected="' + (F.show !== 'loans') + '">Library</button><button role="tab" class="lib-tab' + (F.show === 'loans' ? ' on' : '') + '" data-show="loans" aria-selected="' + (F.show === 'loans') + '">To read</button></div>' +
+        // the tabs and the toolbar stay at the top as the list scrolls
+        '<div class="lib-top"><div class="lib-tabs" role="tablist"><button role="tab" class="lib-tab' + (F.show !== 'loans' ? ' on' : '') + '" data-show="all" aria-selected="' + (F.show !== 'loans') + '">Library</button><button role="tab" class="lib-tab' + (F.show === 'loans' ? ' on' : '') + '" data-show="loans" aria-selected="' + (F.show === 'loans') + '">To read</button></div>' +
         '<div class="toolbar lib-bar"><input type="search" class="lib-q" placeholder="Search the library" aria-label="Search the library" value="' + esc(F.q) + '">' +
         '<label class="lib-show faint"' + (F.show === 'loans' ? ' hidden' : '') + '>Show <select aria-label="Show">' + [['all', 'All works'], ['held', 'Held']].concat(m.items.some(isPrivate) ? [['group', 'For the group']] : []).concat([['out', 'Linked']]).concat((m.adds || []).length ? [['added', 'Added']] : []).map(function (s) { return '<option value="' + s[0] + '"' + (F.show === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select></label>' +
         '<label class="lib-order faint">Order <select aria-label="Order">' + ORDERS.filter(function (o) { return (o[0] !== 'lang' || m.items.some(function (e) { return e.lang; })) && (o[0] !== 'rating' || canSortRating()) && (o[0] !== 'relevance' || hasRel) && (o[0] !== 'listed' || !hasRel); }).map(function (o) { return '<option value="' + o[0] + '"' + (F.order === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="im-seg lib-views" role="group" aria-label="View"><button class="btn' + (F.view !== 'list' && F.view !== 'notes' && F.view !== 'cat' ? ' on' : '') + '" data-libview="icons" title="Covers on a shelf" aria-label="Covers">▦</button><button class="btn' + (F.view === 'list' ? ' on' : '') + '" data-libview="list" title="A list" aria-label="List">☰</button><button class="btn' + (F.view === 'notes' ? ' on' : '') + '" data-libview="notes" title="The group’s notes on these works" aria-label="Notes">✎</button><button class="btn' + (F.view === 'cat' ? ' on' : '') + '" data-libview="cat" title="A card catalogue, in drawers" aria-label="Catalogue"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><rect x="2" y="2" width="12" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h12M6.5 5h3M6.5 11h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></span>' +
         '<span class="im-seg lib-sizes" role="group" aria-label="Cover size">' + [['s', 'Small covers'], ['m', 'Medium covers'], ['l', 'Large covers']].map(function (z) { return '<button class="btn' + (F.size === z[0] ? ' on' : '') + '" data-libsize="' + z[0] + '" title="' + z[1] + '" aria-label="' + z[1] + '">' + z[0].toUpperCase() + '</button>'; }).join('') + '</span>' +
+        '<button class="btn ghost lib-fbtn" data-fpane title="Show or hide the filters" aria-label="Filters" aria-pressed="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></svg></button>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
-        '<span class="lib-n faint"></span></div>' +
+        '<span class="lib-n faint"></span></div></div>' +
         (m.addErr && SW.store.get('library.addErrHidden', '') !== tokenOf().slice(-6) ? '<p class="hint lib-adderr">' + (m.addStatus === 401 ? 'Works the group added are kept on GitHub, which no longer accepts the GitHub token saved in this browser; a new one in ⚙ Settings shows them.' : 'Works the group added could not be read: ' + esc(m.addErr) + '.') + ' <button class="btn ghost" data-hideadderr title="Until the token changes">Hide</button></p>' : '') +
         '<div class="lib-body"><div class="lib-facets"><button class="btn ghost lib-ftoggle" data-ftoggle aria-expanded="false">Filters</button><div class="lib-fbody"></div></div><div class="lib-list"></div></div></div>';
       list(view);
+      pinFacets(view);
       L.canAdd().then(function (yes) {
         var bar = SW.$('.lib-bar', view);
         if (yes && bar && !SW.$('.lib-add', bar)) bar.appendChild(SW.el('button', { class: 'btn lib-add' }, '＋ Add a work'));
@@ -1169,6 +1225,15 @@
           if (ev.target.closest('.lib-help')) { L.help(); return; }
           var fv = ev.target.closest('[data-facet]');
           if (fv) { var fk = fv.dataset.facet, fo = F.facets[fk] = F.facets[fk] || {}; if (fo[fv.dataset.val]) delete fo[fv.dataset.val]; else fo[fv.dataset.val] = 1; list(view); return; }
+          if (ev.target.closest('[data-fpane]')) {
+            // once per click, however many times the Library has been set up on this page
+            if (!ev.fpaneDone) {
+              ev.fpaneDone = true;
+              if (wideLib()) SW.store.set('library.filters', SW.store.get('library.filters', '') === 'hidden' ? '' : 'hidden');
+              else { var fpn = SW.$('.lib-facets', view); if (fpn) fpn.classList.toggle('open'); }
+            }
+            list(view); return;
+          }
           var ft = ev.target.closest('[data-ftoggle]'); if (ft) { ft.setAttribute('aria-expanded', ft.parentNode.classList.toggle('open') ? 'true' : 'false'); return; }
           var fm = ev.target.closest('[data-fmore]'); if (fm) { F.more[fm.dataset.fmore] = !F.more[fm.dataset.fmore]; list(view); return; }
           if (ev.target.closest('[data-fclear]')) { F.facets = {}; list(view); return; }
@@ -1212,6 +1277,11 @@
           }
           var r = ev.target.closest('[data-lib]'); if (r) L.open(r.dataset.lib);
         });
+        // a filter heading opened or shut is remembered
+        view.addEventListener('toggle', function (ev) {
+          var g = ev.target && ev.target.dataset && ev.target.dataset.fgroup; if (!g) return;
+          var o = fOpen(); if (ev.target.open) o[g] = 1; else delete o[g]; SW.store.set('library.fopen', o);
+        }, true);
         view.addEventListener('keydown', function (ev) {
           var ca = (ev.key === 'Enter' || ev.key === ' ') && ev.target.closest && ev.target.closest('[data-cardall]');
           if (ca && !ev.cardAll && cardLines(ca.dataset.cardall).length) { ev.cardAll = true; ev.preventDefault(); showCardAll(ca.dataset.cardall); }
