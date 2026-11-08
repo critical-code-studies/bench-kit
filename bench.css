@@ -1485,6 +1485,8 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-cardall-dlg { width: min(96vw, 520px); }
 /* the reader's library card (Settings ▸ Library), after a 1960s plastic student card */
 .set-libcard { display: flex; justify-content: center; margin: 2px 0 10px; }
+.set-libwipe { margin: 14px 0 4px; }
+.set-libwipe + .hint { margin-top: 0; }
 /* the card turns over to its back */
 .lib-idflip { width: min(100%, 320px); perspective: 1200px; cursor: pointer; border-radius: 4.5% / 7.1%; }
 .lib-idflip:focus-visible { outline: 2px solid var(--beam, var(--accent, #3d63ad)); outline-offset: 4px; }

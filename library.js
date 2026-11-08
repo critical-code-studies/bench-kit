@@ -821,6 +821,17 @@
       '<div class="lib-idcard-name">' + esc(String(name || '').toUpperCase()) + '</div><div class="lib-idcard-y">' + y0 + '–' + String(y0 + 1).slice(2) + '</div></div></div>';
   }
   L.idCard = idCard;
+  // the reader's loans wiped: this browser's record, the cards' paper and age, and their own loan records in the group
+  // (one at a time, so the service is not asked for many at once); other members' loans stay
+  L.wipeLoans = function () {
+    var N = itemNotes(), res = { local: Object.keys(loans()).length, group: 0, failed: 0 };
+    LOANS = {}; saveLoans(); SW.store.set('library.cards', {}); UP = {}; PEND = {}; FLIP = {};
+    var redraw = function () { var v = SW.$('#view-library'); if (v && SW.$('.lib-list', v)) list(v); if (SW.notes && SW.notes.paintNews) SW.notes.paintNews(); return res; };
+    if (!N || !N.myLoanNotes || !canRate()) return Promise.resolve(redraw());
+    return N.myLoanNotes().then(function (ns) {
+      return ns.reduce(function (p, n) { return p.then(function () { return N.remove(n, true).then(function () { res.group++; }, function () { res.failed++; }); }); }, Promise.resolve());
+    }).then(function () { LOANS = {}; saveLoans(); return redraw(); });
+  };
   // the name as drawn: made smaller, a step at a time, until it fits across the card (not while the card is out of sight)
   function fitIdTitle(at) {
     SW.$$('.lib-idcard-t', at).forEach(function (t) {
@@ -852,7 +863,9 @@
         '<label>Sign book cards with <select id="set-libsign"><option value="name">Your name</option><option value="initials">Your initials</option></select></label>' +
         '<p class="hint">What is written in the Borrower’s name column when you take a work for your To read shelf. Lines already written keep their name.</p>' +
         '<label>Due back soon <select id="set-libsoon"><option value="0">Only when overdue</option><option value="3">3 days before</option><option value="7">7 days before</option><option value="14">14 days before</option></select></label>' +
-        '<p class="hint">When a work on your To read shelf is stamped DUE SOON, and named at the top of What’s new.</p>',
+        '<p class="hint">When a work on your To read shelf is stamped DUE SOON, and named at the top of What’s new.</p>' +
+        '<p class="set-libwipe"><button type="button" class="btn ghost" id="set-libwipe">Wipe my loan history…</button></p>' +
+        '<p class="hint">Takes every work off your To read shelf and clears your reading log and your lines on the book cards, in this browser and, where you have joined, in the group. Other members’ loans are kept. For when the shelf goes wrong; it cannot be undone.</p>',
       load: function () {
         SW.$('#set-libsign').value = SW.store.get('library.sign', 'name') === 'initials' ? 'initials' : 'name';
         var sv = String(soonDays()), so = SW.$('#set-libsoon');
@@ -861,6 +874,16 @@
         paintId();
         if (!idHooked) {
           idHooked = true;
+          var wb = SW.$('#set-libwipe');
+          if (wb) wb.addEventListener('click', function () {
+            var n = Object.keys(loans()).length;
+            if (!root.confirm('Wipe your loan history?\n\nThis takes ' + n + (n === 1 ? ' work' : ' works') + ' off your record in this browser' + (canRate() ? ' and deletes your loan records from the group' : '') + ': your To read shelf, your reading log and your lines on the book cards. Other members’ loans are kept.\n\nThis cannot be undone.')) return;
+            wb.disabled = true;
+            L.wipeLoans().then(function (r) {
+              wb.disabled = false;
+              SW.toast('Loan history wiped' + (r.group ? ': ' + r.group + (r.group === 1 ? ' record' : ' records') + ' deleted from the group' : '') + (r.failed ? '; ' + r.failed + ' could not be deleted, try again' : '') + '.', 6000);
+            }, function (err) { wb.disabled = false; SW.toast('The loan history could not be wiped: ' + err.message, 6000); });
+          });
           ['#set-initials', '#set-name'].forEach(function (q) { var x = SW.$(q); if (x) x.addEventListener('input', paintId); });
           var tabs = SW.$('#dlg-settings .set-tabs'); if (tabs) tabs.addEventListener('click', function () { setTimeout(paintId, 0); });
         }

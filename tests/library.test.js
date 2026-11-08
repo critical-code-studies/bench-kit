@@ -41,6 +41,11 @@
       T.eq('by language, those without last', ids('lang'), 'dbca');
       T.eq('as listed', ids('listed'), 'abcd');
       var idc = document.createElement('div'); idc.innerHTML = L.idCard('AB', 'Ada Byron', '');
+      var wl0 = SW.store.get('library.loans', {}), wc0 = SW.store.get('library.cards', {});
+      SW.store.set('library.loans', { 'L-WIPE': [{ out: '2026-11-01', due: '2026-12-01', by: 'You' }] });
+      L.wipeLoans();
+      T.eq('wiping the loan history empties this browser’s record and the cards', [SW.store.get('library.loans', {}), SW.store.get('library.cards', {}), !!L.onLoan('L-WIPE')], [{}, {}, false]);
+      SW.store.set('library.loans', wl0); SW.store.set('library.cards', wc0);
       var noInk = [];
       for (var hi = 0; hi < 400; hi++) { try { L.inksOf({ out: '2026-11-0' + (hi % 9 + 1), due: '2027-0' + (hi % 9 + 1) + '-08', by: 'Reader ' + hi }); } catch (er) { noInk.push(hi); } }
       T.eq('a line with no ink of its own (a loan from before inks were kept) is drawn in a pen and stamp of its own', noInk, []);
@@ -973,12 +978,28 @@
       restore();
     }, function (e) { restore(); throw e; });
   }
+  // wiping a member's loan history: their own loan records in the group deleted one by one, and the count kept
+  function wipeGroup() {
+    var SW = window.SW, N = SW.notes, L = SW.library;
+    if (!N || !L || !L.wipeLoans) return Promise.resolve();
+    T.group('Wiping the loan history');
+    var was = { cf: N.configured, my: N.myLoanNotes, rm: N.remove }, gone = [];
+    N.configured = function () { return true; };
+    N.myLoanNotes = function () { return Promise.resolve([{ id: 'a1', text: 'loan:out:2027-01-01' }, { id: 'a2', text: 'loan:ext:2027-03-01' }, { id: 'a3', text: 'loan:back' }]); };
+    N.remove = function (n) { gone.push(n.id); return n.id === 'a3' ? Promise.reject(new Error('refused')) : Promise.resolve(); };
+    SW.store.set('library.loans', { 'L-WIPE': [{ out: '2026-11-01', due: '2027-01-01', by: 'You' }] });
+    return L.wipeLoans().then(function (r) {
+      N.configured = was.cf; N.myLoanNotes = was.my; N.remove = was.rm;
+      T.eq('each of the reader’s loan records in the group is deleted, and one refused is counted', [gone, r.group, r.failed], [['a1', 'a2', 'a3'], 2, 1]);
+      T.eq('and this browser’s record is empty', SW.store.get('library.loans', {}), {});
+    }, function (e) { N.configured = was.cf; N.myLoanNotes = was.my; N.remove = was.rm; throw e; });
+  }
   // a reader's own Library settings would change what the checks see: kept aside while they run, then put back
   var OWN = ['library.view', 'library.order', 'library.size', 'library.catby', 'library.loans', 'library.relevance', 'library.cards', 'library.sign', 'library.dueSoon', 'library.fopen', 'library.joined', 'library.filters'];
   function aside() { var kept = {}; OWN.forEach(function (k) { kept[k] = SW.store.get(k, null); SW.store.set(k, k === 'library.loans' ? {} : ''); }); return kept; }
   function putBack(kept) { OWN.forEach(function (k) { if (kept[k] == null) SW.store.remove(k); else SW.store.set(k, kept[k]); }); }
   T.later('the Library', function () {
     var kept = aside();
-    return (T.fetchChain || Promise.resolve()).then(run).then(itemNotes).then(function () { putBack(kept); }, function (e) { putBack(kept); throw e; });
+    return (T.fetchChain || Promise.resolve()).then(run).then(itemNotes).then(wipeGroup).then(function () { putBack(kept); }, function (e) { putBack(kept); throw e; });
   });
 })();

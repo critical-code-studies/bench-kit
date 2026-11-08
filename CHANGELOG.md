@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **To read shelf fixed for loans from before 1.8.16** (David): a line with no ink of its own was given a stamp colour through a signed shift, which for many lines found no colour, and the shelf stopped drawing; the library's covers were left in the list without their shelf, under the To read tab, counted as the library. Fixed, and the shelf is now made whole before the list is touched.
+- **Wipe my loan history** (David): Settings ▸ Library has a button that takes every work off the reader's To read shelf and clears their reading log and their lines on the book cards, in this browser and, for a member, their loan records in the group, one at a time. It asks first, with the count; other members' loans are kept.
 - **Book cards turn over again** (David): the yellowing of a well-used card was a filter on the card, which flattens its turn so the back never shows; it is now mixed into the paper's colour.
 - **The image-queue tests wait for the queue** (Melville): "all asked for in the end" and "a failure asked again, then given up" now wait until the queue has finished (up to 15 s) instead of a fixed 700 ms, which a page in the background, its timers slowed, could run past. Test only.
 

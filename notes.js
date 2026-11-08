@@ -1448,6 +1448,12 @@
       return out;
     });
   };
+  // the reader's own loan records in the group, as annotations, for wiping them
+  N.myLoanNotes = function () {
+    return N.itemNotes().then(function (all) {
+      return all.filter(function (n) { return N.isReaction(n) && !n.parent && /^loan:(out|ext|back)/.test(n.text) && N.mine(n); });
+    });
+  };
   N.itemLoansOthers = function () {
     return N.itemNotes().then(function (all) {
       var out = {};
