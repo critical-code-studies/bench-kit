@@ -33,7 +33,7 @@
         { id: 'd', title: 'Early', author: 'B. Oak', date: 'c. 1935', kind: 'article', lang: 'en' }
       ];
       function ids(o) { return L.sorted(es, o).map(function (e) { return e.id; }).join(''); }
-      T.eq('by author, surnames, those without last', ids('author'), 'dbac');
+      T.eq('by author, surnames; a work with no author files under its title', ids('author'), 'cdba');
       T.eq('by title, without the opening article', ids('title'), 'bdca');
       T.eq('newest first, those without a date last', ids('new'), 'badc');
       T.eq('oldest first, those without a date last', ids('old'), 'dabc');
@@ -41,7 +41,8 @@
       T.eq('by language, those without last', ids('lang'), 'dbca');
       T.eq('as listed', ids('listed'), 'abcd');
       var eds = es.concat([{ id: 'e', title: 'A Reader', contributor: 'eds C. Pine, D. Elm; translated by E. Ash', date: '2000', kind: 'book' }]);
-      T.eq('an edited volume with no author files under its first editor', [L.sortName(eds[4]), L.sorted(eds, 'author').map(function (e) { return e.id; }).join('')], ['Pine', 'dbeac']);
+      T.eq('an edited volume with no author files under its first editor', [L.sortName(eds[4]), L.sorted(eds, 'author').map(function (e) { return e.id; }).join('')], ['Pine', 'cdbea']);
+      T.eq('and others with none under what leads their reference', [L.sortName({ title: 'A Piece', kind: 'news', in: 'The Guardian' }), L.sortName({ title: 'X', kind: 'web page', publisher: 'OpenAI' }), L.sortName({ title: '“The Last” Word', kind: 'talk' })], ['Guardian', 'OpenAI', 'Last” Word']);
       T.eq('the entries themselves left in their order', es[0].id, 'a');
       function cite(e) { return L.citation(e).text; }
       T.eq('a citation: an article', cite({ title: 'On Time', author: 'Marc Peeters', date: '2017', kind: 'article', in: 'A Journal 2', publisher: 'A Press', pages: '145–157', url: 'https://example.org/a' }), 'Marc Peeters (2017) ‘On Time’, A Journal 2, pp. 145–157. https://example.org/a');
@@ -50,8 +51,15 @@
       T.eq('a chapter', cite({ title: 'A Part', author: 'E. Editor', date: '1999', kind: 'chapter', in: 'A Whole', publisher: 'A Press', pages: '5–9', doi: 'https://doi.org/10.1/x' }), 'E. Editor (1999) ‘A Part’, in A Whole. A Press, pp. 5–9. https://doi.org/10.1/x');
       T.yes('its DOI a live link in the page', /<a href="https:\/\/doi\.org\/10\.1\/x"/.test(L.citation({ title: 'A Part', kind: 'chapter', doi: '10.1/x' }).html));
       T.yes('a link that is not a web address is not made live', !/<a /.test(L.citation({ title: 'x', kind: 'book', url: 'javascript:alert(1)' }).html));
-      T.eq('no author, no date', cite({ title: 'What Is It?', kind: 'book' }), '(n.d.) What Is It?');
-      T.eq('a date cited by its year', cite({ title: 'A Talk', kind: 'talk', date: '2020-11-21' }), '(2020) A Talk.');
+      T.eq('no author, no date: the title leads, the year after it', cite({ title: 'What Is It?', kind: 'book' }), 'What Is It? (n.d.).');
+      T.eq('a date cited by its year', cite({ title: 'A Talk', kind: 'talk', date: '2020-11-21' }), 'A Talk (2020).');
+      T.eq('no author: an edited volume, its editors leading', cite({ title: 'The Handbook of Artificial Intelligence', contributor: 'eds Barr, A.; Feigenbaum, E.A.', date: '1981', kind: 'book', publisher: 'William Kaufmann' }), 'Barr, A. and Feigenbaum, E.A. (eds) (1981) The Handbook of Artificial Intelligence. William Kaufmann.');
+      T.eq('one editor', cite({ title: 'A Reader', contributor: 'ed. C. Pine', date: '2000', kind: 'book' }), 'C. Pine (ed.) (2000) A Reader.');
+      T.eq('a chapter: in, the editors, the book', cite({ title: 'A Part', author: 'E. Writer', contributor: 'eds C. Pine, D. Elm', date: '1999', kind: 'chapter', in: 'A Whole', publisher: 'A Press', pages: '5–9' }), 'E. Writer (1999) ‘A Part’, in C. Pine and D. Elm (eds) A Whole. A Press, pp. 5–9.');
+      T.eq('no author: a newspaper piece, its paper leading', cite({ title: 'Machines that talk', in: 'The Guardian', date: '2008', kind: 'news', pages: '5' }), 'The Guardian (2008) ‘Machines that talk’, p. 5.');
+      T.eq('no author: an organisation’s web page', cite({ title: 'About us', publisher: 'A Lab', date: '2023', kind: 'web page', url: 'https://example.org/' }), 'A Lab (2023) About us. https://example.org/');
+      T.yes('and the title in italics after it', /^A Lab \(2023\) <i>About us<\/i>\./.test(L.citation({ title: 'About us', publisher: 'A Lab', date: '2023', kind: 'web page' }).html));
+      T.eq('no author, in a journal: the title, the year, the journal', cite({ title: 'On It', in: 'A Journal 3', date: '2001', kind: 'article', pages: '1–4' }), '‘On It’ (2001) A Journal 3, pp. 1–4.');
       T.eq('as written, where it is', cite({ title: 'x', citation: 'By hand.' }), 'By hand.');
       T.yes('and escaped in the page', !/<script/.test(L.citation({ title: '<script>', kind: 'book' }).html));
       var play = function (u, k) { return SW.embedPlayer(u, 'A title', k, 'lib-embed'); };

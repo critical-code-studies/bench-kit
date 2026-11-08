@@ -369,12 +369,28 @@
       .forEach(function (id, i) { KADD[id] = top + i + 1; });
     return moved;
   }
-  // the name a work files under: its first author's surname, or, for an edited volume with no author, its first editor's
+  // What a reference leads with, by Cite Them Right Harvard: the author; with none, a volume's editors, "(ed.)" or
+  // "(eds)"; a newspaper or magazine piece's publication (in); a web page's or report's organisation (publisher);
+  // else the title, with the year after it
+  function namesList(ns) { return ns.length < 2 ? ns.join('') : ns.slice(0, -1).join(', ') + ' and ' + ns[ns.length - 1]; }
+  function editorsText(e) { var ns = rolesOf(e).editor; return ns.length ? namesList(ns) + (ns.length > 1 ? ' (eds)' : ' (ed.)') : ''; }
+  function leadOf(e) {
+    e = e || {};
+    if (String(e.author || '').trim()) return { by: 'author', text: String(e.author).trim() };
+    var fam = L.family(e), k = String(e.kind || '').trim().toLowerCase();
+    if (fam !== 'chapter' && e.contributor && rolesOf(e).editor.length) return { by: 'editors', text: editorsText(e) };
+    if (fam === 'news' && inOf(e)) return { by: 'publication', text: inOf(e) };
+    if ((fam === 'web' || k === 'report') && String(e.publisher || '').trim()) return { by: 'org', text: String(e.publisher).trim() };
+    return { by: 'title', text: String(e.title || '').trim() };
+  }
+  L.leadOf = leadOf;
+  // the name a work files under: whatever leads its reference, an author's or editor's surname, else the name
+  // or title without its opening article, so works with no author file among those with one
   L.sortName = function (e) {
-    var s = L.surname(e && e.author);
-    if (s || !e || !e.contributor) return s;
-    var ed = rolesOf(e).editor[0];
-    return ed ? L.surname(ed) : '';
+    var ld = leadOf(e);
+    if (ld.by === 'author') return L.surname(e.author);
+    if (ld.by === 'editors') return L.surname(rolesOf(e).editor[0]);
+    return titleKey(ld.text).replace(/^[^0-9A-Za-zÀ-ÿĀ-ž]+/, '');
   };
   L.sorted = function (items, order) {
     var byTitle = function (a, b) { return AZ(titleKey(a.title), titleKey(b.title)); };
@@ -1289,30 +1305,40 @@
     var plain = [], rich = [];
     function add(t, h) { plain.push(t); rich.push(h == null ? esc(t) : h); }
     function stop(s) { return /[.?!]['’"”]?$/.test(s) ? s : s + '.'; }
-    var head = (e.author ? String(e.author).trim() + ' ' : '') + '(' + (L.year(e.date) || e.date || 'n.d.') + ')';
-    add(head);
+    var ld = leadOf(e), yr = '(' + (L.year(e.date) || e.date || 'n.d.') + ')';
     var t = String(e.title || '').trim();
-    var pub = fam === 'article' && where ? '' : String(e.publisher || '').trim(), pages = String(e.pages || '').trim();
+    var pub = (fam === 'article' && where) || ld.by === 'org' ? '' : String(e.publisher || '').trim(), pages = String(e.pages || '').trim();
     var pp = where && /\d/.test(pages) ? (/^(pp?\.)/i.test(pages) ? pages : (/[-–]/.test(pages) ? 'pp. ' : 'p. ') + pages) : '';
-    // an article's pages follow its journal; a chapter's follow the book's publisher
-    var after = fam === 'article' && pp ? ', ' + pp : '';
-    if (part) {
-      var q = '‘' + t + '’';
-      if (where) {
-        var lead = fam === 'chapter' ? ', in ' : ', ';
-        add(q + lead + where + after, esc(q + lead) + '<i>' + esc(where) + '</i>' + esc(after));
-      } else add(q);
-    } else add(t, '<i>' + esc(t) + '</i>');
+    // an article's pages follow its journal, a newspaper piece's its title; a chapter's follow the book's publisher
+    var after = (fam === 'article' || ld.by === 'publication') && pp ? ', ' + pp : '';
+    // the publication that leads is not said again
+    var shown = ld.by === 'publication' ? '' : where;
+    var tT, tH, wT = '', wH = '';
+    if (part) { tT = '‘' + t + '’'; tH = esc(tT); } else { tT = t; tH = '<i>' + esc(t) + '</i>'; }
+    if (part && shown) {
+      // a chapter: in, its editors where known, and the book
+      var eds = fam === 'chapter' ? editorsText(e) : '', lead = fam === 'chapter' ? 'in ' + (eds ? eds + ' ' : '') : '';
+      wT = lead + shown + after; wH = esc(lead) + '<i>' + esc(shown) + '</i>' + esc(after);
+    } else if (after) { wT = after.slice(2); wH = esc(wT); }
+    if (ld.by === 'title') {
+      // no one to lead: the title, then the year, then where it appeared
+      add(tT + ' ' + yr, tH + ' ' + esc(yr));
+      if (wT) add(wT, wH);
+    } else {
+      add(ld.text + ' ' + yr);
+      add(tT + (wT ? (ld.by === 'publication' ? ', ' : ', ') + wT : ''), tH + (wH ? ', ' + wH : ''));
+    }
     var tail = [];
     if (pub) tail.push(pub);
     if (pp && !after) tail.push(pp);
     var doi = String(e.doi || '').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
     var link = doi ? 'https://doi.org/' + doi : String(e.url || '').trim();
     function join(xs) {
-      var s = xs[0] + ' ' + stop(xs[1]);
+      var s = xs.length > 1 ? xs[0] + ' ' + stop(xs[1]) : stop(xs[0]);
       return tail.length ? s + ' ' + stop(tail.join(', ')) : s;
     }
-    var text = join(plain), html = esc(plain[0]) + ' ' + rich[1] + (/[.?!]['’"”]?$/.test(plain[1]) ? '' : '.') + (tail.length ? ' ' + esc(stop(tail.join(', '))) : '');
+    var dot = function (s) { return /[.?!]['’"”]?$/.test(s) ? '' : '.'; };
+    var text = join(plain), html = (plain.length > 1 ? rich[0] + ' ' + rich[1] + dot(plain[1]) : rich[0] + dot(plain[0])) + (tail.length ? ' ' + esc(stop(tail.join(', '))) : '');
     if (link) { text += ' ' + link; html += ' ' + (/^https?:\/\//i.test(link) ? '<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + esc(link) + '</a>' : esc(link)); }
     return { text: text, html: html };
   };
