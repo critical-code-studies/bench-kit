@@ -821,7 +821,12 @@
                     vl.querySelector('[data-libview="gallery"]').click();
                     var galRows = vl.querySelectorAll('.lib-gal-r'), galPane = vl.querySelector('.lib-gal-pane');
                     T.eq('the gallery: the works in a list, the first chosen', [galRows.length > 1, galRows[0].classList.contains('on')], [true, true]);
+                    var N0 = SW.notes, cf0 = N0.configured, ls0 = N0.list, asked = [];
+                    N0.configured = function () { return true; }; N0.list = function (v) { asked.push(v); return Promise.resolve([]); };
                     galRows[1].click();
+                    N0.configured = cf0; N0.list = ls0;
+                    var ahead = [].slice.call(galRows, 2, 7).map(function (r) { return 'item:' + r.dataset.gsel; }).concat(['item:' + galRows[0].dataset.gsel]);
+                    T.eq('the works ahead (five after, two before) are asked for before they are reached', ahead.filter(function (v) { return asked.indexOf(v) < 0; }), []);
                     T.eq('choosing another marks it', vl.querySelector('.lib-gal-r.on').dataset.gsel, galRows[1].dataset.gsel);
                     vl.querySelector('.lib-gal-list').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
                     T.eq('and the arrow keys move through them', vl.querySelector('.lib-gal-r.on').dataset.gsel, galRows[0].dataset.gsel);

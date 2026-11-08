@@ -1284,7 +1284,11 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-loan-oth { flex-basis: 100%; }
 .lib-copies { display: inline-flex; gap: 6px; align-items: center; margin-left: 6px; }
 .lib-rec { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 14px; margin: 0 0 12px; font-size: 14px; }
-.lib-rec dt { color: var(--text-faint); }
+.lib-rec dt { color: color-mix(in srgb, var(--beam, #3d63ad) 45%, var(--text-faint)); }
+/* a work's box: the title in a lighter band, and the notes on a ground of their own */
+.lib-dlg .tray-bighead { margin: -12px -16px 12px; padding: 11px 16px; border-bottom: 1px solid var(--line); border-radius: 8px 8px 0 0; background: light-dark(color-mix(in srgb, var(--surface) 45%, #fff), color-mix(in srgb, var(--text) 9%, var(--surface))); }
+.lib-pane.lib-dlg .tray-bighead { margin: -10px -14px 12px; padding: 10px 14px; }
+.lib-dlg .lib-side { padding: 10px 12px; border-radius: 8px; background: light-dark(color-mix(in srgb, var(--surface-2) 60%, var(--surface)), color-mix(in srgb, var(--text) 4%, var(--surface))); align-self: start; }
 .lib-rec dd { margin: 0; }
 .lib-frame { width: 100%; height: 72vh; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
 .lib-img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
@@ -1312,7 +1316,9 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-gal { display: grid; grid-template-columns: minmax(220px, 32%) minmax(0, 1fr); gap: 12px; height: calc(var(--lib-vh, 100vh) - var(--lib-top, 0px) - 24px); min-height: 360px; }
 .lib-gal-list { overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); outline: none; }
 .lib-gal-list:focus-visible { outline: 2px solid var(--beam, var(--accent, #3d63ad)); outline-offset: 1px; }
-.lib-gal-r { display: flex; gap: 9px; align-items: flex-start; padding: 7px 10px; border-bottom: 1px solid var(--line-soft, var(--line)); cursor: pointer; }
+.lib-gal-r { display: flex; gap: 9px; align-items: flex-start; padding: 7px 10px; border-bottom: 1px solid var(--line-soft, var(--line)); cursor: pointer; content-visibility: auto; contain-intrinsic-size: auto 56px; }
+/* where the next part of a long library is drawn: a line's height, across the whole shelf */
+.lib-more { grid-column: 1 / -1; height: 1px; }
 .lib-gal-r:hover { background: var(--surface-2); }
 .lib-gal-r.on { background: color-mix(in srgb, var(--beam, #3d63ad) 18%, var(--surface)); box-shadow: inset 3px 0 0 var(--beam, #3d63ad); }
 .lib-gal-g { flex: 0 0 16px; width: 16px; height: 16px; margin-top: 2px; fill: none; stroke: var(--text-dim); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -1586,6 +1592,12 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-stand { position: relative; display: flex; align-items: flex-end; justify-content: center; height: calc(var(--ch) + 12px); padding: 0 14px; border-bottom: 3px solid color-mix(in srgb, var(--text) 26%, transparent); }
 .lib-cover, .lib-thumb { box-sizing: border-box; width: var(--cw); height: var(--ch); border-radius: 2px 3px 3px 2px; box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.28), 3px 4px 9px rgba(0, 0, 0, 0.18); transition: transform 0.12s ease; }
 .lib-stand .lib-thumb { position: absolute; bottom: 0; left: 50%; margin-left: calc(var(--cw) / -2); object-fit: cover; background: #fff; }
+/* a cover's image fades in when it has come; the drawn cover shows until then, and stays if it does not come */
+.lib-thumb { opacity: 0; transition: opacity 0.25s ease; }
+.lib-thumb.lib-in { opacity: 1; }
+.lib-thumb.lib-gone, .lib-boxcover.lib-gone { display: none; }
+.lib-boxcover { aspect-ratio: auto 2 / 3; background: var(--surface-2); opacity: 0.35; transition: opacity 0.25s ease; }
+.lib-boxcover.lib-in { opacity: 1; background: #fff; }
 .lib-tile:hover .lib-cover, .lib-tile:hover .lib-thumb, .lib-tile:focus-visible .lib-cover, .lib-tile:focus-visible .lib-thumb { transform: translateY(-5px); }
 .lib-tile:focus-visible { outline: 2px solid var(--beam); outline-offset: 2px; }
 .lib-cap { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px 0; min-width: 0; }

@@ -1,5 +1,12 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A long library drawn a part at a time** (David): the covers and the list draw the first 150 works, and the next 150 as the reader comes within two screens of the end, instead of every work at once (Melville's 3,929 were all drawn on opening); the gallery's rows off screen are not laid out until near.
+- **Covers show at once** (David): a cover's image fades in when it has come, the drawn cover (its kind, title and author) standing until then, and in place of one that does not come; in a work's box the cover's place is held, on the paper's colour, until it arrives.
+- **Colour in a work's box** (David): the title in a lighter band with a rule under it, the record's labels in a muted tint of the theme's accent, and the notes on a shaded ground of their own; in light and dark themes, in the dialog and in the gallery's pane.
+- **The gallery reads ahead** (David): when a work is shown, the five after it and the two before are asked of the group, and their covers fetched, so their notes, ratings and reactions are there when the pane reaches them; with the arrow keys the row moves at once and the pane follows when the keys rest (120 ms), so holding a key does not build every box on the way.
+
 ## 1.8.21 (2026-11-08)
 
 - **The Library's head on one line** (David): the Library and To read tabs and the toolbar share a line where the window has room, under one rule, and wrap to two only when it is narrow.

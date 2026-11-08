@@ -1133,6 +1133,31 @@
     }, function (e) { box.innerHTML = '<p class="pad badge err">' + esc(e.message) + '</p>'; });
   }
   function setting(key, name, v) { F[key] = v; SW.store.set('library.' + name, v); }
+  // a cover's image shows once it has come; until then, or if it never does, the drawn cover under it stands
+  document.addEventListener('load', function (ev) { var t = ev.target; if (t && t.classList && (t.classList.contains('lib-thumb') || t.classList.contains('lib-boxcover'))) t.classList.add('lib-in'); }, true);
+  document.addEventListener('error', function (ev) { var t = ev.target; if (t && t.classList && (t.classList.contains('lib-thumb') || t.classList.contains('lib-boxcover'))) t.classList.add('lib-gone'); }, true);
+  // the works drawn at a time, and the watcher that draws the next when the end of those comes within two screens
+  var CHUNK = 150, MOREIO = null;
+  function moreOnScroll(view, box, rs, fn) {
+    if (MOREIO) { MOREIO.disconnect(); MOREIO = null; }
+    var s = SW.$('.lib-more', box), at = CHUNK; if (!s) return;
+    var more = function () {
+      var next = rs.slice(at, at + CHUNK); at += next.length;
+      s.insertAdjacentHTML('beforebegin', next.map(fn).join(''));
+      if (at >= rs.length) { if (MOREIO) MOREIO.disconnect(); MOREIO = null; s.remove(); }
+      paintCounts(view);
+    };
+    if (!root.IntersectionObserver) { while (at < rs.length) more(); return; }
+    var scroller = /auto|scroll/.test(getComputedStyle(view).overflowY) ? view : null;
+    MOREIO = new IntersectionObserver(function (es) {
+      if (!es.some(function (x) { return x.isIntersecting; })) return;
+      more();
+      // still in reach after a part is added (a tall window): look again
+      if (MOREIO) { MOREIO.unobserve(s); MOREIO.observe(s); }
+    }, { root: scroller, rootMargin: '0px 0px 200% 0px' });
+    MOREIO.observe(s);
+  }
+  L.chunk = function () { return CHUNK; };
   function wideLib() { return !root.matchMedia || root.matchMedia('(min-width: 860px)').matches; }
   function list(view) {
     var box = SW.$('.lib-list', view); if (!box) return;
@@ -1163,7 +1188,9 @@
     box.classList.toggle('lib-shelf', icons);
     ['s', 'm', 'l'].forEach(function (z) { box.classList.toggle('lib-' + z, icons && F.size === z); });
     var zs = SW.$('.lib-sizes', view); if (zs) zs.hidden = !icons;
-    box.innerHTML = rs.length ? rs.map(icons ? tile : row).join('') : '<p class="hint pad">Nothing in the library answers the search.</p>';
+    // a long library is drawn a part at a time: the first works now, the next as the reader nears the end
+    box.innerHTML = rs.length ? rs.slice(0, CHUNK).map(icons ? tile : row).join('') + (rs.length > CHUNK ? '<div class="lib-more" aria-hidden="true"></div>' : '') : '<p class="hint pad">Nothing in the library answers the search.</p>';
+    moreOnScroll(view, box, rs, icons ? tile : row);
     var n = SW.$('.lib-n', view); if (n) n.textContent = rs.length + ' of ' + L.items().length;
     paintCounts(view);
   }
@@ -1186,13 +1213,29 @@
     var n = SW.$('.lib-n', view); if (n) n.textContent = gs.length + ' of ' + L.items().length;
     if (GSEL) galShow(view, GSEL);
   }
+  // the row moves at once; with the keys, the pane follows when they rest, so a held key does not build every box it passes
+  var GTIMER = null;
   function galShow(view, id, scroll) {
     var pane = SW.$('.lib-gal-pane', view); if (!pane) return;
     GSEL = id;
     SW.$$('.lib-gal-r', view).forEach(function (r) { var on = r.dataset.gsel === id; r.classList.toggle('on', on); r.setAttribute('aria-selected', String(on)); if (on && scroll) r.scrollIntoView({ block: 'nearest' }); });
     if (pane.dataset.shown === id) return;
-    pane.dataset.want = id; pane.dataset.shown = id;
-    L.open(id, { into: pane });
+    pane.dataset.want = id;
+    clearTimeout(GTIMER);
+    var go = function () { if (pane.dataset.want !== id) return; pane.dataset.shown = id; L.open(id, { into: pane }); galAhead(view, id); };
+    if (scroll) GTIMER = setTimeout(go, 120); else go();
+  }
+  // the five works after the one shown, and the two before, asked of the group and their covers fetched, so the
+  // pane has them when it gets there; the notes are kept for the session as any work's are (SW.notes.list)
+  var AHEAD = {};
+  function galAhead(view, id) {
+    var N = itemNotes(), ids = SW.$$('.lib-gal-r', view).map(function (r) { return r.dataset.gsel; }), i = ids.indexOf(id);
+    if (i < 0) return;
+    ids.slice(i + 1, i + 6).concat(ids.slice(Math.max(0, i - 2), i)).forEach(function (c) {
+      if (N && N.list && N.configured()) N.list('item:' + c).catch(function () {});
+      var e = byId(c);
+      if (e && e.thumb && e.thumb !== e.file && !AHEAD[c]) { AHEAD[c] = 1; var im = new Image(); im.referrerPolicy = 'no-referrer'; im.src = e.thumb; }
+    });
   }
   L.gallery = function () { return GSEL; };
   function canRate() { var N = itemNotes(); return !!(N && N.configured()); }
