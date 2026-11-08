@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **The gallery's pane at narrower widths** (kuki-bench's report): the box's columns follow the pane's width, so Notes go under the record until the pane is 820 px wide, and the cover goes above the citation below 480 px; at 1024 px the citation had been squeezed to about one word a line.
+
 ## 1.8.19 (2026-11-08)
 
 - **The Library's tabs pinned** (David): Library and To read stay at the top with the toolbar as the list scrolls.

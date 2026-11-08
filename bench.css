@@ -1316,6 +1316,11 @@ ul.reading a { overflow-wrap: anywhere; }
 .lib-gal-t span { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lib-gal-pane { overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 10px 14px; }
 .lib-pane [data-x] { display: none; }
+/* in the pane, the box's columns follow the pane's width, not the window's: notes go under the record until there is room */
+.lib-gal-pane { container: libpane / inline-size; }
+.lib-pane .lib-cols { grid-template-columns: minmax(0, 1fr); }
+@container libpane (min-width: 820px) { .lib-pane .lib-cols { grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); } }
+@container libpane (max-width: 480px) { .lib-pane .lib-head { flex-direction: column; } .lib-pane .lib-head-t { width: 100%; } .lib-pane .lib-boxcover { width: 110px; max-height: 170px; } }
 @media (max-width: 700px) { .lib-gal { grid-template-columns: minmax(0, 1fr); grid-template-rows: 38% 62%; } }
 /* the funnel on the bar shows and hides the filters, so the column's own button is not needed */
 .lib-ftoggle { display: none; }
