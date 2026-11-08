@@ -40,6 +40,8 @@
       T.eq('by kind', ids('kind'), 'bdac');
       T.eq('by language, those without last', ids('lang'), 'dbca');
       T.eq('as listed', ids('listed'), 'abcd');
+      var eds = es.concat([{ id: 'e', title: 'A Reader', contributor: 'eds C. Pine, D. Elm; translated by E. Ash', date: '2000', kind: 'book' }]);
+      T.eq('an edited volume with no author files under its first editor', [L.sortName(eds[4]), L.sorted(eds, 'author').map(function (e) { return e.id; }).join('')], ['Pine', 'dbeac']);
       T.eq('the entries themselves left in their order', es[0].id, 'a');
       function cite(e) { return L.citation(e).text; }
       T.eq('a citation: an article', cite({ title: 'On Time', author: 'Marc Peeters', date: '2017', kind: 'article', in: 'A Journal 2', publisher: 'A Press', pages: '145–157', url: 'https://example.org/a' }), 'Marc Peeters (2017) ‘On Time’, A Journal 2, pp. 145–157. https://example.org/a');
@@ -63,9 +65,12 @@
       var ex = [{ id: 'X-1', kind: 'article', title: 'The {Big} Idea', author: 'Weizenbaum, Joseph; Berry, David M.', date: '1966-01', in: 'Communications of the ACM', pages: '36–45', doi: '10.1145/365153.365168', url: 'https://example.org', tags: ['ELIZA', 'High'] }, { id: 'X-2', kind: 'oddity', title: 'Bare', author: 'Weizenbaum, Joseph', date: '1966' }];
       var kx = [{ id: 'K-1', kind: 'translation', title: 'The Structure of Iki', author: 'Kuki, Shūzō 九鬼周造', contributor: 'eds 天野貞祐 Amano Teiyū, 澤瀉久敬 Omodaka Hisayuki; translated by Takeshi Morisato; foreword by Ann Other', extent: '331 p.; 23 cm', date: '2015' }];
       var kris = L.toRIS(kx), kbib = L.toBibTeX(kx);
-      T.yes('RIS: the romanised name, editors, a translator, other roles in a note, a page count, a book', /AU  - Kuki, Shūzō\r\n/.test(kris) && /ED  - Amano Teiyū\r\nED  - Omodaka Hisayuki/.test(kris) && /A4  - Takeshi Morisato/.test(kris) && /N1  - With Ann Other/.test(kris) && /SP  - 331/.test(kris) && /TY  - BOOK/.test(kris));
+      T.yes('RIS: the romanised name, editors, a translator, other roles in a note, a page count, a book', /AU  - Kuki, Shūzō\r\n/.test(kris) && /ED  - Amano Teiyū\r\nED  - Omodaka Hisayuki/.test(kris) && /A4  - Takeshi Morisato/.test(kris) && /N1  - With foreword by Ann Other/.test(kris) && /SP  - 331/.test(kris) && /TY  - BOOK/.test(kris));
       T.yes('BibTeX: editor, translator, pagetotal', /editor = \{Amano Teiyū and Omodaka Hisayuki\}/.test(kbib) && /translator = \{Takeshi Morisato\}/.test(kbib) && /pagetotal = \{331\}/.test(kbib) && /@book\{/.test(kbib));
       T.eq('Surname, Given holds after a role', L.rolesOf({ contributor: 'ed. Smith, John' }).editor, ['Smith, John']);
+      var fam = L.rolesOf({ contributor: 'eds Amano, Teiyū 天野貞祐; Omodaka, Hisayuki; translated by Graham Parkes; introduction by Graham Parkes; annotations and commentary (注解・解説) by Obama Yoshinobu' });
+      T.eq('family name first, one to a segment; other roles kept whole; no empty brackets', fam, { editor: ['Amano, Teiyū', 'Omodaka, Hisayuki'], translator: ['Graham Parkes'], other: ['introduction by Graham Parkes', 'annotations and commentary by Obama Yoshinobu'] });
+      T.yes('a parallel text exports as a book', /TY  - BOOK/.test(L.toRIS([{ id: 'P-1', kind: 'parallel text', title: 'P' }])));
       var ris = L.toRIS(ex);
       T.yes('RIS: type, authors, journal, pages, DOI, tags and code', /TY  - JOUR/.test(ris) && /AU  - Weizenbaum, Joseph\r\nAU  - Berry, David M\./.test(ris) && /JO  - Communications of the ACM/.test(ris) && /SP  - 36\r\nEP  - 45/.test(ris) && /DO  - 10\.1145/.test(ris) && /KW  - ELIZA/.test(ris) && !/KW  - High/.test(ris) && /ID  - X-1/.test(ris) && /TY  - GEN/.test(ris));
       var bib = L.toBibTeX(ex);

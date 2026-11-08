@@ -369,12 +369,19 @@
       .forEach(function (id, i) { KADD[id] = top + i + 1; });
     return moved;
   }
+  // the name a work files under: its first author's surname, or, for an edited volume with no author, its first editor's
+  L.sortName = function (e) {
+    var s = L.surname(e && e.author);
+    if (s || !e || !e.contributor) return s;
+    var ed = rolesOf(e).editor[0];
+    return ed ? L.surname(ed) : '';
+  };
   L.sorted = function (items, order) {
     var byTitle = function (a, b) { return AZ(titleKey(a.title), titleKey(b.title)); };
     // what has no value for this order goes after what has
     function by(key, then) { return function (a, b) { var x = key(a), y = key(b); if (!x !== !y) return x ? -1 : 1; return (x && AZ(x, y)) || then(a, b); }; }
     function byYear(sign) { return function (a, b) { var x = L.year(a.date), y = L.year(b.date); if ((x == null) !== (y == null)) return x == null ? 1 : -1; return (x == null ? 0 : sign * (x - y)) || byTitle(a, b); }; }
-    var byAuthor = by(function (e) { return L.surname(e.author); }, byYear(1));
+    var byAuthor = by(L.sortName, byYear(1));
     var fn = order === 'title' ? byTitle : order === 'new' ? byYear(-1) : order === 'old' ? byYear(1) :
       order === 'kind' ? by(function (e) { return e.kind; }, byTitle) : order === 'lang' ? by(function (e) { return e.lang; }, byTitle) :
       order === 'author' ? byAuthor :
@@ -733,7 +740,7 @@
   function catDrawers(rs) {
     var by = catBy(), cards = [];
     if (by === 'subject') rs.forEach(function (e) { var ts = plainTags(e); (ts.length ? ts : ['No subject']).forEach(function (t) { cards.push({ e: e, k: t, tab: t }); }); });
-    else rs.forEach(function (e) { var who = L.surname(e.author) || ''; cards.push({ e: e, k: by === 'title' ? titleKey(e.title) : who || titleKey(e.title), tab: by === 'title' ? titleKey(e.title) : who || e.title }); });
+    else rs.forEach(function (e) { var who = L.sortName(e) || ''; cards.push({ e: e, k: by === 'title' ? titleKey(e.title) : who || titleKey(e.title), tab: by === 'title' ? titleKey(e.title) : who || e.title }); });
     if (by === 'relevance') {
       var groups = {}, order = ['key'].concat(RELEVANCE, ['none']);
       cards.forEach(function (c) { var g = keyOf(c.e) < Infinity ? 'key' : relOf(c.e) || 'none'; (groups[g] = groups[g] || []).push(c); });
@@ -1191,11 +1198,13 @@
   function exportName(n) {
     n = String(n || '').trim();
     if (!/[A-Za-z\u00c0-\u024f]/.test(n)) return n;
-    return n.replace(/[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef\u3000-\u303f]+/g, ' ').replace(/\s+,/g, ',').replace(/\s{2,}/g, ' ').replace(/^[\s,]+|[\s,]+$/g, '');
+    return n.replace(/[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef\u3000-\u303f]+/g, ' ').replace(/[(\[]\s*[)\]]/g, ' ').replace(/\s+,/g, ',').replace(/\s{2,}/g, ' ').replace(/^[\s,]+|[\s,]+$/g, '');
   }
   function authorsOf(e) { return String(e.author || '').split(/\s*;\s*|\s+and\s+|\s*&\s*/).map(exportName).filter(Boolean); }
   // contributor as "eds A B, C D; translated by E F": editors, translators, and others, by the words before them.
-  // Names after a role are split at commas only where each piece has a space in it, so "Surname, Given" holds
+  // Names after a role are split at commas only where each piece has a space in it, so "Surname, Given" holds.
+  // A segment with no role word carries on the role before it: "eds Amano, Teiyū; Omodaka, Hisayuki" is two editors,
+  // family name first. Any other role ("introduction by X", "complementary essay by X") goes whole into the note
   function splitNames(s) {
     return s.split(/\s*,?\s+and\s+|\s*&\s*|\s*;\s*/).reduce(function (all, part) {
       var bits = part.split(/\s*,\s*/);
@@ -1203,14 +1212,17 @@
     }, []).map(exportName).filter(Boolean);
   }
   function rolesOf(e) {
-    var out = { editor: [], translator: [], other: [] };
+    var out = { editor: [], translator: [], other: [] }, last = 'other';
     String(e.contributor || '').split(/\s*;\s*/).forEach(function (seg) {
       seg = seg.trim(); if (!seg) return;
-      var m, role = 'other';
+      var m, role = null;
       if ((m = /^(?:eds?\.?|editors?|edited)(?:\s+by)?\s+/i.exec(seg))) role = 'editor';
       else if ((m = /^(?:trans(?:\.|lated)?|translators?|tr\.)(?:\s+by)?\s+/i.exec(seg))) role = 'translator';
-      else m = /^(?:foreword|introduction|preface|afterword|notes)(?:\s+by)?\s+/i.exec(seg);
-      splitNames(m ? seg.slice(m[0].length) : seg).forEach(function (n) { out[role].push(n); });
+      if (role) { last = role; splitNames(seg.slice(m[0].length)).forEach(function (n) { out[role].push(n); }); return; }
+      var other = /^(?:foreword|introduction|preface|afterword|notes|commentary|annotations?)\b/i.test(seg) || /^\S+(?:\s+\S+){0,4}?\s+by\s+\S/i.test(seg);
+      if (!other && last !== 'other') { splitNames(seg).forEach(function (n) { out[last].push(n); }); return; }
+      last = 'other';
+      var note = exportName(seg); if (note) out.other.push(note);
     });
     return out;
   }
@@ -1219,7 +1231,7 @@
   function pageCount(e) { var m = /(\d+)\s*(?:p\b|pp\b|pages\b)/i.exec(String(e.extent || '')) || /^\s*(\d+)/.exec(String(e.extent || '')); return m ? m[1] : ''; }
   function risType(e) {
     var k = String(e.kind || '').toLowerCase().trim();
-    return { book: 'BOOK', edition: 'BOOK', monograph: 'BOOK', translation: 'BOOK', thesis: 'THES', dissertation: 'THES', chapter: 'CHAP', article: 'JOUR', review: 'JOUR', preprint: 'UNPB', magazine: 'MGZN', news: 'NEWS', newspaper: 'NEWS', 'web page': 'ELEC', web: 'ELEC', website: 'ELEC', blog: 'BLOG', film: 'VIDEO', video: 'VIDEO', documentary: 'VIDEO', podcast: 'SOUND', audio: 'SOUND', talk: 'SOUND', report: 'RPRT', conference: 'CPAPER', encyclopaedia: 'ENCYC', encyclopedia: 'ENCYC' }[k] || 'GEN';
+    return { book: 'BOOK', edition: 'BOOK', monograph: 'BOOK', translation: 'BOOK', 'parallel text': 'BOOK', 'edited volume': 'BOOK', anthology: 'BOOK', thesis: 'THES', dissertation: 'THES', chapter: 'CHAP', article: 'JOUR', review: 'JOUR', preprint: 'UNPB', magazine: 'MGZN', news: 'NEWS', newspaper: 'NEWS', 'web page': 'ELEC', web: 'ELEC', website: 'ELEC', blog: 'BLOG', film: 'VIDEO', video: 'VIDEO', documentary: 'VIDEO', podcast: 'SOUND', audio: 'SOUND', talk: 'SOUND', report: 'RPRT', conference: 'CPAPER', encyclopaedia: 'ENCYC', encyclopedia: 'ENCYC' }[k] || 'GEN';
   }
   function pagesOf(e) { var m = /(\d+)\s*[-–]\s*(\d+)/.exec(String(e.pages || '')); return m ? [m[1], m[2]] : null; }
   L.toRIS = function (es) {

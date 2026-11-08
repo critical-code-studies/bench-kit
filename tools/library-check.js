@@ -8,6 +8,7 @@
  *
  *   node research/kit/tools/library-check.js                      research/library/library.json, as release finds it
  *   node research/kit/tools/library-check.js FILE [FILE...]        library.json, additions.json, catalogue.json
+ *   node research/kit/tools/library-check.js --dir DIR             the library.json in a bench's folder (or give the folder)
  *   node research/kit/tools/library-check.js FILE --checked ID,ID  clear the mark on these, once looked at
  *   --quiet                                                        a count only (the release tool uses this)
  *
@@ -42,9 +43,11 @@ function main() {
   const argv = process.argv.slice(2);
   const flag = (f) => { const i = argv.indexOf(f); if (i < 0) return null; argv.splice(i, 1); return true; };
   const opt = (f) => { const i = argv.indexOf(f); if (i < 0) return null; const v = argv[i + 1]; argv.splice(i, 2); return v; };
-  const QUIET = flag('--quiet'), CHECKED = opt('--checked');
-  let files = argv.length ? argv : [fs.existsSync('research/library/library.json') ? 'research/library/library.json' : 'library/library.json'];
-  files = files.filter((f) => fs.existsSync(f));
+  const QUIET = flag('--quiet'), CHECKED = opt('--checked'), DIR = opt('--dir');
+  // a folder stands for the library.json in it, wherever a bench keeps it
+  const inDir = (d) => ['research/library/library.json', 'library/library.json', 'library.json'].map((p) => path.join(d, p)).filter((p) => fs.existsSync(p))[0] || null;
+  let files = argv.length ? argv : [DIR || '.'];
+  files = files.map((f) => (fs.existsSync(f) && fs.statSync(f).isDirectory() ? inDir(f) : f)).filter((f) => f && fs.existsSync(f));
   if (!files.length) { if (!QUIET) console.log('library-check: no library.json here; give the files to read.'); return; }
   let total = 0;
   files.forEach((f) => {

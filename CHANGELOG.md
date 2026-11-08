@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Export fixes** (kuki-bench's report): in `contributor`, a segment with no role word carries on the role before it, so editors and translators can be written family name first, one to a segment (`eds Amano, Teiyū; Omodaka, Hisayuki`); a role with no export field (introduction, essay, commentary) goes whole into the note instead of losing its words, and is not split at "and"; bracketed original script leaves no empty brackets; `parallel text`, `edited volume` and `anthology` export as books; `library-check.js --dir DIR`, or a folder given in place of a file, reads that bench's `library.json`.
+- **Edited volumes sort by their editors** (ELIZA's report): a work with no author and editors in `contributor` files under its first editor in Author order, By relevance, To read and the card catalogue, instead of with the works that have no name. Call numbers are unchanged.
 ## 1.8.16 (2026-11-08)
 
 - **To read cards** (David, 2026-11-08): ordered by author unless the reader chooses, so a card stays put when it is renewed; each card has its own paper, creams and buffs a shade apart and now and then an orange one, and a card in heavy use yellows and darkens at the edges; each line has its own pen and stamp ink, kept with its check-out and sent with it to the group, and a card's paper and age are kept once chosen, so they stay the same (David); a full card does not grow: a white sticker goes over the old lines, faintly showing them, and clicking it shows every line; a crossed-out line fades in its own ink, not grey; a work due back within seven days, or overdue, is stamped on its card, and in What's new is an alert kept at the top (David); the head reads "Library: ELIZA" on one line; lines crossed out fade; renewing and returning are behind the bookmark, with the due date beside it, as in a work's box.
