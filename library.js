@@ -163,7 +163,7 @@
     return man;
   }
   function readAdds() {
-    return currentAdds().then(function (c) { return setAdds(c.items); }, function (e) { man.addErr = e.message; addRead = true; return man; });
+    return currentAdds().then(function (c) { return setAdds(c.items); }, function (e) { man.addErr = e.message; man.addStatus = e.status || 0; addRead = true; return man; });
   }
   // a change made on the newest copy, and made again if someone saved in between
   function saveAdds(message, change, tries) {
@@ -522,6 +522,25 @@
     var cur = onLoan(e.id); if (!cur) return '';
     return '<span class="lib-due" title="On your To read shelf' + (cur.due ? ', due back ' + esc(cur.due) : ', with no return date') + '">' + (cur.due ? 'DUE ' + dueShort(cur.due) : 'ON LOAN') + '</span>';
   }
+  // What's new: works due back within the week, and those gone back in the last week
+  function plusDays(day, n) { var d = new Date((day || today()) + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+  L.dueNews = function () {
+    sweepLoans();
+    var t = today(), soon = plusDays(t, 7), since = plusDays(t, -7), l = loans(), out = [];
+    Object.keys(l).forEach(function (c) {
+      var h = l[c] || [], cur = onLoan(c), last = h[h.length - 1], e = byId(c), name = e ? e.title : c;
+      var line = function (head, day) { return { day: day, html: '<div class="news-item news-due"><div class="news-meta"><b>' + head + '</b> · <button class="news-due-w" data-newslib="' + esc(c) + '">' + esc(name) + '</button></div></div>' }; };
+      if (cur && cur.due && cur.due <= soon) out.push(line(cur.due < t ? 'Overdue' : 'Due back ' + dueShort(cur.due), cur.due));
+      else if (!cur && last && last.back && last.due && last.back === last.due && last.back >= since) out.push(line('Gone back to the library ' + dueShort(last.back), last.back));
+    });
+    return out.sort(function (a, b) { return a.day < b.day ? -1 : 1; });
+  };
+  if (SW.notes && SW.notes.addNewsSource) {
+    SW.notes.addNewsSource(L.dueNews);
+    // the titles come with the list: read it once if there are loans to tell of
+    if (Object.keys(loans()).length) L.load().then(function () { SW.notes.paintNews(); }, function () {});
+  }
+  document.addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('[data-newslib]'); if (b) L.open(b.dataset.newslib); });
   // the card in the book's pocket, after the old library cards
   function cardOf(e) {
     var h = (loans()[e.id] || []).concat(OTH[e.id] || []).sort(function (a, b) { return a.out < b.out ? -1 : a.out > b.out ? 1 : 0; }), cur = onLoan(e.id), lines = h.slice(-10).map(function (r) {
@@ -956,7 +975,7 @@
           '<div class="lib-expmenu" hidden><span class="lib-loanst">Export what is shown</span><button class="btn ghost" data-exp="ris" title="Opens in Zotero, EndNote and Mendeley">Download RIS</button><button class="btn ghost" data-exp="bib">Download BibTeX</button><button class="btn ghost" data-exp="copybib" title="For Zotero’s Import from Clipboard">Copy BibTeX</button></div></span>' +
         '<button class="btn ghost lib-help" title="How the Library works" aria-label="How the Library works">?</button>' +
         '<span class="lib-n faint"></span></div>' +
-        (m.addErr ? '<p class="hint">The group’s additions could not be read: ' + esc(m.addErr) + '.</p>' : '') +
+        (m.addErr && SW.store.get('library.addErrHidden', '') !== tokenOf().slice(-6) ? '<p class="hint lib-adderr">' + (m.addStatus === 401 ? 'Works the group added are kept on GitHub, which no longer accepts the GitHub token saved in this browser; a new one in ⚙ Settings shows them.' : 'Works the group added could not be read: ' + esc(m.addErr) + '.') + ' <button class="btn ghost" data-hideadderr title="Until the token changes">Hide</button></p>' : '') +
         '<div class="lib-body"><div class="lib-facets"><button class="btn ghost lib-ftoggle" data-ftoggle aria-expanded="false">Filters</button><div class="lib-fbody"></div></div><div class="lib-list"></div></div></div>';
       list(view);
       L.canAdd().then(function (yes) {
@@ -994,6 +1013,7 @@
           if (ng && sec) { var nq = ng.dataset.at === 'q' ? ng.textContent : '', nat = ng.dataset.at; SW.notes.openItem(sec.dataset.code).then(function () { setTimeout(function () { var ds = SW.$$('dialog[open]'); SW.notes.itemGo(nat, nq, ds[ds.length - 1]); }, 800); }); return; }
           var zb = ev.target.closest('[data-libsize]'); if (zb) { setting('size', 'size', zb.dataset.libsize); SW.$$('[data-libsize]', view).forEach(function (b) { b.classList.toggle('on', b === zb); }); list(view); return; }
           var w = ev.target.closest('[data-libview]'); if (w) { setting('view', 'view', w.dataset.libview); SW.$$('[data-libview]', view).forEach(function (b) { b.classList.toggle('on', b === w); }); list(view); return; }
+          var he = ev.target.closest('[data-hideadderr]'); if (he) { SW.store.set('library.addErrHidden', tokenOf().slice(-6)); he.parentNode.remove(); return; }
           if (ev.target.closest('[data-mynotes]')) { ev.preventDefault(); showMyNotes(); return; }
           var lg = ev.target.closest('.lib-log > summary'); if (lg) { setTimeout(function () { LOGOPEN = lg.parentNode.open; }, 0); }
           var xm = SW.$('.lib-expmenu', view), xb = ev.target.closest('[data-export]');
@@ -1055,6 +1075,7 @@
         'A work linked on YouTube, Vimeo or the Internet Archive plays in the box. Where the group also holds a file, the file comes first and <b>▶ Play from…</b> opens the other. If an uploader has turned this off, the player says so, and the link above still goes to it.',
         '<b>For the group</b> means the group keeps a copy in its private repository. A member with a GitHub token (⚙ Settings) opens it here; anyone else sees the record and the link.',
         'A library card, and a card in the catalogue, turns over with <b>↻</b> to show the group’s notes on the work scribbled on its back, and <b>Add Annotation</b> there writes one. Without the group’s token it stays a draft in this browser.',
+        '<b>What’s new</b> lists works on your To read shelf due back within the week, and those that went back in the last week.',
         '<b>To read</b> is your own shelf. Check a work out from its box for one, two or three months, and it carries a due stamp on its cover. To read shows a library card for each, where you renew it, take the date away or return it; past its date it goes back. Below the cards, your reading log lists every work you have had out, with your rating, and <b>Your notes</b> opens the notes you have written on works in the library. It is kept in this browser. With the group’s Hypothesis token it follows you to your other browsers and the group’s members can see it, and a work’s card and box show who else in the group has it out.',
         'Members of the group set a work’s <b>relevance</b> with the drop-down in its box, which orders <b>By relevance</b> for the group, and add <b>tags</b> there, taking them off with ×. The tags are shared with the group, and <b>Filters</b> and the search read them.',
         'Members of the group mark a work as a <b>key work</b> in its box, and press again to take the mark off. The mark is shared with the group, and key works come first in By relevance.',

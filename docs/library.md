@@ -197,6 +197,8 @@ Each reader has a **To read** shelf, a part of the Library to attend to. A work 
 
 The cards come small, medium or large (**S M L**), and **☰** shows the shelf as a list with the same renewals. A card's code and title open the work. Each card's label, and the spine of a drawn book, carries a call number after the old shelf marks: the year, the author's initial and two figures from the next letters, and the title's first letter (`1966 W48e`). It is a guide to the shelf, not a classification.
 
+**What's new** lists the reader's works due back within the week, with Overdue for any past their date that the shelf has not yet sent back, and those that went back in the last week, each opening its work. They count in the What's new button, and readers with no token see them too.
+
 Loans are kept in the reader's browser. With the group's Hypothesis token they are also kept as annotations the group can read (`loan:out:<date>`, `loan:ext:<date>`, `loan:back`), so they follow the reader to other browsers. A loan made in a browser before the reader had a token is sent up, with its date, the first time they have one. A work's card then has a line for each member's loan of it, and its box says who in the group has it out and till when. A reader with no token sees only their own. `tools/library-snapshot.js` never publishes loans.
 
 ## For readers with no token

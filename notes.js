@@ -322,6 +322,12 @@
 
   // ---------- what's new: notes, replies and reactions by others since you last looked ----------
   var newsItems = [], newsAll = [];
+  // other parts of the bench add their own lines to What's new (the Library: works due back): each source
+  // returns [{ html }] when asked, and counts in the button
+  var newsSources = [];
+  N.addNewsSource = function (fn) { newsSources.push(fn); paintNews(); };
+  function extraNews() { var out = []; newsSources.forEach(function (fn) { try { out = out.concat(fn() || []); } catch (e) { /* a source that fails adds nothing */ } }); return out; }
+  N.paintNews = function () { paintNews(); };
   function newsSince() {
     var s = SW.store.get('notes.seen', '');
     return s || new Date(Date.now() - 7 * 864e5).toISOString();   // first visit: the last week
@@ -350,8 +356,9 @@
   function paintNews() {
     var n = SW.$('#news-n'), btn = SW.$('#btn-news');
     if (!n || !btn) return;
-    n.textContent = newsItems.length ? (newsItems.length > 99 ? '99+' : String(newsItems.length)) : '';
-    btn.classList.toggle('has-news', !!newsItems.length);
+    var ex = extraNews().length, all = newsItems.length + ex;
+    n.textContent = all ? (all > 99 ? '99+' : String(all)) : '';
+    btn.classList.toggle('has-news', !!all);
     btn.classList.toggle('has-mine', !!newsMine);
     btn.title = newsItems.length ? newsItems.length + ' new in the group’s annotations since ' + SW.fmtDate(newsSince()) + (newsMine ? '; ' + newsMine + ' answer' + (newsMine === 1 ? 's' : '') + ' you' : '') : 'What’s new in the group’s annotations';
   }
@@ -375,11 +382,12 @@
   N.showNews = function () {
     var body = SW.drawer('What’s new', '<p class="hint">Looking…</p>');
     N.news().then(function (items) {
-      if (!N.configured()) { body.innerHTML = '<p class="hint">Set the Hypothesis group and token in ⚙ to see what others have added.</p>'; return; }
+      var ex = extraNews(), exHTML = ex.length ? '<section class="news-extra">' + ex.map(function (x) { return x.html; }).join('') + '</section>' : '';
+      if (!N.configured()) { body.innerHTML = exHTML + '<p class="hint">Set the Hypothesis group and token in ⚙ to see what others have added.</p>'; return; }
       var byId = {};
       newsAll.forEach(function (n) { byId[n.id] = n; });
       var lines = items.map(function (n) { return newsLine(n, byId); });
-      body.innerHTML = '<p class="hint">Annotations, replies and reactions by others since ' + SW.esc(SW.fmtDate(newsSince())) + (SW.store.get('notes.seen', '') ? ', when you last marked them read' : ' (the last week; nothing has been marked read yet)') + '.</p>';
+      body.innerHTML = exHTML + '<p class="hint">Annotations, replies and reactions by others since ' + SW.esc(SW.fmtDate(newsSince())) + (SW.store.get('notes.seen', '') ? ', when you last marked them read' : ' (the last week; nothing has been marked read yet)') + '.</p>';
       var bar = SW.el('div', { class: 'toolbar', style: 'position:static;padding-left:0' });
       bar.appendChild(SW.el('button', { class: 'btn', title: 'Everything up to now counts as read; the count starts again from zero', onclick: function () {
         SW.store.set('notes.seen', new Date().toISOString());

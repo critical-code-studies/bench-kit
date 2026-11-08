@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- When GitHub no longer accepts the token saved in a browser, the Library says so in one small line (works the group added are kept there, and a new token shows them), with **Hide** until the token changes (David's report).
+- **Due dates in What's new** (David, 2026-11-08): works on the reader's To read shelf due back within the week, and those gone back in the last week, each opening its work, and counted in the button; for readers with no token too. `N.addNewsSource(fn)` lets any part of the bench add lines; `SW.library.dueNews()`.
+
 ## 1.8.12 (2026-11-08)
 
 - On the To read shelf, **Order** works, with Date due first, and the search box says it searches the shelf (David's report).

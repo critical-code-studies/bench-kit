@@ -806,6 +806,11 @@
                     vl.querySelector('[data-libview="icons"]').click();
                     SW.store.set('library.view', '');
                     vl.querySelector('.lib-card [data-ext="1"]').click();
+                    var nd = SW.library.dueNews().length;
+                    var cur0 = SW.library.onLoan('S-2'), was0 = cur0.due, d3 = new Date(); d3.setUTCDate(d3.getUTCDate() + 3); cur0.due = d3.toISOString().slice(0, 10);
+                    var dn0 = SW.library.dueNews();
+                    T.eq('What’s new: a work due back within the week', [nd, dn0.length, /Due back [A-Z]{3} \d+/.test(dn0[0] && dn0[0].html), /data-newslib="S-2"/.test(dn0[0] && dn0[0].html)], [0, 1, true, true]);
+                    cur0.due = was0;
                     T.eq('renewed: a second line, the first struck through, a month on', [vl.querySelectorAll('.lib-card tbody tr.lib-card-done').length, SW.library.onLoan('S-2').due], [1, plus(3)]);
                     vl.querySelector('.lib-card [data-ext="0"]').click();
                     T.eq('and with no date', [SW.library.onLoan('S-2').due, /NO DATE/.test(vl.querySelector('.lib-card').textContent)], [null, true]);
