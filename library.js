@@ -954,6 +954,11 @@
     L.items().forEach(function (e) { plainTags(e).forEach(function (w) { seen[w] = 1; }); });
     return Object.keys(seen).sort(AZ);
   }
+  // a work's level, as a small label in the lists: Essential to Minimal; nothing for one not yet checked
+  function relBadge(e) {
+    var r = relOf(e); if (!r || r === 'unchecked') return '';
+    return '<span class="lib-lvl lib-lvl-' + r + '" title="Relevance: ' + REL_NAMES[r] + '">' + REL_NAMES[r] + '</span>';
+  }
   function marksOf(e) { return ppBadge(e) + (keyOf(e) < Infinity ? '<span class="lib-key" title="A key work">Key<span class="lib-kw"> work</span></span>' : ''); }
   // a picture that will not load leaves the drawn cover under it
   function tile(e) {
@@ -969,7 +974,7 @@
   function row(e) {
     var pic = thumbOf(e);
     return '<button class="lib-row" data-lib="' + esc(e.id) + '"><span class="lib-mini lib-c-' + L.family(e) + '">' + (pic ? '<img class="lib-thumb" src="' + esc(pic) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : glyph(L.family(e))) + '</span>' +
-      '<span class="lib-t">' + marksOf(e) + esc(e.title) + dueStamp(e) + '</span><span class="lib-m">' + meta(e) + '</span>' +
+      '<span class="lib-t">' + marksOf(e) + esc(e.title) + dueStamp(e) + '</span><span class="lib-m">' + meta(e) + relBadge(e) + '</span>' +
       '<span class="lib-h ' + heldClass(e) + '">' + heldAs(e) + '</span></button>';
   }
   // ---------- facets ----------
@@ -1067,8 +1072,14 @@
     if (canRate() && s.who) { var m = myStars(s); return m ? 'Your rating: ' + stars(m) : 'You have not rated this'; }
     return (Math.round(s.avg * 10) / 10) + ' from ' + s.n + (s.n === 1 ? ' rating' : ' ratings');
   }
+  function rtOf(s) { return s ? '<span class="lib-rt" title="' + esc(starTitle(s)) + '" aria-label="' + starText(s).length + ' of 3 stars. ' + esc(starTitle(s)) + '">' + starText(s) + '</span>' : ''; }
   function paintRatings(view, r) {
     var box0 = SW.$('.lib-list', view); if (!box0) return;
+    // the gallery's rows, which carry their stars on the line under the title
+    SW.$$('[data-gsel]', box0).forEach(function (x) {
+      var at = SW.$('.lib-gal-m', x), old = SW.$('.lib-rt', x); if (old) old.remove();
+      if (at && r[x.dataset.gsel]) at.insertAdjacentHTML('beforeend', rtOf(r[x.dataset.gsel]));
+    });
     SW.$$('[data-lib]', box0).forEach(function (x) {
       var s = r[x.dataset.lib], stand = SW.$('.lib-stand', x), at = stand || SW.$('.lib-m', x), old = SW.$('.lib-rt', x);
       if (old) old.remove();
@@ -1201,7 +1212,7 @@
     var y = L.year(e.date), who = L.leadOf(e).by === 'title' ? '' : L.leadOf(e).text;
     return '<div class="lib-gal-r' + (e.id === GSEL ? ' on' : '') + '" role="option" aria-selected="' + (e.id === GSEL) + '" data-gsel="' + esc(e.id) + '">' +
       '<svg class="lib-gal-g" viewBox="0 0 24 24" aria-hidden="true">' + (GLYPH[L.family(e)] || GLYPH.article) + '</svg>' +
-      '<span class="lib-gal-t"><b>' + esc(e.title || e.id) + '</b><span>' + esc([who, y].filter(Boolean).join(', ')) + '</span></span></div>';
+      '<span class="lib-gal-t"><b>' + marksOf(e) + esc(e.title || e.id) + '</b><span class="lib-gal-m"><span class="lib-gal-w">' + esc([who, y].filter(Boolean).join(', ')) + '</span>' + relBadge(e) + rtOf(NR[e.id]) + '</span></span></div>';
   }
   function drawGallery(view, box) {
     var zg = SW.$('.lib-sizes', view); if (zg) zg.hidden = true;

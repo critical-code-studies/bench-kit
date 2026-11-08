@@ -827,6 +827,8 @@
                     N0.configured = cf0; N0.list = ls0;
                     var ahead = [].slice.call(galRows, 2, 7).map(function (r) { return 'item:' + r.dataset.gsel; }).concat(['item:' + galRows[0].dataset.gsel]);
                     T.eq('the works ahead (five after, two before) are asked for before they are reached', ahead.filter(function (v) { return asked.indexOf(v) < 0; }), []);
+                    var relRow = [].filter.call(galRows, function (r) { var e0 = SW.library.items().filter(function (x) { return x.id === r.dataset.gsel; })[0]; return e0 && (e0.relevance || '').match(/^(essential|high|medium|low|minimal|about|section|mention)$/i); })[0];
+                    T.yes('a work with a level shows it in its row', !relRow || !!relRow.querySelector('.lib-lvl'));
                     T.eq('choosing another marks it', vl.querySelector('.lib-gal-r.on').dataset.gsel, galRows[1].dataset.gsel);
                     vl.querySelector('.lib-gal-list').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
                     T.eq('and the arrow keys move through them', vl.querySelector('.lib-gal-r.on').dataset.gsel, galRows[0].dataset.gsel);

@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Rating, key work and level in the lists** (David): the gallery's rows show a work's Key Work mark, its stars and its level (Essential, High, Medium, Low, Minimal; nothing for Not Checked); the list view adds the level to what it already showed. Essential stands out in red, High in the theme's accent, the rest fainter.
+
 ## 1.8.22 (2026-11-08)
 
 - **A long library drawn a part at a time** (David): the covers and the list draw the first 150 works, and the next 150 as the reader comes within two screens of the end, instead of every work at once (Melville's 3,929 were all drawn on opening); the gallery's rows off screen are not laid out until near.
