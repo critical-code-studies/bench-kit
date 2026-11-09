@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.29 (2026-11-09)
 
 - **A Glossary that tells renderings apart by case** (David, via kuki): `translation.glossary.caseSensitive: true` reads a rendering with its case, for a translation that keeps two terms apart by a capital (Ground for 根據, ground for 理由): the ⚠ no longer marks the pair, and each one's places in the translation are counted apart. Without it the Glossary reads without regard to case, as before.
 - **The Glossary's sort tips name their column as it is headed** (kuki): "Sort by English", not "Sort by english"; Source and Reading likewise.
