@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.0 (2026-11-09)
 
 - **1.8.29 renumbered** (David): the same code as 1.8.29, released as 1.9.0. A bench on 1.8.29 can move to 1.9.0 with no other change.
 
