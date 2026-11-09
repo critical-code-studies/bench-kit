@@ -61,6 +61,7 @@
 
   var DEFAULTS = {
     literal: ['text/literal/*.md'], translation: ['text/translation/*.md'],
+    // glossary: { path, kind ('csv' or 'md'), heading (for 'md'), caseSensitive (a capital keeps two renderings apart) }
     glossary: { path: 'glossary.csv', kind: 'csv' },
     changes: ['checks/*.md'], page: '\\[p\\. (\\d+)\\]', image: null,
     body: { until: '^#+ (Appendix|Glossary)' },
@@ -270,10 +271,11 @@
     });
     return out;
   };
-  // English words that render more than one source term (ground: 根據 and 理由)
-  VT.collisions = function (gl) {
-    var by = {};
-    gl.forEach(function (g) { g.english.forEach(function (e) { var k = e.toLowerCase(); (by[k] = by[k] || []).push(g); }); });
+  // English words that render more than one source term (ground: 根據 and 理由). Without regard to case unless
+  // o.caseSensitive, for a translation that keeps two terms apart by a capital (Ground: 根據, ground: 理由)
+  VT.collisions = function (gl, o) {
+    var by = {}, cs = !!(o && o.caseSensitive);
+    gl.forEach(function (g) { g.english.forEach(function (e) { var k = cs ? e : e.toLowerCase(); (by[k] = by[k] || []).push(g); }); });
     return Object.keys(by).filter(function (k) {
       var srcs = {}; by[k].forEach(function (g) { srcs[g.source.join('/')] = 1; }); return Object.keys(srcs).length > 1;
     }).map(function (k) { return { english: k, terms: by[k] }; });

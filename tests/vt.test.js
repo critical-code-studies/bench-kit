@@ -26,6 +26,8 @@
   var gl = VT.glossary(csv, 'csv');
   eq('rows from glossary.csv', gl.map(function (g) { return [g.source[0], g.english]; }), [['偶然', ['contingency', 'chance']], ['根據', ['ground']], ['理由', ['ground', 'reason']]]);
   eq('an English word that renders two source terms', VT.collisions(gl).map(function (c) { return c.english; }), ['ground']);
+  var glc = [{ source: ['根據'], reading: ['konkyo'], english: ['Ground'] }, { source: ['理由'], reading: ['riyū'], english: ['ground'] }];
+  eq('a capital keeps two renderings apart where the translation asks for it', [VT.collisions(glc).length, VT.collisions(glc, { caseSensitive: true }).length], [1, 0]);
   var md = '## Glossary\n\n| Japanese | Reading | English |\n|---|---|---|\n| 存在 / 非存在 | そんざい / ひそんざい | existence / non-existence |\n';
   eq('a Markdown pair split, one row to each term', VT.glossary(md, 'md', { heading: 'Glossary' }).map(function (g) { return [g.source[0], g.english[0]]; }), [['存在', 'existence'], ['非存在', 'non-existence']]);
   T.group('Translation: change lists');

@@ -111,11 +111,13 @@
     Promise.all([V.glossary(), V.texts()]).then(function (r) {
       var gl = r[0], rb = r[1].translation, ids = V.ids();
       if (!gl.length) { view.innerHTML = '<p class="hint pad">The bench names no glossary (SW.BENCH.translation.glossary).</p>'; return; }
-      var col = {}; VT.collisions(gl).forEach(function (c) { col[c.english] = c.terms; });
+      // a translation that keeps two terms apart by a capital (translation.glossary.caseSensitive) is read with the case
+      var CS = !!(D.glossary && D.glossary.caseSensitive), keyOf = function (e) { return CS ? e : e.toLowerCase(); };
+      var col = {}; VT.collisions(gl, { caseSensitive: CS }).forEach(function (c) { col[c.english] = c.terms; });
       // what else an English word renders, for this row: the other rows' source terms that this row does not hold
       // itself (樣相 / 樣相性 and 樣相性, both "modality", leaves the first with nothing to warn of), each with its reading
       function alsoOf(g, e) {
-        var terms = col[e.toLowerCase()]; if (!terms) return [];
+        var terms = col[keyOf(e)]; if (!terms) return [];
         var out = [], seen = {};
         terms.forEach(function (o) {
           if (o === g) return;
@@ -135,7 +137,7 @@
       // each rendering's places in the translation's body, by section
       var ts = rb ? rb.parts.map(function (p) { return VT.read(p.raw, D); }) : [];
       function where(word) {
-        var w = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), R = new RegExp('(^|[^\\p{L}])' + w + '(?![\\p{L}])', 'giu'), out = {}, order = [];
+        var w = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), R = new RegExp('(^|[^\\p{L}])' + w + '(?![\\p{L}])', CS ? 'gu' : 'giu'), out = {}, order = [];
         ts.forEach(function (t, p) {
           t.lines.forEach(function (L) {
             if (L.n >= t.bodyEnd || L.n < t.bodyStart || L.kind === 'head' || L.kind === 'working') return;
