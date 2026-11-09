@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.8.28 (2026-11-09)
 
 - **The test page leaves the bench's loans alone** (Melville): the checks set the bench's Library store aside and put it back, but the library kept their loans (S-1, S-2, by TT) in memory and a later save wrote them into the bench's store, so its To read tab counted works it does not have. The writes came from the group's answers arriving after a Library view had been taken off the page, which still drew its cards (writing their paper and age) and saved its loans; a view no longer on the page now neither draws nor writes. The record in memory is also let go each way (L.forgetLoans), and putting back waits for the checks' last writes.
 - **The figure box tests wait for the download** (Melville): "PNG saves one file" and "as an .svg" waited a fixed 400 ms, which a page in the background could run past; they now wait for the file (up to 15 s). Test only.
