@@ -111,7 +111,26 @@
     Promise.all([V.glossary(), V.texts()]).then(function (r) {
       var gl = r[0], rb = r[1].translation, ids = V.ids();
       if (!gl.length) { view.innerHTML = '<p class="hint pad">The bench names no glossary (SW.BENCH.translation.glossary).</p>'; return; }
-      var col = {}; VT.collisions(gl).forEach(function (c) { col[c.english] = c.terms.map(function (g) { return g.source.join(' / '); }); });
+      var col = {}; VT.collisions(gl).forEach(function (c) { col[c.english] = c.terms; });
+      // what else an English word renders, for this row: the other rows' source terms that this row does not hold
+      // itself (樣相 / 樣相性 and 樣相性, both "modality", leaves the first with nothing to warn of), each with its reading
+      function alsoOf(g, e) {
+        var terms = col[e.toLowerCase()]; if (!terms) return [];
+        var out = [], seen = {};
+        terms.forEach(function (o) {
+          if (o === g) return;
+          o.source.forEach(function (s, j) {
+            if (g.source.indexOf(s) >= 0 || seen[s]) return; seen[s] = 1;
+            out.push(s + (o.reading.length === o.source.length && o.reading[j] ? ' ' + o.reading[j] : o.source.length === 1 && o.reading[0] ? ' ' + o.reading[0] : ''));
+          });
+        });
+        return out;
+      }
+      function warnOf(g, e) {
+        var also = alsoOf(g, e); if (!also.length) return '';
+        var tip = '“' + e + '” also renders ' + also.join(', ') + ': one English word for more than one source term.';
+        return ' <button type="button" class="vt-warn" data-tip="' + esc(tip) + '" aria-label="' + esc(tip) + '">⚠</button>';
+      }
       // each rendering's places in the translation's body, by section
       var ts = rb ? rb.parts.map(function (p) { return VT.read(p.raw, D); }) : [];
       function where(word) {
@@ -128,12 +147,12 @@
         });
         return order.map(function (s) { return [s, out[s]]; });
       }
-      view.innerHTML = '<div class="vt-pad"><h2 class="view-title">Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the translation, section by section (a count opens the text at its first place). ⚠ marks an English word that renders more than one source term.</p>' +
+      view.innerHTML = '<div class="vt-pad"><h2 class="view-title">Glossary</h2><p class="hint">Each source term, its renderings (a note in brackets), and where each rendering falls in the author’s text of the translation, section by section (a count opens the text at its first place). ⚠ marks an English word that renders more than one source term: point at it, or tap it, for which. Click a column’s heading to sort by it.</p>' +
         '<div class="toolbar"><input type="search" class="vt-q" placeholder="Filter: a source term, a reading or an English word" aria-label="Filter the glossary"><span class="faint vt-n"></span></div>' +
-        '<table class="vt-table vt-gloss"><thead><tr><th>Source</th><th>Reading</th><th>English</th><th>Where, in the translation</th></tr></thead><tbody>' +
+        '<table class="vt-table vt-gloss"><thead><tr>' + [['source', 'Source'], ['reading', 'Reading'], ['english', 'English']].map(function (h) { return '<th aria-sort="none"><button type="button" class="vt-sort" data-sort="' + h[0] + '" title="Sort by ' + h[1].toLowerCase() + ' (again to reverse, a third time for the glossary’s own order)">' + h[1] + '<span class="vt-sorted" aria-hidden="true"></span></button></th>'; }).join('') + '<th>Where, in the translation</th></tr></thead><tbody>' +
         gl.map(function (g, i) {
           return '<tr data-i="' + i + '" data-hay="' + esc([g.source.join(' '), g.reading.join(' '), g.english.join(' '), g.note || ''].join(' ').toLowerCase()) + '"><td class="vt-src" lang="' + esc(B.textLang || 'ja') + '">' + esc(g.source.join(' / ')) + '</td><td>' + esc(g.reading.join(' / ')) + '</td><td>' +
-            g.english.map(function (e) { var c = col[e.toLowerCase()]; return '<div>' + esc(e) + (c ? ' <span class="vt-warn" title="Also renders ' + esc(c.filter(function (x) { return x !== g.source.join(' / '); }).join(', ')) + '">⚠</span>' : '') + '</div>'; }).join('') +
+            g.english.map(function (e) { return '<div>' + esc(e) + warnOf(g, e) + '</div>'; }).join('') +
             (g.note ? '<div class="faint vt-note" title="A note in the glossary, not a rendering">(' + esc(g.note) + ')</div>' : '') + '</td><td class="vt-where" data-where="' + i + '"><span class="faint">…</span></td></tr>';
         }).join('') + '</tbody></table></div>';
       // the counts, row by row, so the table shows at once
@@ -152,7 +171,29 @@
       var q = SW.$('.vt-q', view), n = SW.$('.vt-n', view);
       function filter() { var s = q.value.toLowerCase(), c = 0; rowsEl.forEach(function (tr) { var on = !s || tr.dataset.hay.indexOf(s) >= 0; tr.hidden = !on; if (on) c++; }); n.textContent = c + ' of ' + gl.length; }
       q.addEventListener('input', filter); filter();
-      view.addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b) SW.openAt(ids.translation, JSON.parse(b.dataset.go)); });
+      // sorting by a column: once ascending, again descending, a third time the glossary's own order
+      var SORT = { by: '', dir: 0 }, tbody = SW.$('tbody', view);
+      var fold = function (s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); };
+      var KEY = { source: function (g) { return g.source.join(' / '); }, reading: function (g) { return fold(g.reading.join(' / ')); }, english: function (g) { return g.english.join(' / ').toLowerCase(); } };
+      function sortBy(by) {
+        SORT.dir = SORT.by === by ? (SORT.dir === 1 ? -1 : SORT.dir === -1 ? 0 : 1) : 1; SORT.by = SORT.dir ? by : '';
+        var order = rowsEl.slice();
+        if (SORT.dir) order.sort(function (a, b) { var x = KEY[by](gl[+a.dataset.i]), y = KEY[by](gl[+b.dataset.i]); return (x.localeCompare(y, by === 'source' ? (B.textLang || 'ja') : 'en') || (+a.dataset.i - +b.dataset.i)) * SORT.dir; });
+        order.forEach(function (tr) { tbody.appendChild(tr); });
+        SW.$$('.vt-sort', view).forEach(function (b) {
+          var on = b.dataset.sort === SORT.by; b.closest('th').setAttribute('aria-sort', on ? (SORT.dir > 0 ? 'ascending' : 'descending') : 'none');
+          SW.$('.vt-sorted', b).textContent = on ? (SORT.dir > 0 ? ' ▲' : ' ▼') : '';
+        });
+      }
+      V.glossarySort = sortBy;
+      view.addEventListener('click', function (e) {
+        var sb = e.target.closest('[data-sort]'); if (sb) { sortBy(sb.dataset.sort); return; }
+        // the ⚠ opens its words on a tap as well as on hover and focus
+        var w = e.target.closest('.vt-warn');
+        SW.$$('.vt-warn.open', view).forEach(function (x) { if (x !== w) x.classList.remove('open'); });
+        if (w) { w.classList.toggle('open'); return; }
+        var b = e.target.closest('[data-go]'); if (b) SW.openAt(ids.translation, JSON.parse(b.dataset.go));
+      });
     }, function (e) { failed(view, e); });
   }
 

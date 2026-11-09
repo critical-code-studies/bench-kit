@@ -229,6 +229,12 @@ dialog.ov-dlg { width: min(96vw, 980px); }
 .ov-dlg .ov-hint { flex: 1 1 auto; }
 @media (max-width: 640px) { .ov-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } .ov-folders { border-right: 0; border-bottom: 1px solid var(--line); max-height: 120px; } .ov-row { grid-template-columns: 22px 1fr 80px; } .ov-ref, .ov-med { display: none; } }
 
+/* Glossary (kit/vt-views.js): headings that sort, and a ⚠ that says what it means on hover, focus or a tap */
+.vt-gloss th .vt-sort { padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.vt-gloss th .vt-sort:hover, .vt-gloss th .vt-sort:focus-visible { text-decoration: underline; }
+.vt-gloss .vt-warn { position: relative; padding: 0 2px; border: 0; background: none; color: #b06a00; font: inherit; cursor: help; }
+.vt-gloss .vt-warn::after { content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 6px); z-index: 20; width: max-content; max-width: 280px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); font-size: 12.5px; line-height: 1.4; text-align: left; white-space: normal; transform: translateX(-50%); visibility: hidden; opacity: 0; transition: opacity 0.12s; pointer-events: none; }
+.vt-gloss .vt-warn:hover::after, .vt-gloss .vt-warn:focus-visible::after, .vt-gloss .vt-warn.open::after { visibility: visible; opacity: 1; }
 /* Edit (kit/vt-edit.js): the page's image beside the text. The text and the colours under it are set alike, a line for a line */
 .vte { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .vte-bar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
