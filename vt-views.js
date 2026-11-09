@@ -128,8 +128,9 @@
       }
       function warnOf(g, e) {
         var also = alsoOf(g, e); if (!also.length) return '';
-        var tip = '“' + e + '” also renders ' + also.join(', ') + ': one English word for more than one source term.';
-        return ' <button type="button" class="vt-warn" data-tip="' + esc(tip) + '" aria-label="' + esc(tip) + '">⚠</button>';
+        // the words David chose, the same on every ⚠; the other terms are in its label for a screen reader
+        var tip = 'Renders more than one source term';
+        return ' <button type="button" class="vt-warn" data-also="' + esc(also.join(', ')) + '" data-tip="' + esc(tip) + '" aria-label="' + esc(tip + ': also ' + also.join(', ')) + '">⚠</button>';
       }
       // each rendering's places in the translation's body, by section
       var ts = rb ? rb.parts.map(function (p) { return VT.read(p.raw, D); }) : [];
