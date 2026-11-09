@@ -1,6 +1,28 @@
 # The Library: a guide for a bench
 
-The Library tab (`library.js`) shows the secondary literature on a project as covers on a shelf: books, articles, chapters, talks, podcasts and documentaries. A reader can switch to a list, and order either by author, title, date, kind or language, or as the manifest lists them. Each entry opens in a box over the bench, with its record, the file where one is held, and a link to where the work is published.
+The Library tab (`library.js`) shows the secondary literature on a project: books, articles, chapters, theses, talks, podcasts, films and web pages. Each entry opens in a box over the bench, with its record, the file where one is held, and a link to where the work is published. The screenshots in this guide are from the ELIZA bench (0.2.2, bench-kit 1.8.28, 9 November 2026).
+
+![The Library as covers on the ELIZA bench: key works first, each cover drawn by kind or from an image of the work, the filters beside them, and the search, the order, the views and the sizes above](img/library-covers.jpg)
+
+## The views
+
+The **View** buttons on the bar show the Library five ways. A reader's choice is kept in that browser.
+
+- **Covers (▦):** the works as covers on a shelf, small, medium or large (**S M L**), with the author, the year and whether the bench holds the work below each.
+- **List (☰):** a line for each work, with its Key Work mark, its relevance as a label (Essential, High, Medium, Low, Minimal) and the group's stars.
+- **Notes (✎):** every note the group has written on works in the Library and in Paratexts.
+- **Card catalogue:** the works in drawers (see The card catalogue).
+- **Gallery:** the works on the left and the chosen one's box on the right, as a file browser's preview. The arrow keys move through the list, and Enter opens the box over the bench. The notes and covers of the five works after the one shown, and the two before, are fetched ahead.
+
+![The gallery: the works on the left with Key Work, relevance and stars, and Computer Power and Human Reason in its box on the right](img/library-gallery.jpg)
+
+![The list: each work's title, author and year, its relevance as a label and its Key Work mark](img/library-list.jpg)
+
+The tabs and the bar stay at the top as the works scroll; on a wide screen they share one line. A long library is drawn 150 works at a time, the next as the reader comes near the end. Covers drawn by the kit show at once, and an image of the work fades in over its drawn cover when it arrives.
+
+The filters (kind, relevance, language, rating, decade, author and tag, with counts) stand in a pane of their own beside the works on a wide screen, and scroll on their own. Their headings are shut until opened, a heading with a choice in it opens, and they stay as the reader leaves them. The funnel on the bar shows or hides the pane.
+
+**Order** sorts by author, title, newest, oldest, kind, language, rating (for a reader with the group's token), or as the manifest lists them; on a bench whose entries have a relevance, **By relevance** comes first and takes the place of As listed.
 
 ## What belongs where
 
@@ -198,19 +220,45 @@ node research/kit/tools/library-check.js research/library/library.json --checked
 
 ## The card catalogue
 
+![The card catalogue: fifteen drawers with brass plates, one pulled out with its front card typed and the tabs of the cards behind it](img/library-catalogue.jpg)
+
 The drawer button beside the covers, the list and the notes shows the Library as a card catalogue. Drawers are made from the list as it stands, about fifteen of them, each with a brass plate giving the first and last names in it and its count, so they rebalance as works are added. **Browse by** Author, Title, Subject or Relevance remakes them: by subject a work has a card under each of its tags, and by relevance there is a drawer for the key works and one for each level. Pulling a drawer out shows its cards standing on the rod, the tops of those behind with a tab each and the front card in full, typed: call number, author, title, imprint and kind, the subject tracings (the tags) numbered, the Key work and Preprint marks and the group's stars. The arrow keys flick through, Enter opens the work, Escape closes the drawer. A search and the filters narrow the drawers, and a search opens the drawer holding the first it finds.
 
-A card in the catalogue, and a library card on the To read shelf, turns over with **↻**: its back has the group's notes on the work, in the order they were written, scribbled by hand, or is blank. **Add Annotation** at the foot of every back opens the work's box ready to write one; without the group's token it stays a draft in that browser. A reader with no token sees the notes in their own browser only.
+A card in the catalogue, and a book card on the To read shelf, turns over with **↻**: its back has the group's notes on the work, in the order they were written, scribbled by hand, or is blank. The back is the same card, its paper and its age. **Add Annotation** at the foot of every back opens the work's box ready to write one; without the group's token it stays a draft in that browser. A reader with no token sees the notes in their own browser only.
+
+![A book card turned over: two notes written by hand on its ruled back, each signed and dated, and Add Annotation at its foot](img/library-cardback.jpg)
 
 ## To read
 
-Each reader has a **To read** shelf, a part of the Library to attend to. A work is checked out from its box for one, two or three months, and its cover then carries a due stamp in its upper right corner, in that reader's view only. **To read** beside **All** shows a library card for each work, after the cards once kept in a book's pocket: the work's code, author and title, and a line for each loan and renewal, with the date loaned, the borrower's name and the date due. A card renews a loan for one, two or three months as often as the reader likes, takes the date away, or returns the work. Past its date a work goes back into the library. Below the cards, a reading log lists every work the reader has had out, with when it first went out, when it came back, how many loans, and the reader's own rating where they gave one. **Your notes** there opens, in a box, every note the reader has written on works in the library, drafts included, each with a link to its work.
+![The To read shelf: four book cards, one stamped DUE SOON and one with a white sticker over its full lines](img/library-toread.jpg)
 
-The cards come small, medium or large (**S M L**), and **☰** shows the shelf as a list with the same renewals. A card's code and title open the work. Each card's label, and the spine of a drawn book, carries a call number after the old shelf marks: the year, the author's initial and two figures from the next letters, and the title's first letter (`1966 W48e`). It is a guide to the shelf, not a classification.
+Each reader has a **To read** shelf, a part of the Library to attend to. A work is checked out from its box for one, two or three months, and its cover then carries a due stamp in its upper right corner, in that reader's view only. Past its date a work goes back into the library.
 
-**What's new** lists the reader's works due back within the week, with Overdue for any past their date that the shelf has not yet sent back, and those that went back in the last week, each opening its work. They count in the What's new button, and readers with no token see them too.
+The **To read** tab shows a book card for each work, after the cards once kept in a book's pocket: **Book Card** and the author at the head; the call number, code, author and title; and a line for each loan and renewal, with the date loaned, the borrower's name and the date due. A card renews a loan for one, two or three months as often as the reader likes, takes the date away, or returns the work. A card's code and title open the work.
 
-Loans are kept in the reader's browser. With the group's Hypothesis token they are also kept as annotations the group can read (`loan:out:<date>`, `loan:ext:<date>`, `loan:back`), so they follow the reader to other browsers. A loan made in a browser before the reader had a token is sent up, with its date, the first time they have one. Each check-out and renewal carries a short reference and the inks its line is written in (`loan:out:<due>:<out>:<ref>:<pen>.<stamp>`), so one sent twice is read once and a line keeps its look in every browser. A gallery view (the last View button) lists the works on the left and shows the one chosen in its box on the right, as a file browser's preview does; the arrow keys move through the list, and Enter opens the box over the bench. The tabs and the toolbar stay at the top as the list scrolls; on a wide screen the filters stay in view beside the list and scroll on their own. Filter headings are shut until opened (a heading with a choice in it opens), and stay as the reader leaves them. The funnel on the bar shows or hides the filters (`library.filters`). Settings ▸ Library shows the reader's library card, after a 1960s student card: the bench's `title` (else `name`) over a red ground, and the reader's initials and name embossed with a number made from them. Clicked, the card turns over: its back gives the holder, the card number, the date they joined (their first check-out), the bench's address, their Hypothesis group and account, the GitHub repository (and whether a token is held, never the token), and their loans. It also sets whether book cards are signed with the reader's name or initials, and how many days before its date a work is due soon (0: only when overdue; 7 by default). A card holds six lines; when it is full, a white sticker goes over the old lines, which show faintly through, and the next are written on it. Clicking the sticker shows every line. A line crossed out fades in its own ink. A work due back within seven days, or overdue, is stamped DUE SOON or OVERDUE on its card, and in What's new its line is an alert, kept at the top until the work is renewed or returned. A card's paper and age are kept in the browser once chosen, so a later kit does not recolour old cards, and age only grows. Where the group can be read, it is the record; the browser's copy serves a reader with no token, or offline, and for a minute after a change, while the group's search catches up. A work's card then has a line for each member's loan of it, and its box says who in the group has it out and till when. A reader with no token sees only their own. `tools/library-snapshot.js` never publishes loans.
+- **Call numbers:** each card's label, and the spine of a drawn book, carries a call number after the old shelf marks: the year, the author's initial and two figures from the next letters, and the title's first letter (`1966 W48e`). It is a guide to the shelf, not a classification.
+- **Ink and paper:** each line is written in its own pen and its dates in the desk's stamp ink, and a line crossed out fades in an aged version of its own ink. Each card has its own paper, a few creams and buffs with the odd darker orange, and yellows with use. Paper and age are kept in the browser once chosen, and age only grows.
+- **A full card:** a card holds six lines (three at size S). When it is full, a white sticker goes over the old lines, which show faintly through, and the next are written on it. Clicking the sticker shows every line.
+- **Due soon:** a work due back within seven days (or as the reader sets in Settings ▸ Library) is stamped DUE SOON on its card, and one past its date OVERDUE.
+- **Sizes and the list:** the cards come small, medium or large (**S M L**), and **☰** shows the shelf as a list with the same renewals. The card catalogue and the gallery, which are ways into the whole library, are put away on this tab.
+
+Below the cards, a reading log lists every work the reader has had out, with when it first went out, when it came back, how many loans, and the reader's own rating where they gave one. **Your notes** there opens, in a box, every note the reader has written on works in the library, drafts included, each with a link to its work.
+
+**What's new** lists the reader's works due back within the week, with Overdue for any past their date that the shelf has not yet sent back, and those that went back in the last week, each opening its work. A work due soon or overdue is an alert there, kept at the top until it is renewed or returned. They count in the What's new button, and readers with no token see them too.
+
+### Loans in the group
+
+Loans are kept in the reader's browser. With the group's Hypothesis token they are also kept as annotations the group can read (`loan:out:<date>`, `loan:ext:<date>`, `loan:back`), so they follow the reader to other browsers. A loan made in a browser before the reader had a token is sent up, with its date, the first time they have one. Each check-out and renewal carries a short reference and the inks its line is written in (`loan:out:<due>:<out>:<ref>:<pen>.<stamp>`), so one sent twice is read once and a line keeps its look in every browser; a line from before inks were kept (bench-kit 1.8.16) is given a pen and stamp of its own. Where the group can be read, it is the record; the browser's copy serves a reader with no token, or offline, and for a minute after a change, while the group's search catches up. A work's card then has a line for each member's loan of it, and its box says who in the group has it out and till when. A reader with no token sees only their own. `tools/library-snapshot.js` never publishes loans.
+
+### Settings ▸ Library
+
+![The reader's library card in Settings, and its back](img/library-card-settings.jpg)
+
+Settings ▸ Library shows the reader's library card, after a 1960s student card: the bench's `title` (else `name`) over a red ground, fitted to the card however long, and the reader's initials and name embossed with a number made from them. Clicked, the card turns over: its back gives the holder, the card number, the date they joined (their first check-out), the bench's address, their Hypothesis group and account, the GitHub repository (and whether a token is held, never the token), and their loans.
+
+The same tab sets whether book cards are signed with the reader's name or initials, and how many days before its date a work is due soon (0: only when overdue; 7 by default).
+
+**Wipe my loan history…** takes every work off the reader's To read shelf and clears their reading log and their lines on the book cards. It asks first, with the count. For a member with the group's token, it also deletes their own loan records in the group, one at a time, and says if any could not be deleted. Other members' loans are kept. It cannot be undone.
 
 ## For readers with no token
 
@@ -265,9 +313,13 @@ An entry's box shows a citation with a Copy button, in Harvard form, built from 
 
 ## Notes on a work
 
+![A work's box: its code and Key Work mark, the actions and Add note, the cover, the citation with Copy, the record, and the book from the Internet Archive below](img/library-box.jpg)
+
 The panel in an entry's box, and in a paratext's, holds notes in the bench's Hypothesis group, with replies and reactions as on a text, so they need that group's token and are visible to the group only. Without one, a note stays a draft in that browser. A note is an annotation with `item:<code>` in place of a version, tagged `bk:kind:item`, and pinned if wanted by `bk:at:t:<seconds>`, `bk:at:p:<page>` or `bk:at:q` with the quoted words. The code stays when an item moves from Paratexts to the Library, so its notes go with it.
 
-Members also give an entry one to three stars and an emoji, in the same panel. Each is a reaction in the group with no parent, with `★1` to `★3` or the emoji as its text, and a person's latest rating counts. The average shows on the cover and **Order** can sort by it, an option offered only to a reader with the group's token. A paratext keeps its own ratings in its catalogue, so a rating there does not follow an item to the Library unless someone moves it by hand.
+A work with no notes opens in one column, with **Add note** and the stars at the end of its row of actions; Add note slides the notes' panel out with the box to write in ready. A work with notes opens with its panel.
+
+Members also give an entry one to three stars and reactions, at the end of the box's row of actions. Each is a reaction in the group with no parent, with `★1` to `★3` or the emoji as its text, and a person's latest rating counts. Reactions show as the annotations show them: only those someone has left, each with the initials of who left it, then **☺+** to open the rest. The average shows on the cover and **Order** can sort by it, an option offered only to a reader with the group's token. A paratext keeps its own ratings in its catalogue, so a rating there does not follow an item to the Library unless someone moves it by hand.
 
 A cover shows a count, **Annotated** filters to those, and ✎ lists all the notes across the Library and Paratexts. Paratexts' cards show the count too. Paratexts' own comments and ratings remain as they were, kept in its catalogue and separate from these notes.
 

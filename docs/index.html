@@ -239,9 +239,10 @@
           <a href="#start"><span class="n">02</span>Quick start</a>
           <a href="#usage"><span class="n">03</span>Usage</a>
           <a href="#screens"><span class="n">04</span>Screenshots</a>
-          <a href="#config"><span class="n">05</span>Configuration</a>
-          <a href="#trouble"><span class="n">06</span>Troubleshooting</a>
-          <a href="#links"><span class="n">07</span>Links</a>
+          <a href="#library"><span class="n">05</span>The Library</a>
+          <a href="#config"><span class="n">06</span>Configuration</a>
+          <a href="#trouble"><span class="n">07</span>Troubleshooting</a>
+          <a href="#links"><span class="n">08</span>Links</a>
         </nav>
         <button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle light and dark theme">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -263,11 +264,11 @@
       </div>
       <div class="stats" aria-label="bench-kit in figures">
         <div><b data-kit-version>1.8.28</b><span>Current release</span></div>
-        <div><b>137</b><span>Releases since 11 October 2026</span></div>
-        <div><b>44</b><span>JavaScript modules</span></div>
-        <div><b>16,704</b><span>Lines of JavaScript</span></div>
-        <div><b>5</b><span>Repositories its CI tests on each push</span></div>
-        <div><b>156</b><span>Kit tests passed in bench-template</span></div>
+        <div><b>207</b><span>Releases since 11 October 2026</span></div>
+        <div><b>58</b><span>JavaScript modules</span></div>
+        <div><b>25,803</b><span>Lines of JavaScript</span></div>
+        <div><b>6</b><span>Repositories its CI tests on each push</span></div>
+        <div><b>806</b><span>Kit tests passed in bench-template</span></div>
       </div>
     </div>
   </section>
@@ -277,7 +278,7 @@
     <section class="section wrap reveal" id="what">
       <span class="num">01</span>
       <h2>What it is</h2>
-      <p>bench-kit is the plain JavaScript and CSS that the research benches for SHRDLU, Spacewar!, ELIZA and Melville share: each version of a program or text set out line by line, any two collated, their descent drawn as a stemma, and annotations kept in a private Hypothesis group. A bench includes the kit as a git submodule, gives its own names, sources and language in a configuration file, and is served as a static site by GitHub Pages, with no build step and nothing to install.</p>
+      <p>bench-kit is the plain JavaScript and CSS that the research benches for SHRDLU, Spacewar!, ELIZA and Melville share, and the translation bench for Kuki Shūzō's <i>Gūzensei no mondai</i>: each version of a program or text set out line by line, any two collated, their descent drawn as a stemma, and annotations kept in a private Hypothesis group. A bench includes the kit as a git submodule, gives its own names, sources and language in a configuration file, and is served as a static site by GitHub Pages, with no build step and nothing to install.</p>
       <div class="cards">
         <div class="card"><h3>Read</h3><p>Each version's files as held, with search, highlighting, a citation for any line or range, a reading edition, and export to Word and Markdown.</p></div>
         <div class="card"><h3>Collate</h3><p>Two versions as text, routine by routine, or definition by definition where both are Lisp.</p></div>
@@ -287,6 +288,8 @@
         <div class="card"><h3>Paratexts</h3><p>Scans, documents and recordings in a private GitHub repository, catalogued in Dublin Core and arranged in collections and sequences.</p></div>
         <div class="card"><h3>Implementations</h3><p>A catalogue of a program's copies, ports and reimplementations, drawn as a tree with the evidence for each line of descent.</p></div>
         <div class="card"><h3>References</h3><p>A short reference for every version and file, and a Software Heritage identifier for each source.</p></div>
+        <div class="card"><h3>Library</h3><p>The secondary literature as covers, a list, a gallery or a card catalogue, with ratings, key works, relevance and tags kept in the group, and a To read shelf of book cards for each reader (section 05).</p></div>
+        <div class="card"><h3>Translation</h3><p>A translation's text beside its source page by page, its glossary as a concordance, and its change lists checked against the text.</p></div>
       </div>
     </section>
 
@@ -320,7 +323,7 @@
     <section class="section wrap reveal" id="usage">
       <span class="num">03</span>
       <h2>Usage</h2>
-      <p>Each example was run on a fresh clone of bench-template 0.1.99 (bench-kit 0.81.0) on 27 October 2026; the output is as printed.</p>
+      <p>The tests and the views were run on a fresh clone of bench-template 0.1.165 (bench-kit 1.8.28) on 9 November 2026, the server on bench-template 0.1.99 on 27 October 2026; the output is as printed.</p>
 
       <h3>Serve a bench and open it</h3>
       <div class="term"><div class="label"><span>Terminal</span><span>bench-template</span></div>
@@ -332,13 +335,13 @@
       <p>The kit's tests run in the bench's own page, in headless Chrome, so they check the kit with the bench's settings and versions. From the repository's folder:</p>
       <div class="term"><div class="label"><span>Terminal</span><span>bench-template</span></div>
 <pre><span class="in">node research/kit/tools/test.js</span>
-<span class="out ok">tests/annotations.html: 156 passed</span></pre></div>
+<span class="out ok">tests/annotations.html: 806 passed</span></pre></div>
 
       <h3>Open every view, with this bench's kit or another</h3>
       <p><code>tools/views.js</code> opens each view in turn and fails on one that throws, draws nothing, or shows that it could not load. With <code>--kit</code> it serves a kit from another folder in place of the bench's own, so a kit change can be tried in a bench without changing the bench.</p>
       <div class="term"><div class="label"><span>Terminal</span><span>bench-template</span></div>
 <pre><span class="in">node research/kit/tools/views.js</span>
-<span class="out">Example Research Bench 0.1.99, kit 0.81.0</span>
+<span class="out">Example Research Bench 0.1.165, kit 1.8.28</span>
 <span class="out ok">  ✓ read
   ✓ analyse
   ✓ functional
@@ -349,7 +352,7 @@
   ✓ notes</span>
 <span class="c"># with a kit checked out beside the bench:</span>
 <span class="in">node research/kit/tools/views.js --kit ../bench-kit</span></pre></div>
-      <p>The kit's own <a href="https://github.com/critical-code-studies/bench-kit/actions">workflow</a> runs both tools in all five repositories (the four benches and the template) on every push.</p>
+      <p>The kit's own <a href="https://github.com/critical-code-studies/bench-kit/actions">workflow</a> runs both tools in all six repositories (the five benches and the template) on every push.</p>
     </section>
 
     <section class="section wrap reveal" id="screens">
@@ -397,15 +400,51 @@
           <a href="img/melville-compare.jpg"><img src="img/melville-compare.jpg" width="1440" height="813" loading="lazy" alt="The Melville bench's Book view with Compare: the manuscript at stage Fa facing MEL's reading text at the same leaf."></a>
           <figcaption><b>Melville, Book with Compare.</b> The manuscript at stage Fa facing MEL's reading text. Text: Melville Electronic Library, <i>Versions of Billy Budd</i>. Leaf images: Houghton Library, Harvard University, MS Am 188 (363).<span class="prov">Melville 0.1.17, bench-kit 0.74.3 · 22 October 2026</span></figcaption>
         </figure>
+      </div>
+    </section>
+
+    <section class="section wrap reveal" id="library">
+      <span class="num">05</span>
+      <h2>The Library</h2>
+      <p>The Library tab (<code>library.js</code>) holds the secondary literature on a project: books, articles, chapters, theses, talks, podcasts, films and web pages, each a record in the bench's <code>library.json</code>, with the file where the bench or the group holds one and a link where the work is published. Members of the bench's Hypothesis group rate works, mark key works, set each work's relevance, tag it and write notes on it; a published snapshot shows the ratings, marks and tags to readers with no token. The figures below are from the ELIZA bench, which lists 1,146 works. The <a href="library.html">Library guide</a> covers setting it up, the manifest's fields and the tools.</p>
+      <div class="shots">
         <figure>
-          <a href="img/library-shelf.jpg"><img src="img/library-shelf.jpg" width="1200" height="678" loading="lazy" alt="The Library tab: example books, articles, a chapter, a thesis, a letter, a podcast, a talk, a documentary and a web page as covers on a shelf"></a>
-          <figcaption><b>The Library.</b> A project's secondary literature as covers on a shelf, drawn by kind or from an image of the work, with a list beside it. The entries here are examples.</figcaption>
+          <a href="img/library-covers.jpg"><img src="img/library-covers.jpg" width="1440" height="813" loading="lazy" alt="The Library as covers on a shelf: key works first, each cover drawn by kind or from an image of the work, with its author, year and whether the bench holds it below; the filters on the left, closed."></a>
+          <figcaption><b>Covers.</b> Ordered by relevance, key works first. A cover is drawn from the work's kind, or is an image of the work; a rating shows as stars on it. The filters (kind, relevance, language, rating, decade, author, tag) stand beside the shelf, and the funnel on the bar shows or hides them.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/library-list.jpg"><img src="img/library-list.jpg" width="1440" height="813" loading="lazy" alt="The Library as a list: each work's title, author, year, kind, its relevance as a label and its Key Work mark."></a>
+          <figcaption><b>List.</b> The same works as lines, each with its Key Work mark, its relevance (Essential in red, High, Medium, Low, Minimal) and the group's stars.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/library-gallery.jpg"><img src="img/library-gallery.jpg" width="1440" height="813" loading="lazy" alt="The gallery: a list of works on the left with key work, relevance and stars, and the chosen work's box on the right with its cover, citation and record."></a>
+          <figcaption><b>Gallery.</b> The works on the left and the chosen one's box on the right, as a file browser's preview. The arrow keys move through the list; the works on either side are fetched ahead.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/library-catalogue.jpg"><img src="img/library-catalogue.jpg" width="1440" height="813" loading="lazy" alt="The card catalogue: fifteen wooden drawers with brass plates naming their first and last authors, one pulled out with its front card typed and the tabs of the cards behind it."></a>
+          <figcaption><b>Card catalogue.</b> About fifteen drawers made from the list as it stands, by author, title, subject or relevance. A drawer pulled out shows its cards, the front one typed in full; the arrow keys flick through.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/library-box.jpg"><img src="img/library-box.jpg" width="1440" height="813" loading="lazy" alt="A work's box: its code and Key Work mark, the actions, the cover, the citation with Copy, the record, and the book itself playing from the Internet Archive below."></a>
+          <figcaption><b>A work's box.</b> Weizenbaum's <i>Computer Power and Human Reason</i>: the citation in Cite Them Right Harvard, the record, and the book from the Internet Archive below. Open, Share, Export for Zotero and To read sit in a row; Add note opens the group's notes on the work beside it.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/library-toread.jpg"><img src="img/library-toread.jpg" width="1440" height="813" loading="lazy" alt="The To read shelf: four book cards, each with a call number, code, author and title, and lines for each loan with the date loaned, the borrower's name and the date due; one card stamped Due soon, one with a white sticker over its full lines."></a>
+          <figcaption><b>To read.</b> A reader's own shelf, as the book cards once kept in a book's pocket: a line for each loan and renewal in its own pen and stamp. A card due within the week is stamped DUE SOON; a full card takes a white sticker over its old lines, which show faintly through and open in full when clicked. The loans here are examples.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/library-cardback.jpg"><img src="img/library-cardback.jpg" width="760" height="470" loading="lazy" alt="A book card turned over: two notes on the work written by hand on its ruled back, each signed and dated, and Add Annotation at its foot."></a>
+          <figcaption><b>The back of a card.</b> Turned with ↻, a card carries the group's notes on the work, in the order they were written. The notes here are examples.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/library-card-settings.jpg"><img src="img/library-card-settings.jpg" width="700" height="244" loading="lazy" alt="The reader's library card in Settings: the bench's name over a red ground with an open-book seal and LIBRARY CARD, the reader's number, initials and name embossed; and its back, giving the holder, the card number, the bench, the group and the repository."></a>
+          <figcaption><b>Settings ▸ Library.</b> The reader's library card, after a 1960s student card, and its back. The same tab sets how book cards are signed and when a loan is due soon, and has Wipe my loan history. The name here is an example.<span class="prov">ELIZA 0.2.2, bench-kit 1.8.28 · 9 November 2026</span></figcaption>
         </figure>
       </div>
     </section>
 
     <section class="section wrap reveal" id="config">
-      <span class="num">05</span>
+      <span class="num">06</span>
       <h2>Configuration and tokens</h2>
       <p>A bench has no server, no environment variables and no API keys of its own. Its settings are in <code>research/js/config.js</code>, read by the browser. Two services take a personal token, and both are optional: without them a bench reads, collates and draws as usual, keeps annotations as drafts in the browser, and does not open the paratext archive.</p>
       <p>Each person pastes their own token into ⚙ Settings. It is kept in that browser's localStorage, under the bench's storage prefix (<code>store</code> in <code>config.js</code>), and is left out of Help ▸ Back up my data. Nothing is sent anywhere but the service it belongs to.</p>
@@ -461,7 +500,7 @@
     </section>
 
     <section class="section wrap reveal" id="trouble">
-      <span class="num">06</span>
+      <span class="num">07</span>
       <h2>Troubleshooting</h2>
       <ul class="trouble">
         <li><span class="sym">Access to fetch at 'file:///…/source/v2/wordfreq.py' from origin 'null' has been blocked by CORS policy</span><span class="fix">The bench was opened as a file. It reads its sources over HTTP, so serve the repository's folder (<code>python3 -m http.server 8000</code>) and open <code>http://localhost:8000/research/</code>.</span></li>
@@ -471,17 +510,18 @@
         <li><span class="sym">Failed to load resource: net::ERR_CONNECTION_RESET …/research/kit/genealogy.js</span><span class="fix">Python's built-in server dropped some of the many files a bench asks for at once. Reload, or serve with a longer queue:<br><code>python3 -c "import http.server as h; h.ThreadingHTTPServer.request_queue_size = 256; h.test(h.SimpleHTTPRequestHandler, h.ThreadingHTTPServer, port=8000)"</code></span></li>
         <li><span class="sym">After moving to a newer kit, the bench still behaves as it did before the move</span><span class="fix">The browser kept the old modules. Every script and stylesheet in <code>research/index.html</code> carries <code>?v=</code> with the bench's version; raise them all together, which <code>node research/kit/tools/release.js next "…" --kit vX.Y.Z</code> does (it printed <code>research/index.html: 47 × ?v=0.1.99</code> for bench-template). Then reload with the cache bypassed.</span></li>
         <li><span class="sym">no Chrome or Chromium found; give its path as CHROME=</span><span class="fix">The test tools could not find a browser in the usual places. Give its path: <code>CHROME=/path/to/chrome node research/kit/tools/test.js</code>.</span></li>
-        <li><span class="sym">Annotations show as drafts only, or the paratext archive asks for a token, on the published bench</span><span class="fix">Tokens are kept per origin, so the ones pasted on <code>localhost</code> are not on <code>github.io</code>. Paste them in ⚙ Settings on the published bench (section 05).</span></li>
+        <li><span class="sym">Annotations show as drafts only, or the paratext archive asks for a token, on the published bench</span><span class="fix">Tokens are kept per origin, so the ones pasted on <code>localhost</code> are not on <code>github.io</code>. Paste them in ⚙ Settings on the published bench (section 06).</span></li>
       </ul>
     </section>
 
     <section class="section wrap reveal" id="links">
-      <span class="num">07</span>
+      <span class="num">08</span>
       <h2>Links</h2>
       <div class="links">
         <a href="https://github.com/critical-code-studies/bench-kit"><b>Source</b><span>critical-code-studies/bench-kit on GitHub</span></a>
         <a href="https://github.com/critical-code-studies/bench-template"><b>bench-template</b><span>The starting point for a new bench</span></a>
         <a href="https://github.com/critical-code-studies/bench-kit#readme"><b>README</b><span>Every module, setting and hook</span></a>
+        <a href="library.html"><b>Library guide</b><span>Setting up the Library, its manifest and its tools</span></a>
         <a href="https://github.com/critical-code-studies/bench-kit/blob/main/CHANGELOG.md"><b>Changelog</b><span>Each release and what it changed</span></a>
         <a href="https://github.com/critical-code-studies/bench-kit/blob/main/LICENSE"><b>Licence</b><span>GNU General Public License, version 3</span></a>
         <a href="https://critical-code-studies.github.io/"><b>Critical Code Studies</b><span>The readings and the method</span></a>

@@ -506,7 +506,7 @@ node tools/new-bench.js translation ../my-bench --name "My Text" --org my-org --
 
 ## The Library
 
-![The Library tab: books, a jacket, an article, a chapter, a thesis, a letter, a podcast, a talk, a documentary and a web page as covers on a shelf, with the search, the filters, the order and the switch to a list above them](docs/img/library-shelf.jpg)
+![The Library tab on the ELIZA bench: key works as covers on a shelf, drawn by kind or from an image of the work, with the filters beside them and the search, the order, the views and the sizes above](docs/img/library-covers.jpg)
 
 The Library tab shows a project's secondary literature as covers on a shelf, or as a list. A bench turns it on with `library: true` in `js/config.js`, and writes `library/library.json` beside its `index.html`:
 
