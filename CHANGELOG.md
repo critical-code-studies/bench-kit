@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Glossary renderings separated by a comma** (David, via kuki): an English cell was split on ";" only, so "basis, foundation" was one rendering, never found in the translation, and the Glossary called it not in the translation though each word occurs there 40 times. A cell is now split on "," as on ";", in a Markdown table and in glossary.csv, and each part is counted and warned of on its own. A description beside a rendering goes in brackets, where it is a note: "decision; determination (in the causal sense)".
+
 ## 1.9.0 (2026-11-09)
 
 - **1.8.29 renumbered** (David): the same code as 1.8.29, released as 1.9.0. A bench on 1.8.29 can move to 1.9.0 with no other change.

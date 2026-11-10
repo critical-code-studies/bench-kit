@@ -233,11 +233,12 @@
     return rows;
   }
   VT.csv = csvRows;
-  // an English cell: renderings separated by ; (or / where the source cell pairs terms), the words
-  // in brackets a note
+  // an English cell: renderings separated by ; or , (or / where the source cell pairs terms), the words
+  // in brackets a note, so a description goes in brackets: determination (in the causal sense)
+  var SEP = /\s*[;,]\s*/;
   function renderings(cell) {
     var note = [], s = String(cell || '').replace(/\s*\(([^()]*)\)/g, function (_, x) { note.push(x); return ''; });
-    return { list: s.split(/\s*;\s*/).map(function (x) { return x.replace(/\*/g, '').trim(); }).filter(Boolean), note: note.join('; ') };
+    return { list: s.split(SEP).map(function (x) { return x.replace(/\*/g, '').trim(); }).filter(Boolean), note: note.join('; ') };
   }
   VT.glossary = function (raw, kind, o) {
     o = o || {};
@@ -265,7 +266,7 @@
       if (!r.join('').trim()) return;
       var get = function (name) { var k = col(name); return k < 0 ? '' : (r[k] || '').trim(); };
       out.push({
-        source: [get('source')], reading: get('reading') ? [get('reading')] : [], english: get('english').split(/\s*;\s*/).filter(Boolean),
+        source: [get('source')], reading: get('reading') ? [get('reading')] : [], english: get('english').split(SEP).filter(Boolean),
         competitors: get('competitors').split(/\s*;\s*/).filter(Boolean), scope: get('scope'), decided: get('decided'), note: get('notes'), n: i + 2, row: i + 1
       });
     });

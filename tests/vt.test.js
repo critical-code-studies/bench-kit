@@ -29,6 +29,9 @@
   var glc = [{ source: ['根據'], reading: ['konkyo'], english: ['Ground'] }, { source: ['理由'], reading: ['riyū'], english: ['ground'] }];
   eq('a capital keeps two renderings apart where the translation asks for it', [VT.collisions(glc).length, VT.collisions(glc, { caseSensitive: true }).length], [1, 0]);
   var md = '## Glossary\n\n| Japanese | Reading | English |\n|---|---|---|\n| 存在 / 非存在 | そんざい / ひそんざい | existence / non-existence |\n';
+  var mdc = '## Glossary\n\n| Japanese | Reading | English |\n|---|---|---|\n| 基礎 | kiso | basis, foundation (基礎づける to found; 基く to rest on) |\n| 決定 | kettei | decision; determination (in the causal sense) |\n';
+  eq('renderings split on a comma as on a semicolon, the bracketed words a note', VT.glossary(mdc, 'md', { heading: 'Glossary' }).map(function (g) { return [g.english, g.note]; }),
+    [[['basis', 'foundation'], '基礎づける to found; 基く to rest on'], [['decision', 'determination'], 'in the causal sense']]);
   eq('a Markdown pair split, one row to each term', VT.glossary(md, 'md', { heading: 'Glossary' }).map(function (g) { return [g.source[0], g.english[0]]; }), [['存在', 'existence'], ['非存在', 'non-existence']]);
   T.group('Translation: change lists');
   var ch = VT.changes('### translation | p. 12\nOLD: the chance\nNEW: the contingency\nSRC: 偶然\nWHY: the glossary\nORIGIN: witness W1\n\n### p. 13 | CHANGES\nOLD: a\nNEW: b\nJP: 甲\n\n## Literal problems\n- p. 14 a reading in doubt\n', 'checks/x.md');
