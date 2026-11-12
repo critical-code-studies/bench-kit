@@ -435,6 +435,8 @@ A selection in Book is the version's lines, so an annotation made there (✎ Ann
 
 Book finds each quote in the page's text as it is set, with the pages before and after for a passage that crosses the turn, in the file's order, passing over whitespace, `*` and notes' marks. The file keeps no lines or offsets, so it is made once for a source whose pages do not change and follows the text when it is edited elsewhere; a quote no longer found leaves its place drawn and untied. A passage under the pointer lights its place on the page, and a place its passage; a click on either holds both until the next click; text selected lights every place it runs over. `SW.book.regionsReport()` counts the places of the pages read so far and lists those not found.
 
+While a passage's highlight link is held, **✦ Share highlight** makes a picture of the page with the place marked and the passage, its citation and the image's credit beside it, to share, copy, download or paste into an email, and a link (`hr`) that opens Book with the same highlight held. **🔗 Share page** is the link to Book as it is set.
+
 `doc.linkColor` (a CSS colour) sets the colour of every highlight link between the text and the page: lines, revisions' boxes and passages. Without it the theme's is used. A reader can choose their own in Settings ▸ Book ▸ Highlight links, and turn them off there.
 
 ## Tests

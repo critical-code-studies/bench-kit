@@ -80,6 +80,11 @@
  * A passage under the pointer lights its place on the page, and a place its passage; a click on either holds
  * both, until the next click; text selected lights every place it runs over. SW.book.regionsReport() counts the
  * places of the pages read so far and lists those not found in the text.
+ * While a passage's highlight link is held, ✦ Share highlight in the toolbar makes a picture to send: the page with the
+ * place drawn on it, the passage, its citation, the page's name and the image's credit (doc.imageCreditShort), with
+ * Share… (where the browser can hand a file on), Copy image, Download image, Email… (the passage, the citation and
+ * the link in a new message, the picture on the clipboard to paste in) and Copy link, a link that opens Book with the
+ * same highlight held (hr: the page, the place and the first of its words). 🔗 Share page is the link to Book as set.
  * These are Book's highlight links: a line, a box or a passage lit on the page, and its words in the text. Their
  * colour is the theme's, or the bench's (SW.BENCH.doc.linkColor: a CSS colour), or the reader's own (Settings ▸
  * Book, kept in this browser as book.link); the reader can also turn them off there (book.linkOff), and the
@@ -217,7 +222,7 @@
     view.style.setProperty('--bk-imgw', st.imgW + 'px');
     (cols || []).forEach(function (c) { c.stale = true; });
   }
-  var cols = [], place = null, pending = null, shared = (Q0.pz || Q0.hz) ? { pz: Q0.pz, zm: Q0.zm, hz: Q0.hz } : null;
+  var cols = [], place = null, pending = null, shared = (Q0.pz || Q0.hz || Q0.hr) ? { pz: Q0.pz, zm: Q0.zm, hz: Q0.hz, hr: Q0.hr } : null;
   showImages();   // place: in the first column's lines; pending: a link's, until it is set
 
   function inStates(vid) { return !!STATES && [STATES.source, STATES.first, STATES.last].indexOf(vid) >= 0; }
@@ -737,13 +742,15 @@
   }
   // clicked: held, the place and its passage, until the next click
   var rgHeld = [], rgHeldAt = 0;
-  function rgUnhold() { rgHeld.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rheld', false); }); rgHeld = []; hlSet('bk-rg-held', []); }
+  function rgShareShown() { var b = SW.$('#bk-share-hl'); if (b) b.hidden = !rgHeld.length; }
+  function rgUnhold() { rgHeld.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rheld', false); }); rgHeld = []; hlSet('bk-rg-held', []); rgShareShown(); }
   function rgHold(list) {
     rgUnhold(); if (!linkOn()) return [];
     rgHeld = list.map(function (x) { return { facs: x.pg.facs, k: x.k }; }); rgHeldAt = Date.now();
     var ranges = [];
     rgHeld.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rheld', true); ranges = ranges.concat(rgRanges(x.facs, x.k)); });
     hlSet('bk-rg-held', ranges);
+    rgShareShown();
     return ranges;
   }
   // a place on the page: to its passage in the text beside it, both held
@@ -790,7 +797,7 @@
       });
     });
     view.addEventListener('pointerleave', function () { rgHover(null); });
-    view.addEventListener('click', function (e) { if (rgHeld.length && Date.now() - rgHeldAt > 300 && !(e.target.closest && e.target.closest('#bk-share'))) rgUnhold(); }, true);
+    view.addEventListener('click', function (e) { if (rgHeld.length && Date.now() - rgHeldAt > 300 && !(e.target.closest && e.target.closest('#bk-share, #bk-share-hl'))) rgUnhold(); }, true);
     // a click on a passage of the text (not a drag that selects, nor a link, a note's mark or a button): held
     view.addEventListener('click', function (e) {
       var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0 || !s0._leaf || !s0._leaf.col || e.target.closest('a, button, .bk-ref')) return;
@@ -799,6 +806,150 @@
       rgNeed(s0._leaf.col, s0._leaf.col.pages.indexOf(s0._leaf)).then(function () { var list = rgAtPoint(s0, x, y); if (list.length) rgHold(list); });
     });
   }
+  // ---------- a held highlight to send: a link that holds it again, and a picture of the page with it ----------
+  // hr in a link: the page, the place's number on it, and the first of its words (squashed), so that a place
+  // whose number has changed since (the file made again) is still found by its words
+  function rgRef(c, x) { var pg = c.pages[c.byFacs[x.facs]]; return x.facs + ':' + x.k + ':' + rgQuote(pg.regions[x.k], c.vid).slice(0, 16); }
+  function rgOpenHeld(c, hr) {
+    var m = /^([^:]+):(\d+):?(.*)$/.exec(String(hr)); if (!m) return;
+    if (c.stale || !c.byFacs) measure(c);
+    var j = c.byFacs[m[1]]; if (j == null) return;
+    rgNeed(c, j).then(function () {
+      var pg = c.pages[j], rs = pg.regions; if (!rs) return;
+      var k = +m[2], has = function (i) { return rs[i] && (!m[3] || rgQuote(rs[i], c.vid).indexOf(m[3]) === 0); };
+      if (!has(k)) { k = -1; for (var i = 0; i < rs.length; i++) if (has(i)) { k = i; break; } }
+      if (k < 0) { SW.toast('The passage this link held is no longer marked on the ' + PAGE + '.', 5000); return; }
+      // after the place the link names has been gone to
+      setTimeout(function () { toRegion(c, pg, k); }, 250);
+    });
+  }
+  function loadPic(src) {
+    return new Promise(function (ok, no) {
+      var im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = function () { ok(im); }; im.onerror = function () { no(new Error('the ' + PAGE + '’s image could not be read')); };
+      im.src = src;
+    });
+  }
+  function wrapText(x, text, width) {
+    var out = [], line = '';
+    String(text).split(/\s+/).forEach(function (w) {
+      var t = line ? line + ' ' + w : w;
+      if (line && x.measureText(t).width > width) { out.push(line); line = w; } else line = t;
+    });
+    if (line) out.push(line);
+    return out;
+  }
+  // what is held, read for sending: the page, its places held, the passage as the first text has it, its citation
+  function rgHeldInfo() {
+    var c = cols[0]; if (!c || !rgHeld.length) return null;
+    if (c.stale || !c.byFacs) measure(c);
+    var x = rgHeld[0], j = c.byFacs[x.facs], pg = c.pages[j]; if (!pg || !pg.regions) return null;
+    var rr = rgResolve(c, j) || [], range = rr[x.k], ks = rgHeld.filter(function (y) { return y.facs === x.facs; }).map(function (y) { return y.k; });
+    var passage = range ? range.toString().replace(/\s+/g, ' ').trim() : '', cite = '', sa = range && spanOf(range.startContainer);
+    var face = getComputedStyle(sa || c.el).fontFamily;   // the text's own face, for the picture
+    if (range && SW.cite && c.b) {
+      var sb = spanOf(range.endContainer);
+      if (sa && sb && sa.dataset.n && sa.dataset.p != null) cite = SW.cite(c.b, +sa.dataset.p, +sa.dataset.n, Math.max(+sa.dataset.n, +(sb.dataset.n || sa.dataset.n)));
+    }
+    return { c: c, pg: pg, ks: ks, passage: passage, cite: cite, face: face, est: ks.some(function (k) { return pg.regions[k].est; }), link: shareLink({ hr: rgRef(c, x) }) };
+  }
+  // the picture: the page as it is trimmed, the places drawn in the links' colour; beside it the passage, and
+  // under that the page's name, the text, the citation, the bench and the image's credit
+  function rgPicture(h) {
+    var pg = h.pg, src = pg.img ? (pg.img.large || pg.img.src) : iiifURL(pg.iiif, 1200);
+    return loadPic(src).then(function (im) {
+      var T = trim(pg) || { l: 0, t: 0, r: 0, b: 0 }, nw = im.naturalWidth, nh = im.naturalHeight;
+      var sx = T.l * nw, sy = T.t * nh, sw = (1 - T.l - T.r) * nw, sh = (1 - T.t - T.b) * nh;
+      var PAD = 40, IW = 640, IH = Math.round(IW * sh / sw), TX = PAD + IW + 44, CW = 1400, TW = CW - TX - PAD;
+      var cv = document.createElement('canvas'), x = cv.getContext('2d');
+      var serif = h.face || 'Georgia, serif', sans = 'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
+      var css = getComputedStyle(document.documentElement), colour = css.getPropertyValue('--bk-link').trim() || css.getPropertyValue('--amber').trim() || '#a3317a';
+      var size = h.passage.length > 900 ? 20 : h.passage.length > 500 ? 23 : 27;
+      x.font = size + 'px ' + serif;
+      var body = wrapText(x, '“' + h.passage + '”', TW), lh = Math.round(size * 1.5);
+      x.font = '17px ' + sans;
+      var P = PAGE.charAt(0).toUpperCase() + PAGE.slice(1), credit = String(D.imageCreditShort || '').replace(/<[^>]*>/g, '').trim();
+      var meta = [P + ' ' + (pg.facs || '') + ' · ' + textLabel(h.c.vid)].concat(h.cite ? wrapText(x, h.cite, TW) : [], [B.title || B.name || ''].filter(Boolean),
+        credit ? wrapText(x, 'Image: ' + credit, TW) : [], h.est ? ['The place marked on the ' + PAGE + ' is approximate.'] : []);
+      var CH = Math.max(IH, body.length * lh + 30 + meta.length * 26) + 2 * PAD;
+      cv.width = CW; cv.height = CH;
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, CW, CH);
+      x.drawImage(im, sx, sy, sw, sh, PAD, PAD, IW, IH);
+      x.strokeStyle = '#c9c9c9'; x.lineWidth = 1; x.strokeRect(PAD + 0.5, PAD + 0.5, IW - 1, IH - 1);
+      // the places, by their share of the page, within the trimmed picture
+      x.save(); x.beginPath(); x.rect(PAD, PAD, IW, IH); x.clip();
+      h.ks.forEach(function (k) {
+        pg.regions[k].boxes.forEach(function (b0) {
+          var rw = pg.rsize[0], rh = pg.rsize[1];
+          var bx = PAD + (Math.min(b0[0], b0[2]) / rw - T.l) / (1 - T.l - T.r) * IW, by = PAD + (Math.min(b0[1], b0[3]) / rh - T.t) / (1 - T.t - T.b) * IH;
+          var bw = Math.abs(b0[2] - b0[0]) / rw / (1 - T.l - T.r) * IW, bh = Math.abs(b0[3] - b0[1]) / rh / (1 - T.t - T.b) * IH;
+          x.globalAlpha = 0.28; x.fillStyle = colour; x.fillRect(bx, by, bw, bh);
+          x.globalAlpha = 1; x.strokeStyle = colour; x.lineWidth = 2.5; x.strokeRect(bx, by, bw, bh);
+        });
+      });
+      x.restore();
+      x.fillStyle = '#15191c'; x.textBaseline = 'top'; x.font = size + 'px ' + serif;
+      body.forEach(function (ln, i) { x.fillText(ln, TX, PAD + i * lh); });
+      // a rule in the links' colour beside the passage
+      x.fillStyle = colour; x.fillRect(TX - 18, PAD + 4, 4, body.length * lh - 10);
+      x.fillStyle = '#55606a'; x.font = '17px ' + sans;
+      meta.forEach(function (ln, i) { x.fillText(ln, TX, PAD + body.length * lh + 30 + i * 26); });
+      return new Promise(function (ok, no) { cv.toBlob(function (bl) { if (bl) ok({ blob: bl, w: CW, h: CH }); else no(new Error('the picture could not be made')); }, 'image/png'); });
+    });
+  }
+  function shareHighlight() {
+    var h = rgHeldInfo();
+    if (!h) { SW.toast('Click a passage, or its place on the ' + PAGE + ', to hold a highlight first.', 4000); return; }
+    var old = SW.$('dialog.bk-shl'); if (old) old.remove();
+    var d = SW.el('dialog', { class: 'bk-shl' }), P = PAGE.charAt(0).toUpperCase() + PAGE.slice(1), pic = null;
+    var name = String(B.id || B.name || 'bench').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + PAGE + '-' + (h.pg.facs || '') + '-highlight.png';
+    d.innerHTML = '<form method="dialog"><h3>Share highlight</h3>' +
+      '<div class="bk-shl-pic"><p class="hint">Making the picture…</p></div>' +
+      '<p class="hint">' + esc(P + ' ' + (h.pg.facs || '') + ' · ' + textLabel(h.c.vid)) + (h.cite ? ' · ' + esc(h.cite) : '') + '</p>' +
+      '<div class="row bk-shl-acts"><button type="button" class="btn" data-shl="share" hidden>Share…</button><button type="button" class="btn" data-shl="copy" disabled>Copy image</button>' +
+      '<button type="button" class="btn" data-shl="save" disabled>Download image</button><button type="button" class="btn" data-shl="mail">Email…</button>' +
+      '<button type="button" class="btn" data-shl="link">Copy link</button><span class="bk-shl-gap"></span><button value="cancel" class="btn ghost">Close</button></div>' +
+      '<p class="hint bk-shl-msg" aria-live="polite"></p></form>';
+    document.body.appendChild(d);
+    var msg = SW.$('.bk-shl-msg', d), say = function (t) { msg.textContent = t; };
+    var text = (h.passage ? '“' + h.passage + '”\n\n' : '') + (h.cite ? h.cite + '\n\n' : '') + h.link;
+    var file = function () { return new File([pic.blob], name, { type: 'image/png' }); };
+    var toClip = function () {
+      if (!pic || !navigator.clipboard || !root.ClipboardItem) return Promise.reject(new Error('this browser cannot copy a picture'));
+      return navigator.clipboard.write([new root.ClipboardItem({ 'image/png': pic.blob })]);
+    };
+    rgPicture(h).then(function (p) {
+      pic = p;
+      var u = URL.createObjectURL(p.blob), box = SW.$('.bk-shl-pic', d);
+      box.innerHTML = ''; box.appendChild(SW.el('img', { src: u, alt: 'The ' + PAGE + ' with the passage’s place marked, and the passage', width: p.w, height: p.h }));
+      d.addEventListener('close', function () { URL.revokeObjectURL(u); });
+      SW.$$('[data-shl="copy"], [data-shl="save"]', d).forEach(function (b) { b.disabled = false; });
+      var sb = SW.$('[data-shl="share"]', d);
+      try { if (navigator.canShare && navigator.canShare({ files: [file()] })) sb.hidden = false; } catch (e) { /* no sharing of files here */ }
+    }, function (e) {
+      SW.$('.bk-shl-pic', d).innerHTML = '<p class="hint">The picture could not be made here (' + esc(e.message) + '). The passage and the link can still be sent.</p>';
+    });
+    d.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-shl]'); if (!b) return;
+      var k = b.dataset.shl;
+      if (k === 'link') { SW.copyText(h.link, 'the link'); say('The link is copied. It opens this ' + PAGE + ' with the highlight held.'); }
+      else if (k === 'copy') toClip().then(function () { say('The picture is copied: paste it into a message or a document.'); }, function (err) { say('Could not copy the picture (' + err.message + '). Download image gives it as a file.'); });
+      else if (k === 'save') { var a = SW.el('a', { href: URL.createObjectURL(pic.blob), download: name }); document.body.appendChild(a); a.click(); a.remove(); say('Saved as ' + name + '.'); }
+      else if (k === 'share') navigator.share({ files: [file()], title: (B.title || B.name || '') + ', ' + PAGE + ' ' + (h.pg.facs || ''), text: text }).catch(function () { /* put away by the reader */ });
+      else if (k === 'mail') {
+        // an email cannot be given a file from a page: the words and the link go in it, the picture on the clipboard
+        var go = function (copied) {
+          var a = SW.el('a', { href: 'mailto:?subject=' + encodeURIComponent((B.title || B.name || 'A passage') + ', ' + PAGE + ' ' + (h.pg.facs || '')) + '&body=' + encodeURIComponent(text) });
+          document.body.appendChild(a); a.click(); a.remove();
+          say(copied ? 'A message is started with the passage and the link. The picture is copied: paste it into the message.' : 'A message is started with the passage and the link. Download image gives the picture to attach.');
+        };
+        toClip().then(function () { go(true); }, function () { go(false); });
+      }
+    });
+    d.addEventListener('close', function () { d.remove(); });
+    d.showModal();
+  }
+  K.heldInfo = rgHeldInfo; K.heldPicture = function () { var h = rgHeldInfo(); return h ? rgPicture(h) : Promise.resolve(null); };
   // the highlight links turned on or off, or their colour changed (Settings ▸ Book): what is lit is put out, and each page's
   // layer is made again when next wanted
   SW.on('book-link', function () {
@@ -1275,7 +1426,8 @@
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
         '<button class="btn bk-eye" id="bk-imgoff" title="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '" aria-label="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '">' + (st.imgOn ? EYE : EYEOFF) + '</button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="' + SW.lineWord() + ' at the place shown here, line by line">≡ ' + SW.lineWord() + ' here</button>' +
-      '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share</button>' +
+      '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share page</button>' +
+      '<button class="btn ghost" id="bk-share-hl"' + (rgHeld.length ? '' : ' hidden') + ' title="The highlight held: a picture of the page with its place marked and the passage, to send, or a link that opens it here">✦ Share highlight</button>' +
       '<select id="bk-marks" class="bk-marks" title="The ' + esc(PAGE) + 's you have bookmarked in this text: choose one to go to it"><option value="">🔖 Bookmarks</option></select>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
         '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision">' +
@@ -1299,6 +1451,7 @@
       if (e.target.id === 'bk-next') { stop(); st.stage = Math.min(STAGES.length, st.stage + 1); apply(true); }
       if (e.target.id === 'bk-play') { if (st.play) stop(); else play(); }
       if (e.target.id === 'bk-share') { SW.copyText(shareLink(), 'the link'); return; }
+      if (e.target.id === 'bk-share-hl') { shareHighlight(); return; }
       if (e.target.id === 'bk-read') { var c = cols[0]; if (c) { var a = place || firstLine(c); if (a) SW.openAt(c.vid, a); else SW.setTab('read'); } }
     });
     tb.addEventListener('input', function (e) {
@@ -1381,6 +1534,7 @@
         var c0 = cols[0];
         if (sh.hz) c0.pages.some(function (pg) { if (pg.zones[sh.hz]) { toText(c0, pg, sh.hz); return true; } return false; });
         if (sh.pz) { if (c0.stale || !c0.byFacs) measure(c0); var k = c0.byFacs[sh.pz]; if (k != null && c0.pages[k].has) pageBox(c0, k, sh.zm); }
+        if (sh.hr && RG) rgOpenHeld(c0, sh.hr);
       }
     });
   }

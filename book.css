@@ -124,6 +124,16 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-band { position: absolute; box-sizing: border-box; border-bottom: 1px solid transparent; pointer-events: auto; cursor: pointer; z-index: 1; transition: background-color 0.2s ease, border-color 0.2s ease; }
 .bk-fig-b:hover .bk-band, .bk-modal-pic:hover .bk-band { border-bottom-color: color-mix(in srgb, var(--bk-link, var(--amber)) 25%, transparent); }
 .bk-fig-b:hover .bk-band.bk-band-est, .bk-modal-pic:hover .bk-band.bk-band-est { border-bottom-style: dashed; }
+/* Share highlight: the picture to send, and what can be done with it */
+.bk-shl { width: min(820px, 94vw); max-height: 90vh; padding: 0; }
+.bk-shl form { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; }
+.bk-shl h3 { margin: 0; }
+.bk-shl-pic { overflow: auto; max-height: 56vh; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.bk-shl-pic img { display: block; max-width: 100%; max-height: 54vh; width: auto; height: auto; margin: 0 auto; }
+.bk-shl-pic .hint { padding: 16px; margin: 0; }
+.bk-shl-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bk-shl-gap { flex: 1; }
+.bk-shl-msg { min-height: 1.4em; margin: 0; }
 /* Settings ▸ Book: a sample of the highlight links' colour */
 .bk-linkdemo { padding: 1px 6px; border-radius: 2px; outline: 1px solid transparent; }
 /* the places of a page's passages (doc.regions): faint with the pointer on the picture, lit with their passage */
