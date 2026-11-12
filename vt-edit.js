@@ -6,7 +6,7 @@
  * writes the master itself.
  *
  * The text is set in a box of its own, a field with a head, so that Edit is not taken for the pages of Book: greyed
- * with a plain edge while locked, the paper's ground with an edge in the bench's accent once unlocked.
+ * with a plain edge while locked, white with an edge in the bench's accent once unlocked.
  * The padlock: Edit opens locked, on a page load and each time the tab is opened again. While locked the
  * text cannot change, by typing, pasting, dropping, undo or redo; it can be read, selected, copied, scrolled
  * and saved. A save leaves the lock as it is.

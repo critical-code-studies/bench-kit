@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Edit's text in a box of its own** (David, via kuki): Edit set the file's text in the same face on the same ground as the pages of Book, with only the padlock in the toolbar to tell them apart. The text is now in a field with a head: greyed, with a plain edge, while locked; the paper's ground with an edge in the bench's accent once unlocked. The head says which, and what the box holds (the text as its file has it, Markdown), and its padlock locks and unlocks as the toolbar's does.
+- **Edit's text in a box of its own** (David, via kuki): Edit set the file's text in the same face on the same ground as the pages of Book, with only the padlock in the toolbar to tell them apart. The text is now in a field with a head: greyed, with a plain edge, while locked; white (in a dark theme, the lighter surface) with an edge in the bench's accent once unlocked. The head says which, and what the box holds (the text as its file has it, Markdown), and its padlock locks and unlocks as the toolbar's does.
 
 ## 1.9.2 (2026-11-12)
 
