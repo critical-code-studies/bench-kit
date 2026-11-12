@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.4 (2026-11-12)
 
 - **Share highlight cites in the bench's words** (David, via kuki): the picture, the dialog and the email gave the bench's reference by file and line ("Translation (2026), translation/….md, l. 394 [REF: …]"), which is for annotating, not for a reader sent a page. A bench can now give its own wording: SW.BENCH.doc.shareCite, a text with {page}, {version} and {label} in it, or a function of { page, version, label, cite }. Without it, or where the function gives nothing, the reference is used as before. The picture and the dialog now say what the passage is once: the bench's wording alone, which names the page, or the page and the reference; "Page 81 · Translation · Translation (2026), …" named the text three times.
 
