@@ -42,6 +42,15 @@
   eq('a span not in the lines: no selection', K.selection({ c0: 0, c1: 3, off: 0 }, { n: 2, c0: 0, c1: 3, off: 1 }), null);
 
   T.group('Book: opened from elsewhere');
+  T.group('Book: the citation sent with a highlight');
+  (function () {
+    var o = { page: '81', version: 'translation', label: 'Translation', cite: 'Translation (2026), file.md, l. 394' };
+    eq('with no wording of the bench’s, the reference by file and line', K.shareCite(undefined, o), 'Translation (2026), file.md, l. 394');
+    eq('a text with {page} in it', K.shareCite('Kuki, *The Problem of Contingency*, p. {page} of the 1948 printing ({label}).', o), 'Kuki, The Problem of Contingency, p. 81 of the 1948 printing (Translation).');
+    eq('a function of the page and the version', K.shareCite(function (x) { return x.version === 'translation' ? 'p. ' + x.page : null; }, o), 'p. 81');
+    eq('a function that gives nothing keeps the reference', K.shareCite(function () { return null; }, o), o.cite);
+    eq('a function that fails keeps the reference', K.shareCite(function () { throw new Error('x'); }, o), o.cite);
+  })();
   T.group('Book: a place’s words found in the text');
   eq('whitespace and * are passed over', K.squash(' the *hasard* of\n chance '), 'thehasardofchance');
   (function () {

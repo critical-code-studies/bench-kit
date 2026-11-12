@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Share highlight cites in the bench's words** (David, via kuki): the picture, the dialog and the email gave the bench's reference by file and line ("Translation (2026), translation/….md, l. 394 [REF: …]"), which is for annotating, not for a reader sent a page. A bench can now give its own wording: SW.BENCH.doc.shareCite, a text with {page}, {version} and {label} in it, or a function of { page, version, label, cite }. Without it, or where the function gives nothing, the reference is used as before.
+
 ## 1.9.3 (2026-11-12)
 
 - **Book: Share highlight** (David, via kuki): while a passage's highlight link is held, ✦ Share highlight in the toolbar makes a picture to send: the page with the passage's place drawn on it in the links' colour, the passage beside it, and under that the page's name, the text, the citation, the bench and the image's credit (and, for an estimated place, that it is approximate). In the order David gave: Copy link gives a link that opens Book with the same highlight held (hr: the page, the place and the first of its words, so a place is found again after its file is remade); Email… hands the picture and the passage to the system's sharing where the browser can pass a file, and elsewhere starts a message with the passage, the citation and the link, with the picture copied to paste in (a page cannot attach a file to an email); Download PNG and Copy PNG give the picture.

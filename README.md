@@ -437,6 +437,8 @@ Book finds each quote in the page's text as it is set, with the pages before and
 
 While a passage's highlight link is held, **✦ Share highlight** makes a picture of the page with the place marked and the passage, its citation and the image's credit beside it, with Copy link (`hr`: a link that opens Book with the same highlight held), Email…, Download PNG and Copy PNG. **🔗 Share page** is the link to Book as it is set.
 
+`doc.shareCite` gives the citation that Share highlight sends, in the bench's own words: a text with `{page}`, `{version}` and `{label}` in it (`'Author, Title (year), trans. Name (year), p. {page} of the 1948 printing.'`), or a function of `{ page, version, label, cite }`. Without it the bench's reference by file and line is sent.
+
 `doc.linkColor` (a CSS colour) sets the colour of every highlight link between the text and the page: lines, revisions' boxes and passages. Without it the theme's is used. A reader can choose their own in Settings ▸ Book ▸ Highlight links, and turn them off there.
 
 ## Tests

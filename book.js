@@ -86,6 +86,9 @@
  * of its words), Email… (the picture and the passage handed to the system's sharing where the browser can pass a
  * file; elsewhere the passage, the citation and the link in a new message, the picture on the clipboard to paste
  * in), Download PNG and Copy PNG. 🔗 Share page is the link to Book as set.
+ * SW.BENCH.doc.shareCite gives the citation sent with a highlight in the bench's own words, in place of the reference
+ * by file and line: a text with {page} (the page's name), {version} and {label} in it, or a function of
+ * { page, version, label, cite } that returns one (nothing, to keep the reference).
  * These are Book's highlight links: a line, a box or a passage lit on the page, and its words in the text. Their
  * colour is the theme's, or the bench's (SW.BENCH.doc.linkColor: a CSS colour), or the reader's own (Settings ▸
  * Book, kept in this browser as book.link); the reader can also turn them off there (book.linkOff), and the
@@ -160,6 +163,15 @@
       i = hay.indexOf(q, i + 1);
     }
     return null;
+  };
+  // the citation sent with a highlight: the bench's wording where it gives one (doc.shareCite: a function of
+  // { page, version, label, cite }, or a text with {page}, {version} and {label} in it), else the reference made
+  // from the file and its lines (o.cite); * (a mark of emphasis) is taken out, the picture and an email being plain
+  K.shareCite = function (how, o) {
+    var t = null;
+    if (typeof how === 'function') { try { t = how(o); } catch (e) { t = null; } }
+    else if (typeof how === 'string') t = how.replace(/\{(page|version|label)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; });
+    return t == null || t === '' ? (o.cite || '') : String(t).replace(/\*/g, '');
   };
   // a selection from one span to another as the lines it covers: start and end are
   // { n, c0, c1, off } (off: characters into the span, or null for the span's start or end)
@@ -852,6 +864,8 @@
       var sb = spanOf(range.endContainer);
       if (sa && sb && sa.dataset.n && sa.dataset.p != null) cite = SW.cite(c.b, +sa.dataset.p, +sa.dataset.n, Math.max(+sa.dataset.n, +(sb.dataset.n || sa.dataset.n)));
     }
+    // the bench's own wording for what is sent (doc.shareCite), in place of the reference by file and line
+    cite = K.shareCite(D.shareCite, { page: pg.facs || '', version: c.vid, label: textLabel(c.vid), cite: cite });
     return { c: c, pg: pg, ks: ks, passage: passage, cite: cite, face: face, est: ks.some(function (k) { return pg.regions[k].est; }), link: shareLink({ hr: rgRef(c, x) }) };
   }
   // the picture: the page as it is trimmed, the places drawn in the links' colour; beside it the passage, and
