@@ -26,7 +26,8 @@
  *     no stage (or one in SW.BENCH.doc.unplaced) counts from the first; 0 is the text before
  *     any revision. stageHands (a list of hands' k) limits the slider to those hands' revisions;
  *     the others are shown only in All revisions, which raises the additions and strikes the
- *     deletions. The revisions come and go as the slider moves; with Strike deletions the
+ *     deletions. While All revisions is on, the slider is drawn fainter, since it is not what sets the text;
+ *     moving it, ◀ ▶ or the run through the stages turns All revisions off and shows the text at the stage. The revisions come and go as the slider moves; with Strike deletions the
  *     deletions made up to the stage stay, struck through in red, and the revisions made at the
  *     stage itself are marked more strongly;
  *   - Compare: other texts beside the first (up to SW.BENCH.doc.besideMax, 3 if not given), all held
@@ -1414,11 +1415,21 @@
     });
     cols.forEach(function (c) { c.stale = true; });
     var lab = SW.$('#bk-stage-l', view); if (lab) lab.textContent = stageName(st.stage);
-    var r = SW.$('#bk-stage', view); if (r) { r.value = st.stage; r.disabled = st.all; }
+    // with every revision shown the slider is not what sets the text, and is drawn so; it can still be moved,
+    // and moving it (or ◀ ▶, or the run through the stages) puts every revision away
+    var r = SW.$('#bk-stage', view);
+    if (r) { r.value = st.stage; r.classList.toggle('bk-idle', st.all); r.title = st.all ? 'Every revision is shown. Move the slider to see the text at a stage.' : ''; }
     writeQ();
   }
+  // every revision put away, for a stage: the box unticked, and Strike deletions offered again
+  function allOff() {
+    if (!st.all) return;
+    st.all = false;
+    var c = SW.$('#bk-all', view); if (c) c.checked = false;
+    var sk = SW.$('#bk-strike', view); if (sk) sk.disabled = false;
+  }
   function play() {
-    if (st.all) { st.all = false; var c = SW.$('#bk-all', view); if (c) c.checked = false; }
+    allOff();
     if (st.stage >= STAGES.length) st.stage = 0;
     apply(true);
     st.play = setInterval(function () { if (st.stage >= STAGES.length) { stop(); return; } st.stage++; apply(true); }, 900);
@@ -1470,11 +1481,11 @@
       '<button class="btn ghost" id="bk-share-hl"' + (rgHeld.length ? '' : ' hidden') + ' title="The highlight held: a picture of the page with its place marked and the passage, to send, or a link that opens it here">✦ Share highlight</button>' +
       '<select id="bk-marks" class="bk-marks" title="The ' + esc(PAGE) + 's you have bookmarked in this text: choose one to go to it"><option value="">🔖 Bookmarks</option></select>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
-        '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision">' +
+        '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision"' + (st.all ? ' class="bk-idle"' : '') + '>' +
         '<button class="btn ghost" id="bk-next" title="The stage after">▶</button><button class="btn ghost" id="bk-play" title="Run through the stages, one by one">' + (st.play ? '❚❚' : '▶▶') + '</button>' +
         '<span class="bk-stage-l" id="bk-stage-l"></span>' +
         '<label class="check" title="Deletions made up to this stage struck through, in red (or in the hand’s colour), rather than taken out; the revisions of this stage marked more strongly"><input type="checkbox" id="bk-strike"' + (st.strike ? ' checked' : '') + (st.all ? ' disabled' : '') + '> strike deletions</label>' +
-        '<label class="check" title="Every revision at once: additions raised, deletions struck, each with its hand and stage"><input type="checkbox" id="bk-all"' + (st.all ? ' checked' : '') + '> ' + esc((W.all || 'All revisions').toLowerCase()) + '</label>' +
+        '<label class="check" title="Every revision at once: additions raised, deletions struck, each with its hand and stage. Moving the slider, or ◀ ▶, turns this off and shows the text at a stage."><input type="checkbox" id="bk-all"' + (st.all ? ' checked' : '') + '> ' + esc((W.all || 'All revisions').toLowerCase()) + '</label>' +
         (Object.keys(HANDS).length ? '<label class="check" title="Revisions coloured by hand"><input type="checkbox" id="bk-hands"' + (st.hands ? ' checked' : '') + '> hands</label>' : '') + '</div>' : '');
     tb.addEventListener('click', function (e) {
       // controls are found by their own ids and attributes, within the toolbar only
@@ -1487,15 +1498,15 @@
       }
       var t = b0.dataset.text != null ? b0 : null;
       if (t) { stop(); var to = t.dataset.text; st.beside = st.beside.filter(function (x) { return x !== to; }); st.own = true; SW.select(to === textOf(SW.state.v) ? SW.state.v : to); return; }
-      if (e.target.id === 'bk-prev') { stop(); st.stage = Math.max(0, st.stage - 1); apply(true); }
-      if (e.target.id === 'bk-next') { stop(); st.stage = Math.min(STAGES.length, st.stage + 1); apply(true); }
+      if (e.target.id === 'bk-prev') { stop(); allOff(); st.stage = Math.max(0, st.stage - 1); apply(true); }
+      if (e.target.id === 'bk-next') { stop(); allOff(); st.stage = Math.min(STAGES.length, st.stage + 1); apply(true); }
       if (e.target.id === 'bk-play') { if (st.play) stop(); else play(); }
       if (e.target.id === 'bk-share') { SW.copyText(shareLink(), 'the link'); return; }
       if (e.target.id === 'bk-share-hl') { shareHighlight(); return; }
       if (e.target.id === 'bk-read') { var c = cols[0]; if (c) { var a = place || firstLine(c); if (a) SW.openAt(c.vid, a); else SW.setTab('read'); } }
     });
     tb.addEventListener('input', function (e) {
-      if (e.target.id === 'bk-stage') { stop(); st.stage = +e.target.value; apply(true); }
+      if (e.target.id === 'bk-stage') { stop(); allOff(); st.stage = +e.target.value; apply(true); }
       if (e.target.id === 'bk-imgw') { st.imgW = imgw(e.target.value) || IMGW0; SW.store.set('book.imgw', st.imgW); showImages(); writeQ(); }
     });
     // the bookmarks, listed afresh as the list is opened, in the text's order

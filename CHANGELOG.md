@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book: the stage slider turns “every revision” off** (David, via Melville): with every revision shown, the slider was disabled and ◀ ▶ changed the stage with nothing to show for it; only the run through the stages unticked the box. The slider now stays usable, drawn fainter while every revision is on, and moving it, ◀ or ▶ unticks the box and shows the text at the stage, with Strike deletions offered again. The box's tip says so.
+
 ## 1.9.6 (2026-11-12)
 
 - **A passage's highlight has a little room** (David): with its edge gone the fill sat tight on the characters; it now runs two pixels past the place above and below, in its own colour, on the page's image, and to the same measure in Share highlight's picture. The sides are as they were.
