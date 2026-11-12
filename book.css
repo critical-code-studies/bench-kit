@@ -220,20 +220,28 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 @media (prefers-reduced-motion: reduce) { .bk-s { transition: none; } .bk-s.bk-new, .bk-s.bk-flash, .bk-s.bk-strike-in, .bk-z.bk-zstage { animation: none; } }
 
 /* Settings ▸ Book: the pages' edges, dragged on a page */
-.bk-tset { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+/* Settings ▸ Book fits its pane without scrolling: the page at a modest height, its controls beside it */
+.bk-tset { display: flex; gap: 16px; align-items: flex-start; }
 .bk-tpic { flex: none; }
+.bk-tctl { flex: 1; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.bk-tctl p { margin: 0; }
+.bk-linkrow .bk-linkgap { flex: none; width: 10px; }
+.set-pane .bk-linkrow label { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; width: auto; }
+.bk-linkrow .bk-linkdemo { font-size: 13px; }
+.set-pane > h2 + .hint { margin: 0; }
+@media (max-width: 520px) { .bk-tset { flex-wrap: wrap; } }
 .bk-tpage { position: relative; display: inline-block; overflow: hidden; touch-action: none; }
-.bk-tpage img { display: block; height: 300px; width: auto; max-width: 100%; }
+.bk-tpage img { display: block; height: 200px; width: auto; max-width: 100%; }
 .bk-tframe { position: absolute; outline: 2px solid #fff; outline-offset: -1px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); pointer-events: none; }
 .bk-tedge { position: absolute; pointer-events: auto; }
 .bk-tedge-l, .bk-tedge-r { top: 0; bottom: 0; width: 14px; cursor: ew-resize; }
 .bk-tedge-t, .bk-tedge-b { left: 0; right: 0; height: 14px; cursor: ns-resize; }
 .bk-tedge-l { left: -7px; } .bk-tedge-r { right: -7px; }
 .bk-tedge-t { top: -7px; } .bk-tedge-b { bottom: -7px; }
-.bk-tnums { display: grid; gap: 6px; }
+.bk-tnums { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px 18px; }
 .bk-tnums label { display: flex; align-items: center; gap: 6px; }
-.bk-tnums label > span { min-width: 4em; }
-.bk-tnums input { width: 5em; }
+.bk-tnums label > span { min-width: 3.4em; }
+.bk-tnums input { width: 4.6em; }
 
 /* a bookmark: red, at the top right of a page beside the text and of the enlarged page; faint on the
    page under the pointer until it is set */

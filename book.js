@@ -1831,10 +1831,12 @@
     };
     SW.settings.add({
       tab: 'book',
-      html: '<h2>The pages’ edges</h2><p class="hint">Trim what is not the page, such as a scan’s colour card and ruler, from every page’s image, beside the text and enlarged. Drag an edge of the page, or give each side as a percentage of the page. The boxes and lines on the image keep their places.</p>' +
-        '<div class="bk-tset"><div id="set-trim-pic" class="bk-tpic"></div><div class="bk-tnums">' +
-        SIDES.map(function (sd) { return '<label><span>' + sd[1] + '</span> <input type="number" id="set-trim-' + sd[0] + '" min="0" max="40" step="0.1"> %</label>'; }).join('') +
-        '<p class="row-l"><button type="button" class="btn ghost" id="set-trim-bench">' + (D.trim ? 'Bench’s default trim' : 'Not trimmed') + '</button>' + (D.trim ? ' <button type="button" class="btn ghost" id="set-trim-none">None</button>' : '') + '</p>' +
+      // the page to the left, at a height that leaves the pane without scrolling; beside it the four sides two
+      // to a row (left and right, top and bottom), the buttons and what is now set
+      html: '<h2>The pages’ edges</h2><p class="hint">Trim what is not the page (a scan’s colour card, a ruler, the binding) from every page’s image. Drag an edge, or give a side as a percentage.</p>' +
+        '<div class="bk-tset"><div id="set-trim-pic" class="bk-tpic"></div><div class="bk-tctl"><div class="bk-tnums">' +
+        [SIDES[0], SIDES[2], SIDES[1], SIDES[3]].map(function (sd) { return '<label><span>' + sd[1] + '</span> <input type="number" id="set-trim-' + sd[0] + '" min="0" max="40" step="0.1"> %</label>'; }).join('') +
+        '</div><p class="row-l"><button type="button" class="btn ghost" id="set-trim-bench">' + (D.trim ? 'Bench’s default trim' : 'Not trimmed') + '</button>' + (D.trim ? ' <button type="button" class="btn ghost" id="set-trim-none">None</button>' : '') + '</p>' +
         '<p class="hint" id="set-trim-msg"></p></div></div>',
       load: function () {
         var box = SW.$('#set-trim-pic'), pg = spg = samplePage(), t = trim(pg);
@@ -1881,10 +1883,9 @@
     };
     SW.settings.add({
       tab: 'book',
-      html: '<h2>Highlight links</h2><p class="hint">A highlight link ties words of the text to their place on the page’s image: the words under the pointer are lit on the image, a place on the image lights its words, and a click holds both. Shown where a text’s pages give the places of their lines, revisions or passages.</p>' +
-        '<p class="row-l"><label><input type="checkbox" id="set-bklink-on"> Show highlight links</label></p>' +
-        '<p class="row-l"><label>Colour <input type="color" id="set-bklink"></label> <button type="button" class="btn ghost" id="set-bklink-bench">' + (D.linkColor ? 'Bench’s default colour' : 'Theme’s colour') + '</button> <span class="bk-linkdemo" id="set-bklink-demo">a passage lit</span></p>' +
-        '<p class="hint" id="set-bklink-msg"></p>',
+      html: '<h2>Highlight links</h2><p class="hint">The words under the pointer are lit on the page’s image, and a place on the image lights its words; a click holds both.</p>' +
+        '<p class="row-l bk-linkrow"><label><input type="checkbox" id="set-bklink-on"> Show highlight links</label><span class="bk-linkgap"></span>' +
+        '<label>Colour <input type="color" id="set-bklink"></label> <button type="button" class="btn ghost" id="set-bklink-bench">' + (D.linkColor ? 'Bench’s default colour' : 'Theme’s colour') + '</button> <span class="bk-linkdemo" id="set-bklink-demo">a passage lit</span> <span class="hint" id="set-bklink-msg"></span></p>',
       load: function () {
         var own = SW.store.get('book.link', null);
         lk = { color: /^#[0-9a-f]{6}$/i.test(own || '') ? own : null };

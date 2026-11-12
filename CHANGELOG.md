@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Settings ▸ Book fits its pane** (David): the pane ran to nearly a thousand pixels, the trim's four boxes and buttons under a tall picture and Highlight links below those, so the dialog scrolled and Save was out of sight. The page is now shown at a modest height with its controls beside it (left and right, top and bottom, two to a row), the hints are shorter, and Highlight links is one row; nothing scrolls.
+
 ## 1.9.7 (2026-11-12)
 
 - **Book: the stage slider turns “every revision” off** (David, via Melville): with every revision shown, the slider was disabled and ◀ ▶ changed the stage with nothing to show for it; only the run through the stages unticked the box. The slider now stays usable, drawn fainter while every revision is on, and moving it, ◀ or ▶ unticks the box and shows the text at the stage, with Strike deletions offered again. The box's tip says so.
