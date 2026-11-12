@@ -80,6 +80,10 @@
  * A passage under the pointer lights its place on the page, and a place its passage; a click on either holds
  * both, until the next click; text selected lights every place it runs over. SW.book.regionsReport() counts the
  * places of the pages read so far and lists those not found in the text.
+ * These are Book's highlight links: a line, a box or a passage lit on the page, and its words in the text. Their
+ * colour is the theme's, or the bench's (SW.BENCH.doc.linkColor: a CSS colour), or the reader's own (Settings ▸
+ * Book, kept in this browser as book.link); the reader can also turn them off there (book.linkOff), and the
+ * page's image is then a picture only.
  * The pages' edges can be trimmed (a scan's colour card and ruler): the reader's in Settings ▸ Book,
  * dragged on a page there, or the bench's (SW.BENCH.doc.trim: { l, t, r, b }, each a share of the
  * page's width or height, or a function (pb) giving each page its own, or null); beside the text and in
@@ -178,7 +182,13 @@
 
   // the places of each page's passages (doc.regions): the file's address, or none
   var RG = D.regions ? (typeof D.regions === 'string' ? D.regions : D.regions.url) || null : null;
-  function hasBoxes(pg) { return !!(pg.zoneN || pg.lines || pg.regions); }
+  // the highlight links between the text and the page: on unless the reader has turned them off (Settings ▸ Book), in the
+  // reader's colour, else the bench's (doc.linkColor), else the theme's
+  function linkOn() { return !SW.store.get('book.linkOff', false); }
+  function hasBoxes(pg) { return linkOn() && !!(pg.zoneN || pg.lines || pg.regions); }
+  function linkColor() { var own = SW.store.get('book.link', null); return (/^#[0-9a-f]{6}$/i.test(own || '') ? own : '') || D.linkColor || ''; }
+  function paintLink() { var c = linkColor(), e = document.documentElement; if (c) e.style.setProperty('--bk-link', c); else e.style.removeProperty('--bk-link'); }
+  paintLink();
   // the address as the page was opened, read before the shell rewrites it
   var Q0 = SW.readQuery();
   var BESIDE = Math.max(1, +D.besideMax || 3);   // the most texts beside the first
@@ -364,7 +374,7 @@
     hold(col, marks);
   }
   function zoneLayer(pg) {
-    if (pg.layer || !pg.figBtn || !(pg.size || pg.rsize)) return pg.layer || null;
+    if (pg.layer || !pg.figBtn || !(pg.size || pg.rsize) || !linkOn()) return pg.layer || null;
     var Z = makeZones(pg, true);
     pg.zdiv = Z.zdiv; pg.ldiv = Z.ldiv; pg.rdiv = Z.rdiv;
     pg.figBtn.appendChild(Z.L);
@@ -715,6 +725,7 @@
   var rgHov = [], rgHovKey = '';
   function rgKey(list) { return (list || []).map(function (x) { return x.pg.facs + ':' + x.k; }).join(','); }
   function rgHover(list) {
+    if (!linkOn()) list = null;
     var key = rgKey(list); if (key === rgHovKey) return;
     rgHov.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rhover', false); });
     rgHov = (list || []).map(function (x) { return { facs: x.pg.facs, k: x.k }; }); rgHovKey = key;
@@ -726,7 +737,7 @@
   var rgHeld = [], rgHeldAt = 0;
   function rgUnhold() { rgHeld.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rheld', false); }); rgHeld = []; hlSet('bk-rg-held', []); }
   function rgHold(list) {
-    rgUnhold();
+    rgUnhold(); if (!linkOn()) return [];
     rgHeld = list.map(function (x) { return { facs: x.pg.facs, k: x.k }; }); rgHeldAt = Date.now();
     var ranges = [];
     rgHeld.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rheld', true); ranges = ranges.concat(rgRanges(x.facs, x.k)); });
@@ -786,6 +797,14 @@
       rgNeed(s0._leaf.col, s0._leaf.col.pages.indexOf(s0._leaf)).then(function () { var list = rgAtPoint(s0, x, y); if (list.length) rgHold(list); });
     });
   }
+  // the highlight links turned on or off, or their colour changed (Settings ▸ Book): what is lit is put out, and each page's
+  // layer is made again when next wanted
+  SW.on('book-link', function () {
+    paintLink();
+    clearHeld(); rgHover(null); rgUnhold();
+    rgSelLit.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rsel', false); }); rgSelLit = [];
+    cols.forEach(function (c) { (c.pages || []).forEach(function (pg) { if (pg.layer) { pg.layer.remove(); pg.layer = null; pg.zdiv = null; pg.ldiv = null; pg.rdiv = null; } }); });
+  });
   // the places of the pages read so far, and those whose words are not in the first text
   K.regionsReport = function () {
     var out = { pages: 0, regions: 0, tied: 0, untied: [] }, c = cols[0];
@@ -1601,14 +1620,14 @@
       var box = SW.$('#set-trim-pic'); if (!box) return;
       var F = box.querySelector('.bk-tframe'); if (F) { F.style.left = 100 * tv.l + '%'; F.style.top = 100 * tv.t + '%'; F.style.right = 100 * tv.r + '%'; F.style.bottom = 100 * tv.b + '%'; }
       SIDES.forEach(function (sd) { var i = SW.$('#set-trim-' + sd[0]); if (i && document.activeElement !== i) i.value = Math.round(1000 * tv[sd[0]]) / 10; });
-      var msg = SW.$('#set-trim-msg'); if (msg) msg.textContent = same(tv, dflt()) ? (D.trim ? 'The bench’s trim' + (typeof D.trim === 'function' ? ' for this page; it trims each page as that page needs.' : '.') : 'Not trimmed.') : 'Your own trim, the same for every page.';
+      var msg = SW.$('#set-trim-msg'); if (msg) msg.textContent = same(tv, dflt()) ? (D.trim ? 'The bench’s default trim' + (typeof D.trim === 'function' ? ' for this page; it trims each page as that page needs.' : '.') : 'Not trimmed.') : 'Your own trim, the same for every page.';
     };
     SW.settings.add({
       tab: 'book',
       html: '<h2>The pages’ edges</h2><p class="hint">Trim what is not the page, such as a scan’s colour card and ruler, from every page’s image, beside the text and enlarged. Drag an edge of the page, or give each side as a percentage of the page. The boxes and lines on the image keep their places.</p>' +
         '<div class="bk-tset"><div id="set-trim-pic" class="bk-tpic"></div><div class="bk-tnums">' +
-        SIDES.map(function (sd) { return '<label><span>' + sd[1] + '</span> <input type="number" id="set-trim-' + sd[0] + '" min="0" max="40" step="0.5"> %</label>'; }).join('') +
-        '<p class="row-l"><button type="button" class="btn ghost" id="set-trim-bench">' + (D.trim ? 'The bench’s trim' : 'Not trimmed') + '</button>' + (D.trim ? ' <button type="button" class="btn ghost" id="set-trim-none">None</button>' : '') + '</p>' +
+        SIDES.map(function (sd) { return '<label><span>' + sd[1] + '</span> <input type="number" id="set-trim-' + sd[0] + '" min="0" max="40" step="0.1"> %</label>'; }).join('') +
+        '<p class="row-l"><button type="button" class="btn ghost" id="set-trim-bench">' + (D.trim ? 'Bench’s default trim' : 'Not trimmed') + '</button>' + (D.trim ? ' <button type="button" class="btn ghost" id="set-trim-none">None</button>' : '') + '</p>' +
         '<p class="hint" id="set-trim-msg"></p></div></div>',
       load: function () {
         var box = SW.$('#set-trim-pic'), pg = spg = samplePage(), t = trim(pg);
@@ -1639,6 +1658,42 @@
         if (!tv) return;
         SW.store.set('book.trim', same(tv, dflt()) ? null : { l: tv.l, t: tv.t, r: tv.r, b: tv.b });
         SW.emit('book-trim');
+      }
+    });
+    // Settings ▸ Book: the highlight links between the text and the page's image, on or off, and their colour
+    var lk = null;
+    // a CSS colour as #rrggbb, for the colour box
+    var toHex = function (c) { var x = document.createElement('canvas').getContext('2d'); x.fillStyle = '#000000'; try { x.fillStyle = c; } catch (e) { /* not a colour */ } return /^#[0-9a-f]{6}$/i.test(x.fillStyle) ? x.fillStyle : '#000000'; };
+    var benchHex = function () { return toHex(D.linkColor || getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#a3317a'); };
+    var drawLink = function () {
+      var i = SW.$('#set-bklink'), demo = SW.$('#set-bklink-demo'), on = SW.$('#set-bklink-on'), msg = SW.$('#set-bklink-msg'); if (!i) return;
+      i.value = lk.color || benchHex(); i.disabled = !on.checked; SW.$('#set-bklink-bench').disabled = !on.checked;
+      demo.style.backgroundColor = on.checked ? 'color-mix(in srgb, ' + i.value + ' 30%, transparent)' : 'transparent';
+      demo.style.outlineColor = on.checked ? i.value : 'transparent';
+      msg.textContent = !on.checked ? 'Off: the page’s image is a picture only.' : lk.color ? 'Your own colour.' : D.linkColor ? 'The bench’s default colour.' : 'The theme’s colour.';
+    };
+    SW.settings.add({
+      tab: 'book',
+      html: '<h2>Highlight links</h2><p class="hint">A highlight link ties words of the text to their place on the page’s image: the words under the pointer are lit on the image, a place on the image lights its words, and a click holds both. Shown where a text’s pages give the places of their lines, revisions or passages.</p>' +
+        '<p class="row-l"><label><input type="checkbox" id="set-bklink-on"> Show highlight links</label></p>' +
+        '<p class="row-l"><label>Colour <input type="color" id="set-bklink"></label> <button type="button" class="btn ghost" id="set-bklink-bench">' + (D.linkColor ? 'Bench’s default colour' : 'Theme’s colour') + '</button> <span class="bk-linkdemo" id="set-bklink-demo">a passage lit</span></p>' +
+        '<p class="hint" id="set-bklink-msg"></p>',
+      load: function () {
+        var own = SW.store.get('book.link', null);
+        lk = { color: /^#[0-9a-f]{6}$/i.test(own || '') ? own : null };
+        var on = SW.$('#set-bklink-on'), i = SW.$('#set-bklink');
+        on.checked = linkOn(); on.onchange = drawLink;
+        i.oninput = function () { lk.color = i.value; drawLink(); };
+        SW.$('#set-bklink-bench').onclick = function () { lk.color = null; drawLink(); };
+        drawLink();
+      },
+      // the bench's colour is kept as none of the reader's own, so a change to the bench's reaches them
+      save: function () {
+        if (!lk) return;
+        var on = SW.$('#set-bklink-on');
+        SW.store.set('book.link', lk.color || null);
+        if (on) SW.store.set('book.linkOff', !on.checked);
+        SW.emit('book-link');
       }
     });
   }

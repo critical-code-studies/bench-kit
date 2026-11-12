@@ -122,29 +122,31 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-zl { position: absolute; pointer-events: none; }
 /* the page's lines (pb.lines), as bands under the revisions' boxes */
 .bk-band { position: absolute; box-sizing: border-box; border-bottom: 1px solid transparent; pointer-events: auto; cursor: pointer; z-index: 1; transition: background-color 0.2s ease, border-color 0.2s ease; }
-.bk-fig-b:hover .bk-band, .bk-modal-pic:hover .bk-band { border-bottom-color: color-mix(in srgb, var(--amber) 25%, transparent); }
+.bk-fig-b:hover .bk-band, .bk-modal-pic:hover .bk-band { border-bottom-color: color-mix(in srgb, var(--bk-link, var(--amber)) 25%, transparent); }
 .bk-fig-b:hover .bk-band.bk-band-est, .bk-modal-pic:hover .bk-band.bk-band-est { border-bottom-style: dashed; }
+/* Settings ▸ Book: a sample of the highlight links' colour */
+.bk-linkdemo { padding: 1px 6px; border-radius: 2px; outline: 1px solid transparent; }
 /* the places of a page's passages (doc.regions): faint with the pointer on the picture, lit with their passage */
 .bk-rg { position: absolute; box-sizing: border-box; border: 1px solid transparent; border-radius: 2px; pointer-events: auto; cursor: pointer; z-index: 1; transition: background-color 0.2s ease, border-color 0.2s ease; }
-.bk-fig-b:hover .bk-rg, .bk-modal-pic:hover .bk-rg { border-color: color-mix(in srgb, var(--amber) 25%, transparent); }
+.bk-fig-b:hover .bk-rg, .bk-modal-pic:hover .bk-rg { border-color: color-mix(in srgb, var(--bk-link, var(--amber)) 25%, transparent); }
 .bk-rg.bk-rg-est { border-style: dashed; }
-.bk-rg.bk-rhover, .bk-rg.bk-rsel { background: color-mix(in srgb, var(--amber) 20%, transparent); border-color: var(--amber); }
-.bk-rg.bk-rheld { background: color-mix(in srgb, var(--amber) 30%, transparent); border: 2px solid var(--amber); }
-::highlight(bk-rg-hover) { background-color: color-mix(in srgb, var(--amber, #a3317a) 20%, transparent); }
-::highlight(bk-rg-held) { background-color: color-mix(in srgb, var(--amber, #a3317a) 36%, transparent); }
-.bk-s.bk-rg-hover { background-color: color-mix(in srgb, var(--amber) 20%, transparent); }
-.bk-s.bk-rg-held { background-color: color-mix(in srgb, var(--amber) 36%, transparent); }
-.bk-band.bk-lhover { background: color-mix(in srgb, var(--amber) 14%, transparent); border-bottom-color: var(--amber); }
-.bk-band.bk-lsel { background: color-mix(in srgb, var(--amber) 24%, transparent); border-bottom-color: var(--amber); }
-.bk-fig-b .bk-band:hover, .bk-modal-pic .bk-band:hover { background: color-mix(in srgb, var(--amber) 14%, transparent); border-bottom-color: var(--amber); }
+.bk-rg.bk-rhover, .bk-rg.bk-rsel { background: color-mix(in srgb, var(--bk-link, var(--amber)) 20%, transparent); border-color: var(--bk-link, var(--amber)); }
+.bk-rg.bk-rheld { background: color-mix(in srgb, var(--bk-link, var(--amber)) 30%, transparent); border: 2px solid var(--bk-link, var(--amber)); }
+::highlight(bk-rg-hover) { background-color: color-mix(in srgb, var(--bk-link, var(--amber, #a3317a)) 20%, transparent); }
+::highlight(bk-rg-held) { background-color: color-mix(in srgb, var(--bk-link, var(--amber, #a3317a)) 36%, transparent); }
+.bk-s.bk-rg-hover { background-color: color-mix(in srgb, var(--bk-link, var(--amber)) 20%, transparent); }
+.bk-s.bk-rg-held { background-color: color-mix(in srgb, var(--bk-link, var(--amber)) 36%, transparent); }
+.bk-band.bk-lhover { background: color-mix(in srgb, var(--bk-link, var(--amber)) 14%, transparent); border-bottom-color: var(--bk-link, var(--amber)); }
+.bk-band.bk-lsel { background: color-mix(in srgb, var(--bk-link, var(--amber)) 24%, transparent); border-bottom-color: var(--bk-link, var(--amber)); }
+.bk-fig-b .bk-band:hover, .bk-modal-pic .bk-band:hover { background: color-mix(in srgb, var(--bk-link, var(--amber)) 14%, transparent); border-bottom-color: var(--bk-link, var(--amber)); }
 .bk-z { z-index: 2; }
 .bk-z.bk-zbig { z-index: 0; }
 .bk-z { position: absolute; box-sizing: border-box; border: 1px solid transparent; border-radius: 2px; pointer-events: auto; cursor: pointer; transition: background-color 0.3s ease, border-color 0.3s ease; }
-.bk-fig-b:hover .bk-z { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.bk-fig-b:hover .bk-z { border-color: color-mix(in srgb, var(--bk-link, var(--amber)) 45%, transparent); }
 .bk-z.bk-zstage { border: 2px solid var(--red); background: color-mix(in srgb, var(--red) 16%, transparent); animation: bk-zpulse 1.2s ease; }
-.bk-z.bk-zhover, .bk-fig-b .bk-z:hover { border: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 26%, transparent); }
+.bk-z.bk-zhover, .bk-fig-b .bk-z:hover { border: 2px solid var(--bk-link, var(--amber)); background: color-mix(in srgb, var(--bk-link, var(--amber)) 26%, transparent); }
 @keyframes bk-zpulse { from { background: color-mix(in srgb, var(--red) 45%, transparent); } }
-.bk-s.bk-zlink { background-color: color-mix(in srgb, var(--amber) 30%, transparent); }
+.bk-s.bk-zlink { background-color: color-mix(in srgb, var(--bk-link, var(--amber)) 30%, transparent); }
 /* a part of the page transcribed under another page: below its lowest box, and a link by its rule */
 .bk-else { position: absolute; left: 0; width: 100%; box-sizing: border-box; border: 1px dashed transparent; border-radius: 2px; pointer-events: auto; cursor: pointer; }
 .bk-fig-b:hover .bk-else, .bk-modal-pic:hover .bk-else { border-color: color-mix(in srgb, var(--amber) 55%, transparent); }
@@ -152,14 +154,14 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-else-link { order: 2; font: 12px var(--sans, system-ui); padding: 0 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); color: var(--text-dim); cursor: pointer; }
 .bk-else-link:hover { border-color: var(--amber); color: var(--text); }
 /* the text a box was clicked for, until the reader does something else */
-.bk-page .bk-held { background-color: color-mix(in srgb, var(--amber) 34%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 55%, transparent); border-radius: 2px; }
+.bk-page .bk-held { background-color: color-mix(in srgb, var(--bk-link, var(--amber)) 34%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--bk-link, var(--amber)) 55%, transparent); border-radius: 2px; }
 /* a box's words and revision, by the pointer in the enlarged view */
 .bk-ztip { position: fixed; z-index: 3; max-width: 22em; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); font-size: 13px; line-height: 1.4; pointer-events: none; }
 .bk-ztip-w { font: 15px/1.4 var(--serif, Georgia, serif); margin-bottom: 4px; }
 .bk-ztip-h { margin-top: 4px; color: var(--text-faint); font-size: 12px; }
 .bk-modal-pic .bk-zl { position: absolute; pointer-events: none; }
-.bk-modal-pic:hover .bk-z { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
-.bk-modal-pic .bk-z:hover { border: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 26%, transparent); }
+.bk-modal-pic:hover .bk-z { border-color: color-mix(in srgb, var(--bk-link, var(--amber)) 45%, transparent); }
+.bk-modal-pic .bk-z:hover { border: 2px solid var(--bk-link, var(--amber)); background: color-mix(in srgb, var(--bk-link, var(--amber)) 26%, transparent); }
 /* with Compare: the page of the passage under the pointer in the facing text */
 .bk-sheet.bk-leaflit .bk-fig-b { outline: 3px solid var(--amber); outline-offset: 2px; }
 .bk-sheet.bk-leaflit .bk-pb { color: var(--amber); }
