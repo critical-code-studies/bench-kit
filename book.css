@@ -140,8 +140,10 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-rg { position: absolute; box-sizing: border-box; border: 1px solid transparent; border-radius: 2px; pointer-events: auto; cursor: pointer; z-index: 1; transition: background-color 0.2s ease, border-color 0.2s ease; }
 .bk-fig-b:hover .bk-rg, .bk-modal-pic:hover .bk-rg { border-color: color-mix(in srgb, var(--bk-link, var(--amber)) 25%, transparent); }
 .bk-rg.bk-rg-est { border-style: dashed; }
-.bk-rg.bk-rhover, .bk-rg.bk-rsel { background: color-mix(in srgb, var(--bk-link, var(--amber)) 20%, transparent); border-color: var(--bk-link, var(--amber)); }
-.bk-rg.bk-rheld { background: color-mix(in srgb, var(--bk-link, var(--amber)) 30%, transparent); border: 2px solid var(--bk-link, var(--amber)); }
+/* a passage's place lit or held is filled, with no edge (David): the faint edges show where the places are while
+   the pointer is on the picture, and go from a place once it is lit */
+.bk-fig-b .bk-rg.bk-rhover, .bk-fig-b .bk-rg.bk-rsel, .bk-modal-pic .bk-rg.bk-rhover, .bk-rg.bk-rhover, .bk-rg.bk-rsel { background: color-mix(in srgb, var(--bk-link, var(--amber)) 24%, transparent); border-color: transparent; }
+.bk-fig-b .bk-rg.bk-rheld, .bk-modal-pic .bk-rg.bk-rheld, .bk-rg.bk-rheld { background: color-mix(in srgb, var(--bk-link, var(--amber)) 34%, transparent); border-color: transparent; }
 ::highlight(bk-rg-hover) { background-color: color-mix(in srgb, var(--bk-link, var(--amber, #a3317a)) 20%, transparent); }
 ::highlight(bk-rg-held) { background-color: color-mix(in srgb, var(--bk-link, var(--amber, #a3317a)) 36%, transparent); }
 .bk-s.bk-rg-hover { background-color: color-mix(in srgb, var(--bk-link, var(--amber)) 20%, transparent); }

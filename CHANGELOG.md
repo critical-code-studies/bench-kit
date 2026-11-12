@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A passage that crosses a page turn tinted the page's image** (David): a page's last sentence runs on over the turn, and its mark in the text was one stretch from its first word to its last, which took in what lies between: the page break and the next page's image, tinted whole. The passage is now marked paragraph by paragraph, its own words only. Its words in the enlarged page's tip and in Share highlight no longer take in the page break's number either.
+- **A passage's highlight has no edge** (David): a passage's place lit or held on the page's image was filled and edged in the links' colour, and so was the place in Share highlight's picture; the edge is gone from both, and the fill is a little stronger. The faint edges that show where the places are, while the pointer is on the image, stay. Lines and revisions' boxes are as they were.
+
 ## 1.9.4 (2026-11-12)
 
 - **Share highlight cites in the bench's words** (David, via kuki): the picture, the dialog and the email gave the bench's reference by file and line ("Translation (2026), translation/….md, l. 394 [REF: …]"), which is for annotating, not for a reader sent a page. A bench can now give its own wording: SW.BENCH.doc.shareCite, a text with {page}, {version} and {label} in it, or a function of { page, version, label, cite }. Without it, or where the function gives nothing, the reference is used as before. The picture and the dialog now say what the passage is once: the bench's wording alone, which names the page, or the page and the reference; "Page 81 · Translation · Translation (2026), …" named the text three times.

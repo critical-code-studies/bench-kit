@@ -684,6 +684,16 @@
       cur = m[0];
       var rg = document.createRange();
       rg.setStart(ix.nodes[m[0]], ix.offs[m[0]]); rg.setEnd(ix.nodes[m[1] - 1], ix.offs[m[1] - 1] + 1);
+      // its text block by block (a paragraph, a heading): a passage that crosses a page turn is marked and read
+      // by these, so that what lies between its two parts (the page break, the next page's image) is neither
+      rg.parts = [];
+      var blockOf = function (i) { var sp = ix.nodes[i].parentNode.closest('.bk-s'); return sp ? sp.parentNode : ix.nodes[i].parentNode; };
+      for (var a = m[0]; a < m[1];) {
+        var bl = blockOf(a), b = a;
+        while (b + 1 < m[1] && blockOf(b + 1) === bl) b++;
+        var part = document.createRange(); part.setStart(ix.nodes[a], ix.offs[a]); part.setEnd(ix.nodes[b], ix.offs[b] + 1);
+        rg.parts.push(part); a = b + 1;
+      }
       return rg;
     });
     pg.rrAt = stamp;
@@ -693,7 +703,7 @@
   // none, the spans it runs over
   var HL = root.CSS && root.CSS.highlights && root.Highlight ? root.CSS.highlights : null, hlSpans = {};
   function hlSet(name, ranges) {
-    if (HL) { if (!ranges.length) { HL.delete(name); return; } var h = new root.Highlight(); ranges.forEach(function (r) { h.add(r); }); HL.set(name, h); return; }
+    if (HL) { if (!ranges.length) { HL.delete(name); return; } var h = new root.Highlight(); ranges.forEach(function (r) { (r.parts || [r]).forEach(function (x) { h.add(x); }); }); HL.set(name, h); return; }
     (hlSpans[name] || []).forEach(function (e) { e.classList.remove(name); });
     hlSpans[name] = [];
     ranges.forEach(function (r) {
@@ -702,6 +712,8 @@
       es.forEach(function (e) { if (r.intersectsNode(e)) { e.classList.add(name); hlSpans[name].push(e); } });
     });
   }
+  // a passage's words: its parts' text, a space between two parts
+  function rgText(r) { return r ? (r.parts || [r]).map(function (x) { return x.toString(); }).join(' ').replace(/\s+/g, ' ').trim() : ''; }
   // a place's boxes lit on every picture of its page now shown
   function rgLight(facs, k, cls, on) {
     cols.forEach(function (c) {
@@ -775,7 +787,7 @@
     if (e) { col.moved = false; col.el.scrollTop = Math.max(0, e.offsetTop - READ); }
   }
   function regionTip(col, pg, k) {
-    var r = pg.regions[k], rg = (rgResolve(col, col.pages.indexOf(pg)) || [])[k], t = rg ? rg.toString().replace(/\s+/g, ' ').trim() : '';
+    var r = pg.regions[k], rg = (rgResolve(col, col.pages.indexOf(pg)) || [])[k], t = rgText(rg);
     return (r.text ? '<div class="bk-ztip-w">' + esc(r.text.length > 220 ? r.text.slice(0, 220) + '…' : r.text) + '</div>' : '') +
       (t ? '<div>“' + esc(t.length > 260 ? t.slice(0, 260) + '…' : t) + '”</div>' : '<div><i>its words were not found in the text shown</i></div>') +
       (r.est ? '<div>The place or the match is estimated.</div>' : '') + (t ? '<div class="bk-ztip-h">Click: highlight this in panel</div>' : '');
@@ -858,7 +870,7 @@
     if (c.stale || !c.byFacs) measure(c);
     var x = rgHeld[0], j = c.byFacs[x.facs], pg = c.pages[j]; if (!pg || !pg.regions) return null;
     var rr = rgResolve(c, j) || [], range = rr[x.k], ks = rgHeld.filter(function (y) { return y.facs === x.facs; }).map(function (y) { return y.k; });
-    var passage = range ? range.toString().replace(/\s+/g, ' ').trim() : '', cite = '', sa = range && spanOf(range.startContainer);
+    var passage = rgText(range), cite = '', sa = range && spanOf(range.startContainer);
     var face = getComputedStyle(sa || c.el).fontFamily;   // the text's own face, for the picture
     if (range && SW.cite && c.b) {
       var sb = spanOf(range.endContainer);
@@ -902,8 +914,9 @@
           var rw = pg.rsize[0], rh = pg.rsize[1];
           var bx = PAD + (Math.min(b0[0], b0[2]) / rw - T.l) / (1 - T.l - T.r) * IW, by = PAD + (Math.min(b0[1], b0[3]) / rh - T.t) / (1 - T.t - T.b) * IH;
           var bw = Math.abs(b0[2] - b0[0]) / rw / (1 - T.l - T.r) * IW, bh = Math.abs(b0[3] - b0[1]) / rh / (1 - T.t - T.b) * IH;
-          x.globalAlpha = 0.28; x.fillStyle = colour; x.fillRect(bx, by, bw, bh);
-          x.globalAlpha = 1; x.strokeStyle = colour; x.lineWidth = 2.5; x.strokeRect(bx, by, bw, bh);
+          // filled, with no edge, as on the page
+          x.globalAlpha = 0.32; x.fillStyle = colour; x.fillRect(bx, by, bw, bh);
+          x.globalAlpha = 1;
         });
       });
       x.restore();
