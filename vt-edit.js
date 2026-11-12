@@ -5,6 +5,8 @@
  * translation method's form, which tools/vt_apply.py applies to the master file; the bench never
  * writes the master itself.
  *
+ * The text is set in a box of its own, a field with a head, so that Edit is not taken for the pages of Book: greyed
+ * with a plain edge while locked, the paper's ground with an edge in the bench's accent once unlocked.
  * The padlock: Edit opens locked, on a page load and each time the tab is opened again. While locked the
  * text cannot change, by typing, pasting, dropping, undo or redo; it can be read, selected, copied, scrolled
  * and saved. A save leaves the lock as it is.
@@ -385,7 +387,7 @@
         '<span class="vte-beside"><span class="faint">Beside</span> <span class="im-seg"><button class="btn" data-beside="image">Image</button><button class="btn" data-beside="other"></button><button class="btn" data-beside="off" title="The text alone, the full width">Off</button></span></span>' +
       '</div>' +
       '<div class="vte-status hint"></div>' +
-      '<div class="vte-split"><div class="vte-pane"></div><div class="vte-text"><div class="vte-stack"><pre class="vte-back" aria-hidden="true"></pre><textarea class="vte-in" spellcheck="true" aria-label="The text of this page, as the file has it"></textarea></div></div></div>' +
+      '<div class="vte-split"><div class="vte-pane"></div><div class="vte-text"><div class="vte-field"><div class="vte-cap"><button type="button" class="vte-caplock" data-do="lock"></button><span class="vte-capt"></span></div><div class="vte-stack"><pre class="vte-back" aria-hidden="true"></pre><textarea class="vte-in" spellcheck="true" aria-label="The text of this page, as the file has it"></textarea></div></div></div></div>' +
     '</div>';
     ta = SW.$('.vte-in', view); back = SW.$('.vte-back', view); pane = SW.$('.vte-pane', view); status = SW.$('.vte-status', view); winSel = SW.$('.vte-win', view);
     ta.lang = 'en';
@@ -641,6 +643,10 @@
     b.classList.toggle('on', !S.locked);
     b.title = S.locked ? 'The text is locked. Click to unlock it for editing.' : 'The text can be edited. Click to lock it.';
     b.setAttribute('aria-pressed', S.locked ? 'true' : 'false');
+    // the text's own box says the same: a padlock at its head (which also locks and unlocks) and what the box holds
+    var cb = SW.$('.vte-caplock', view), ct = SW.$('.vte-capt', view);
+    if (cb) { cb.textContent = S.locked ? '🔒' : '🔓'; cb.title = b.title; cb.setAttribute('aria-label', S.locked ? 'Locked. Unlock the text for editing' : 'Unlocked. Lock the text'); }
+    if (ct) ct.innerHTML = S.locked ? '<b>Locked.</b> The text as its file has it (Markdown). The padlock unlocks it for editing.' : '<b>Unlocked.</b> The text as its file has it (Markdown), open for editing.';
     buttons();
   }
   function setLock(on) {

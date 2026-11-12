@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Edit's text in a box of its own** (David, via kuki): Edit set the file's text in the same face on the same ground as the pages of Book, with only the padlock in the toolbar to tell them apart. The text is now in a field with a head: greyed, with a plain edge, while locked; the paper's ground with an edge in the bench's accent once unlocked. The head says which, and what the box holds (the text as its file has it, Markdown), and its padlock locks and unlocks as the toolbar's does.
+
 ## 1.9.2 (2026-11-12)
 
 - **Book: highlight links for a page's passages, both ways** (David): for a text whose lines are not the page's (a translation beside its source), a bench names a support file of each page's places (SW.BENCH.doc.regions: 'regions.json', or 'regions/{page}.json' for a file to each page): the boxes a passage takes on the image, the source's words there, and the words of the text it holds (quote, one for every version or one to each). Book finds the words in the text as it is set, so the file keeps no lines or offsets and follows the text when it is edited elsewhere; a quote not found leaves its place drawn and untied. A passage under the pointer lights its place on the page and a place its passage; a click on either holds both; text selected lights every place it runs over; the enlarged page shows a place's source words and its passage by the pointer. est marks a place or match as estimated (a dashed edge). SW.book.regionsReport() lists the places not found. A page's places are fetched when its image comes near the view, or, with the images folded away, when the pointer first comes over its text. A bench that names no file is as before.

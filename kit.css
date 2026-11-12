@@ -244,14 +244,19 @@ dialog.ov-dlg { width: min(96vw, 980px); }
 .vte-split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: minmax(0, 1fr); border-top: 1px solid var(--line); }
 .vte-split.vte-alone { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
 .vte-alone .vte-pane { display: none; }
-.vte-alone .vte-stack { max-width: 46em; margin: 0 auto; }
+.vte-alone .vte-field { max-width: 46em; margin: 12px auto; }
 .vte-pane { overflow: auto; border-right: 1px solid var(--line); min-height: 0; }
 .vte-img { display: block; width: 100%; cursor: zoom-in; }
 .vte-img.big { width: 220%; max-width: none; cursor: zoom-out; }
 .vte-credit { padding: 4px 8px; font-size: 11px; }
 .vte-other { margin: 0; padding: 14px 16px; white-space: pre-wrap; overflow-wrap: anywhere; font: 15px/1.6 var(--serif, Georgia, serif); color: var(--text-dim); }
 .vte-text { overflow: auto; min-height: 0; overflow-anchor: none; }
-.vte-stack { display: grid; min-height: 100%; }
+/* the text's own box: a field, greyed while locked, the paper's ground with the accent's edge when unlocked */
+.vte-field { margin: 12px; min-height: calc(100% - 24px); box-sizing: border-box; display: flex; flex-direction: column; border: 1px solid var(--amber); border-radius: 6px; background: var(--surface); box-shadow: 0 0 0 1px var(--amber), inset 0 1px 3px rgba(0, 0, 0, 0.06); transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+.vte-locked .vte-field { border-color: var(--line); background: var(--bg-2); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08); }
+.vte-cap { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-bottom: 1px solid var(--line-soft, var(--line)); border-radius: 6px 6px 0 0; background: inherit; font: 12px/1.4 var(--sans); color: var(--text-dim); }
+.vte-caplock { border: 0; background: none; padding: 0 2px; font-size: 14px; line-height: 1; cursor: pointer; }
+.vte-stack { display: grid; flex: 1; }
 .vte-back, .vte-in { grid-area: 1 / 1; margin: 0; padding: 14px 16px; border: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 15px/1.6 var(--serif, Georgia, serif); letter-spacing: normal; tab-size: 4; box-sizing: border-box; width: 100%; }
 .vte-back { color: var(--text); pointer-events: none; }
 .vte-in { color: transparent; caret-color: var(--text); background: transparent; resize: none; overflow: hidden; outline: none; }
