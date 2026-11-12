@@ -7,6 +7,14 @@
 
 Shared modules for the critical code studies research benches: the [SHRDLU](https://critical-code-studies.github.io/SHRDLU/research/) and [Spacewar!](https://spacewar1962.github.io/spacewar/research/) benches, and those to come. Plain browser JavaScript and CSS, no build step.
 
+<p>
+<a href="docs/img/book-melville-lines.jpg"><img src="docs/img/book-melville-lines.jpg" width="32%" alt="The Melville bench's Book: lines of the manuscript's text selected, and their bands lit on the leaf's image"></a>
+<a href="docs/img/book-kuki-highlight.jpg"><img src="docs/img/book-kuki-highlight.jpg" width="32%" alt="The Kuki bench's Pages view: a sentence of the translation held, and its columns filled on the 1948 page"></a>
+<a href="docs/img/library-covers.jpg"><img src="docs/img/library-covers.jpg" width="32%" alt="The Library on the ELIZA bench: key works as covers on a shelf"></a>
+</p>
+
+Book on the Melville bench, Book on the Kuki bench, and the Library on the ELIZA bench; each opens at full size. The [site](https://critical-code-studies.github.io/bench-kit/) has more, with their sources.
+
 ## What is here
 
 | File | What it does |
@@ -423,6 +431,13 @@ Compare sets other texts beside the first, up to `doc.besideMax` (3), all held a
 
 A selection in Book is the version's lines, so an annotation made there (✎ Annotate, ❝ Copy citation, 🔗 Copy link, ≡ Read) is the same as one made in Read, and the group's annotations are marked on their lines. A state is annotated on its source's lines; a place in one of the states, coming from Read, is found in the source through the document's blocks. Where the document gives the boxes its revisions are written in (`doc.zones`: `{ id: [ulx, uly, lrx, lry] }`, in the page's pixel space, the page break's `size: [w, h]`, and a revision mark's `zone`), the text and the image are joined: a revision under the pointer lights its box on the page, a box on the page (drawn faintly while the pointer is on the image) goes to its text, and the slider lights the boxes of the revisions made at its stage. The enlarged image has the same boxes: a box under the pointer shows its words by it, what the revision is (with what it replaced, or what replaced it), its stage and hand; a click on one closes the view. A click on a box highlights its text in the panel ("Highlight this in panel") until the reader clicks, scrolls the text, hovers another revision or moves the slider. With **Compare**, a passage of a text facing a version's states (the reading text beside the manuscript, say) lights its page in the other column, and the boxes of the revisions whose words are mostly in that passage. Boxes are placed by their share of the page's space over the picture as drawn, so the image's own size need not match, and a zone the document does not define is passed over. The enlarged page zooms and pans (the wheel, a pinch, + and −, a drag; 0 or ⟲ for the whole page), its boxes zoomed with it. **🔗 Share**, in the toolbar and in the enlarged page's details, copies a link that opens Book as it is set: the version, the stage and settings, the place (`l`), the box clicked and held (`hz`), and, from the enlarged page, that page open at the same zoom and centre (`pz`, `zm`: the zoom, and the centre as a share of the image's width and height). A page whose text, or part of it, the document transcribes under another page (`pb.elsewhere: [{ to, note }]`) has a link to that page by its rule, with the note; where the page has boxes, the part of its image below its lowest box leads there too (the document does not say where that part begins). Read's selection bar has 📖 Book where the version has a document. `kit/edition.js` typesets a version with a document from it, a sheet to each of its pages, raising the additions and striking the deletions where the version is diplomatic. To add the tab: `doc` in the config, a `<button data-tab="book">`, a `<section class="view" id="view-book">`, `book` in `SW.BENCH.shell.views`, `kit/book.css`, and `kit/book.js` after `kit/readnotes.js`.
 
+<p>
+<a href="docs/img/book-melville-lines.jpg"><img src="docs/img/book-melville-lines.jpg" width="49%" alt="Four lines of the manuscript's text selected in Book on the Melville bench, and the band of each lit on the leaf beside it"></a>
+<a href="docs/img/book-melville-stage.jpg"><img src="docs/img/book-melville-stage.jpg" width="49%" alt="Book on the Melville bench with the stage slider at stage C b, the twelfth of thirty-three"></a>
+</p>
+
+Left: four lines of the manuscript selected, and the band of each lit on the leaf (`pb.lines`). Right: the slider at a stage. Text: Melville Electronic Library, *Versions of Billy Budd*; leaf images: Houghton Library, Harvard University, MS Am 188 (363). Melville 0.4.30, bench-kit 1.9.8, 12 November 2026.
+
 **Highlight links for a page's passages** (`doc.regions`). For a text whose lines are not the page's, such as a translation read beside its source, a bench names a support file of each page's places: `doc.regions: 'regions.json'` (every page: `{ pages: { facs: {…} } }`) or `'regions/{page}.json'` (a file to each page, fetched as it is wanted; `{page}` is the page break's `facs`). A page gives `{ size: [w, h], regions: [{ boxes, text, quote, est }] }`:
 
 | Field | What it is |
@@ -435,11 +450,30 @@ A selection in Book is the version's lines, so an annotation made there (✎ Ann
 
 Book finds each quote in the page's text as it is set, with the pages before and after for a passage that crosses the turn, in the file's order, passing over whitespace, `*` and notes' marks. The file keeps no lines or offsets, so it is made once for a source whose pages do not change and follows the text when it is edited elsewhere; a quote no longer found leaves its place drawn and untied. A passage under the pointer lights its place on the page, and a place its passage; a click on either holds both until the next click; text selected lights every place it runs over. `SW.book.regionsReport()` counts the places of the pages read so far and lists those not found.
 
+<p>
+<a href="docs/img/book-kuki-highlight.jpg"><img src="docs/img/book-kuki-highlight.jpg" width="70%" alt="A sentence of the translation held on p. 81 of the Kuki bench, and its columns filled on the page of the 1948 printing"></a>
+</p>
+
+A sentence of the translation held on the Kuki bench, and its columns filled on the page (`doc.regions`, each place marked `est`). Page images: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain). Kuki 0.2.41, bench-kit 1.9.8, 12 November 2026.
+
 While a passage's highlight link is held, **✦ Share highlight** makes a picture of the page with the place marked and the passage, its citation and the image's credit beside it, with Copy link (`hr`: a link that opens Book with the same highlight held), Email…, Download PNG and Copy PNG. **🔗 Share page** is the link to Book as it is set.
+
+<p>
+<a href="docs/img/book-kuki-share.jpg"><img src="docs/img/book-kuki-share.jpg" width="56%" alt="The Share highlight dialog on the Kuki bench: the picture, the citation, and Copy link, Email, Download PNG and Copy PNG"></a>
+<a href="docs/img/book-kuki-share-picture.jpg"><img src="docs/img/book-kuki-share-picture.jpg" width="42%" alt="The picture Share highlight makes: the page with the passage's columns filled, the passage, the citation and the library's credit"></a>
+</p>
+
+Left: the Share highlight dialog. Right: the picture it makes, here reduced (the file is 1,400 pixels wide). Page images: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain). Kuki 0.2.41, bench-kit 1.9.8, 12 November 2026.
 
 `doc.shareCite` gives the citation that Share highlight sends, in the bench's own words: a text with `{page}`, `{version}` and `{label}` in it (`'Author, Title (year), trans. Name (year), p. {page} of the 1948 printing.'`), or a function of `{ page, version, label, cite }`. Without it the bench's reference by file and line is sent.
 
 `doc.linkColor` (a CSS colour) sets the colour of every highlight link between the text and the page: lines, revisions' boxes and passages. Without it the theme's is used. A reader can choose their own in Settings ▸ Book ▸ Highlight links, and turn them off there.
+
+<p>
+<a href="docs/img/book-kuki-settings.jpg"><img src="docs/img/book-kuki-settings.jpg" width="70%" alt="Settings, Book, on the Kuki bench: the page with its trim frame and the four sides beside it, and Highlight links with a switch and a colour"></a>
+</p>
+
+Settings ▸ Book on the Kuki bench: the pages’ edges and Highlight links. Page images: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain). Kuki 0.2.41, bench-kit 1.9.8, 12 November 2026.
 
 ## Tests
 
