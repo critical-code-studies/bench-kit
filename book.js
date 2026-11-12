@@ -914,8 +914,9 @@
           var rw = pg.rsize[0], rh = pg.rsize[1];
           var bx = PAD + (Math.min(b0[0], b0[2]) / rw - T.l) / (1 - T.l - T.r) * IW, by = PAD + (Math.min(b0[1], b0[3]) / rh - T.t) / (1 - T.t - T.b) * IH;
           var bw = Math.abs(b0[2] - b0[0]) / rw / (1 - T.l - T.r) * IW, bh = Math.abs(b0[3] - b0[1]) / rh / (1 - T.t - T.b) * IH;
-          // filled, with no edge, as on the page
-          x.globalAlpha = 0.32; x.fillStyle = colour; x.fillRect(bx, by, bw, bh);
+          // filled, with no edge, as on the page, and a little past the place above and below
+          var M = 4;
+          x.globalAlpha = 0.32; x.fillStyle = colour; x.fillRect(bx, by - M, bw, bh + 2 * M);
           x.globalAlpha = 1;
         });
       });

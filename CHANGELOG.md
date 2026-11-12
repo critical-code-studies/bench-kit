@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A passage's highlight has a little room** (David): with its edge gone the fill sat tight on the characters; it now runs two pixels past the place above and below, in its own colour, on the page's image, and to the same measure in Share highlight's picture. The sides are as they were.
+
 ## 1.9.5 (2026-11-12)
 
 - **A passage that crosses a page turn tinted the page's image** (David): a page's last sentence runs on over the turn, and its mark in the text was one stretch from its first word to its last, which took in what lies between: the page break and the next page's image, tinted whole. The passage is now marked paragraph by paragraph, its own words only. Its words in the enlarged page's tip and in Share highlight no longer take in the page break's number either.

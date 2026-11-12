@@ -141,9 +141,10 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-fig-b:hover .bk-rg, .bk-modal-pic:hover .bk-rg { border-color: color-mix(in srgb, var(--bk-link, var(--amber)) 25%, transparent); }
 .bk-rg.bk-rg-est { border-style: dashed; }
 /* a passage's place lit or held is filled, with no edge (David): the faint edges show where the places are while
-   the pointer is on the picture, and go from a place once it is lit */
-.bk-fig-b .bk-rg.bk-rhover, .bk-fig-b .bk-rg.bk-rsel, .bk-modal-pic .bk-rg.bk-rhover, .bk-rg.bk-rhover, .bk-rg.bk-rsel { background: color-mix(in srgb, var(--bk-link, var(--amber)) 24%, transparent); border-color: transparent; }
-.bk-fig-b .bk-rg.bk-rheld, .bk-modal-pic .bk-rg.bk-rheld, .bk-rg.bk-rheld { background: color-mix(in srgb, var(--bk-link, var(--amber)) 34%, transparent); border-color: transparent; }
+   the pointer is on the picture, and go from a place once it is lit. The fill runs two pixels past the place
+   above and below (shadows of its own colour), so that it does not sit tight on the first and last characters */
+.bk-fig-b .bk-rg.bk-rhover, .bk-fig-b .bk-rg.bk-rsel, .bk-modal-pic .bk-rg.bk-rhover, .bk-rg.bk-rhover, .bk-rg.bk-rsel { background: color-mix(in srgb, var(--bk-link, var(--amber)) 24%, transparent); border-color: transparent; box-shadow: 0 -2px 0 0 color-mix(in srgb, var(--bk-link, var(--amber)) 24%, transparent), 0 2px 0 0 color-mix(in srgb, var(--bk-link, var(--amber)) 24%, transparent); }
+.bk-fig-b .bk-rg.bk-rheld, .bk-modal-pic .bk-rg.bk-rheld, .bk-rg.bk-rheld { background: color-mix(in srgb, var(--bk-link, var(--amber)) 34%, transparent); border-color: transparent; box-shadow: 0 -2px 0 0 color-mix(in srgb, var(--bk-link, var(--amber)) 34%, transparent), 0 2px 0 0 color-mix(in srgb, var(--bk-link, var(--amber)) 34%, transparent); }
 ::highlight(bk-rg-hover) { background-color: color-mix(in srgb, var(--bk-link, var(--amber, #a3317a)) 20%, transparent); }
 ::highlight(bk-rg-held) { background-color: color-mix(in srgb, var(--bk-link, var(--amber, #a3317a)) 36%, transparent); }
 .bk-s.bk-rg-hover { background-color: color-mix(in srgb, var(--bk-link, var(--amber)) 20%, transparent); }
