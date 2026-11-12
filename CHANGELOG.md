@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.5 (2026-11-12)
 
 - **A passage that crosses a page turn tinted the page's image** (David): a page's last sentence runs on over the turn, and its mark in the text was one stretch from its first word to its last, which took in what lies between: the page break and the next page's image, tinted whole. The passage is now marked paragraph by paragraph, its own words only. Its words in the enlarged page's tip and in Share highlight no longer take in the page break's number either.
 - **A passage's highlight has no edge** (David): a passage's place lit or held on the page's image was filled and edged in the links' colour, and so was the place in Share highlight's picture; the edge is gone from both, and the fill is a little stronger. The faint edges that show where the places are, while the pointer is on the image, stay. Lines and revisions' boxes are as they were.
