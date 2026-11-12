@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Book: a page's passages joined to the text, both ways** (David): for a text whose lines are not the page's (a translation beside its source), a bench names a support file of each page's places (SW.BENCH.doc.regions: 'regions.json', or 'regions/{page}.json' for a file to each page): the boxes a passage takes on the image, the source's words there, and the words of the text it holds (quote, one for every version or one to each). Book finds the words in the text as it is set, so the file keeps no lines or offsets and follows the text when it is edited elsewhere; a quote not found leaves its place drawn and untied. A passage under the pointer lights its place on the page and a place its passage; a click on either holds both; text selected lights every place it runs over; the enlarged page shows a place's source words and its passage by the pointer. est marks a place or match as estimated (a dashed edge). SW.book.regionsReport() lists the places not found. A bench that names no file is as before.
 - **Book: the text lights its lines on the page** (David): where a page gives its lines' places (pb.lines, as Melville's manuscript does), a band on the image already lit its line in the text; now a line of the text under the pointer lights its band on the page beside it, and text selected lights the band of every line it covers, until the selection is let go. A line the page gives no place for is not lit.
 
 ## 1.9.1 (2026-11-12)

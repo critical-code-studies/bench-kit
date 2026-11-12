@@ -66,6 +66,20 @@
  * and text selected lights the bands of every line it covers, until the selection is let go; a band whose place is estimated (measured false) is drawn with a dashed edge,
  * and the enlarged page's details say so. pb.folio and pb.seq (an archive's folio, a sequence number)
  * are shown beside the page's name in those details (SW.BENCH.doc.folioWord names the folio).
+ * Where the bench gives the places of each page's passages (SW.BENCH.doc.regions: 'regions.json' for every
+ * page, or 'regions/{page}.json', a file to each page fetched as it is wanted), the text and the image are joined
+ * passage by passage, for a text whose lines are not the page's (a translation beside its source):
+ *   { pages: { facs: { size: [w, h], regions: [{ boxes: [[x0, y0, x1, y1], …], text, quote, est }] } } }
+ * (a page's own file: { size, regions }). boxes: where the passage is on the image, in the page's own pixels
+ * (size), a box to each column or line it runs over; text: the source's words there; quote: the words of the text
+ * shown that the place holds, one string for every version or { version id: string }; with no quote, text is
+ * looked for (a transcription's own words); est: the place or the match is estimated (a dashed edge).
+ * A quote is looked for in the page's text and the pages before and after (a passage may cross the turn), in the
+ * file's order, whitespace and * passed over; one not found leaves its place drawn and untied. The file is made
+ * once for a source whose pages do not change; a quote follows the text when it is edited elsewhere.
+ * A passage under the pointer lights its place on the page, and a place its passage; a click on either holds
+ * both, until the next click; text selected lights every place it runs over. SW.book.regionsReport() counts the
+ * places of the pages read so far and lists those not found in the text.
  * The pages' edges can be trimmed (a scan's colour card and ruler): the reader's in Settings ▸ Book,
  * dragged on a page there, or the bench's (SW.BENCH.doc.trim: { l, t, r, b }, each a share of the
  * page's width or height, or a function (pb) giving each page its own, or null); beside the text and in
@@ -123,6 +137,20 @@
       return (m.k === 'added' || m.k === 'erased' || m.k === 'reinstated') && (!hands || !m.hand || hands.indexOf(m.hand) >= 0) && m.change && at[m.change] === s;
     });
   };
+  // a text made ready to be looked for or in: whitespace and * (a mark of emphasis) taken out
+  K.squash = function (s) { return String(s == null ? '' : s).normalize('NFC').replace(/[\s*\u200b]+/g, ''); };
+  // where a quote lies in a text (both squashed): the first place at or after from that reaches past lo and
+  // begins before hi (the part of the text that is the page's own), as [start, end], or null
+  K.findQuote = function (hay, q, from, lo, hi) {
+    if (!q) return null;
+    var i = hay.indexOf(q, Math.max(0, from || 0));
+    while (i >= 0) {
+      if (hi != null && i >= hi) return null;
+      if (lo == null || i + q.length > lo) return [i, i + q.length];
+      i = hay.indexOf(q, i + 1);
+    }
+    return null;
+  };
   // a selection from one span to another as the lines it covers: start and end are
   // { n, c0, c1, off } (off: characters into the span, or null for the span's start or end)
   K.selection = function (a, b) {
@@ -148,6 +176,9 @@
   var CLS = { added: 'bk-add', erased: 'bk-del', reinstated: 'bk-stet', uncertain: 'bk-unc', sic: 'bk-sic', regularised: 'bk-reg', corrected: 'bk-cor',
     restored: 'bk-res', supplied: 'bk-supp', gap: 'bk-gap', metamark: 'bk-meta', ref: 'bk-ref' };
 
+  // the places of each page's passages (doc.regions): the file's address, or none
+  var RG = D.regions ? (typeof D.regions === 'string' ? D.regions : D.regions.url) || null : null;
+  function hasBoxes(pg) { return !!(pg.zoneN || pg.lines || pg.regions); }
   // the address as the page was opened, read before the shell rewrites it
   var Q0 = SW.readQuery();
   var BESIDE = Math.max(1, +D.besideMax || 3);   // the most texts beside the first
@@ -231,7 +262,7 @@
   }
   function figure(pg, col) {
     var f = SW.el('figure', { class: 'bk-fig' });
-    var btn = SW.el('button', { class: 'bk-fig-b', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ': click to see it larger, with its details' + (pg.zoneN || pg.lines ? '; a box or a line on it: highlight this in panel' : '') });
+    var btn = SW.el('button', { class: 'bk-fig-b', title: 'The ' + PAGE + ' ' + (pg.facs || '') + ': click to see it larger, with its details' + (pg.zoneN || pg.lines || RG ? '; a box or a line on it: highlight this in panel' : '') });
     var img = SW.el('img', { src: pg.img ? pg.img.src : iiifURL(pg.iiif, 400), alt: PAGE + ' ' + (pg.facs || ''), loading: 'lazy' });
     btn.appendChild(img);
     pg.figBtn = btn; pg.figImg = img;
@@ -239,7 +270,7 @@
     if (pg.facs) { pg.markBox = SW.el('div', { class: 'bk-mkbox' }); pg.markBox.innerHTML = markHTML(pg.facs); btn.appendChild(pg.markBox); fitMark(img, pg.markBox); }
     img.addEventListener('load', function () { if (pg.layer) fitZones(pg); fitMark(img, pg.markBox); });
     // the revisions' boxes, drawn when the pointer comes onto the image
-    btn.addEventListener('pointerenter', function () { if (pg.zoneN || pg.lines) { zoneLayer(pg, col); fitZones(pg); } });
+    btn.addEventListener('pointerenter', function () { if (RG) rgNeed(col, col.pages.indexOf(pg)); if (hasBoxes(pg)) { zoneLayer(pg, col); fitZones(pg); } });
     btn.onclick = function (e) {
       var mk = e.target.closest('.bk-mk');
       if (mk) { e.preventDefault(); setMark(pg.facs, !marked(pg.facs)); return; }
@@ -247,6 +278,8 @@
       if (z) { e.preventDefault(); toText(col, pg, z.dataset.z); return; }
       var lb = e.target.closest('.bk-band');
       if (lb) { e.preventDefault(); toLine(col, pg, +lb.dataset.ln); return; }
+      var rb = e.target.closest('.bk-rg');
+      if (rb) { e.preventDefault(); toRegion(col, pg, +rb.dataset.rg); return; }
       var ew = e.target.closest('.bk-else');
       if (ew) { e.preventDefault(); goElsewhere(col, ew.dataset.to); return; }
       pageBox(col, col.pages.indexOf(pg));
@@ -262,7 +295,24 @@
   // contain), so the image's own size need not match. A zone the document does not define is passed over.
   // the boxes of a page as a layer: link, whether a box under the pointer lights the text written in it
   function makeZones(pg, link) {
-    var L = SW.el('div', { class: 'bk-zl' }), w = pg.size[0], h = pg.size[1], zdiv = {}, ldiv = {};
+    var L = SW.el('div', { class: 'bk-zl' }), sz = pg.size || pg.rsize, w = sz[0], h = sz[1], zdiv = {}, ldiv = {}, rdiv = [];
+    // the places of the page's passages (doc.regions), beneath the lines and the revisions' boxes
+    (pg.regions || []).forEach(function (r, k) {
+      var rw = pg.rsize[0], rh = pg.rsize[1];
+      rdiv[k] = r.boxes.map(function (b0) {
+        // kept within the page, whatever the file gives
+        var b = [Math.max(0, Math.min(b0[0], b0[2])), Math.max(0, Math.min(b0[1], b0[3])), Math.min(rw, Math.max(b0[0], b0[2])), Math.min(rh, Math.max(b0[1], b0[3]))];
+        var d = SW.el('div', { class: 'bk-rg' + (r.est ? ' bk-rg-est' : ''), 'data-rg': k, title: link ? 'Highlight this in panel' : '' });
+        d.style.left = (100 * b[0] / rw) + '%'; d.style.top = (100 * b[1] / rh) + '%';
+        d.style.width = (100 * (b[2] - b[0]) / rw) + '%'; d.style.height = (100 * (b[3] - b[1]) / rh) + '%';
+        if (link) {
+          d.addEventListener('pointerenter', function () { rgHover([{ pg: pg, k: k }]); });
+          d.addEventListener('pointerleave', function () { rgHover(null); });
+        }
+        L.appendChild(d);
+        return d;
+      });
+    });
     // the page's lines (pb.lines), as bands under the revisions' boxes
     (pg.lines || []).forEach(function (ln) {
       var b0 = ln.box, b = [Math.min(b0[0], b0[2]), Math.min(b0[1], b0[3]), Math.max(b0[0], b0[2]), Math.max(b0[1], b0[3])];
@@ -299,7 +349,7 @@
       r.style.top = (100 * lowest / h + 1) + '%'; r.style.height = (99 - 100 * lowest / h) + '%';
       L.appendChild(r);
     }
-    return { L: L, zdiv: zdiv, ldiv: ldiv };
+    return { L: L, zdiv: zdiv, ldiv: ldiv, rdiv: rdiv };
   }
   // the text of a line of the page (pb.lines' n), and its spans highlighted as a box's are
   function lineSpans(pg, n) { return ((pg.col && pg.col.byLine[pg.p + ':' + n]) || []).filter(function (e) { return e.classList.contains('bk-s'); }); }
@@ -314,9 +364,9 @@
     hold(col, marks);
   }
   function zoneLayer(pg) {
-    if (pg.layer || !pg.figBtn || !pg.size) return pg.layer || null;
+    if (pg.layer || !pg.figBtn || !(pg.size || pg.rsize)) return pg.layer || null;
     var Z = makeZones(pg, true);
-    pg.zdiv = Z.zdiv; pg.ldiv = Z.ldiv;
+    pg.zdiv = Z.zdiv; pg.ldiv = Z.ldiv; pg.rdiv = Z.rdiv;
     pg.figBtn.appendChild(Z.L);
     pg.layer = Z.L;
     return Z.L;
@@ -436,7 +486,7 @@
       (c.pages || []).forEach(function (pg) {
         if (!pg.figImg) return;
         var T = trim(pg);
-        if (pg.layer) { pg.layer.remove(); pg.layer = null; pg.zdiv = null; }
+        if (pg.layer) { pg.layer.remove(); pg.layer = null; pg.zdiv = null; pg.ldiv = null; pg.rdiv = null; }
         if (T) withShape(pg, pg.figImg, function (ar) { cropIn(pg.figImg, T, ar); }); else cropOut(pg.figImg);
         if (pg.markBox) { if (!pg.markBox.isConnected) pg.figBtn.appendChild(pg.markBox); fitMark(pg.figImg, pg.markBox); }
       });
@@ -534,8 +584,219 @@
     by.forEach(function (ns, pg) { lightLines(pg, ns, 'bk-lsel', true); selLit.push({ pg: pg, ns: ns }); });
   }
   var selT = 0;
-  document.addEventListener('selectionchange', function () { clearTimeout(selT); selT = setTimeout(selLines, 60); });
+  document.addEventListener('selectionchange', function () { clearTimeout(selT); selT = setTimeout(function () { selLines(); if (RG) rgSel(); }, 60); });
   K.selLines = selLines;
+
+  // ---------- places on the page tied to passages of the text (SW.BENCH.doc.regions) ----------
+  // The file gives each page's places and the words of the text each holds; the words are found in the text as it
+  // is set, so the join is the text's own and nothing is kept of lines or offsets.
+  function rgFetch(u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(u + ': ' + r.status); return r.json(); }); }
+  var rgOne = null, rgGot = {};
+  function rgLoad(facs) {
+    if (!RG || !facs) return Promise.resolve(null);
+    if (rgGot[facs]) return rgGot[facs];
+    if (RG.indexOf('{page}') >= 0) return (rgGot[facs] = rgFetch(RG.replace('{page}', encodeURIComponent(facs))).catch(function () { return null; }));
+    rgOne = rgOne || rgFetch(RG).then(function (j) { return (j && j.pages) || {}; }).catch(function (e) { SW.toast('The places on the pages could not be read (' + e.message + ').', 5000); return {}; });
+    return (rgGot[facs] = rgOne.then(function (P) { return P[facs] || null; }));
+  }
+  function rgBox(b) { return Array.isArray(b) && b.length === 4 && b.every(function (x) { return typeof x === 'number' && isFinite(x); }); }
+  function rgArea(b) { return b[0] !== b[2] && b[1] !== b[3]; }   // a box with no width or height is not drawn
+  // a page's places, and those of the pages beside it, asked for once; a layer already drawn is made again
+  function rgNeed(col, k) {
+    return Promise.all([k - 1, k, k + 1].map(function (j) {
+      var pg = col.pages[j]; if (!pg || !pg.facs) return null;
+      if (pg.rgAsked) return pg.rgAsked;
+      return (pg.rgAsked = rgLoad(pg.facs).then(function (x) {
+        if (!x || !Array.isArray(x.regions) || !rgBox([0, 0].concat(x.size || []))) return;
+        var rs = x.regions.filter(function (r) { return r && Array.isArray(r.boxes) && r.boxes.every(rgBox); })
+          .map(function (r) { return Object.assign({}, r, { boxes: r.boxes.filter(rgArea) }); }).filter(function (r) { return r.boxes.length; });
+        if (!rs.length) return;
+        pg.regions = rs; pg.rsize = x.size;
+        if (pg.layer) { pg.layer.remove(); pg.layer = null; pg.zdiv = null; pg.ldiv = null; pg.rdiv = null; }
+        if (pg.figBtn && pg.figBtn.matches(':hover')) { zoneLayer(pg); fitZones(pg); }
+      }));
+    }));
+  }
+  // the text of a page and of the pages beside it as it is set, squashed, with each character's node and place
+  // in it; lo and hi: the part that is the page's own
+  function rgIndex(col, k) {
+    var S = [], nodes = [], offs = [], lo = 0, hi = 0;
+    for (var j = Math.max(0, k - 1); j <= Math.min(col.pages.length - 1, k + 1); j++) {
+      if (j === k) lo = nodes.length;
+      (col.pages[j].sp || []).forEach(function (e) {
+        if (e.classList.contains('bk-gone') || e.classList.contains('bk-off') || e.classList.contains('bk-ref') || e.closest('[hidden]')) return;
+        var w = document.createTreeWalker(e, NodeFilter.SHOW_TEXT), t;
+        while ((t = w.nextNode())) {
+          var d = t.data;
+          for (var i = 0; i < d.length; i++) { var c = d.charCodeAt(i); if (c === 42 || c === 0x200b || /\s/.test(d[i])) continue; S.push(d[i]); nodes.push(t); offs.push(i); }
+        }
+      });
+      if (j === k) hi = nodes.length;
+    }
+    return { S: S.join(''), nodes: nodes, offs: offs, lo: lo, hi: hi };
+  }
+  // each place's passage in a column's text, as a range, or null where its words are not found there
+  function rgQuote(r, vid) {
+    var q = r.quote;
+    if (q && typeof q === 'object') q = q[vid] != null ? q[vid] : q[textOf(vid)];
+    else if (q == null) q = r.text;
+    return K.squash(q || '');
+  }
+  function rgResolve(col, k) {
+    var pg = col.pages[k]; if (!pg || !pg.regions) return null;
+    var stamp = st.stage + '|' + st.all + '|' + st.strike;
+    if (pg.rr && pg.rrAt === stamp) return pg.rr;
+    var ix = rgIndex(col, k), cur = 0;
+    pg.rr = pg.regions.map(function (r) {
+      var q = rgQuote(r, col.vid); if (!q) return null;
+      var m = K.findQuote(ix.S, q, cur, ix.lo, ix.hi) || K.findQuote(ix.S, q, 0, ix.lo, ix.hi);
+      if (!m) return null;
+      cur = m[0];
+      var rg = document.createRange();
+      rg.setStart(ix.nodes[m[0]], ix.offs[m[0]]); rg.setEnd(ix.nodes[m[1] - 1], ix.offs[m[1] - 1] + 1);
+      return rg;
+    });
+    pg.rrAt = stamp;
+    return pg.rr;
+  }
+  // a passage marked in the text without touching it (the CSS Custom Highlight API), or, where a browser has
+  // none, the spans it runs over
+  var HL = root.CSS && root.CSS.highlights && root.Highlight ? root.CSS.highlights : null, hlSpans = {};
+  function hlSet(name, ranges) {
+    if (HL) { if (!ranges.length) { HL.delete(name); return; } var h = new root.Highlight(); ranges.forEach(function (r) { h.add(r); }); HL.set(name, h); return; }
+    (hlSpans[name] || []).forEach(function (e) { e.classList.remove(name); });
+    hlSpans[name] = [];
+    ranges.forEach(function (r) {
+      var c = r.commonAncestorContainer; c = c.nodeType === 1 ? c : c.parentNode;
+      var one = c.closest('.bk-s'), es = one ? [one] : [].slice.call(c.querySelectorAll('.bk-s'));
+      es.forEach(function (e) { if (r.intersectsNode(e)) { e.classList.add(name); hlSpans[name].push(e); } });
+    });
+  }
+  // a place's boxes lit on every picture of its page now shown
+  function rgLight(facs, k, cls, on) {
+    cols.forEach(function (c) {
+      if (c.stale || !c.byFacs) measure(c);
+      var j = c.byFacs[facs], pg = c.pages[j]; if (!pg || !pg.figBtn) return;
+      if (!pg.regions) { if (on) rgNeed(c, j); return; }
+      if (on) { zoneLayer(pg); fitZones(pg); }
+      ((pg.rdiv || [])[k] || []).forEach(function (d) { d.classList.toggle(cls, on); });
+    });
+  }
+  // a place's passage in each column's text
+  function rgRanges(facs, k) {
+    var out = [];
+    cols.forEach(function (c) {
+      if (c.stale || !c.byFacs) measure(c);
+      var j = c.byFacs[facs], pg = c.pages[j]; if (!pg) return;
+      if (!pg.regions) { rgNeed(c, j); return; }
+      var r = (rgResolve(c, j) || [])[k]; if (r) out.push(r);
+    });
+    return out;
+  }
+  // the places whose passage holds a point of the text: the page's own, and those of the pages beside it
+  function caretAt(x, y) {
+    if (document.caretPositionFromPoint) { var c = document.caretPositionFromPoint(x, y); return c && { node: c.offsetNode, off: c.offset }; }
+    if (document.caretRangeFromPoint) { var r = document.caretRangeFromPoint(x, y); return r && { node: r.startContainer, off: r.startOffset }; }
+    return null;
+  }
+  function rgAtPoint(s0, x, y) {
+    var pg = s0._leaf, col = pg && pg.col; if (!col) return [];
+    var c = caretAt(x, y); if (!c || !s0.contains(c.node)) return [];
+    var k = col.pages.indexOf(pg), out = [];
+    [k - 1, k, k + 1].forEach(function (j) {
+      var q = col.pages[j]; if (!q || !q.regions) return;
+      (rgResolve(col, j) || []).forEach(function (rg, i) {
+        try { if (rg && rg.comparePoint(c.node, c.off) === 0) out.push({ pg: q, k: i }); } catch (err) { /* a node no longer in the text */ }
+      });
+    });
+    return out;
+  }
+  // under the pointer: the places lit and their passages marked, until the pointer leaves
+  var rgHov = [], rgHovKey = '';
+  function rgKey(list) { return (list || []).map(function (x) { return x.pg.facs + ':' + x.k; }).join(','); }
+  function rgHover(list) {
+    var key = rgKey(list); if (key === rgHovKey) return;
+    rgHov.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rhover', false); });
+    rgHov = (list || []).map(function (x) { return { facs: x.pg.facs, k: x.k }; }); rgHovKey = key;
+    var ranges = [];
+    rgHov.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rhover', true); ranges = ranges.concat(rgRanges(x.facs, x.k)); });
+    hlSet('bk-rg-hover', ranges);
+  }
+  // clicked: held, the place and its passage, until the next click
+  var rgHeld = [], rgHeldAt = 0;
+  function rgUnhold() { rgHeld.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rheld', false); }); rgHeld = []; hlSet('bk-rg-held', []); }
+  function rgHold(list) {
+    rgUnhold();
+    rgHeld = list.map(function (x) { return { facs: x.pg.facs, k: x.k }; }); rgHeldAt = Date.now();
+    var ranges = [];
+    rgHeld.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rheld', true); ranges = ranges.concat(rgRanges(x.facs, x.k)); });
+    hlSet('bk-rg-held', ranges);
+    return ranges;
+  }
+  // a place on the page: to its passage in the text beside it, both held
+  function toRegion(col, pg, k) {
+    var r = (rgResolve(col, col.pages.indexOf(pg)) || [])[k];
+    if (!r) { SW.toast('The words of this place were not found in the text shown.', 4000); return; }
+    rgHold([{ pg: pg, k: k }]);
+    var e = r.startContainer.parentNode && r.startContainer.parentNode.closest('.bk-s');
+    if (e) { col.moved = false; col.el.scrollTop = Math.max(0, e.offsetTop - READ); }
+  }
+  function regionTip(col, pg, k) {
+    var r = pg.regions[k], rg = (rgResolve(col, col.pages.indexOf(pg)) || [])[k], t = rg ? rg.toString().replace(/\s+/g, ' ').trim() : '';
+    return (r.text ? '<div class="bk-ztip-w">' + esc(r.text.length > 220 ? r.text.slice(0, 220) + '…' : r.text) + '</div>' : '') +
+      (t ? '<div>“' + esc(t.length > 260 ? t.slice(0, 260) + '…' : t) + '”</div>' : '<div><i>its words were not found in the text shown</i></div>') +
+      (r.est ? '<div>The place or the match is estimated.</div>' : '') + (t ? '<div class="bk-ztip-h">Click: highlight this in panel</div>' : '');
+  }
+  // text selected: every place its passage runs over lit, until the selection is let go
+  var rgSelLit = [];
+  function rgSel() {
+    rgSelLit.forEach(function (x) { rgLight(x.facs, x.k, 'bk-rsel', false); }); rgSelLit = [];
+    var sel = window.getSelection && window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount || !view.isConnected) return;
+    var r = sel.getRangeAt(0); if (!view.contains(r.commonAncestorContainer)) return;
+    var c = r.commonAncestorContainer; c = c.nodeType === 1 ? c : c.parentNode;
+    var one = c.closest('.bk-s'), spans = one ? [one] : [].slice.call(c.querySelectorAll('.bk-s')), seen = [];
+    spans.forEach(function (e) {
+      var pg = e._leaf; if (!pg || !pg.col || seen.indexOf(pg) >= 0 || !r.intersectsNode(e)) return;
+      seen.push(pg);
+      var k = pg.col.pages.indexOf(pg); rgNeed(pg.col, k);
+      (rgResolve(pg.col, k) || []).forEach(function (rg, i) {
+        if (rg && rg.compareBoundaryPoints(Range.END_TO_START, r) < 0 && rg.compareBoundaryPoints(Range.START_TO_END, r) > 0) { rgLight(pg.facs, i, 'bk-rsel', true); rgSelLit.push({ facs: pg.facs, k: i }); }
+      });
+    });
+  }
+  if (RG) {
+    var rgRaf = 0, rgEv = null;
+    view.addEventListener('pointermove', function (e) {
+      rgEv = e; if (rgRaf) return;
+      rgRaf = requestAnimationFrame(function () {
+        rgRaf = 0;
+        var t = rgEv.target, s0 = t.closest && t.closest('.bk-s');
+        if (s0 && s0._leaf && s0._leaf.col) { rgNeed(s0._leaf.col, s0._leaf.col.pages.indexOf(s0._leaf)); rgHover(rgAtPoint(s0, rgEv.clientX, rgEv.clientY)); }
+        else if (!(t.closest && t.closest('.bk-rg'))) rgHover(null);
+      });
+    });
+    view.addEventListener('pointerleave', function () { rgHover(null); });
+    view.addEventListener('click', function (e) { if (rgHeld.length && Date.now() - rgHeldAt > 300 && !(e.target.closest && e.target.closest('#bk-share'))) rgUnhold(); }, true);
+    // a click on a passage of the text (not a drag that selects, nor a link, a note's mark or a button): held
+    view.addEventListener('click', function (e) {
+      var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0 || !s0._leaf || !s0._leaf.col || e.target.closest('a, button, .bk-ref')) return;
+      var sel = window.getSelection && window.getSelection(); if (sel && !sel.isCollapsed) return;
+      var x = e.clientX, y = e.clientY;
+      rgNeed(s0._leaf.col, s0._leaf.col.pages.indexOf(s0._leaf)).then(function () { var list = rgAtPoint(s0, x, y); if (list.length) rgHold(list); });
+    });
+  }
+  // the places of the pages read so far, and those whose words are not in the first text
+  K.regionsReport = function () {
+    var out = { pages: 0, regions: 0, tied: 0, untied: [] }, c = cols[0];
+    if (c) c.pages.forEach(function (pg, k) {
+      if (!pg.regions) return;
+      out.pages++;
+      (rgResolve(c, k) || []).forEach(function (rg, i) { out.regions++; if (rg) out.tied++; else out.untied.push({ page: pg.facs, k: i, quote: rgQuote(pg.regions[i], c.vid).slice(0, 60) }); });
+    });
+    return out;
+  };
+  K.regionsNeed = function (facs) { var c = cols[0]; if (!c) return Promise.resolve(); if (c.stale || !c.byFacs) measure(c); return c.byFacs[facs] == null ? Promise.resolve() : rgNeed(c, c.byFacs[facs]); };
   function words(t) { return String(t).toLowerCase().match(/[a-z\u00c0-\u024f']{3,}/g) || []; }
   function facing(s0, on) {
     if (cols.length < 2 || !s0._leaf || !s0._leaf.facs) return;
@@ -575,6 +836,7 @@
     var P = PAGE.charAt(0).toUpperCase() + PAGE.slice(1);
     function fill(k) {
       i = k;
+      if (RG && !col.pages[k].rgAsked) rgNeed(col, k).then(function () { if (i === k && d.isConnected && col.pages[k].regions) fill(k); });
       var pg = col.pages[k], b = col.b, next = col.pages[k + 1], n1 = next && next.p === pg.p && next.n0 != null ? next.n0 - 1 : (b.lines[pg.p] || []).length;
       // an archive's folio and sequence beside the page's name (pb.folio, pb.seq)
       var arch = [pg.folio != null ? (D.folioWord || 'folio') + ' ' + pg.folio : '', pg.seq != null ? 'seq. ' + pg.seq : ''].filter(Boolean).join(', ');
@@ -582,6 +844,10 @@
       if (b.parts.length > 1) rows.push(['Part', esc(b.parts[pg.p].src.split('/').pop())]);
       if (pg.n0 != null) rows.push(['Lines', (n1 > pg.n0 ? 'll. ' + pg.n0 + '–' + n1 : 'l. ' + pg.n0) + ' ' + SW.refTag(b.v.id, pg.p, pg.n0, Math.max(pg.n0, n1), b.parts.length)]);
       if (pg.lines && pg.lines.some(function (ln) { return !ln.measured; })) rows.push(['Lines on the image', 'Lines are estimated.']);
+      if (pg.regions) {
+        var rrs = rgResolve(col, k) || [], untied = rrs.filter(function (x) { return !x; }).length;
+        rows.push(['Passages on the image', pg.regions.length + (untied ? ', ' + untied + ' not found in this text' : '') + (pg.regions.some(function (r) { return r.est; }) ? '. A dashed edge: the place or the match is estimated.' : '')]);
+      }
       // the image's credit folded behind the bench's short form (doc.imageCreditShort, plain text), or
       // its first words (as "Houghton Library"), opened with the chevron
       if (D.imageCredit) {
@@ -601,7 +867,7 @@
         (many ? '<button class="bk-nav bk-nav-prev" data-to="' + prev + '"' + (prev < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' before" aria-label="The ' + esc(PAGE) + ' before">◀</button>' +
           '<button class="bk-nav bk-nav-next" data-to="' + nxt + '"' + (nxt < 0 ? ' disabled' : '') + ' title="The ' + esc(PAGE) + ' after" aria-label="The ' + esc(PAGE) + ' after">▶</button>' : '') + '</div>' +
         '<div class="bk-modal-meta"><button class="bk-x" data-x title="Close (Esc)" aria-label="Close">✕</button><table>' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' + acts +
-        '<p class="hint bk-keys">Wheel, pinch or + −: zoom; drag: move. ' + (pg.zoneN || pg.lines ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click outside: close.</p></div></div>';
+        '<p class="hint bk-keys">Wheel, pinch or + −: zoom; drag: move. ' + (hasBoxes(pg) ? 'A box or a line on the image: its text by the pointer; a click: highlight this in panel. ' : '') + (many ? '◀ ▶ or the arrow keys: the ' + esc(PAGE) + ' before or after. ' : '') + '✕, Esc or a click outside: close.</p></div></div>';
       zoomEl = d.querySelector('.bk-zoom'); zm = { z: 1, x: 0, y: 0 }; paint();
       showRating(pg.facs);
       // the bookmark at the page's top right, moving with the page and kept its own size
@@ -636,7 +902,7 @@
       [step(k, -1), step(k, 1)].forEach(function (j) { var q = j >= 0 && col.pages[j].img && col.pages[j].img.sharp; if (q) (new Image()).src = q; });
       // the revisions' boxes over the large image, as beside the text: faint with the pointer on it,
       // the stage's lit in red, a click on one to the text written there
-      if ((pg.zoneN || pg.lines) && pg.size) {
+      if (hasBoxes(pg) && (pg.size || pg.rsize)) {
         var pic = d.querySelector('.bk-modal-pic'), big = pic.querySelector('img'), Z = makeZones(pg, false), sNow = st.all ? 0 : st.stage;
         zoomEl.appendChild(Z.L);
         var er = Z.L.querySelector('.bk-else');
@@ -653,6 +919,13 @@
           bd.addEventListener('pointerenter', function () { tip.innerHTML = lineTip(pg, ln); tip.hidden = false; });
           bd.addEventListener('pointermove', function (e) { var r = tip.getBoundingClientRect(); tip.style.left = Math.min(e.clientX + 14, innerWidth - r.width - 8) + 'px'; tip.style.top = Math.min(e.clientY + 16, innerHeight - r.height - 8) + 'px'; });
           bd.addEventListener('pointerleave', function () { tip.hidden = true; });
+        });
+        Z.rdiv.forEach(function (ds, rk) {
+          ds.forEach(function (rd) {
+            rd.addEventListener('pointerenter', function () { ds.forEach(function (x) { x.classList.add('bk-rhover'); }); tip.innerHTML = regionTip(col, pg, rk); tip.hidden = false; });
+            rd.addEventListener('pointermove', function (e) { var r = tip.getBoundingClientRect(); tip.style.left = Math.min(e.clientX + 14, innerWidth - r.width - 8) + 'px'; tip.style.top = Math.min(e.clientY + 16, innerHeight - r.height - 8) + 'px'; });
+            rd.addEventListener('pointerleave', function () { ds.forEach(function (x) { x.classList.remove('bk-rhover'); }); tip.hidden = true; });
+          });
         });
         if (er) {
           er.addEventListener('pointerenter', function () { tip.innerHTML = '<div>' + esc(pg.elsewhere[0].note || '') + '</div><div class="bk-ztip-h">Click: the text, under ' + esc(pg.elsewhere[0].to) + '</div>'; tip.hidden = false; });
@@ -766,6 +1039,8 @@
       if (zb) { e.stopPropagation(); var at = col.pages[i]; d.close(); toText(col, at, zb.dataset.z); return; }
       var lbm = e.target.closest('.bk-band');
       if (lbm) { e.stopPropagation(); var at2 = col.pages[i]; d.close(); toLine(col, at2, +lbm.dataset.ln); return; }
+      var rgm = e.target.closest('.bk-rg');
+      if (rgm) { e.stopPropagation(); var at3 = col.pages[i]; d.close(); toRegion(col, at3, +rgm.dataset.rg); return; }
       // only ✕ or a click outside the box (on the backdrop, which is the dialog itself) closes it, and Esc
       if (e.target === d || e.target.closest('[data-x]')) d.close();
     });
@@ -847,6 +1122,7 @@
         var e = spanEl(sp, p, notes);
         el.appendChild(e);
         e._leaf = cur;
+        if (cur && RG) (cur.sp = cur.sp || []).push(e);
         if (cur && cur.lines && sp.n != null) e._ln = sp.n;
         // a substitution's two sides (a deletion and the addition in its place), by its id
         if (cur) sp.marks.forEach(function (q) {

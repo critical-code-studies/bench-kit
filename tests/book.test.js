@@ -42,5 +42,17 @@
   eq('a span not in the lines: no selection', K.selection({ c0: 0, c1: 3, off: 0 }, { n: 2, c0: 0, c1: 3, off: 1 }), null);
 
   T.group('Book: opened from elsewhere');
+  T.group('Book: a place’s words found in the text');
+  eq('whitespace and * are passed over', K.squash(' the *hasard* of\n chance '), 'thehasardofchance');
+  (function () {
+    var hay = K.squash('It is so. Why is it so? It is so. The end.'), q = K.squash('It is so.');
+    eq('a quote is found where it first lies', K.findQuote(hay, q, 0), [0, 7]);
+    eq('from a place on, the next', K.findQuote(hay, q, 1), [17, 24]);
+    eq('one that ends before the page’s own text is passed over', K.findQuote(hay, q, 0, 8, hay.length), [17, 24]);
+    eq('one that begins after the page’s own text is not taken', K.findQuote(hay, q, 1, 0, 10), null);
+    eq('a passage that crosses into the page counts', K.findQuote(hay, K.squash('Why is it so?'), 0, 12, hay.length), [7, 17]);
+    eq('words not in the text: null', K.findQuote(hay, K.squash('Not here.'), 0), null);
+    eq('no words: null', K.findQuote(hay, '', 0), null);
+  })();
   eq('SW.book.openAt is there for any bench', typeof (window.SW.book || {}).openAt, 'function');
 })();
