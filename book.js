@@ -865,8 +865,12 @@
       if (sa && sb && sa.dataset.n && sa.dataset.p != null) cite = SW.cite(c.b, +sa.dataset.p, +sa.dataset.n, Math.max(+sa.dataset.n, +(sb.dataset.n || sa.dataset.n)));
     }
     // the bench's own wording for what is sent (doc.shareCite), in place of the reference by file and line
+    var ref = cite, P = PAGE.charAt(0).toUpperCase() + PAGE.slice(1);
     cite = K.shareCite(D.shareCite, { page: pg.facs || '', version: c.vid, label: textLabel(c.vid), cite: cite });
-    return { c: c, pg: pg, ks: ks, passage: passage, cite: cite, face: face, est: ks.some(function (k) { return pg.regions[k].est; }), link: shareLink({ hr: rgRef(c, x) }) };
+    // what is said of the passage, once: the bench's wording alone (it names the page), else the page and the
+    // reference (which names the text), else the page and the text
+    var lines = D.shareCite && cite && cite !== ref ? [cite] : cite ? [P + ' ' + (pg.facs || ''), cite] : [P + ' ' + (pg.facs || '') + ' · ' + textLabel(c.vid)];
+    return { c: c, pg: pg, ks: ks, passage: passage, cite: cite, lines: lines, face: face, est: ks.some(function (k) { return pg.regions[k].est; }), link: shareLink({ hr: rgRef(c, x) }) };
   }
   // the picture: the page as it is trimmed, the places drawn in the links' colour; beside it the passage, and
   // under that the page's name, the text, the citation, the bench and the image's credit
@@ -884,7 +888,7 @@
       var body = wrapText(x, '“' + h.passage + '”', TW), lh = Math.round(size * 1.5);
       x.font = '17px ' + sans;
       var P = PAGE.charAt(0).toUpperCase() + PAGE.slice(1), credit = String(D.imageCreditShort || '').replace(/<[^>]*>/g, '').trim();
-      var meta = [P + ' ' + (pg.facs || '') + ' · ' + textLabel(h.c.vid)].concat(h.cite ? wrapText(x, h.cite, TW) : [], [B.title || B.name || ''].filter(Boolean),
+      var meta = [].concat.apply([], h.lines.map(function (t) { return wrapText(x, t, TW); })).concat([B.title || B.name || ''].filter(Boolean),
         credit ? wrapText(x, 'Image: ' + credit, TW) : [], h.est ? ['The place marked on the ' + PAGE + ' is approximate.'] : []);
       var CH = Math.max(IH, body.length * lh + 30 + meta.length * 26) + 2 * PAD;
       cv.width = CW; cv.height = CH;
@@ -920,7 +924,7 @@
     var name = String(B.id || B.name || 'bench').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + PAGE + '-' + (h.pg.facs || '') + '-highlight.png';
     d.innerHTML = '<form method="dialog"><h3>Share highlight</h3>' +
       '<div class="bk-shl-pic"><p class="hint">Making the picture…</p></div>' +
-      '<p class="hint">' + esc(P + ' ' + (h.pg.facs || '') + ' · ' + textLabel(h.c.vid)) + (h.cite ? ' · ' + esc(h.cite) : '') + '</p>' +
+      '<p class="hint">' + esc(h.lines.join(' · ')) + '</p>' +
       '<div class="row bk-shl-acts"><button type="button" class="btn" data-shl="link" title="A link that opens this ' + esc(PAGE) + ' with the highlight held">Copy link</button>' +
       '<button type="button" class="btn" data-shl="mail" title="A message with the picture and the passage">Email…</button>' +
       '<button type="button" class="btn" data-shl="save" disabled title="The picture as a file">Download PNG</button>' +
