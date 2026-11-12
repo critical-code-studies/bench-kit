@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.6 (2026-11-12)
 
 - **A passage's highlight has a little room** (David): with its edge gone the fill sat tight on the characters; it now runs two pixels past the place above and below, in its own colour, on the page's image, and to the same measure in Share highlight's picture. The sides are as they were.
 
