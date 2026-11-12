@@ -278,7 +278,9 @@
     pg.figBtn = btn; pg.figImg = img;
     var T0 = trim(pg); if (T0) withShape(pg, img, function (ar) { cropIn(img, T0, ar); });
     if (pg.facs) { pg.markBox = SW.el('div', { class: 'bk-mkbox' }); pg.markBox.innerHTML = markHTML(pg.facs); btn.appendChild(pg.markBox); fitMark(img, pg.markBox); }
-    img.addEventListener('load', function () { if (pg.layer) fitZones(pg); fitMark(img, pg.markBox); });
+    // the picture is fetched as it comes near the view (loading: lazy), and the places of its passages with it,
+    // so the first passage pointed at is lit without a wait
+    img.addEventListener('load', function () { if (pg.layer) fitZones(pg); fitMark(img, pg.markBox); if (RG && linkOn()) rgNeed(col, col.pages.indexOf(pg)); });
     // the revisions' boxes, drawn when the pointer comes onto the image
     btn.addEventListener('pointerenter', function () { if (RG) rgNeed(col, col.pages.indexOf(pg)); if (hasBoxes(pg)) { zoneLayer(pg, col); fitZones(pg); } });
     btn.onclick = function (e) {
