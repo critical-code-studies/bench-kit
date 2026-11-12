@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.7 (2026-11-12)
 
 - **Book: the stage slider turns “every revision” off** (David, via Melville): with every revision shown, the slider was disabled and ◀ ▶ changed the stage with nothing to show for it; only the run through the stages unticked the box. The slider now stays usable, drawn fainter while every revision is on, and moving it, ◀ or ▶ unticks the box and shows the text at the stage, with Strike deletions offered again. The box's tip says so.
 
