@@ -81,10 +81,11 @@
  * both, until the next click; text selected lights every place it runs over. SW.book.regionsReport() counts the
  * places of the pages read so far and lists those not found in the text.
  * While a passage's highlight link is held, ✦ Share highlight in the toolbar makes a picture to send: the page with the
- * place drawn on it, the passage, its citation, the page's name and the image's credit (doc.imageCreditShort), with
- * Share… (where the browser can hand a file on), Copy image, Download image, Email… (the passage, the citation and
- * the link in a new message, the picture on the clipboard to paste in) and Copy link, a link that opens Book with the
- * same highlight held (hr: the page, the place and the first of its words). 🔗 Share page is the link to Book as set.
+ * place drawn on it, the passage, its citation, the page's name and the image's credit (doc.imageCreditShort), with,
+ * in this order, Copy link (a link that opens Book with the same highlight held; hr: the page, the place and the first
+ * of its words), Email… (the picture and the passage handed to the system's sharing where the browser can pass a
+ * file; elsewhere the passage, the citation and the link in a new message, the picture on the clipboard to paste
+ * in), Download PNG and Copy PNG. 🔗 Share page is the link to Book as set.
  * These are Book's highlight links: a line, a box or a passage lit on the page, and its words in the text. Their
  * colour is the theme's, or the bench's (SW.BENCH.doc.linkColor: a CSS colour), or the reader's own (Settings ▸
  * Book, kept in this browser as book.link); the reader can also turn them off there (book.linkOff), and the
@@ -906,9 +907,11 @@
     d.innerHTML = '<form method="dialog"><h3>Share highlight</h3>' +
       '<div class="bk-shl-pic"><p class="hint">Making the picture…</p></div>' +
       '<p class="hint">' + esc(P + ' ' + (h.pg.facs || '') + ' · ' + textLabel(h.c.vid)) + (h.cite ? ' · ' + esc(h.cite) : '') + '</p>' +
-      '<div class="row bk-shl-acts"><button type="button" class="btn" data-shl="share" hidden>Share…</button><button type="button" class="btn" data-shl="copy" disabled>Copy image</button>' +
-      '<button type="button" class="btn" data-shl="save" disabled>Download image</button><button type="button" class="btn" data-shl="mail">Email…</button>' +
-      '<button type="button" class="btn" data-shl="link">Copy link</button><span class="bk-shl-gap"></span><button value="cancel" class="btn ghost">Close</button></div>' +
+      '<div class="row bk-shl-acts"><button type="button" class="btn" data-shl="link" title="A link that opens this ' + esc(PAGE) + ' with the highlight held">Copy link</button>' +
+      '<button type="button" class="btn" data-shl="mail" title="A message with the picture and the passage">Email…</button>' +
+      '<button type="button" class="btn" data-shl="save" disabled title="The picture as a file">Download PNG</button>' +
+      '<button type="button" class="btn" data-shl="copy" disabled title="The picture, to paste">Copy PNG</button>' +
+      '<span class="bk-shl-gap"></span><button value="cancel" class="btn ghost">Close</button></div>' +
       '<p class="hint bk-shl-msg" aria-live="polite"></p></form>';
     document.body.appendChild(d);
     var msg = SW.$('.bk-shl-msg', d), say = function (t) { msg.textContent = t; };
@@ -924,8 +927,6 @@
       box.innerHTML = ''; box.appendChild(SW.el('img', { src: u, alt: 'The ' + PAGE + ' with the passage’s place marked, and the passage', width: p.w, height: p.h }));
       d.addEventListener('close', function () { URL.revokeObjectURL(u); });
       SW.$$('[data-shl="copy"], [data-shl="save"]', d).forEach(function (b) { b.disabled = false; });
-      var sb = SW.$('[data-shl="share"]', d);
-      try { if (navigator.canShare && navigator.canShare({ files: [file()] })) sb.hidden = false; } catch (e) { /* no sharing of files here */ }
     }, function (e) {
       SW.$('.bk-shl-pic', d).innerHTML = '<p class="hint">The picture could not be made here (' + esc(e.message) + '). The passage and the link can still be sent.</p>';
     });
@@ -933,15 +934,22 @@
       var b = e.target.closest('[data-shl]'); if (!b) return;
       var k = b.dataset.shl;
       if (k === 'link') { SW.copyText(h.link, 'the link'); say('The link is copied. It opens this ' + PAGE + ' with the highlight held.'); }
-      else if (k === 'copy') toClip().then(function () { say('The picture is copied: paste it into a message or a document.'); }, function (err) { say('Could not copy the picture (' + err.message + '). Download image gives it as a file.'); });
+      else if (k === 'copy') toClip().then(function () { say('The picture is copied: paste it into a message or a document.'); }, function (err) { say('Could not copy the picture (' + err.message + '). Download PNG gives it as a file.'); });
       else if (k === 'save') { var a = SW.el('a', { href: URL.createObjectURL(pic.blob), download: name }); document.body.appendChild(a); a.click(); a.remove(); say('Saved as ' + name + '.'); }
-      else if (k === 'share') navigator.share({ files: [file()], title: (B.title || B.name || '') + ', ' + PAGE + ' ' + (h.pg.facs || ''), text: text }).catch(function () { /* put away by the reader */ });
       else if (k === 'mail') {
-        // an email cannot be given a file from a page: the words and the link go in it, the picture on the clipboard
+        // where the browser can hand a file on, the picture and the words go to the system's sharing, which gives
+        // them to Mail; elsewhere an email cannot be given a file from a page, so the words and the link go in a
+        // new message and the picture on the clipboard, to paste in
+        var can = false; try { can = !!(pic && navigator.canShare && navigator.canShare({ files: [file()] })); } catch (err) { can = false; }
+        if (can) {
+          navigator.share({ files: [file()], title: (B.title || B.name || '') + ', ' + PAGE + ' ' + (h.pg.facs || ''), text: text })
+            .then(function () { say('Handed on with the picture and the passage.'); }, function (err) { if (err && err.name !== 'AbortError') say('Could not hand the picture on (' + err.message + '). Download PNG gives it to attach.'); });
+          return;
+        }
         var go = function (copied) {
           var a = SW.el('a', { href: 'mailto:?subject=' + encodeURIComponent((B.title || B.name || 'A passage') + ', ' + PAGE + ' ' + (h.pg.facs || '')) + '&body=' + encodeURIComponent(text) });
           document.body.appendChild(a); a.click(); a.remove();
-          say(copied ? 'A message is started with the passage and the link. The picture is copied: paste it into the message.' : 'A message is started with the passage and the link. Download image gives the picture to attach.');
+          say(copied ? 'A message is started with the passage and the link. The picture is copied: paste it into the message.' : 'A message is started with the passage and the link. Download PNG gives the picture to attach.');
         };
         toClip().then(function () { go(true); }, function () { go(false); });
       }
