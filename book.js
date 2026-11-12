@@ -62,7 +62,8 @@
  * the page's own pixels, n the line number its spans carry), each line has a band on the image, under
  * the revisions' line-sized boxes and over larger ones (a passage added whole), which are reached where
  * no band covers them and from the text: under the pointer it lights its line in the text, and a click highlights it
- * there, as a box does; a band whose place is estimated (measured false) is drawn with a dashed edge,
+ * there, as a box does; the other way, a line of the text under the pointer lights its band on the page beside it,
+ * and text selected lights the bands of every line it covers, until the selection is let go; a band whose place is estimated (measured false) is drawn with a dashed edge,
  * and the enlarged page's details say so. pb.folio and pb.seq (an archive's folio, a sequence number)
  * are shown beside the page's name in those details (SW.BENCH.doc.folioWord names the folio).
  * The pages' edges can be trimmed (a scan's colour card and ruler): the reader's in Settings ▸ Book,
@@ -315,7 +316,7 @@
   function zoneLayer(pg) {
     if (pg.layer || !pg.figBtn || !pg.size) return pg.layer || null;
     var Z = makeZones(pg, true);
-    pg.zdiv = Z.zdiv;
+    pg.zdiv = Z.zdiv; pg.ldiv = Z.ldiv;
     pg.figBtn.appendChild(Z.L);
     pg.layer = Z.L;
     return Z.L;
@@ -455,6 +456,13 @@
     L.style.left = (img.offsetLeft + (W - cw) / 2) + 'px'; L.style.top = (img.offsetTop + (H - ch) / 2) + 'px';
     L.style.width = cw + 'px'; L.style.height = ch + 'px';
   }
+  // a page's bands (pb.lines) for these lines lit or put out, the layer drawn first if need be
+  function lightLines(pg, ns, cls, on) {
+    if (!pg || !pg.lines) return;
+    if (on) { zoneLayer(pg); fitZones(pg); }
+    if (!pg.ldiv) return;
+    ns.forEach(function (n) { if (pg.ldiv[n]) pg.ldiv[n].classList.toggle(cls, on); });
+  }
   function lightZones(pg, ids, cls, on) {
     if (!pg || !pg.zoneN) return;
     if (on) { zoneLayer(pg); fitZones(pg); }
@@ -498,13 +506,36 @@
   view.addEventListener('pointerover', function (e) {
     var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0) return;
     if (s0._zones) { if (held.length && Date.now() - heldAt > 800 && held.indexOf(s0) < 0) clearHeld(); lightZones(s0._pg, s0._zones, 'bk-zhover', true); }
+    if (s0._ln != null) lightLines(s0._leaf, [s0._ln], 'bk-lhover', true);
     facing(s0, true);
   });
   view.addEventListener('pointerout', function (e) {
     var s0 = e.target.closest && e.target.closest('.bk-s'); if (!s0) return;
     if (s0._zones) lightZones(s0._pg, s0._zones, 'bk-zhover', false);
+    if (s0._ln != null) lightLines(s0._leaf, [s0._ln], 'bk-lhover', false);
     facing(s0, false);
   });
+  // text selected in a column: the bands of the lines it covers lit on their pages, until it is let go
+  var selLit = [];
+  function selLines() {
+    selLit.forEach(function (x) { lightLines(x.pg, x.ns, 'bk-lsel', false); }); selLit = [];
+    var sel = window.getSelection && window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount || !view.isConnected) return;
+    var r = sel.getRangeAt(0), by = new Map();
+    if (!view.contains(r.commonAncestorContainer)) return;
+    var root = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentNode;
+    var spans = root.classList && root.classList.contains('bk-s') ? [root] : [].slice.call(root.querySelectorAll('.bk-s'));
+    var s1 = root.closest && root.closest('.bk-s'); if (s1 && spans.indexOf(s1) < 0) spans.push(s1);
+    spans.forEach(function (e) {
+      if (e._ln == null || !e._leaf || !r.intersectsNode(e)) return;
+      var ns = by.get(e._leaf); if (!ns) by.set(e._leaf, ns = []);
+      if (ns.indexOf(e._ln) < 0) ns.push(e._ln);
+    });
+    by.forEach(function (ns, pg) { lightLines(pg, ns, 'bk-lsel', true); selLit.push({ pg: pg, ns: ns }); });
+  }
+  var selT = 0;
+  document.addEventListener('selectionchange', function () { clearTimeout(selT); selT = setTimeout(selLines, 60); });
+  K.selLines = selLines;
   function words(t) { return String(t).toLowerCase().match(/[a-z\u00c0-\u024f']{3,}/g) || []; }
   function facing(s0, on) {
     if (cols.length < 2 || !s0._leaf || !s0._leaf.facs) return;
@@ -816,6 +847,7 @@
         var e = spanEl(sp, p, notes);
         el.appendChild(e);
         e._leaf = cur;
+        if (cur && cur.lines && sp.n != null) e._ln = sp.n;
         // a substitution's two sides (a deletion and the addition in its place), by its id
         if (cur) sp.marks.forEach(function (q) {
           if (q.k !== 'subst' || !q.id) return;

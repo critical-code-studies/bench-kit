@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book: the text lights its lines on the page** (David): where a page gives its lines' places (pb.lines, as Melville's manuscript does), a band on the image already lit its line in the text; now a line of the text under the pointer lights its band on the page beside it, and text selected lights the band of every line it covers, until the selection is let go. A line the page gives no place for is not lit.
+
 ## 1.9.1 (2026-11-12)
 
 - **Glossary renderings separated by a comma** (David, via kuki): an English cell was split on ";" only, so "basis, foundation" was one rendering, never found in the translation, and the Glossary called it not in the translation though each word occurs there 40 times. A cell is now split on "," as on ";", in a Markdown table and in glossary.csv, and each part is counted and warned of on its own. A description beside a rendering goes in brackets, where it is a note: "decision; determination (in the causal sense)".

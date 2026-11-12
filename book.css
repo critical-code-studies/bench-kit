@@ -124,6 +124,8 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-band { position: absolute; box-sizing: border-box; border-bottom: 1px solid transparent; pointer-events: auto; cursor: pointer; z-index: 1; transition: background-color 0.2s ease, border-color 0.2s ease; }
 .bk-fig-b:hover .bk-band, .bk-modal-pic:hover .bk-band { border-bottom-color: color-mix(in srgb, var(--amber) 25%, transparent); }
 .bk-fig-b:hover .bk-band.bk-band-est, .bk-modal-pic:hover .bk-band.bk-band-est { border-bottom-style: dashed; }
+.bk-band.bk-lhover { background: color-mix(in srgb, var(--amber) 14%, transparent); border-bottom-color: var(--amber); }
+.bk-band.bk-lsel { background: color-mix(in srgb, var(--amber) 24%, transparent); border-bottom-color: var(--amber); }
 .bk-fig-b .bk-band:hover, .bk-modal-pic .bk-band:hover { background: color-mix(in srgb, var(--amber) 14%, transparent); border-bottom-color: var(--amber); }
 .bk-z { z-index: 2; }
 .bk-z.bk-zbig { z-index: 0; }
