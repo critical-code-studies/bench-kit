@@ -499,7 +499,7 @@
           <dt>Provider</dt><dd><a href="https://web.hypothes.is/">Hypothesis</a>. An account is free.</dd>
           <dt>Get it</dt><dd>Signed in, at <a href="https://hypothes.is/account/developer">hypothes.is/account/developer</a>, where Hypothesis makes and shows your token.</dd>
           <dt>Where it goes</dt><dd>⚙ Settings ▸ Annotations: the group link from your invitation in <b>Group link or ID</b> (it is reduced to the ID), the token in <b>API token</b>. Stored as <code>&lt;store&gt;group</code> and <code>&lt;store&gt;token</code>.</dd>
-          <dt>Bench setting</dt><dd>The private group's ID, as the default for everyone, in <code>config.js</code>; members join through the bench's invitation (Help ▸ Joining the annotation group).</dd>
+          <dt>Bench setting</dt><dd>The private group's ID, as the default for everyone, in <code>config.js</code>; members join through the bench's invitation (Help ▸ Annotating and sharing ▸ Getting set up).</dd>
         </dl>
         <div class="term"><div class="label"><span>research/js/config.js</span><span>example</span></div>
 <pre>group: 'AbC123xy',      <span class="c">// the private Hypothesis group's ID</span></pre></div>
@@ -546,6 +546,7 @@
     <section class="section wrap reveal" id="trouble">
       <span class="num">08</span>
       <h2>Troubleshooting</h2>
+      <p>The <a href="faq.html">FAQ</a> answers wider questions: what a bench is, joining a group, where notes are kept, tokens, and highlight links.</p>
       <ul class="trouble">
         <li><span class="sym">Access to fetch at 'file:///…/source/v2/wordfreq.py' from origin 'null' has been blocked by CORS policy</span><span class="fix">The bench was opened as a file. It reads its sources over HTTP, so serve the repository's folder (<code>python3 -m http.server 8000</code>) and open <code>http://localhost:8000/research/</code>.</span></li>
         <li><span class="sym">Could not load · Could not fetch v2/wordfreq.py (404)</span><span class="fix">The server was started in <code>research/</code>, so <code>source/</code> beside it is out of reach. Start it in the repository's folder. The test tools fail the same way when run from <code>research/</code>: run them from the repository's folder, or give <code>--dir</code>.</span></li>
@@ -565,6 +566,7 @@
         <a href="https://github.com/critical-code-studies/bench-kit"><b>Source</b><span>critical-code-studies/bench-kit on GitHub</span></a>
         <a href="https://github.com/critical-code-studies/bench-template"><b>bench-template</b><span>The starting point for a new bench</span></a>
         <a href="https://github.com/critical-code-studies/bench-kit#readme"><b>README</b><span>Every module, setting and hook</span></a>
+        <a href="faq.html"><b>FAQ</b><span>Questions about the kit, making a bench, reading and annotating</span></a>
         <a href="library.html"><b>Library guide</b><span>Setting up the Library, its manifest and its tools</span></a>
         <a href="https://github.com/critical-code-studies/bench-kit/blob/main/CHANGELOG.md"><b>Changelog</b><span>Each release and what it changed</span></a>
         <a href="https://github.com/critical-code-studies/bench-kit/blob/main/LICENSE"><b>Licence</b><span>GNU General Public License, version 3</span></a>
