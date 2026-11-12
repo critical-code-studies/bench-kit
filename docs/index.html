@@ -101,10 +101,10 @@
     .site-nav a { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-dim); padding: 0.6rem 1.2rem; }
     .site-nav a:hover { color: var(--beam); background: rgba(242,171,60,0.08); }
     .site-nav a .n { color: var(--beam); margin-right: 0.4rem; }
-    @media (min-width: 1120px) {
+    @media (min-width: 1400px) {
       .nav-toggle { display: none; }
       .site-nav { position: static; display: flex; flex-direction: row; min-width: 0; padding: 0; background: none; border: 0; box-shadow: none; gap: 0.1rem; }
-      .site-nav a { padding: 0.45rem 0.6rem; font-size: 0.66rem; white-space: nowrap; }
+      .site-nav a { padding: 0.45rem 0.42rem; font-size: 0.66rem; letter-spacing: 0.5px; white-space: nowrap; }
       .site-nav a:hover { background: none; }
     }
     @media (max-width: 560px) { .brand-tagline { display: none; } .nav-toggle { padding: 7px 10px; } }
@@ -240,9 +240,10 @@
           <a href="#usage"><span class="n">03</span>Usage</a>
           <a href="#screens"><span class="n">04</span>Screenshots</a>
           <a href="#library"><span class="n">05</span>The Library</a>
-          <a href="#config"><span class="n">06</span>Configuration</a>
-          <a href="#trouble"><span class="n">07</span>Troubleshooting</a>
-          <a href="#links"><span class="n">08</span>Links</a>
+          <a href="#book"><span class="n">06</span>Book</a>
+          <a href="#config"><span class="n">07</span>Configuration</a>
+          <a href="#trouble"><span class="n">08</span>Troubleshooting</a>
+          <a href="#links"><span class="n">09</span>Links</a>
         </nav>
         <button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle light and dark theme">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -264,11 +265,11 @@
       </div>
       <div class="stats" aria-label="bench-kit in figures">
         <div><b data-kit-version>1.9.8</b><span>Current release</span></div>
-        <div><b>207</b><span>Releases since 11 October 2026</span></div>
-        <div><b>58</b><span>JavaScript modules</span></div>
-        <div><b>25,803</b><span>Lines of JavaScript</span></div>
+        <div><b>217</b><span>Releases since 11 October 2026</span></div>
+        <div><b>59</b><span>JavaScript modules</span></div>
+        <div><b>26,398</b><span>Lines of JavaScript</span></div>
         <div><b>6</b><span>Repositories its CI tests on each push</span></div>
-        <div><b>806</b><span>Kit tests passed in bench-template</span></div>
+        <div><b>821</b><span>Kit tests passed in bench-template</span></div>
       </div>
     </div>
   </section>
@@ -283,13 +284,13 @@
         <div class="card"><h3>Read</h3><p>Each version's files as held, with search, highlighting, a citation for any line or range, a reading edition, and export to Word and Markdown.</p></div>
         <div class="card"><h3>Collate</h3><p>Two versions as text, routine by routine, or definition by definition where both are Lisp.</p></div>
         <div class="card"><h3>Genealogy</h3><p>A stemma of the versions, and flows and trees of what each keeps from its parent, moves, edits or drops.</p></div>
-        <div class="card"><h3>Book</h3><p>A text whose reader gives its structure (TEI, say) set as pages beside their images, with a slider through the stages of revision.</p></div>
+        <div class="card"><h3>Book</h3><p>A text whose reader gives its structure (TEI, say) set as pages beside their images, with a slider through the stages of revision, and highlight links between the words and their places on the page (section 06).</p></div>
         <div class="card"><h3>Annotation</h3><p>Through a private Hypothesis group, with replies and reactions; an annotation shows as a ghost on the matching lines of other versions.</p></div>
         <div class="card"><h3>Paratexts</h3><p>Scans, documents and recordings in a private GitHub repository, catalogued in Dublin Core and arranged in collections and sequences.</p></div>
         <div class="card"><h3>Implementations</h3><p>A catalogue of a program's copies, ports and reimplementations, drawn as a tree with the evidence for each line of descent.</p></div>
         <div class="card"><h3>References</h3><p>A short reference for every version and file, and a Software Heritage identifier for each source.</p></div>
         <div class="card"><h3>Library</h3><p>The secondary literature as covers, a list, a gallery or a card catalogue, with ratings, key works, relevance and tags kept in the group, and a To read shelf of book cards for each reader (section 05).</p></div>
-        <div class="card"><h3>Translation</h3><p>A translation's text beside its source page by page, its glossary as a concordance, and its change lists checked against the text.</p></div>
+        <div class="card"><h3>Translation</h3><p>A translation's text beside its source page by page, its glossary as a concordance, its change lists checked against the text, and its file edited in a box that is locked until opened.</p></div>
       </div>
     </section>
 
@@ -443,8 +444,51 @@
       </div>
     </section>
 
-    <section class="section wrap reveal" id="config">
+    <section class="section wrap reveal" id="book">
       <span class="num">06</span>
+      <h2>Book</h2>
+      <p>Book (<code>book.js</code>) sets a version's text as pages beside their images. A <b>highlight link</b> ties words of the text to their place on the page's image: the words under the pointer are lit on the image, a place on the image lights its words, and a click on either holds both until the next click. Text selected lights every place it runs over. A bench sets the links' colour (<code>doc.linkColor</code>); a reader can choose their own, or turn the links off, in Settings ▸ Book.</p>
+      <p>The places come from the bench's data, in one of three forms. A document that gives the boxes its revisions are written in (<code>doc.zones</code>) ties each revision to its box. A page break that gives its lines (<code>pb.lines</code>) ties each line of the text to a band on the image, as the Melville bench does for the manuscript of <i>Billy Budd</i>. For a text whose lines are not the page's, such as a translation read beside its source, a support file gives each page's passages (<code>doc.regions</code>): the boxes a passage takes on the image and the words of the text it holds. Book finds those words in the text as it is set, so the file keeps no line numbers and follows the text when it is edited elsewhere. The Kuki bench has 2,754 such places on 330 pages, one for each sentence of the translation or its part on a page, all marked as estimated. The <a href="https://github.com/critical-code-studies/bench-kit#readme">README</a> gives the file's fields.</p>
+      <p>While a passage's highlight link is held, <b>Share highlight</b> makes a picture of the page with the place marked and the passage beside it, with the bench's citation (<code>doc.shareCite</code>) and the image's credit. Copy link gives a link that opens Book with the same highlight held. Email… hands the picture and the passage to the system's sharing where the browser can pass a file, and elsewhere starts a message with the passage and the link and copies the picture to paste in. Download PNG and Copy PNG give the picture. <b>Share page</b> is the link to Book as it is set.</p>
+      <p>Where a version has stages of revision, the slider shows the text at a stage and “every revision” shows them all at once; moving the slider, or ◀ ▶, turns “every revision” off. On a translation bench, Edit (<code>vt-edit.js</code>) sets the file's text in a box of its own, greyed while locked and white once its padlock is opened.</p>
+      <div class="shots">
+        <figure>
+          <a href="img/book-melville-lines.jpg"><img src="img/book-melville-lines.jpg" width="1440" height="813" loading="lazy" alt="The Melville bench's Book: four lines of the manuscript's text selected on the left, and the bands of those lines lit on the leaf's image on the right."></a>
+          <figcaption><b>Melville, lines.</b> Four lines of the manuscript’s text selected, and the band of each lit on the leaf beside it. A band under the pointer lights its line in the text, and a click holds it. Text: Melville Electronic Library, <i>Versions of Billy Budd</i>. Leaf images: Houghton Library, Harvard University, MS Am 188 (363).<span class="prov">Melville 0.4.30, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/book-melville-stage.jpg"><img src="img/book-melville-stage.jpg" width="1440" height="813" loading="lazy" alt="The Melville bench's Book with the stage slider at stage C b, the twelfth of thirty-three, and every revision unticked."></a>
+          <figcaption><b>Melville, stages.</b> The slider at stage C b, the twelfth of thirty-three. With every revision shown the slider is drawn fainter; moving it turns every revision off and shows the text at the stage. Text: Melville Electronic Library, <i>Versions of Billy Budd</i>. Leaf images: Houghton Library, Harvard University, MS Am 188 (363).<span class="prov">Melville 0.4.30, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/book-kuki-highlight.jpg"><img src="img/book-kuki-highlight.jpg" width="1440" height="813" loading="lazy" alt="The Kuki bench's Pages view at page 81: a sentence of the translation marked in the text, and its four columns filled on the image of the 1948 page."></a>
+          <figcaption><b>Kuki, a passage held.</b> A sentence of the translation clicked on p. 81, and its columns filled on the page of the 1948 printing. The bench estimates each place from the sentence’s share of the page’s text. Page image: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain).<span class="prov">Kuki 0.2.41, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/book-kuki-share.jpg"><img src="img/book-kuki-share.jpg" width="1440" height="813" loading="lazy" alt="The Share highlight dialog on the Kuki bench: the picture, the citation, and the buttons Copy link, Email, Download PNG and Copy PNG."></a>
+          <figcaption><b>Share highlight.</b> The dialog for the passage held: the picture, the bench’s citation, and Copy link, Email…, Download PNG and Copy PNG. Page image: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain).<span class="prov">Kuki 0.2.41, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/book-kuki-share-picture.jpg"><img src="img/book-kuki-share-picture.jpg" width="1081" height="813" loading="lazy" alt="The picture Share highlight makes: the 1948 page with the passage's columns filled, the passage in English beside it, the citation, the bench's name and the library's credit."></a>
+          <figcaption><b>The picture sent.</b> The page with the place marked, the passage, the bench’s citation, the image’s credit and, for an estimated place, a line saying so. Shown reduced; the file is 1,400 pixels wide. Page image: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain).<span class="prov">Kuki 0.2.41, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/book-kuki-edit-locked.jpg"><img src="img/book-kuki-edit-locked.jpg" width="1440" height="813" loading="lazy" alt="The Kuki bench's Edit view, locked: the translation's Markdown in a greyed box with a padlock at its head, the page's image beside it."></a>
+          <figcaption><b>Edit, locked.</b> The translation’s file as written (Markdown) in a greyed box. The padlock at the box’s head, or the one in the toolbar, unlocks it. Page image: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain).<span class="prov">Kuki 0.2.41, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/book-kuki-edit-unlocked.jpg"><img src="img/book-kuki-edit-unlocked.jpg" width="1440" height="813" loading="lazy" alt="The Kuki bench's Edit view, unlocked: the same box white, with an edge in the bench's accent."></a>
+          <figcaption><b>Edit, unlocked.</b> The same box white, with an edge in the bench’s accent, open for editing. Page image: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain).<span class="prov">Kuki 0.2.41, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/book-kuki-settings.jpg"><img src="img/book-kuki-settings.jpg" width="1440" height="813" loading="lazy" alt="Settings, Book, on the Kuki bench: the page with its trim frame and the four sides beside it, and Highlight links with a switch, a colour and a sample."></a>
+          <figcaption><b>Settings ▸ Book.</b> The pages’ edges, trimmed by dragging an edge or by percentage, and Highlight links: a switch, a colour and the bench’s default. Page image: 国立国会図書館 National Diet Library, Japan, pid 1037966 (public domain).<span class="prov">Kuki 0.2.41, bench-kit 1.9.8 · 12 November 2026</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section wrap reveal" id="config">
+      <span class="num">07</span>
       <h2>Configuration and tokens</h2>
       <p>A bench has no server, no environment variables and no API keys of its own. Its settings are in <code>research/js/config.js</code>, read by the browser. Two services take a personal token, and both are optional: without them a bench reads, collates and draws as usual, keeps annotations as drafts in the browser, and does not open the paratext archive.</p>
       <p>Each person pastes their own token into ⚙ Settings. It is kept in that browser's localStorage, under the bench's storage prefix (<code>store</code> in <code>config.js</code>), and is left out of Help ▸ Back up my data. Nothing is sent anywhere but the service it belongs to.</p>
@@ -500,7 +544,7 @@
     </section>
 
     <section class="section wrap reveal" id="trouble">
-      <span class="num">07</span>
+      <span class="num">08</span>
       <h2>Troubleshooting</h2>
       <ul class="trouble">
         <li><span class="sym">Access to fetch at 'file:///…/source/v2/wordfreq.py' from origin 'null' has been blocked by CORS policy</span><span class="fix">The bench was opened as a file. It reads its sources over HTTP, so serve the repository's folder (<code>python3 -m http.server 8000</code>) and open <code>http://localhost:8000/research/</code>.</span></li>
@@ -510,12 +554,12 @@
         <li><span class="sym">Failed to load resource: net::ERR_CONNECTION_RESET …/research/kit/genealogy.js</span><span class="fix">Python's built-in server dropped some of the many files a bench asks for at once. Reload, or serve with a longer queue:<br><code>python3 -c "import http.server as h; h.ThreadingHTTPServer.request_queue_size = 256; h.test(h.SimpleHTTPRequestHandler, h.ThreadingHTTPServer, port=8000)"</code></span></li>
         <li><span class="sym">After moving to a newer kit, the bench still behaves as it did before the move</span><span class="fix">The browser kept the old modules. Every script and stylesheet in <code>research/index.html</code> carries <code>?v=</code> with the bench's version; raise them all together, which <code>node research/kit/tools/release.js next "…" --kit vX.Y.Z</code> does (it printed <code>research/index.html: 47 × ?v=0.1.99</code> for bench-template). Then reload with the cache bypassed.</span></li>
         <li><span class="sym">no Chrome or Chromium found; give its path as CHROME=</span><span class="fix">The test tools could not find a browser in the usual places. Give its path: <code>CHROME=/path/to/chrome node research/kit/tools/test.js</code>.</span></li>
-        <li><span class="sym">Annotations show as drafts only, or the paratext archive asks for a token, on the published bench</span><span class="fix">Tokens are kept per origin, so the ones pasted on <code>localhost</code> are not on <code>github.io</code>. Paste them in ⚙ Settings on the published bench (section 06).</span></li>
+        <li><span class="sym">Annotations show as drafts only, or the paratext archive asks for a token, on the published bench</span><span class="fix">Tokens are kept per origin, so the ones pasted on <code>localhost</code> are not on <code>github.io</code>. Paste them in ⚙ Settings on the published bench (section 07).</span></li>
       </ul>
     </section>
 
     <section class="section wrap reveal" id="links">
-      <span class="num">08</span>
+      <span class="num">09</span>
       <h2>Links</h2>
       <div class="links">
         <a href="https://github.com/critical-code-studies/bench-kit"><b>Source</b><span>critical-code-studies/bench-kit on GitHub</span></a>
