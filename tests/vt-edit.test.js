@@ -70,6 +70,24 @@
   eq('a paragraph taken out, not yet applied: shown', [w.text === text, w.pending.length, w.stuck.length].join(' '), 'true 1 0');
   w = E.working(text, [{ name: 'g', raw: glist }], 'translation');
   eq('a paragraph taken out, applied: counted as applied, not stuck', [w.text === text, w.applied.length, w.pending.length, w.stuck.length].join(' '), 'true 1 0 0');
+  // a marker moved a few words on: taken out in one place and put in beside it
+  var mbase = 'Before it (Hegel, En-[p. 2] [コマ 8]cyklopädie, hrsg. v. Bolland, 1906, § 150) and after it, with words enough to stand alone.\n';
+  var mnext = mbase.replace('En-[p. 2] [コマ 8]cyklopädie, hrsg', 'En-[コマ 8]cyklopädie, [p. 2] hrsg');
+  var mes = E.entries(mbase, mnext, { target: 'translation' }), mraw = E.list(mes);
+  eq('a marker moved a few words on is one entry', mes.length, 1);
+  w = E.working(mbase, [{ name: 'm', raw: mraw }], 'translation');
+  eq('a marker moved, not yet applied: shown', [w.text === mnext, w.pending.length, w.stuck.length].join(' '), 'true 1 0');
+  w = E.working(mnext, [{ name: 'm', raw: mraw }], 'translation');
+  eq('a marker moved, applied: applied, none stuck', [w.text === mnext, w.applied.length, w.pending.length, w.stuck.length].join(' '), 'true 1 0 0');
+  // the same move as two entries, the second inside the first one's NEW, as lists were written before
+  var two = E.list([{ target: 'translation', where: 'p. 2', old: 'Hegel, En-[p. 2] [コマ 8]cyklopädie, hrsg', new: 'Hegel, En-[コマ 8]cyklopädie, hrsg' },
+                    { target: 'translation', where: 'p. 1', old: 'En-[コマ 8]cyklopädie, hrsg. v. Bolland, 1906,', new: 'En-[コマ 8]cyklopädie, [p. 2] hrsg. v. Bolland, 1906,' }]);
+  w = E.working(mbase, [{ name: 't', raw: two }], 'translation');
+  eq('a list of two entries in a chain, not yet applied: both shown', [w.text === mnext, w.pending.length, w.stuck.length].join(' '), 'true 2 0');
+  w = E.working(mnext, [{ name: 't', raw: two }], 'translation');
+  eq('a list of two entries in a chain, applied: both applied, none stuck', [w.text === mnext, w.applied.length, w.pending.length, w.stuck.length].join(' '), 'true 2 0 0');
+  w = E.working(mbase.replace('Hegel, En-', 'Hegel in the En-'), [{ name: 't', raw: two }], 'translation');
+  eq('a chain whose first OLD is not in the text: both stuck, the text left as it was', [w.stuck.length, w.applied.length, w.text === mbase.replace('Hegel, En-', 'Hegel in the En-')].join(' '), '2 0 true');
   eq('and Changes reads it as applied, pending before', [VT.applied(gc[0], { translation: text }), VT.applied(gc[0], { translation: withP })].join(' '), 'applied pending');
   var top = 'New.\n' + text, tl = E.list(E.entries(text, top, { target: 'translation' }));
   eq('words added at the top, before', E.working(text, [{ name: 'a', raw: tl }], 'translation').text, top);

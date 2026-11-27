@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Edit: a marker moved a few words on is one entry** (kuki's crosscheck of Edit against `vt_apply.py`, run 209: "working after: pending 0 stuck 1"): a `[p. N]` marker moved three or more words along a line was written as two entries, the marker taken out and then put in, with the second entry's place inside the first one's NEW. `vt_apply` applied both and the text was right, but the first entry's NEW was then nowhere in the text, and Edit showed it as stuck. A change that falls inside the NEW of an entry before it is now written with that entry as one. A list already saved as two such entries is read as applied where putting the later entry's OLD back for its NEW leaves the earlier NEW in the text.
+
 ## 1.9.13 (2026-11-27)
 
 - **Book: to a page by its name** (David, via kuki: "we need a jump to page on the bench - i needed to check a page and it was irritating to find it"): Book could be moved by scrolling, by a bookmark already made, or by a link to a line. The toolbar now has a box, labelled with the bench's word for a page, that shows the page being read; a name or number typed there and Return goes to that page, its break brought to the reading height and marked for a moment. `81`, `p. 81` and `page 81` name the same page, a name is matched without its case, and a number finds the one page whose name holds it (`7` for `img_7`). A name that is not in the text is said to be so, with the first and last there are. A link can name the page (`&page=81`), used where it gives no line. The box is shown wherever a text has two or more named pages; no setting.

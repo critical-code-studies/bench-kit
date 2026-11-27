@@ -22,7 +22,9 @@
  * Each entry's OLD occurs once in the text it is applied to and not at all afterwards, the test by
  * which vt_apply accepts it and by which this view knows it has been applied. It is widened by whole
  * words until both hold, to at least 8 words where its line has them (the method's 8 to 30). Entries of a
- * list apply in order: each is worked out on the text the ones before it leave.
+ * list apply in order: each is worked out on the text the ones before it leave. A change that falls inside
+ * the NEW of an entry before it (a marker moved a few words on: taken out in one place, put in beside it) is
+ * written with that entry as one, so that every entry's NEW is in the text once the list is applied.
  *
  * The descriptor (SW.BENCH.translation): edit: { dir, tool }, the folder for the lists (default 'checks/',
  * a path as the versions' files are named; a list is named edit-<date>-<time>-<file's name>.md) and the
@@ -159,19 +161,34 @@
   function atEdge(S, l, r) { return l === 0 || r === S.length; }
   E.entries = function (base, text, o) {
     o = o || {};
-    var MINW = o.minWords || 8, out = null;
+    var MINW = o.minWords || 8, out = null, cs = E.changes(base, text);
     // a later entry may bring back an earlier entry's OLD (a paragraph moved): the lines around it as well,
     // more of them each time, until none does
     for (var tries = 0; tries < 4; tries++) {
-      out = entriesAt(base, text, o, MINW, tries * 2);
+      // a change inside an earlier entry's NEW: the changes from that entry's to this one are one change
+      for (var guard = cs.length; guard >= 0; guard--) {
+        out = entriesAt(base, text, o, MINW, tries * 2, cs);
+        if (!out.inside) break;
+        cs = joinChanges(base, cs, out.inside[0], out.inside[1]);
+      }
+      if (out.inside) break;
       if (out.every(function (e) { return e.new.indexOf(e.old) >= 0 || count(text, e.old) === 0; })) return out;
     }
     throw new Error('Two changes could not be told apart in a change list: save them one at a time.');
   };
-  function entriesAt(base, text, o, MINW, lines) {
-    var S = base, shift = 0, out = [];
-    E.changes(base, text).forEach(function (c) {
+  // changes j to i of a list as one: what they take out and put in, with the text between them
+  function joinChanges(base, cs, j, i) {
+    var c = { a0: cs[j].a0, a1: cs[i].a1, ins: '', b0: cs[j].b0 };
+    for (var k = j; k <= i; k++) c.ins += (k > j ? base.slice(cs[k - 1].a1, cs[k].a0) : '') + cs[k].ins;
+    return cs.slice(0, j).concat([c], cs.slice(i + 1));
+  }
+  // the entries for a list of changes, or { inside: [j, i] } where change i falls inside the NEW of change j's entry
+  function entriesAt(base, text, o, MINW, lines, cs) {
+    var S = base, shift = 0, out = [], news = [], join = null;
+    cs.forEach(function (c, ci) {
+      if (join) return;
       var a = c.a0 + shift, b = c.a1 + shift, ins = c.ins, l = a, r = b;
+      for (var pi = 0; pi < news.length; pi++) if (a < news[pi].end && b > news[pi].l) { join = [news[pi].i, ci]; return; }
       function NEW() { return S.slice(l, a) + ins + S.slice(b, r); }
       function right() { var old = S.slice(l, r); if (!old) return false; if (count(S, old) !== 1) return false; return count(S.slice(0, l) + NEW() + S.slice(r), old) === 0 || (atEdge(S, l, r) && (a === 0 || b === S.length)); }
       for (var q = 0; q < lines; q++) { if (l > 0) l = S.lastIndexOf('\n', l - 2) + 1; var nl0 = S.indexOf('\n', r + 1); r = nl0 < 0 ? S.length : nl0; }
@@ -192,8 +209,10 @@
       if (!fits(old) || !fits(nw)) throw new Error('A change near “' + S.slice(a, a + 40) + '” holds a line or a character a change list cannot carry (~~~, or an unusual line break).');
       out.push({ target: o.target || 'translation', where: o.desc ? whereAt(S, a, o.desc) : '', old: old, new: nw });
       S = S.slice(0, l) + nw + S.slice(r);
+      news.push({ l: l, end: l + nw.length, i: ci });
       shift += ins.length - (b - a);
     });
+    if (join) return { inside: join };
     if (S !== text) throw new Error('The change list does not reproduce the text; nothing was saved.');
     return out;
   }
@@ -217,16 +236,24 @@
   };
   // a file with its lists' entries for this target applied, in the order of the lists' names: OLD found
   // once, applied; not found and NEW there (or NEW nothing but blank lines: a paragraph taken out), already
-  // applied; otherwise stuck, the text left as it was
+  // applied; otherwise stuck, the text left as it was. An entry whose NEW a later entry of its list has
+  // changed again (lists written before a move was one entry) is applied where putting the later entries'
+  // OLD back for their NEW leaves its NEW in the text.
+  function chained(S, c, later) {
+    var T = S;
+    for (var i = later.length - 1; i >= 0; i--) { var x = later[i]; if (x.old && x.new && count(T, x.new) === 1) T = T.replace(x.new, (function (v) { return function () { return v; }; })(x.old)); }
+    return T !== S && VT.present(T, c.new);
+  }
   E.working = function (file, lists, target) {
     var S = file, res = { pending: [], applied: [], stuck: [] };
     lists.slice().sort(function (x, y) { return x.name < y.name ? -1 : x.name > y.name ? 1 : 0; }).forEach(function (L) {
-      VT.changes(L.raw, L.name).forEach(function (c) {
-        if ((c.target === 'readable' ? 'translation' : c.target) !== target || !c.old) return;
+      var mine = VT.changes(L.raw, L.name).filter(function (c) { return (c.target === 'readable' ? 'translation' : c.target) === target; });
+      mine.forEach(function (c, ci) {
+        if (!c.old) return;
         var n = count(S, c.old);
         if (c.new && c.new.indexOf(c.old) >= 0 && S.indexOf(c.new) >= 0) res.applied.push(c);
         else if (n === 1) { S = S.replace(c.old, function () { return c.new; }); res.pending.push(c); }
-        else if (n === 0 && (!/\S/.test(c.new || '') || VT.present(S, c.new))) res.applied.push(c);
+        else if (n === 0 && (!/\S/.test(c.new || '') || VT.present(S, c.new) || chained(S, c, mine.slice(ci + 1)))) res.applied.push(c);
         else res.stuck.push(c);
       });
     });
