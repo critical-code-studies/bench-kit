@@ -1,5 +1,10 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **A bench's own wording for "Cite this version"** (David, via kuki: "Cite this version is incorrect"): Versions ▸ This version built the line from the version's label, date and authors and the bench's name, and a bench could not change it, so kuki's translation was cited without Kuki or the book's title. `SW.BENCH.version.cite` gives the line: a function of the version, `(v, { id, label, date, authors, bench, url, ref })`, or a text with `{label}`, `{date}`, `{authors}`, `{bench}`, `{url}`, `{ref}` or `{id}` in it. It is plain text, with `*…*` set in italics; where it gives nothing for a version, the kit's line stands. `SW.versionCite(v)` returns the line as text.
+- The kit's own line no longer has an empty sentence (". .") for a version with no authors.
+
 ## 1.9.9 (2026-11-27)
 
 - **A bench's own links in Versions ▾ and File ▾** (David, via kuki): Versions ▾ listed the kit's views and nothing of the bench's own, so a file that is a version of the text but not a view (kuki's typeset book, a PDF) had no place there. `SW.BENCH.menus.links: { versions: [{ label, text, href }], file: […] }` puts each at the menu's foot, after a rule, with ↗ after its label; it opens in a new tab.

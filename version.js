@@ -6,6 +6,10 @@
  *                  what the bench holds of the version and how it reads or assembles it (by
  *                  default the files, and how they are read)
  *   after(v)    -> HTML after the record (a reconstruction card)
+ *   cite        -> the line "Cite this version" gives, in place of the kit's: a function of the version
+ *                  (v, { id, label, date, authors, bench, url, ref }) or a text with {label}, {date},
+ *                  {authors}, {bench}, {url}, {ref} or {id} in it. Plain text, with *…* set in italics;
+ *                  nothing given for a version keeps the kit's line
  *   notesHint   -> the text above the version's annotations
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -15,6 +19,19 @@
   function H() { return B.version || {}; }
   // a version's label without the bench's name before it (Spacewar! 3.1 → 3.1)
   function short(label) { var n = (B.name || '') + ' '; return label.indexOf(n) === 0 ? label.slice(n.length) : label; }
+  // "Cite this version" as plain text: the bench's own wording (SW.BENCH.version.cite, or `how`), else the
+  // kit's line from the version's record
+  SW.versionCite = function (v, how) {
+    var o = { id: v.id, label: v.label, date: v.date, authors: v.authors || '', bench: B.name, url: SW.versionURI(v.id), ref: v.build ? SW.refText(v.id) : '' };
+    if (arguments.length < 2) how = H().cite;
+    var t = null;
+    if (typeof how === 'function') { try { t = how(v, o); } catch (e) { t = null; } }
+    else if (typeof how === 'string') t = how.replace(/\{(id|label|date|authors|bench|url|ref)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; });
+    if (t != null && String(t).trim()) return String(t).trim();
+    return o.label + ' (' + o.date + '). ' + (o.authors ? o.authors + '. ' : '') + o.bench + ' research bench, ' + o.url + (o.ref ? ' ' + o.ref : '');
+  };
+  // the same as HTML: escaped, *…* in italics
+  function citeHTML(v) { return SW.esc(SW.versionCite(v)).replace(/\*([^*]+)\*/g, '<i>$1</i>'); }
   var view = SW.$('#view-about');
   var build = null;
 
@@ -49,7 +66,7 @@
     ];
     var dl = [['Date', v.date], ['Authors', v.authors], ['Descends from', descent(v)], ['Status', v.status], ['Survives as', v.medium || 'none']].concat(own, [
       ['SWHID', v.build ? SW.swhidList(SW.filesOf(v)) + '<span class="hint">Software Heritage identifiers of the files, from their bytes; click to copy.</span>' : 'none'],
-      ['Cite this version', SW.esc(v.label + ' (' + v.date + '). ' + (v.authors || '') + '. ' + B.name + ' research bench, ' + SW.versionURI(v.id) + (v.build ? ' ' + SW.refText(v.id) : ''))]
+      ['Cite this version', citeHTML(v)]
     ]);
     pad.innerHTML = '<h2 style="margin-top:0">' + SW.esc(v.label) + (v.build ? ' ' + SW.refTag(v.id) : '') + '</h2><p class="prose">' + SW.esc(v.summary) + '</p>' +
       '<dl class="meta">' + dl.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>'; }).join('') + '</dl>' + (H().after ? H().after(v) || '' : '') +
