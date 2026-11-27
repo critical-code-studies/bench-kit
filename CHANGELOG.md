@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.9 (2026-11-27)
 
 - **A bench's own links in Versions ▾ and File ▾** (David, via kuki): Versions ▾ listed the kit's views and nothing of the bench's own, so a file that is a version of the text but not a view (kuki's typeset book, a PDF) had no place there. `SW.BENCH.menus.links: { versions: [{ label, text, href }], file: […] }` puts each at the menu's foot, after a rule, with ↗ after its label; it opens in a new tab.
 
