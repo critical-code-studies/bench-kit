@@ -2,7 +2,8 @@
 /*
  * tools/release.js - a bench's release: its version raised on every script and stylesheet
  * (the ?v= in its pages) and its date (the bench-date meta) set to the day, a line in its
- * changelog, the version in its README, the DOI badge at the README's foot (from about.doi), the Library's
+ * changelog, the version in its README, the DOI badge at the README's foot (from about.doi), the bench's
+ * preview card (the tags in index.html a site reads when a link is posted, from about.card), the Library's
  * page with its preview card (library/index.html, for a bench with a Library), and the kit moved to a release if asked; then a check for conflict markers. It changes files only: committing and pushing stay with you. Run from
  * the bench's repository:
  *
@@ -165,6 +166,100 @@ if (!NOLOG) {
   } else if (!A.doi) console.log('No DOI: set about.doi in js/config.js once Zenodo has archived a GitHub Release (https://zenodo.org/account/settings/github/; the kit\'s README, "A bench\'s DOI").');
 }
 
+// The bench's preview card: the picture, title and line a site shows when a link to the bench is posted
+// (LinkedIn, Slack, Mastodon, Bluesky and others read Open Graph tags; X reads twitter: ones). A site's reader
+// runs no script, so the tags are written into index.html here, between two comments, from the bench's settings
+// (js/config.js): about.card { title, description, image, alt }, each with a default: the bench's title, the page's
+// own description, and the kit's picture (kit/docs/img/bench-card.jpg). about.card: false writes none. A page
+// whose tags were written by hand is left as it is until the bench sets about.card.
+{
+  let B = {}, SWx = {};
+  try {
+    const vm = require('vm'), sb = { SW: {} }; sb.window = sb; sb.globalThis = sb;
+    vm.runInNewContext(fs.readFileSync(path.join(dir, 'js', 'config.js'), 'utf8'), sb);
+    SWx = sb.SW; B = sb.SW.BENCH || {};
+  } catch (e) { /* no config.js, or one that needs the page */ }
+  const A = B.about || {}, K = A.card && typeof A.card === 'object' ? A.card : {};
+  const START = '<!-- preview card: written by kit/tools/release.js from about.card in js/config.js -->', END = '<!-- /preview card -->';
+  const s = fs.readFileSync(page, 'utf8'), has = s.indexOf(START) >= 0, byHand = !has && /<meta\s+(?:property="og:|name="twitter:)/.test(s);
+  const base = B.base || SWx.BASE_URI || '';
+  if (A.card === false) { /* the bench wants none */ }
+  else if (byHand && !A.card) { /* written by hand: left */ }
+  else if (!base) console.log('No preview card: set base in js/config.js to the address the bench is published at.');
+  else {
+    const attr = (x) => String(x).replace(/&(?!#?\w+;)/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const plain = (x) => String(x || '').replace(/<\/?(?:p|div|br|li|ul|ol|h\d)\b[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    const unattr = (x) => String(x || '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    const title = K.title || B.title || ((B.name || 'A') + ' research bench');
+    let desc = plain(K.description) || unattr((/<meta name="description" content="([^"]*)">/.exec(s) || [])[1]) || plain(A.purpose);
+    if (desc.length > 200) {
+      const head = desc.slice(0, 201), end = Math.max(head.lastIndexOf('. '), head.lastIndexOf('! '), head.lastIndexOf('? '));
+      desc = end > 40 ? head.slice(0, end + 1) : head.replace(/\s+\S*$/, '') + '…';
+    }
+    const root = base.replace(/\/?$/, '/'), abs = (u) => /^https?:/.test(u) ? u : root + String(u).replace(/^\.?\//, '');
+    // the picture: the bench's own, or the kit's. Its size and kind are read from the file, and its address
+    // carries a stamp of its bytes, so a site that has kept an old picture fetches a new one.
+    let pic = K.image || 'kit/docs/img/bench-card.jpg', info = null, stamp = '';
+    const read = (u) => {
+      if (/^https?:/.test(u)) return null;
+      try {
+        const b = fs.readFileSync(path.join(dir, u.replace(/[?#].*$/, ''))), o = { bytes: b.length, hash: require('crypto').createHash('sha1').update(b).digest('hex').slice(0, 8) };
+        if (b.length > 24 && b.readUInt32BE(0) === 0x89504e47) { o.w = b.readUInt32BE(16); o.h = b.readUInt32BE(20); o.type = 'image/png'; }
+        else if (b[0] === 0xff && b[1] === 0xd8) {
+          o.type = 'image/jpeg';
+          for (let i = 2; i + 9 < b.length;) {
+            if (b[i] !== 0xff) { i++; continue; }
+            const m = b[i + 1];
+            if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) { o.h = b.readUInt16BE(i + 5); o.w = b.readUInt16BE(i + 7); break; }
+            if (m === 0xff) { i++; continue; }
+            if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }
+            i += 2 + b.readUInt16BE(i + 2);
+          }
+        }
+        return o;
+      } catch (e) { return undefined; }
+    };
+    info = read(pic);
+    if (info === undefined && K.image) { console.warn('warning: the preview card\'s picture ' + K.image + ' (about.card.image) is not in the bench; the kit\'s picture is used.'); pic = 'kit/docs/img/bench-card.jpg'; info = read(pic); }
+    if (info && K.image) {
+      if (!info.type) console.warn('warning: the preview card\'s picture ' + pic + ' is neither PNG nor JPEG; LinkedIn and others show those only.');
+      else if (info.w < 1200 || info.h < 627) console.warn('warning: the preview card\'s picture ' + pic + ' is ' + info.w + ' × ' + info.h + '; a card wants 1200 × 627 or more.');
+      if (info.bytes > 5 * 1024 * 1024) console.warn('warning: the preview card\'s picture ' + pic + ' is over 5 MB, which LinkedIn refuses.');
+    }
+    if (info && info.hash && !/[?#]/.test(pic)) stamp = '?v=' + info.hash;
+    const image = abs(pic) + stamp, alt = K.alt || title;
+    const tags = [START,
+      '<meta property="og:type" content="website">',
+      B.title ? '<meta property="og:site_name" content="' + attr(B.title) + '">' : '',
+      '<meta property="og:title" content="' + attr(title) + '">',
+      desc ? '<meta property="og:description" content="' + attr(desc) + '">' : '',
+      '<meta property="og:url" content="' + attr(root) + '">',
+      '<meta property="og:image" content="' + attr(image) + '">',
+      info && info.type ? '<meta property="og:image:type" content="' + info.type + '">' : '',
+      info && info.w ? '<meta property="og:image:width" content="' + info.w + '">' : '',
+      info && info.h ? '<meta property="og:image:height" content="' + info.h + '">' : '',
+      '<meta property="og:image:alt" content="' + attr(alt) + '">',
+      '<meta name="twitter:card" content="summary_large_image">',
+      '<meta name="twitter:title" content="' + attr(title) + '">',
+      desc ? '<meta name="twitter:description" content="' + attr(desc) + '">' : '',
+      '<meta name="twitter:image" content="' + attr(image) + '">',
+      END].filter(Boolean);
+    // an earlier card taken out, with tags written by hand where the bench now gives about.card
+    let t = s;
+    if (has) t = t.replace(new RegExp('[ \\t]*' + START.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&') + '[\\s\\S]*?' + END.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&') + '[ \\t]*\\n?'), '');
+    else t = t.replace(/^[ \t]*<meta\s+(?:property="og:[^"]*"|name="twitter:[^"]*")[^>]*>[ \t]*\n/gm, '');
+    // the page's own description follows the card's, where the bench gives one
+    if (K.description && desc) t = /<meta name="description" content="[^"]*">/.test(t) ? t.replace(/<meta name="description" content="[^"]*">/, () => '<meta name="description" content="' + attr(desc) + '">') : t;
+    const at = /^([ \t]*)<meta name="description"[^>]*>[ \t]*\n/m.exec(t) || /^([ \t]*)<title>[^\n]*\n/m.exec(t);
+    if (!at) console.warn('warning: no <title> in ' + page + ' to put the preview card after; none written.');
+    else {
+      const k = at.index + at[0].length;
+      t = t.slice(0, k) + tags.map((x) => at[1] + x).join('\n') + '\n' + t.slice(k);
+      if (t !== s) { write(page, t); changes.push(page + ': the preview card (' + pic + (info && info.w ? ', ' + info.w + ' × ' + info.h : '') + ')'); }
+    }
+  }
+}
+
 // the Library's own page, for the preview card a site shows when a link is posted. Every tab is one page and a
 // site's reader runs no script, so the card needs a page of its own, which sends a person on to the entry.
 {
@@ -191,7 +286,9 @@ if (!NOLOG) {
         desc = end > 40 ? head.slice(0, end + 1) : head.replace(/\s+\S*$/, '') + '…';
       }
       const root = base.replace(/\/?$/, '/'), abs = (u) => /^https?:/.test(u) ? u : root + u;
-      const ownImage = K.image || tag('image'), image = abs(ownImage || 'kit/docs/img/library-card.jpg');
+      // the bench's own picture, if it has one: not the kit's picture of a bench, which the shelves replace here
+      const benchImage = /kit\/docs\/img\/bench-card\./.test(tag('image')) ? '' : tag('image');
+      const ownImage = K.image || benchImage, image = abs(ownImage || 'kit/docs/img/library-card.jpg');
       const out = '<!doctype html>\n<!-- Written by the kit\'s tools/release.js: edit library.card in js/config.js, not this. -->\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
         '<title>' + attr(title) + '</title>\n' +
         (desc ? '<meta name="description" content="' + attr(desc) + '">\n' : '') +

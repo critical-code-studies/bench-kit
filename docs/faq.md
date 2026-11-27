@@ -79,6 +79,10 @@ Commit the new pointer with the files the tool changed. The kit's `CHANGELOG.md`
 
 Two tools, run from the repository's folder. `node research/kit/tools/test.js` runs the kit's tests in the bench's own page, in headless Chrome, so they check the kit with the bench's settings and versions. `node research/kit/tools/views.js` opens each view in turn and fails on one that throws, draws nothing or could not load; with `--kit ../bench-kit` it tries another copy of the kit without changing the bench.
 
+### Why does a link to my bench show no picture when I post it?
+
+A site that shows a card for a link (LinkedIn, Slack, Mastodon, Bluesky, X) reads tags in the page's HTML, and a bench has them once its release tool has written them. Set `base` in `js/config.js` to the address the bench is published at, give `about.card` a `description` and an `image` (a PNG or JPEG in the bench, 1200 × 630), and run the release tool; without an image the kit's own picture is used. Sites keep a card for days: LinkedIn's Post Inspector (linkedin.com/post-inspector) reads a link again. The README's section "A bench's preview card" has the fields.
+
 ### How does a bench get a DOI?
 
 Through Zenodo, which archives a GitHub repository each time a GitHub Release is published; a tag alone is not enough. The account holder turns the repository on at zenodo.org ▸ Account ▸ GitHub, a Release is published, and the DOI for all versions goes in `about.doi` in `js/config.js`. The README's section "A bench's DOI" has the steps.

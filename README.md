@@ -166,7 +166,7 @@ SW.BENCH = {
 
 | Setting | Read by | What it is |
 |---|---|---|
-| `about` | `about.js` | The About box's own rows: `icon` (HTML), `cite: { authors, title }` (Cite as: the project's leads as cited, such as `Berry, D. M. and Jonik, M.`, and the title; by default `citeAuthor` or `author`, and the bench's title), `author` and `citeAuthor` (the box has no Author row, the kit's author being on its repository), `project` (HTML, the first row: the project and its leads), `purpose`, `techMore`, `inside`, `sources` (HTML), `code` (the repository), `catalogue: { skip: [ids], held: 'held as source' }`, `doi` (the DOI of every version, Zenodo's concept DOI: a DOI row, and Cite as ends with it in place of the bench's address) `doiVersion` (this release's own, shown in the row) and `doiBadge` (Zenodo's badge for the repository, `https://zenodo.org/badge/<GitHub repository id>.svg`, shown in the row and linked to the DOI). |
+| `about` | `about.js`, `tools/release.js` | `card` (the bench's preview card, below: `{ title, description, image, alt }`, or `false`). The About box's own rows: `icon` (HTML), `cite: { authors, title }` (Cite as: the project's leads as cited, such as `Berry, D. M. and Jonik, M.`, and the title; by default `citeAuthor` or `author`, and the bench's title), `author` and `citeAuthor` (the box has no Author row, the kit's author being on its repository), `project` (HTML, the first row: the project and its leads), `purpose`, `techMore`, `inside`, `sources` (HTML), `code` (the repository), `catalogue: { skip: [ids], held: 'held as source' }`, `doi` (the DOI of every version, Zenodo's concept DOI: a DOI row, and Cite as ends with it in place of the bench's address) `doiVersion` (this release's own, shown in the row) and `doiBadge` (Zenodo's badge for the repository, `https://zenodo.org/badge/<GitHub repository id>.svg`, shown in the row and linked to the DOI). |
 | `theme` | `themes.js`, `shell.js` | The default colour theme's `label` and `note`; `start`: the theme on a first visit (`paper`, say), in place of the bench's own. A reader's choice is kept. |
 | `accent` | `themes.js` | `{ dark, light }`: the accent of figures exported on black and on white. |
 | `hands` | `themes.js`, `compare.js` | People named in the text: `[{ k, who, re, colour }]`. |
@@ -601,6 +601,21 @@ node research/kit/tools/library-publish.js ../my-paratexts --write
 A bench makes and keeps its own models: [`docs/topics-guide.md`](docs/topics-guide.md) is the guide, from its documents to publishing a model and rebuilding it when the text changes.
 
 `node research/kit/tools/topics.js --set reading --k 8,12 --min-count 2,3 --seeds 1,2,3,4,5` opens the bench in headless Chrome, takes its documents (`topics.documents`), trains a model with mallette in node for every setting and seed, and prints how far each setting's topics recur across its seeds (the overlap of their top 20 words). `--write auto` (or `--write k=8,min=2,seed=5`) writes the chosen model, only that one, to `topics/<id>.json`, with the check, the source and the documents' fingerprint in it; the bench lists it in `topics.models`. `--compare topics/<other>.json` matches its topics with another model's both ways and keeps the result in the file; `--note` keeps a note. The same documents, settings and seed give the same model in node and in any browser.
+
+## A bench's preview card
+
+When a link to a bench is posted (LinkedIn, Slack, Mastodon, Bluesky, X), the site shows a card: a picture, a title and a line of description. It reads them from tags in the page's HTML and runs no script, so `tools/release.js` writes the tags into the bench's `index.html` at each release, between two comments, from `about.card` in `js/config.js`:
+
+| Field | What it is | Without it |
+|---|---|---|
+| `title` | The card's title. | The bench's `title`. |
+| `description` | The line under the title, up to 200 characters; also written to the page's `<meta name="description">`. | The page's own `<meta name="description">`, else `about.purpose`. |
+| `image` | A PNG or JPEG in the bench (`img/card.png`), 1200 × 630 or larger and under 5 MB; an animated GIF is not shown. | The kit's picture, `kit/docs/img/bench-card.jpg`. |
+| `alt` | The picture in words. | The title. |
+
+The bench's `base` (the address it is published at) makes the addresses absolute, as a card needs; without `base` no card is written. The picture's size and kind are read from the file, and its address carries a stamp of its bytes, so a site that kept an old picture fetches a changed one. `about.card: false` writes no card. A page whose tags were written by hand is left as it is until the bench sets `about.card`, and then they are replaced.
+
+Sites keep a card for days. LinkedIn's Post Inspector (linkedin.com/post-inspector) reads a link again; the Library's page has a card of its own (`library.card`).
 
 ## A bench's DOI
 

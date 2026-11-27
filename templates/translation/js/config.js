@@ -75,6 +75,9 @@
       inside: 'The translation and the literal translation, divided into lines and set as pages; the glossary; the change lists; the source as OCR.',   // EDIT
       sources: 'An invented example. Details under Versions.',   // EDIT
       code: 'https://github.com/vector-humanities/example-bench',   // EDIT
+      // the card a site shows when a link to the bench is posted (kit/tools/release.js writes it into index.html):
+      // description is the line under the title; image a PNG or JPEG in the bench, 1200 × 630 (the kit's picture without one)
+      card: { description: 'A research bench for reading a translation beside its source: the pages, the glossary, the changes.' },   // EDIT, and add image: 'img/card.png', alt: '…'
       catalogue: { skip: [], held: 'held' }
     },
     theme: { label: 'Bench', note: 'light text on a dark ground', start: 'paper' },   // start: the theme on a first visit (a light one here); a reader's choice is kept
