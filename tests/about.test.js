@@ -21,6 +21,7 @@
   eq('the kit\'s line, with no wording of the bench\'s', SW.versionCite(v, undefined), 'Translation (2026). D. M. Berry. ' + N + ' research bench, ' + url);
   eq('a version with no authors has no empty sentence', SW.versionCite({ id: 'zz', label: 'Translation', date: '2026' }, undefined), 'Translation (2026). ' + N + ' research bench, ' + url);
   eq('a text with the record\'s fields in it', SW.versionCite(v, 'Kuki Shūzō, *The Problem of Contingency*, trans. {authors} ({date}). {url}'), 'Kuki Shūzō, *The Problem of Contingency*, trans. D. M. Berry (2026). ' + url);
+  eq('the day the page is read, as the About box writes it', SW.versionCite(v, 'Available at: {url} (Accessed: {accessed}).'), 'Available at: ' + url + ' (Accessed: ' + SW.fmtDate(SW.today()) + ').');
   eq('a function of the version', SW.versionCite(v, function (x, o) { return x.id === 'zz' ? o.label + ', ' + o.url : null; }), 'Translation, ' + url);
   eq('a function that gives nothing keeps the kit\'s line', SW.versionCite(v, function () { return ''; }), SW.versionCite(v, undefined));
   eq('a function that fails keeps the kit\'s line', SW.versionCite(v, function () { throw new Error('x'); }), SW.versionCite(v, undefined));

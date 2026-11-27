@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **A bench's own wording for "Cite this version"** (David, via kuki: "Cite this version is incorrect"): Versions ▸ This version built the line from the version's label, date and authors and the bench's name, and a bench could not change it, so kuki's translation was cited without Kuki or the book's title. `SW.BENCH.version.cite` gives the line: a function of the version, `(v, { id, label, date, authors, bench, url, ref })`, or a text with `{label}`, `{date}`, `{authors}`, `{bench}`, `{url}`, `{ref}` or `{id}` in it. It is plain text, with `*…*` set in italics; where it gives nothing for a version, the kit's line stands. `SW.versionCite(v)` returns the line as text.
+- **A bench's own wording for "Cite this version"** (David, via kuki: "Cite this version is incorrect"): Versions ▸ This version built the line from the version's label, date and authors and the bench's name, and a bench could not change it, so kuki's translation was cited without Kuki or the book's title. `SW.BENCH.version.cite` gives the line: a function of the version, `(v, { id, label, date, authors, bench, url, ref, accessed })`, or a text with `{label}`, `{date}`, `{authors}`, `{bench}`, `{url}`, `{ref}`, `{id}` or `{accessed}` in it (`accessed`: the day the page is read, written as in the About box's citation, for a Harvard "(Accessed: …)"). The bench's text is the whole line: the address and the reference are in it only where the bench puts them. It is plain text, with `*…*` set in italics; where it gives nothing for a version, the kit's line stands. `SW.versionCite(v)` returns the line as text.
 - The kit's own line no longer has an empty sentence (". .") for a version with no authors.
 
 ## 1.9.9 (2026-11-27)

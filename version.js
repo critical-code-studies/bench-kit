@@ -7,9 +7,10 @@
  *                  default the files, and how they are read)
  *   after(v)    -> HTML after the record (a reconstruction card)
  *   cite        -> the line "Cite this version" gives, in place of the kit's: a function of the version
- *                  (v, { id, label, date, authors, bench, url, ref }) or a text with {label}, {date},
- *                  {authors}, {bench}, {url}, {ref} or {id} in it. Plain text, with *…* set in italics;
- *                  nothing given for a version keeps the kit's line
+ *                  (v, { id, label, date, authors, bench, url, ref, accessed }) or a text with {label},
+ *                  {date}, {authors}, {bench}, {url}, {ref}, {id} or {accessed} in it (accessed: the day
+ *                  the page is read, as the About box's citation writes it). Plain text, with *…* set in
+ *                  italics; nothing given for a version keeps the kit's line
  *   notesHint   -> the text above the version's annotations
  * Part of bench-kit (github.com/critical-code-studies/bench-kit).
  */
@@ -22,11 +23,11 @@
   // "Cite this version" as plain text: the bench's own wording (SW.BENCH.version.cite, or `how`), else the
   // kit's line from the version's record
   SW.versionCite = function (v, how) {
-    var o = { id: v.id, label: v.label, date: v.date, authors: v.authors || '', bench: B.name, url: SW.versionURI(v.id), ref: v.build ? SW.refText(v.id) : '' };
+    var o = { id: v.id, label: v.label, date: v.date, authors: v.authors || '', bench: B.name, url: SW.versionURI(v.id), ref: v.build ? SW.refText(v.id) : '', accessed: SW.fmtDate(SW.today()) };
     if (arguments.length < 2) how = H().cite;
     var t = null;
     if (typeof how === 'function') { try { t = how(v, o); } catch (e) { t = null; } }
-    else if (typeof how === 'string') t = how.replace(/\{(id|label|date|authors|bench|url|ref)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; });
+    else if (typeof how === 'string') t = how.replace(/\{(id|label|date|authors|bench|url|ref|accessed)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; });
     if (t != null && String(t).trim()) return String(t).trim();
     return o.label + ' (' + o.date + '). ' + (o.authors ? o.authors + '. ' : '') + o.bench + ' research bench, ' + o.url + (o.ref ? ' ' + o.ref : '');
   };
