@@ -50,6 +50,15 @@
     eq('a function of the page and the version', K.shareCite(function (x) { return x.version === 'translation' ? 'p. ' + x.page : null; }, o), 'p. 81');
     eq('a function that gives nothing keeps the reference', K.shareCite(function () { return null; }, o), o.cite);
     eq('a function that fails keeps the reference', K.shareCite(function () { throw new Error('x'); }, o), o.cite);
+    T.group('Book: a page by its name');
+    var pn = ['i', 'ii', '1', '2', '81', '330', '331'], mn = ['img_7', 'img_8', 'f. 12r', 'Cover'];
+    eq('the name as typed', K.findPage(pn, ' 81 '), '81');
+    eq('with p. or page before it', [K.findPage(pn, 'p. 81'), K.findPage(pn, 'page 330'), K.findPage(pn, 'P.2'), K.findPage(pn, 'p81'), K.findPage(pn, 'p. ii')].join(' '), '81 330 2 81 ii');
+    eq('a roman numeral, and a name without its case', [K.findPage(pn, 'II'), K.findPage(mn, 'cover')].join(' '), 'ii Cover');
+    eq('zeros before a number', K.findPage(pn, '081'), '81');
+    eq('the one page whose name has the number', [K.findPage(mn, '7'), K.findPage(mn, '12')].join(' '), 'img_7 f. 12r');
+    eq('a page that is not there, and nothing typed', [K.findPage(pn, '400'), K.findPage(pn, ''), K.findPage(pn, 'p.'), K.findPage(pn, 'pages')].map(String).join(' '), 'null null null null');
+    eq('a number two pages share names neither', K.findPage(['f. 3r', 'f. 3v'], '3'), null);
     T.group('Book: the texts with a chip');
     var tl = ['translation', 'literal', 'ocr'];
     eq('every text, where the bench names none', K.chips(tl, 'translation').join(' '), 'translation literal ocr');

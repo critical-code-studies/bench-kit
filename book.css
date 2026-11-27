@@ -273,6 +273,11 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-mk.on { opacity: 1 !important; }
 .bk-modal-pic .bk-mk { width: 22px; height: 38px; transform-origin: 100% 0; }
 .bk-bar .bk-marks { max-width: 13em; }
+/* to a page by its name: the page being read, and a box to type another in */
+#view-book .bk-goto { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-dim); }
+#view-book .bk-goto[hidden] { display: none; }
+#view-book .bk-goto input[type="search"] { width: 6em; padding: 3px 6px; text-align: center; color: var(--text); }
+#view-book .bk-goto input[type="search"]:focus { text-align: left; }
 /* the enlarged page's details: the image's credit folded, the rating, bookmark and link on one line,
    the keys in small type */
 .bk-credit summary { cursor: pointer; }

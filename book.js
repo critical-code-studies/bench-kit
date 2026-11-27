@@ -97,6 +97,10 @@
  * colour is the theme's, or the bench's (SW.BENCH.doc.linkColor: a CSS colour), or the reader's own (Settings ▸
  * Book, kept in this browser as book.link); the reader can also turn them off there (book.linkOff), and the
  * page's image is then a picture only.
+ * To a page by its name: the box in the toolbar (labelled with SW.BENCH.doc.words.page) shows the page being
+ * read; a name or number typed there and Return goes to that page (81, p. 81, or the one page whose name has
+ * that number: 7 for img_7), and a name that is not in the text is said to be so, with the first and last
+ * there are. A link can name the page: &page=81, used where the link gives no line (l).
  * Footnotes: a document's note blocks (t 'note', id) and the calls to them (a span with the mark
  * { k: 'ref', note: id }). A call with no words of its own (a translation's [^label]) is set as a raised number:
  * the notes are numbered in the order they are first called, through the document, or from 1 again at each
@@ -185,6 +189,19 @@
     if (typeof how === 'function') { try { t = how(o); } catch (e) { t = null; } }
     else if (typeof how === 'string') t = how.replace(/\{(page|version|label)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; });
     return t == null || t === '' ? (o.cite || '') : String(t).replace(/\*/g, '');
+  };
+  // the page a reader names, among a text's pages' names: the name as typed, or without its case, or without a
+  // word before it (p., page, f., folio, leaf), or the one page whose name holds that number and no other; null
+  K.findPage = function (names, q) {
+    names = (names || []).map(String); q = String(q == null ? '' : q).trim();
+    if (!q) return null;
+    if (names.indexOf(q) >= 0) return q;
+    var lc = q.toLowerCase(), hit = function (x) { return names.filter(function (n) { return n.toLowerCase() === x; })[0]; };
+    var bare = lc.replace(/^(?:(?:pages?|pp?|folio|fol|ff?|leaf)(?:\.\s*|\s+)(?=\S)|(?:pp?|ff?)(?=\d))/, ''), got = hit(lc) || hit(bare);
+    if (got != null) return got;
+    if (!/^\d+$/.test(bare)) return null;
+    var num = names.filter(function (n) { var d = n.match(/\d+/g); return d && d.length === 1 && +d[0] === +bare; });
+    return num.length === 1 ? num[0] : null;
   };
   // the texts with a chip in Book's row: all of `list` (how not given); none (how false); or those named in `how`,
   // with the text open where it is not one of them, and no row for the open text alone
@@ -288,7 +305,7 @@
     (cols || []).forEach(function (c) { c.stale = true; });
     if (cols) fnSoon();
   }
-  var cols = [], place = null, pending = null, shared = (Q0.pz || Q0.hz || Q0.hr) ? { pz: Q0.pz, zm: Q0.zm, hz: Q0.hz, hr: Q0.hr } : null;
+  var cols = [], place = null, pending = null, pendingPage = null, shared = (Q0.pz || Q0.hz || Q0.hr) ? { pz: Q0.pz, zm: Q0.zm, hz: Q0.hz, hr: Q0.hr } : null;
   showImages();   // place: in the first column's lines; pending: a link's, until it is set
 
   function inStates(vid) { return !!STATES && [STATES.source, STATES.first, STATES.last].indexOf(vid) >= 0; }
@@ -637,6 +654,27 @@
     if (!pg || !pg.sheet) { SW.toast('The ' + PAGE + ' ' + to + ' is not in this text.', 4000); return; }
     var els = [].slice.call(pg.sheet.querySelectorAll('.bk-text > p, .bk-text > h3, .bk-text > .bk-lg')).filter(function (e) { return !e.hidden; });
     hold(col, els.length ? els : [pg.el]);
+  }
+  // to a page by its name: its break brought to the reading height and marked for a moment; the place is its line
+  function pageNames(col) { var seen = {}; return col.pages.filter(function (pg) { return pg.facs && !seen[pg.facs] && (seen[pg.facs] = 1); }).map(function (pg) { return String(pg.facs); }); }
+  function goPage(col, facs) {
+    if (col.stale || !col.byFacs) measure(col);
+    var pg = col.pages[col.byFacs[facs]]; if (!pg || !pg.el) return false;
+    col.moved = false;
+    col.el.scrollTop = Math.max(0, pg.el.offsetTop - READ);
+    pg.el.classList.remove('bk-flash'); void pg.el.offsetWidth; pg.el.classList.add('bk-flash');
+    setTimeout(function () { pg.el.classList.remove('bk-flash'); }, 1600);
+    if (pg.n0 != null) place = { p: pg.p, n0: pg.n0, n1: pg.n0 };
+    return true;
+  }
+  // the box in the toolbar: the page being read, unless the reader is typing in it
+  function pageNow(col) { var k = pageAt(col, col.el.scrollTop + READ + 4); return k >= 0 && col.pages[k] && col.pages[k].facs ? String(col.pages[k].facs) : ''; }
+  function pageShown(name) { var i = SW.$('#bk-goto', view); if (i && document.activeElement !== i) i.value = name == null ? '' : name; }
+  function goTyped(inp) {
+    var c = cols[0], q = inp.value.trim(); if (!c || !c.b || !q) return;
+    var names = pageNames(c), to = K.findPage(names, q);
+    if (to == null) { SW.toast('No ' + PAGE + ' ' + q + ' in this text' + (names.length ? ': the first is ' + names[0] + ', the last ' + names[names.length - 1] + '.' : '.'), 5000); inp.select(); return; }
+    if (goPage(c, to)) { inp.value = to; inp.select(); writeQ(); }
   }
   // a revision in the text: its box lit on the page beside it while the pointer is on it; and, with
   // Compare, a passage of the text facing a version's states lights its page there
@@ -1554,6 +1592,8 @@
       '<button class="btn ghost" id="bk-read" title="' + SW.lineWord() + ' at the place shown here, line by line">≡ ' + SW.lineWord() + ' here</button>' +
       '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share page</button>' +
       '<button class="btn ghost" id="bk-share-hl"' + (rgHeld.length ? '' : ' hidden') + ' title="The highlight held: a picture of the page with its place marked and the passage, to send, or a link that opens it here">✦ Share highlight</button>' +
+      '<label class="bk-goto" id="bk-goto-l" hidden title="The ' + esc(PAGE) + ' being read. To go to another, type its name or number and press Return.">' + esc(PAGE.charAt(0).toUpperCase() + PAGE.slice(1)) +
+        ' <input type="search" id="bk-goto" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Go to a ' + esc(PAGE) + '"></label>' +
       '<select id="bk-marks" class="bk-marks" title="The ' + esc(PAGE) + 's you have bookmarked in this text: choose one to go to it"><option value="">🔖 Bookmarks</option></select>' +
       (hasStates && STAGES.length ? '<div class="bk-stages"><button class="btn ghost" id="bk-prev" title="The stage before">◀</button>' +
         '<input type="range" id="bk-stage" min="0" max="' + STAGES.length + '" step="1" value="' + st.stage + '" aria-label="Stage of revision"' + (st.all ? ' class="bk-idle"' : '') + '>' +
@@ -1585,6 +1625,7 @@
       if (e.target.id === 'bk-stage') { stop(); allOff(); st.stage = +e.target.value; apply(true); }
       if (e.target.id === 'bk-imgw') { st.imgW = imgw(e.target.value) || IMGW0; SW.store.set('book.imgw', st.imgW); showImages(); writeQ(); }
     });
+    tb.addEventListener('keydown', function (e) { if (e.target.id === 'bk-goto' && e.key === 'Enter') { e.preventDefault(); goTyped(e.target); } });
     // the bookmarks, listed afresh as the list is opened, in the text's order
     var mkSel = SW.$('#bk-marks', tb);
     function listMarks() {
@@ -1663,7 +1704,16 @@
       wireScroll();
       var where = SW.state.sel ? { vid: SW.state.v, a: SW.state.sel, flash: true } : pending || (place && { vid: cols[0].vid, a: place });
       pending = null;
-      if (where && cols[0].b && textOf(where.vid) === cols[0].vid) placeIn(cols[0], where).then(function (a) { if (a) { goTo(cols[0], a, !!where.flash); place = a; writeQ(); } });
+      var gl = SW.$('#bk-goto-l', view), named = cols[0].b ? pageNames(cols[0]) : [];
+      if (gl) { gl.hidden = named.length < 2; var gi = SW.$('#bk-goto', gl); if (gi) {
+        // wide enough for the longest name; where the names are short, the first and last as a prompt
+        gi.style.width = Math.min(9, Math.max(3, named.reduce(function (m, x) { return Math.max(m, x.length); }, 0)) + 2.4) + 'em';
+        gi.placeholder = named.length > 1 && (named[0] + named[named.length - 1]).length <= 7 ? named[0] + '–' + named[named.length - 1] : '';
+      } }
+      var wp = pendingPage; pendingPage = null;
+      if (where && cols[0].b && textOf(where.vid) === cols[0].vid) placeIn(cols[0], where).then(function (a) { if (a) { goTo(cols[0], a, !!where.flash); place = a; writeQ(); } if (cols[0].b) pageShown(pageNow(cols[0])); });
+      else if (wp != null && cols[0].b) { var toP = K.findPage(named, wp); if (toP != null && goPage(cols[0], toP)) writeQ(); pageShown(toP != null ? toP : pageNow(cols[0])); }
+      else if (cols[0].b) pageShown(pageNow(cols[0]));
       // a shared link: the box it held, held again, and the page it had open, at its zoom
       var sh = shared; shared = null;
       if (sh && cols[0].b) {
@@ -1728,7 +1778,7 @@
         if (col.ignore) { col.ignore = false; return; }   // the other column moved this one
         clearTimeout(placeTimer);
         // the place follows the reader's scrolling, not a jump Book made itself
-        placeTimer = setTimeout(function () { if (i === 0 && col.moved) { var e = topSpan(col); place = e ? { p: +e.dataset.p, n0: +e.dataset.n, n1: +e.dataset.n } : null; writeQ(); } }, 250);
+        placeTimer = setTimeout(function () { if (i === 0 && col.moved) { var e = topSpan(col); place = e ? { p: +e.dataset.p, n0: +e.dataset.n, n1: +e.dataset.n } : null; writeQ(); pageShown(pageNow(col)); } }, 250);
         if (cols.length < 2 || col.frame) return;
         col.frame = requestAnimationFrame(function () { col.frame = 0; cols.forEach(function (o) { if (o !== col) follow(col, o); }); });
       };
@@ -1940,6 +1990,7 @@
       else if (vid === STATES.source && !(st.first && Q0.all != null)) st.all = true;
     }
     if (st.first && Q0.l && !SW.state.sel) { var m = /^(\d+):(\d+)(?:-(\d+))?$/.exec(Q0.l); if (m) pending = { vid: vid, a: { p: +m[1], n0: +m[2], n1: +(m[3] || m[2]) } }; }
+    else if (st.first && Q0.page && !SW.state.sel) pendingPage = String(Q0.page);   // a link that names the page
     st.first = false; st.own = false;
     draw(vid);
   }

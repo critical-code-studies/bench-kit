@@ -1,5 +1,9 @@
 # Changelog: bench-kit
 
+## Unreleased
+
+- **Book: to a page by its name** (David, via kuki: "we need a jump to page on the bench - i needed to check a page and it was irritating to find it"): Book could be moved by scrolling, by a bookmark already made, or by a link to a line. The toolbar now has a box, labelled with the bench's word for a page, that shows the page being read; a name or number typed there and Return goes to that page, its break brought to the reading height and marked for a moment. `81`, `p. 81` and `page 81` name the same page, a name is matched without its case, and a number finds the one page whose name holds it (`7` for `img_7`). A name that is not in the text is said to be so, with the first and last there are. A link can name the page (`&page=81`), used where it gives no line. The box is shown wherever a text has two or more named pages; no setting.
+
 ## 1.9.12 (2026-11-27)
 
 - **Edit: a paragraph taken out is known as applied** (kuki's crosscheck of Edit against `vt_apply.py`, runs 182 and 201: "working after: pending 0 stuck 1"): where a change list's entry takes a whole paragraph out, its NEW is the blank lines left. Once `vt_apply` had applied the list, Edit looked for that NEW in the text, found no words to look for, and showed the entry as stuck although the paragraph was gone; Changes gave it as "gone". An entry whose NEW is blank lines only is now read as one with no NEW: applied where its OLD is no longer in the text, pending where it is. `vt_apply` applied these lists correctly throughout.
