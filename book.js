@@ -1549,7 +1549,7 @@
       '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; the eye folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
         '<button class="btn bk-eye" id="bk-imgoff" title="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '" aria-label="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '">' + (st.imgOn ? EYE : EYEOFF) + '</button></span>' +
-      '<span class="bk-imgs bk-fns" id="bk-fns" hidden title="This text’s footnotes: a number at each call, and the note beside the text where there is room (elsewhere a click on the number shows it)">Notes ' +
+      '<span class="sep" id="bk-fns-sep" hidden></span><span class="bk-imgs bk-fns" id="bk-fns" hidden title="This text’s footnotes: a number at each call, and the note beside the text where there is room (elsewhere a click on the number shows it)">Notes ' +
         '<button class="btn bk-eye" id="bk-fnoff"></button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="' + SW.lineWord() + ' at the place shown here, line by line">≡ ' + SW.lineWord() + ' here</button>' +
       '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share page</button>' +
@@ -1908,7 +1908,9 @@
   function fnShown() {
     view.classList.toggle('bk-nofn', fnOff());
     var g = SW.$('#bk-fns', view), b = SW.$('#bk-fnoff', view);
+    var sp = SW.$('#bk-fns-sep', view);
     if (g) g.hidden = !cols.some(function (c) { return c.fnN; });
+    if (sp) sp.hidden = !g || g.hidden;
     if (b) fnBtn(b);
   }
   window.addEventListener('resize', fnSoon);

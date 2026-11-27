@@ -223,7 +223,6 @@ dialog.bk-modal::backdrop { background: rgba(0, 0, 0, 0.72); cursor: zoom-out; }
 .bk-sn-long .bk-sn-more { display: inline-block; }
 #view-book.bk-nofn .bk-s.bk-fn::after { content: none; }
 #view-book.bk-nofn .bk-side { display: none; }
-#view-book .bk-fns { margin-left: 8px; }
 #view-book .bk-fns[hidden] { display: none; }
 
 @media (max-width: 760px) {
