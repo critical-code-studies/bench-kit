@@ -94,6 +94,15 @@
  * colour is the theme's, or the bench's (SW.BENCH.doc.linkColor: a CSS colour), or the reader's own (Settings ▸
  * Book, kept in this browser as book.link); the reader can also turn them off there (book.linkOff), and the
  * page's image is then a picture only.
+ * Footnotes: a document's note blocks (t 'note', id) and the calls to them (a span with the mark
+ * { k: 'ref', note: id }). A call with no words of its own (a translation's [^label]) is set as a raised number:
+ * the notes are numbered in the order they are first called, through the document, or from 1 again at each
+ * heading of the level SW.BENCH.doc.noteRestart or above (2: at each ## of a translation, as a book numbers
+ * by chapter); SW.BENCH.doc.noteMark(label, k) gives a mark of the bench's own. A label is not shown. Where one text is open and there is room beside it (the text giving a little of its measure
+ * where the room is short), each note is set there, level with its
+ * call, a long one held to eight lines until it is opened; where there is not (a narrow window, Compare), a
+ * click on the call shows the note. The eye beside Notes in the toolbar puts the calls and the notes away
+ * (kept in this browser as book.notesOff). SW.BENCH.doc.sidenotes: false keeps every note to the click.
  * The pages' edges can be trimmed (a scan's colour card and ruler): the reader's in Settings ▸ Book,
  * dragged on a page there, or the bench's (SW.BENCH.doc.trim: { l, t, r, b }, each a share of the
  * page's width or height, or a function (pb) giving each page its own, or null); beside the text and in
@@ -174,6 +183,36 @@
     else if (typeof how === 'string') t = how.replace(/\{(page|version|label)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; });
     return t == null || t === '' ? (o.cite || '') : String(t).replace(/\*/g, '');
   };
+  // the numbers of a document's footnotes, { id: n }: each note numbered where it is first called by a span with
+  // no words (a translation's [^label]), in the text's order; with `restart` (a heading's level), from 1 again at
+  // each heading of that level or above. `has`: the notes there are ({ id: … }); a call to another is not counted.
+  K.noteNumbers = function (blocks, restart, has) {
+    var out = {}, k = 0;
+    (blocks || []).forEach(function (bl) {
+      if (bl.t === 'note') return;
+      if (bl.t === 'head' && restart && bl.level != null && bl.level <= restart) k = 0;
+      (bl.spans || []).forEach(function (sp) {
+        if (sp.s) return;
+        (sp.marks || []).forEach(function (m) { if (m.k === 'ref' && m.note != null && out[m.note] == null && (!has || has[m.note] != null)) out[m.note] = ++k; });
+      });
+    });
+    return out;
+  };
+  // a note's spans as HTML: italic and bold kept; the note's own label at its head, and the colon after it, left out
+  K.noteHTML = function (spans, id) {
+    var out = '', own = false, first = true;
+    var h = function (x) { return x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    (spans || []).forEach(function (sp, i) {
+      var mk = sp.marks || [], ref = mk.filter(function (m) { return m.k === 'ref'; })[0], s = String(sp.s == null ? '' : sp.s);
+      if (ref && !s) { if (i === 0 && ref.note === id) own = true; return; }
+      if (first) { s = own ? s.replace(/^\s*:\s*/, '') : s.replace(/^\s+/, ''); if (!s) return; first = false; }
+      var rend = mk.filter(function (m) { return m.k === 'hi'; }).map(function (m) { return m.rend || ''; }).join(' '), x = h(s);
+      if (/\bitalic\b/.test(rend)) x = '<i>' + x + '</i>';
+      if (/\bbold\b/.test(rend)) x = '<b>' + x + '</b>';
+      out += x;
+    });
+    return out.replace(/\s+$/, '');
+  };
   // a selection from one span to another as the lines it covers: start and end are
   // { n, c0, c1, off } (off: characters into the span, or null for the span's start or end)
   K.selection = function (a, b) {
@@ -235,6 +274,7 @@
     view.classList.toggle('bk-imgleft', D.imageSide === 'left');
     view.style.setProperty('--bk-imgw', st.imgW + 'px');
     (cols || []).forEach(function (c) { c.stale = true; });
+    if (cols) fnSoon();
   }
   var cols = [], place = null, pending = null, shared = (Q0.pz || Q0.hz || Q0.hr) ? { pz: Q0.pz, zm: Q0.zm, hz: Q0.hz, hr: Q0.hr } : null;
   showImages();   // place: in the first column's lines; pending: a link's, until it is set
@@ -272,7 +312,11 @@
   // ---------- setting a document ----------
   function notesOf(doc) {
     var out = {};
-    doc.blocks.forEach(function (bl) { if (bl.t === 'note') out[bl.id] = bl.spans.map(function (s) { return s.s; }).join('').trim(); });
+    doc.blocks.forEach(function (bl) {
+      if (bl.t !== 'note') return;
+      var s0 = bl.spans[0], own = s0 && !s0.s && (s0.marks || []).some(function (m) { return m.k === 'ref' && m.note === bl.id; });
+      out[bl.id] = bl.spans.map(function (s) { return s.s; }).join('').trim().replace(own ? /^:\s*/ : /^$/, '');
+    });
     return out;
   }
   // a page's image from the bench's own files: SW.BENCH.doc.image(pb) gives a URL (the image beside the
@@ -1290,13 +1334,18 @@
   var MARGIN = /\b(top|bottom|left|right|margin|above|below|foot|head)\b/;
   function setDoc(doc, p, col) {
     var notes = notesOf(doc), box = SW.el('div', { class: 'bk-page', 'data-p': p }), text = null, cur = null, ZONES = doc.zones || null;
+    var side = null, shNow = null, fnNum = K.noteNumbers(doc.blocks, D.noteRestart, notes);
     Object.assign(col.notes, notes);
+    doc.blocks.forEach(function (bl) { if (bl.t === 'note') col.noteHTML[bl.id] = K.noteHTML(bl.spans, bl.id); });
     // the text in sheets, one to a page, each with the page's image beside it
     function sheet(pg) {
       var sh = SW.el('div', { class: 'bk-sheet' });
       if (pg) pg.sheet = sh;
       text = SW.el('div', { class: 'bk-text' });
       sh.appendChild(text);
+      // the notes beside the text (fnSet): between the text and an image to its right, after the text otherwise
+      side = SW.el('div', { class: 'bk-side' }); sh.appendChild(side);
+      shNow = sh; sh._side = side; sh._fns = [];
       sh.appendChild(pg && pg.has ? figure(pg, col) : SW.el('div', { class: 'bk-fig bk-nofig' }));
       box.appendChild(sh);
     }
@@ -1334,6 +1383,17 @@
         if (K.join(prev, sp, prevN)) el.appendChild(document.createTextNode(' '));
         var e = spanEl(sp, p, notes);
         el.appendChild(e);
+        // a footnote's call with no words of its own: its number, and its note for the side of the text
+        if (e.dataset.note != null && !sp.s) {
+          var fl = e.dataset.note, fm = D.noteMark ? D.noteMark(fl, fnNum[fl]) : null;
+          if (fm == null || fm === '') fm = String(fnNum[fl]);
+          e.classList.add('bk-fn'); e.dataset.fn = fm; e.title = 'Note ' + fm; col.fnN++;
+          if (SIDE && shNow) {
+            var sn = SW.el('div', { class: 'bk-sn', 'data-note': fl });
+            sn.innerHTML = '<div class="bk-sn-t"><span class="bk-sn-n">' + esc(fm) + '</span>' + (col.noteHTML[fl] || esc(notes[fl] || '')) + '</div><button type="button" class="bk-sn-more">more</button>';
+            sn._call = e; e._sn = sn; side.appendChild(sn); shNow._fns.push(e);
+          }
+        }
         e._leaf = cur;
         if (cur && RG) (cur.sp = cur.sp || []).push(e);
         if (cur && cur.lines && sp.n != null) e._ln = sp.n;
@@ -1414,6 +1474,7 @@
       });
     });
     cols.forEach(function (c) { c.stale = true; });
+    fnSoon();
     var lab = SW.$('#bk-stage-l', view); if (lab) lab.textContent = stageName(st.stage);
     // with every revision shown the slider is not what sets the text, and is drawn so; it can still be moved,
     // and moving it (or ◀ ▶, or the run through the stages) puts every revision away
@@ -1475,7 +1536,9 @@
     tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
       '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; the eye folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
-        '<button class="btn bk-eye" id="bk-imgoff" title="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '" aria-label="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '">' + (st.imgOn ? EYE : EYEOFF) + '</button></span><span class="sep"></span>' +
+        '<button class="btn bk-eye" id="bk-imgoff" title="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '" aria-label="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '">' + (st.imgOn ? EYE : EYEOFF) + '</button></span>' +
+      '<span class="bk-imgs bk-fns" id="bk-fns" hidden title="This text’s footnotes: a number at each call, and the note beside the text where there is room (elsewhere a click on the number shows it)">Notes ' +
+        '<button class="btn bk-eye" id="bk-fnoff"></button></span><span class="sep"></span>' +
       '<button class="btn ghost" id="bk-read" title="' + SW.lineWord() + ' at the place shown here, line by line">≡ ' + SW.lineWord() + ' here</button>' +
       '<button class="btn ghost" id="bk-share" title="A link that opens Book here, as it is set: the stage, the settings, the place and the text highlighted">🔗 Share page</button>' +
       '<button class="btn ghost" id="bk-share-hl"' + (rgHeld.length ? '' : ' hidden') + ' title="The highlight held: a picture of the page with its place marked and the passage, to send, or a link that opens it here">✦ Share highlight</button>' +
@@ -1496,6 +1559,7 @@
         var r0 = SW.$('#bk-imgw', tb); if (r0) r0.disabled = !st.imgOn;
         writeQ(); return;
       }
+      if (b0.id === 'bk-fnoff') { SW.store.set('book.notesOff', !fnOff()); fnShown(); cols.forEach(fnSet); return; }
       var t = b0.dataset.text != null ? b0 : null;
       if (t) { stop(); var to = t.dataset.text; st.beside = st.beside.filter(function (x) { return x !== to; }); st.own = true; SW.select(to === textOf(SW.state.v) ? SW.state.v : to); return; }
       if (e.target.id === 'bk-prev') { stop(); allOff(); st.stage = Math.max(0, st.stage - 1); apply(true); }
@@ -1535,7 +1599,7 @@
   // ---------- the columns ----------
   function firstLine(col) { var e = col.el.querySelector('.bk-s[data-n]'); return e ? { p: +e.dataset.p, n0: +e.dataset.n, n1: +e.dataset.n } : null; }
   function column(vid, holder) {
-    var col = { vid: vid, states: inStates(vid), spans: [], blocks: [], byLine: {}, notes: {}, pages: [], b: null, el: SW.el('div', { class: 'bk-col' }) };
+    var col = { vid: vid, states: inStates(vid), spans: [], blocks: [], byLine: {}, notes: {}, noteHTML: {}, fnN: 0, pages: [], b: null, el: SW.el('div', { class: 'bk-col' }) };
     col.el.appendChild(SW.el('p', { class: 'hint pad' }, 'Setting the page…'));
     holder.appendChild(col.el);
     col.ready = SW.build(vid).then(function (b) {
@@ -1562,6 +1626,7 @@
       st.beside = D.beside.concat(D.versions || []).filter(function (t, i, a) { return t !== left && a.indexOf(t) === i; }).slice(0, want);
     }
     st.beside = st.beside.filter(function (t, i, a) { return t !== left && a.indexOf(t) === i && known.indexOf(t) >= 0; }).slice(0, BESIDE);
+    cols.forEach(function (c) { if (c.fnRO) c.fnRO.disconnect(); });
     cols = [];
     view.innerHTML = '';
     var holder = SW.el('div', { class: 'bk-cols' + (st.beside.length ? ' bk-two' : '') + (st.beside.length > 1 ? ' bk-many' : '') + (D.imagesFirst ? ' bk-onefig' : '') });
@@ -1575,6 +1640,14 @@
     Promise.all(cols.map(function (c) { return c.ready; })).then(function () {
       apply(false);
       cols.forEach(markNotes);
+      // the notes beside the text, before the place is found; set again when the text's width changes (the type's size)
+      fnShown(); cols.forEach(fnSet);
+      if (window.ResizeObserver) cols.forEach(function (c) {
+        var t = c.fnN && SW.$('.bk-text', c.el); if (!t) return;
+        var w0 = t.clientWidth;
+        c.fnRO = new ResizeObserver(function () { var w1 = t.clientWidth; if (w1 !== w0) { w0 = w1; fnSoon(); } });
+        c.fnRO.observe(t);
+      });
       wireScroll();
       var where = SW.state.sel ? { vid: SW.state.v, a: SW.state.sel, flash: true } : pending || (place && { vid: cols[0].vid, a: place });
       pending = null;
@@ -1768,7 +1841,79 @@
   view.addEventListener('click', function (e) {
     var r = e.target.closest('.bk-s[data-note]'); if (!r || String(window.getSelection())) return;
     var col = cols.filter(function (c) { return c.el.contains(r); })[0]; if (!col) return;
-    SW.pop(e.clientX, e.clientY, '<div class="bk-notepop">' + esc(col.notes[r.dataset.note] || '') + '</div>');
+    // its note is beside the text: brought into view and marked
+    if (r._sn && col.el.classList.contains('bk-sided')) {
+      r._sn.scrollIntoView({ block: 'nearest' });
+      r._sn.classList.remove('bk-flash'); void r._sn.offsetWidth; r._sn.classList.add('bk-flash');
+      return;
+    }
+    SW.pop(e.clientX, e.clientY, '<div class="bk-notepop">' + (r.dataset.fn ? '<span class="bk-sn-n">' + esc(r.dataset.fn) + '</span>' : '') + (col.noteHTML[r.dataset.note] || esc(col.notes[r.dataset.note] || '')) + '</div>');
+  });
+
+  // ---------- footnotes: the notes beside the text ----------
+  // Where one text is open and the page has room beside the text, each sheet's notes are set in a column
+  // there, each level with its call or under the note before it; the room is measured with the column away.
+  // Short of room for a column of FNW[1], the text gives some of its measure, down to thirty ems.
+  var SIDE = D.sidenotes !== false, FNW = [170, 200, 300], fnT = 0, fnLitNow = null;
+  function fnOff() { return !!SW.store.get('book.notesOff', false); }
+  function fnBtn(b) { var off = fnOff(); b.innerHTML = off ? EYEOFF : EYE; b.title = off ? 'Show the notes' : 'Hide the notes'; b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', off ? 'false' : 'true'); }
+  function fnSet(col) {
+    if (!col || !col.el || !col.fnN) return;
+    var sh = SW.$('.bk-sheet', col.el), was = col.el.classList.contains('bk-sided'), w = 0;
+    col.el.classList.remove('bk-sided');
+    if (SIDE && sh && cols.length === 1 && !fnOff()) {
+      var cs = getComputedStyle(sh), tr = String(cs.gridTemplateColumns).split(/\s+/).map(parseFloat).filter(function (x) { return x === x; }), gap = parseFloat(cs.columnGap) || 0;
+      var free = sh.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0) - tr.reduce(function (a, x) { return a + x; }, 0) - gap * Math.max(0, tr.length - 1);
+      w = Math.min(FNW[2], Math.floor(free - gap - 12));
+      var tx = SW.$('.bk-text', sh), em = tx ? parseFloat(getComputedStyle(tx).fontSize) || 18 : 18;
+      if (w < FNW[1] && tx) w = Math.min(FNW[1], w + Math.max(0, tx.getBoundingClientRect().width - 30 * em));
+    }
+    if (w < FNW[0]) { if (was) col.stale = true; return; }
+    col.el.style.setProperty('--bk-snw', w + 'px');
+    col.el.classList.add('bk-sided');
+    var sheets = SW.$$('.bk-sheet', col.el).filter(function (s) { return s._fns && s._fns.length; });
+    // the notes longer than the lines they are held to: these can be opened
+    var long = [], i = 0;
+    sheets.forEach(function (s) { s._fns.forEach(function (e) { var t = e._sn.firstChild; long.push(e._sn.classList.contains('bk-sn-open') || t.scrollHeight > t.clientHeight + 1); }); });
+    sheets.forEach(function (s) { s._fns.forEach(function (e) { e._sn.classList.toggle('bk-sn-long', long[i++]); }); });
+    // each note level with its call, or under the note before it (read first, then written)
+    var pos = sheets.map(function (s) {
+      var top = s._side.getBoundingClientRect().top;
+      return s._fns.map(function (e) { var r = e.getClientRects()[0]; return r ? [r.top - top, e._sn.offsetHeight] : null; });
+    });
+    sheets.forEach(function (s, k) {
+      var y = 0;
+      s._fns.forEach(function (e, j) {
+        var q = pos[k][j]; e._sn.classList.toggle('bk-sn-gone', !q); if (!q) return;
+        var t = Math.max(Math.round(q[0]) - 3, y); e._sn.style.top = t + 'px'; y = t + q[1] + 8;
+      });
+      s._side.style.minHeight = y + 'px';
+    });
+    col.stale = true;
+  }
+  function fnSoon() { if (fnT || !cols.some(function (c) { return c.fnN; })) return; fnT = requestAnimationFrame(function () { fnT = 0; cols.forEach(fnSet); }); }
+  // the calls and notes shown or put away, as the reader keeps it; the toolbar's control where a text has calls
+  function fnShown() {
+    view.classList.toggle('bk-nofn', fnOff());
+    var g = SW.$('#bk-fns', view), b = SW.$('#bk-fnoff', view);
+    if (g) g.hidden = !cols.some(function (c) { return c.fnN; });
+    if (b) fnBtn(b);
+  }
+  window.addEventListener('resize', fnSoon);
+  // a call and its note, each lit with the pointer on the other
+  view.addEventListener('pointerover', function (e) {
+    var t = e.target.closest && e.target.closest('.bk-fn, .bk-sn'), call = t ? (t._call || t) : null;
+    if (call === fnLitNow) return;
+    if (fnLitNow) { fnLitNow.classList.remove('bk-fn-lit'); if (fnLitNow._sn) fnLitNow._sn.classList.remove('bk-sn-lit'); }
+    fnLitNow = call && call._sn ? call : null;
+    if (fnLitNow) { fnLitNow.classList.add('bk-fn-lit'); fnLitNow._sn.classList.add('bk-sn-lit'); }
+  });
+  // a note beside the text: opened in full or closed again, or its call brought into view
+  view.addEventListener('click', function (e) {
+    var n = e.target.closest && e.target.closest('.bk-sn'); if (!n) return;
+    var more = e.target.closest('.bk-sn-more');
+    if (more) { more.textContent = n.classList.toggle('bk-sn-open') ? 'less' : 'more'; fnSoon(); return; }
+    if (!String(window.getSelection()) && n._call) n._call.scrollIntoView({ block: 'nearest' });
   });
 
   // ---------- the view ----------

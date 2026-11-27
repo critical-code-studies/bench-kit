@@ -469,6 +469,8 @@ Left: the Share highlight dialog. Right: the picture it makes, here reduced (the
 
 `doc.linkColor` (a CSS colour) sets the colour of every highlight link between the text and the page: lines, revisions' boxes and passages. Without it the theme's is used. A reader can choose their own in Settings ▸ Book ▸ Highlight links, and turn them off there.
 
+**Footnotes.** A document's note blocks (`t: 'note'`, `id`) and the calls to them (a span marked `{ k: 'ref', note: id }`; a translation's `[^label]`) are set in Book without a setting. A call with no words of its own is a raised number: the notes are numbered in the order they are first called, through the document, or from 1 again at each heading of the level `doc.noteRestart` or above (`2`: at each `##` of a translation, as a book numbers by chapter); `doc.noteMark(label, k)` returns a mark of the bench's own. A label is not shown. With one text open and room beside it, each note sits beside the text, level with its call; a long note is held to eight lines until it is opened. Without room (a narrow window, Compare), a click on the number shows the note. **Notes** in the toolbar puts calls and notes away (`book.notesOff`, kept in the browser). `doc.sidenotes: false` keeps every note to the click.
+
 <p>
 <a href="docs/img/book-kuki-settings.jpg"><img src="docs/img/book-kuki-settings.jpg" width="70%" alt="Settings, Book, on the Kuki bench: the page with its trim frame and the four sides beside it, and Highlight links with a switch and a colour"></a>
 </p>

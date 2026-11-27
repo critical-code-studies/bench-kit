@@ -50,6 +50,17 @@
     eq('a function of the page and the version', K.shareCite(function (x) { return x.version === 'translation' ? 'p. ' + x.page : null; }, o), 'p. 81');
     eq('a function that gives nothing keeps the reference', K.shareCite(function () { return null; }, o), o.cite);
     eq('a function that fails keeps the reference', K.shareCite(function () { throw new Error('x'); }, o), o.cite);
+    T.group('Book: footnotes');
+    var call = function (id) { return { s: '', marks: [{ k: 'ref', note: id }] }; }, w = { s: 'words', marks: [] };
+    var nb = [{ t: 'head', level: 2, spans: [w] }, { t: 'p', spans: [w, call('i1-6'), w, call('i1-1')] }, { t: 'note', id: 'i1-6', spans: [call('i1-6'), w] },
+              { t: 'head', level: 3, spans: [w] }, { t: 'p', spans: [call('i1-2'), call('i1-6'), call('none'), { s: 'a word', marks: [{ k: 'ref', note: 'w' }] }] },
+              { t: 'head', level: 2, spans: [w] }, { t: 'p', spans: [call('c1-9')] }];
+    var known = { 'i1-6': 1, 'i1-1': 1, 'i1-2': 1, 'c1-9': 1, w: 1 };
+    eq('notes are numbered in the order they are first called, whatever their labels', JSON.stringify(K.noteNumbers(nb, null, known)), '{"i1-6":1,"i1-1":2,"i1-2":3,"c1-9":4}');
+    eq('from 1 again at each heading of the level given or above', JSON.stringify(K.noteNumbers(nb, 2, known)), '{"i1-6":1,"i1-1":2,"i1-2":3,"c1-9":1}');
+    var ns = [{ s: '', marks: [{ k: 'ref', note: 'i1-2' }] }, { s: ': Tr. 形而上 (', marks: [] }, { s: 'keijijō', marks: [{ k: 'hi', rend: 'italic' }] }, { s: '), <above> & ', marks: [] }, { s: '', marks: [{ k: 'ref', note: 'i1-3' }] }, { s: 'form', marks: [{ k: 'hi', rend: 'bold' }] }];
+    eq('a note without its own label and colon, italic and bold kept, markup escaped', K.noteHTML(ns, 'i1-2'), 'Tr. 形而上 (<i>keijijō</i>), &lt;above&gt; &amp; <b>form</b>');
+    eq('a note that does not begin with its label keeps its first words', K.noteHTML([{ s: ' : a colon of its own', marks: [] }], 'x'), ': a colon of its own');
   })();
   T.group('Book: a place’s words found in the text');
   eq('whitespace and * are passed over', K.squash(' the *hasard* of\n chance '), 'thehasardofchance');
