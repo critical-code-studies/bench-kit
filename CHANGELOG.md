@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.13 (2026-11-27)
 
 - **Book: to a page by its name** (David, via kuki: "we need a jump to page on the bench - i needed to check a page and it was irritating to find it"): Book could be moved by scrolling, by a bookmark already made, or by a link to a line. The toolbar now has a box, labelled with the bench's word for a page, that shows the page being read; a name or number typed there and Return goes to that page, its break brought to the reading height and marked for a moment. `81`, `p. 81` and `page 81` name the same page, a name is matched without its case, and a number finds the one page whose name holds it (`7` for `img_7`). A name that is not in the text is said to be so, with the first and last there are. A link can name the page (`&page=81`), used where it gives no line. The box is shown wherever a text has two or more named pages; no setting.
 
