@@ -111,7 +111,8 @@ if (process.env.BENCH_KIT_MOVED) { changes.push(process.env.BENCH_KIT_MOVED); to
 const kv = kitVersion();
 // the kit's own version (base.js) should be the release it is checked out at
 {
-  let tag = ''; try { tag = git(['describe', '--tags', '--exact-match'], kitDir); } catch (e) { /* between releases */ }
+  // (asked without git(), which stops the release on an error: a kit between releases has no tag, and that is no fault)
+  let tag = ''; try { tag = execFileSync('git', ['describe', '--tags', '--exact-match'], { cwd: kitDir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch (e) { /* between releases */ }
   if (tag && kv && tag.replace(/^v/, '') !== kv) console.warn('warning: the kit is at ' + tag + ' but its base.js says ' + kv + '; release the kit with tools/kit-release.js');
 }
 
