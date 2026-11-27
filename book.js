@@ -18,7 +18,10 @@
  * Moving between versions is the view's own business:
  *   - the texts in a row at the top (SW.BENCH.doc.versions, or every version with files), the
  *     open one first; a version's states (SW.BENCH.doc.states: { source, first, last, label },
- *     the versions that are one document read at different stages) are one text there;
+ *     the versions that are one document read at different stages) are one text there; the bench
+ *     can name the texts that get a chip in that row (SW.BENCH.doc.chips: [ids], or false for no
+ *     row), the others being reached from Compare: the text open is then shown with them where it
+ *     is not one of them, and a row that would hold the open text alone is left out;
  *   - for that text, a slider through SW.BENCH.doc.stages ([{ id, label, note }], in order):
  *     at a stage an addition is shown and a deletion applied when its change is at or before it,
  *     the deletion a reinstatement encloses comes back at the reinstatement's stage (a deletion
@@ -182,6 +185,15 @@
     if (typeof how === 'function') { try { t = how(o); } catch (e) { t = null; } }
     else if (typeof how === 'string') t = how.replace(/\{(page|version|label)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; });
     return t == null || t === '' ? (o.cite || '') : String(t).replace(/\*/g, '');
+  };
+  // the texts with a chip in Book's row: all of `list` (how not given); none (how false); or those named in `how`,
+  // with the text open where it is not one of them, and no row for the open text alone
+  K.chips = function (list, cur, how) {
+    list = list || [];
+    if (how === false) return [];
+    if (!Array.isArray(how)) return list.slice();
+    var out = list.filter(function (t) { return how.indexOf(t) >= 0 || t === cur; });
+    return out.length === 1 && out[0] === cur ? [] : out;
   };
   // the numbers of a document's footnotes, { id: n }: each note numbered where it is first called by a span with
   // no words (a translation's [^label]), in the text's order; with `restart` (a heading's level), from 1 again at
@@ -1524,7 +1536,7 @@
   // ---------- the toolbar ----------
   function toolbar(left) {
     var tb = SW.el('div', { class: 'toolbar bk-bar' }), list = texts(), hasStates = cols.some(function (c) { return c.states; });
-    var chips = list.map(function (t) { return '<button class="btn' + (t === textOf(left) ? ' on' : '') + '" data-text="' + esc(t) + '">' + esc(textLabel(t)) + '</button>'; }).join('');
+    var chips = K.chips(list, textOf(left), Array.isArray(D.chips) ? D.chips.map(textOf) : D.chips).map(function (t) { return '<button class="btn' + (t === textOf(left) ? ' on' : '') + '" data-text="' + esc(t) + '">' + esc(textLabel(t)) + '</button>'; }).join('');
     // Compare: a select for each text beside, and one more while there are texts and room
     var others = list.filter(function (t) { return t !== textOf(left); }), slots = st.beside.slice();
     if (slots.length < BESIDE && others.length > slots.length) slots.push('');
@@ -1533,7 +1545,7 @@
         return (i ? '<span class="faint">and</span> ' : '') + '<select data-slot="' + i + '" aria-label="' + (i ? 'Another text beside' : 'A text beside') + '"><option value="">' + (i ? 'nothing more' : 'with nothing') + '</option>' +
           others.filter(function (t) { return t === cur || st.beside.indexOf(t) < 0; }).map(function (t) { return '<option value="' + esc(t) + '"' + (t === cur ? ' selected' : '') + '>with ' + esc(textLabel(t)) + '</option>'; }).join('') + '</select>';
       }).join(' ') + '</span>';
-    tb.innerHTML = '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' + beside + '<span class="sep"></span>' +
+    tb.innerHTML = (chips ? '<span class="bk-texts">' + chips + '</span><span class="sep"></span>' : '') + beside + '<span class="sep"></span>' +
       '<span class="bk-imgs" title="The size of the ' + esc(PAGE) + 's’ images beside the text; the eye folds them away (a ▣ at each ' + esc(PAGE) + ' opens one)">Images ' +
         '<input type="range" id="bk-imgw" min="' + IMGW[0] + '" max="' + IMGW[1] + '" step="10" value="' + st.imgW + '" aria-label="Size of the images"' + (st.imgOn ? '' : ' disabled') + '>' +
         '<button class="btn bk-eye" id="bk-imgoff" title="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '" aria-label="' + (st.imgOn ? 'Hide the images' : 'Show the images') + '">' + (st.imgOn ? EYE : EYEOFF) + '</button></span>' +

@@ -50,6 +50,13 @@
     eq('a function of the page and the version', K.shareCite(function (x) { return x.version === 'translation' ? 'p. ' + x.page : null; }, o), 'p. 81');
     eq('a function that gives nothing keeps the reference', K.shareCite(function () { return null; }, o), o.cite);
     eq('a function that fails keeps the reference', K.shareCite(function () { throw new Error('x'); }, o), o.cite);
+    T.group('Book: the texts with a chip');
+    var tl = ['translation', 'literal', 'ocr'];
+    eq('every text, where the bench names none', K.chips(tl, 'translation').join(' '), 'translation literal ocr');
+    eq('no row, where the bench wants none', K.chips(tl, 'literal', false).length, 0);
+    eq('the texts named, in the list\'s order', K.chips(tl, 'translation', ['ocr', 'translation']).join(' '), 'translation ocr');
+    eq('the text open with them, where it is not one of them', K.chips(tl, 'literal', ['translation']).join(' '), 'translation literal');
+    eq('no row for the open text alone', K.chips(tl, 'translation', ['translation']).length, 0);
     T.group('Book: footnotes');
     var call = function (id) { return { s: '', marks: [{ k: 'ref', note: id }] }; }, w = { s: 'words', marks: [] };
     var nb = [{ t: 'head', level: 2, spans: [w] }, { t: 'p', spans: [w, call('i1-6'), w, call('i1-1')] }, { t: 'note', id: 'i1-6', spans: [call('i1-6'), w] },
