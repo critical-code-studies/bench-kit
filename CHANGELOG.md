@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.12 (2026-11-27)
 
 - **Edit: a paragraph taken out is known as applied** (kuki's crosscheck of Edit against `vt_apply.py`, runs 182 and 201: "working after: pending 0 stuck 1"): where a change list's entry takes a whole paragraph out, its NEW is the blank lines left. Once `vt_apply` had applied the list, Edit looked for that NEW in the text, found no words to look for, and showed the entry as stuck although the paragraph was gone; Changes gave it as "gone". An entry whose NEW is blank lines only is now read as one with no NEW: applied where its OLD is no longer in the text, pending where it is. `vt_apply` applied these lists correctly throughout.
 - **Book's toolbar: a divider between Images and Notes** (David, via kuki: "needs a divide between images and notes"): the two groups ran together; Notes now has the toolbar's rule before it, as the other groups have, shown and hidden with it.
