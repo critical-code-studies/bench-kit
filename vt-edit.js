@@ -216,7 +216,8 @@
     return out.join('\n');
   };
   // a file with its lists' entries for this target applied, in the order of the lists' names: OLD found
-  // once, applied; not found and NEW there, already applied; otherwise stuck, the text left as it was
+  // once, applied; not found and NEW there (or NEW nothing but blank lines: a paragraph taken out), already
+  // applied; otherwise stuck, the text left as it was
   E.working = function (file, lists, target) {
     var S = file, res = { pending: [], applied: [], stuck: [] };
     lists.slice().sort(function (x, y) { return x.name < y.name ? -1 : x.name > y.name ? 1 : 0; }).forEach(function (L) {
@@ -225,7 +226,7 @@
         var n = count(S, c.old);
         if (c.new && c.new.indexOf(c.old) >= 0 && S.indexOf(c.new) >= 0) res.applied.push(c);
         else if (n === 1) { S = S.replace(c.old, function () { return c.new; }); res.pending.push(c); }
-        else if (n === 0 && (!c.new || VT.present(S, c.new))) res.applied.push(c);
+        else if (n === 0 && (!/\S/.test(c.new || '') || VT.present(S, c.new))) res.applied.push(c);
         else res.stuck.push(c);
       });
     });

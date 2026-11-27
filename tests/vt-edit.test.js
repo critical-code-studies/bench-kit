@@ -62,6 +62,15 @@
   eq('another target: left alone', w.text, text);
   w = E.working(text.replace('second page begins', 'other words'), [{ name: 'a', raw: list }], 'translation');
   eq('the passage changed since: stuck', w.stuck.length, 1);
+  // a paragraph taken out: the entry's NEW is the blank lines left, which are nowhere to be looked for
+  var para = 'A paragraph to take out, of enough words to be found once in the text.', withP = text.replace('## Appendix', para + '\n\n## Appendix');
+  var glist = E.list([{ target: 'translation', where: '', old: '\n' + para + '\n\n', new: '\n' }]), gc = VT.changes(glist, 'g.md');
+  T.yes('a paragraph taken out: the list read back, its NEW blank lines only', gc.length === 1 && gc[0].new === '\n' && gc[0].old === '\n' + para + '\n\n');
+  w = E.working(withP, [{ name: 'g', raw: glist }], 'translation');
+  eq('a paragraph taken out, not yet applied: shown', [w.text === text, w.pending.length, w.stuck.length].join(' '), 'true 1 0');
+  w = E.working(text, [{ name: 'g', raw: glist }], 'translation');
+  eq('a paragraph taken out, applied: counted as applied, not stuck', [w.text === text, w.applied.length, w.pending.length, w.stuck.length].join(' '), 'true 1 0 0');
+  eq('and Changes reads it as applied, pending before', [VT.applied(gc[0], { translation: text }), VT.applied(gc[0], { translation: withP })].join(' '), 'applied pending');
   var top = 'New.\n' + text, tl = E.list(E.entries(text, top, { target: 'translation' }));
   eq('words added at the top, before', E.working(text, [{ name: 'a', raw: tl }], 'translation').text, top);
   eq('words added at the top, after: not twice', E.working(top, [{ name: 'a', raw: tl }], 'translation').text, top);

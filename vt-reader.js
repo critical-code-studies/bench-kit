@@ -351,7 +351,7 @@
     var t = texts[c.target === 'readable' ? 'translation' : c.target]; if (t == null) t = c.target === 'translation' ? texts.readable : null;
     if (t == null || c.kind === 'PROBLEM') return null;
     var hasNew = c.new ? present(t, c.new) : false, hasOld = c.old ? present(t, c.old) : false;
-    if (!c.new) return hasOld ? 'pending' : 'applied';
+    if (!/\S/.test(c.new || '')) return hasOld ? 'pending' : 'applied';   // no NEW, or blank lines only: a passage taken out
     return hasNew && !hasOld ? 'applied' : hasOld && !hasNew ? 'pending' : hasNew ? 'both' : 'gone';
   };
   // where the change is in a text now: the line holding NEW (or OLD), or null

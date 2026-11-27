@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Edit: a paragraph taken out is known as applied** (kuki's crosscheck of Edit against `vt_apply.py`, runs 182 and 201: "working after: pending 0 stuck 1"): where a change list's entry takes a whole paragraph out, its NEW is the blank lines left. Once `vt_apply` had applied the list, Edit looked for that NEW in the text, found no words to look for, and showed the entry as stuck although the paragraph was gone; Changes gave it as "gone". An entry whose NEW is blank lines only is now read as one with no NEW: applied where its OLD is no longer in the text, pending where it is. `vt_apply` applied these lists correctly throughout.
 - **Book's toolbar: a divider between Images and Notes** (David, via kuki: "needs a divide between images and notes"): the two groups ran together; Notes now has the toolbar's rule before it, as the other groups have, shown and hidden with it.
 - **Book's notes: smaller, and in the text's typeface throughout** (David, via kuki: "could you reduce the size of the footnotes and put them in the same typeface as text"): a note's number was set in the interface's sans and "more" in its monospace, with the note's words in the text's face. The number, "more" (now in italic) and the call's number in the text take the text's own face, with lining figures; the notes are set at 0.66 of the text's size (from 0.72), leaded at 1.4.
 
