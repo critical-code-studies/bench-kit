@@ -170,7 +170,7 @@ if (!NOLOG) {
 // The bench's preview card: the picture, title and line a site shows when a link to the bench is posted
 // (LinkedIn, Slack, Mastodon, Bluesky and others read Open Graph tags; X reads twitter: ones). A site's reader
 // runs no script, so the tags are written into index.html here, between two comments, from the bench's settings
-// (js/config.js): about.card { title, description, image, alt }, each with a default: the bench's title, the page's
+// (js/config.js): about.card { title, description, image, alt, site }, each with a default: the bench's title, the page's
 // own description, and the kit's picture (kit/docs/img/bench-card.jpg). about.card: false writes none. A page
 // whose tags were written by hand is left as it is until the bench sets about.card.
 {
@@ -184,7 +184,12 @@ if (!NOLOG) {
   const START = '<!-- preview card: written by kit/tools/release.js from about.card in js/config.js -->', END = '<!-- /preview card -->';
   const s = fs.readFileSync(page, 'utf8'), has = s.indexOf(START) >= 0, byHand = !has && /<meta\s+(?:property="og:|name="twitter:)/.test(s);
   const base = B.base || SWx.BASE_URI || '';
-  if (A.card === false) { /* the bench wants none */ }
+  if (A.card === false) {   // the bench wants none: a card this tool wrote earlier is taken out
+    if (has) {
+      const cut = s.slice(0, s.lastIndexOf('\n', s.indexOf(START)) + 1) + s.slice(s.indexOf('\n', s.indexOf(END)) + 1);
+      write(page, cut); changes.push(page + ': the preview card taken out (about.card: false)');
+    }
+  }
   else if (byHand && !A.card) { /* written by hand: left */ }
   else if (!base) console.log('No preview card: set base in js/config.js to the address the bench is published at.');
   else {
@@ -231,7 +236,7 @@ if (!NOLOG) {
     const image = abs(pic) + stamp, alt = K.alt || title;
     const tags = [START,
       '<meta property="og:type" content="website">',
-      B.title ? '<meta property="og:site_name" content="' + attr(B.title) + '">' : '',
+      K.site || B.title ? '<meta property="og:site_name" content="' + attr(K.site || B.title) + '">' : '',
       '<meta property="og:title" content="' + attr(title) + '">',
       desc ? '<meta property="og:description" content="' + attr(desc) + '">' : '',
       '<meta property="og:url" content="' + attr(root) + '">',
