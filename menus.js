@@ -17,6 +17,9 @@
  *                     About the bench is always first in Help ▾, at the top level, not in a group.
  *   file              File ▾'s own items for the whole project, [[pick, label, text]] (exports of
  *                     every version, say), handled by pick('file', p)
+ *   links             { versions: [{ label, text, href }], file: […] }: the bench's own files or pages at the
+ *                     foot of Versions ▾ or File ▾, after a rule, each opened in a new tab (a typeset PDF of the
+ *                     text, say); ↗ is put after the label
  *   menu(which)       HTML for a menu of the bench's own (buttons with data-pick), or null
  * Read ▾ (a tab button with data-menu="read" data-tabs="read"): from another view a click goes back to
  * Read where it was left, and its ▾ (or a click in Read) opens the menu. It lists the versions in the version
@@ -377,6 +380,10 @@
   // what a submenu holds, in brief: its first items' names
   function firstOf(list) { return list.slice(0, 3).map(function (h) { return h[1].replace(/ ↗$/, ''); }).join(', ') + (list.length > 3 ? '…' : ''); }
   SW.menuFirst = firstOf;
+  // the bench's own links for a menu (SW.BENCH.menus.links), those with a label and an address
+  function LINKS(which) { var L = (H().links || {})[which]; return Array.isArray(L) ? L.filter(function (x) { return x && x.label && x.href; }) : []; }
+  function linksHTML(which) { var L = LINKS(which); return L.length ? '<hr class="menu-rule">' + L.map(function (x, i) { return item(['link:' + i, x.label + ' ↗', x.text || '']); }).join('') : ''; }
+  SW.menuLinks = LINKS;
   function item(h, on) { return '<button data-pick="' + SW.esc(h[0]) + '"' + (on ? ' class="on"' : '') + '><b>' + SW.esc(h[1]) + '</b>' + (h[2] ? '<span>' + SW.esc(h[2]) + '</span>' : '') + '</button>'; }   // an item with no line under it, where none is given
 
   function menuHTML(which) {
@@ -388,11 +395,11 @@
         .filter(function (g) { return g[1].length; });
       return item(ab || ['about', 'About the bench', 'Version, sources, citation']) + G.map(function (g) { return SW.menuSub(SW.esc(g[0]), SW.esc(firstOf(g[1])), g[1].map(function (h) { return item(h); }).join('')); }).join('') + '<div class="help-ver hint">' + SW.esc(B.title) + ' ' + SW.esc(SW.VERSION) + (dm ? ', ' + SW.esc(SW.fmtDate(dm.content)) : '') + '</div>';
     }
-    if (which === 'file') return FILE().map(function (g, i) { return (i ? '<hr class="menu-rule">' : '') + g.map(function (h) { return item(h); }).join(''); }).join('');
+    if (which === 'file') return FILE().map(function (g, i) { return (i ? '<hr class="menu-rule">' : '') + g.map(function (h) { return item(h); }).join(''); }).join('') + linksHTML('file');
     if (which === 'versions') return (H().versions || VERSIONS()).filter(kept('versions')).map(function (h) {
       var on = H().on && H().on(which, h[0]); if (on == null && SW.lenses) on = SW.lenses.on(which, h[0]); if (on == null) on = SW.state.tab === h[0];
       return item(h, on);
-    }).join('');
+    }).join('') + linksHTML('versions');
     var lm = SW.lenses ? SW.lenses.menuHTML(which) : null; if (lm != null) return lm;   // kit/lenses.js
     var gm = SW.graphics ? SW.graphics.menuHTML(which) : null; if (gm != null) return gm;   // kit/graphics.js
     var own = H().menu ? H().menu(which) : null; if (own) return own;
@@ -447,6 +454,8 @@
     }).join('');
   }
   function pick(which, p) {
+    // one of the bench's own links: its file or page, in a new tab
+    if (/^link:\d+$/.test(p)) { var lk = LINKS(which)[+p.slice(5)]; if (lk) window.open(lk.href, '_blank', 'noopener'); return; }
     if (H().pick && H().pick(which, p)) return;
     if (SW.lenses && SW.lenses.pick(which, p)) return;
     if (SW.graphics && SW.graphics.pick(which, p)) return;
