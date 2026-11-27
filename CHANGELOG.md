@@ -1,6 +1,6 @@
 # Changelog: bench-kit
 
-## Unreleased
+## 1.9.14 (2026-11-27)
 
 - **Edit: a marker moved a few words on is one entry** (kuki's crosscheck of Edit against `vt_apply.py`, run 209: "working after: pending 0 stuck 1"): a `[p. N]` marker moved three or more words along a line was written as two entries, the marker taken out and then put in, with the second entry's place inside the first one's NEW. `vt_apply` applied both and the text was right, but the first entry's NEW was then nowhere in the text, and Edit showed it as stuck. A change that falls inside the NEW of an entry before it is now written with that entry as one. A list already saved as two such entries is read as applied where putting the later entry's OLD back for its NEW leaves the earlier NEW in the text.
 
