@@ -167,6 +167,28 @@ if (!NOLOG) {
   } else if (!A.doi) console.log('No DOI: set about.doi in js/config.js once Zenodo has archived a GitHub Release (https://zenodo.org/account/settings/github/; the kit\'s README, "A bench\'s DOI").');
 }
 
+// a card's picture, read from the bench's own files: { bytes, hash, type, w, h } (type and size for a PNG or a
+// JPEG); null for an address elsewhere, undefined where the file is not there
+const picInfo = (u) => {
+  if (/^https?:/.test(u)) return null;
+  try {
+    const b = fs.readFileSync(path.join(dir, u.replace(/[?#].*$/, ''))), o = { bytes: b.length, hash: require('crypto').createHash('sha1').update(b).digest('hex').slice(0, 8) };
+    if (b.length > 24 && b.readUInt32BE(0) === 0x89504e47) { o.w = b.readUInt32BE(16); o.h = b.readUInt32BE(20); o.type = 'image/png'; }
+    else if (b[0] === 0xff && b[1] === 0xd8) {
+      o.type = 'image/jpeg';
+      for (let i = 2; i + 9 < b.length;) {
+        if (b[i] !== 0xff) { i++; continue; }
+        const m = b[i + 1];
+        if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) { o.h = b.readUInt16BE(i + 5); o.w = b.readUInt16BE(i + 7); break; }
+        if (m === 0xff) { i++; continue; }
+        if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }
+        i += 2 + b.readUInt16BE(i + 2);
+      }
+    }
+    return o;
+  } catch (e) { return undefined; }
+};
+
 // The bench's preview card: the picture, title and line a site shows when a link to the bench is posted
 // (LinkedIn, Slack, Mastodon, Bluesky and others read Open Graph tags; X reads twitter: ones). A site's reader
 // runs no script, so the tags are written into index.html here, between two comments, from the bench's settings
@@ -206,27 +228,8 @@ if (!NOLOG) {
     // the picture: the bench's own, or the kit's. Its size and kind are read from the file, and its address
     // carries a stamp of its bytes, so a site that has kept an old picture fetches a new one.
     let pic = K.image || 'kit/docs/img/bench-card.jpg', info = null, stamp = '';
-    const read = (u) => {
-      if (/^https?:/.test(u)) return null;
-      try {
-        const b = fs.readFileSync(path.join(dir, u.replace(/[?#].*$/, ''))), o = { bytes: b.length, hash: require('crypto').createHash('sha1').update(b).digest('hex').slice(0, 8) };
-        if (b.length > 24 && b.readUInt32BE(0) === 0x89504e47) { o.w = b.readUInt32BE(16); o.h = b.readUInt32BE(20); o.type = 'image/png'; }
-        else if (b[0] === 0xff && b[1] === 0xd8) {
-          o.type = 'image/jpeg';
-          for (let i = 2; i + 9 < b.length;) {
-            if (b[i] !== 0xff) { i++; continue; }
-            const m = b[i + 1];
-            if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) { o.h = b.readUInt16BE(i + 5); o.w = b.readUInt16BE(i + 7); break; }
-            if (m === 0xff) { i++; continue; }
-            if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }
-            i += 2 + b.readUInt16BE(i + 2);
-          }
-        }
-        return o;
-      } catch (e) { return undefined; }
-    };
-    info = read(pic);
-    if (info === undefined && K.image) { console.warn('warning: the preview card\'s picture ' + K.image + ' (about.card.image) is not in the bench; the kit\'s picture is used.'); pic = 'kit/docs/img/bench-card.jpg'; info = read(pic); }
+    info = picInfo(pic);
+    if (info === undefined && K.image) { console.warn('warning: the preview card\'s picture ' + K.image + ' (about.card.image) is not in the bench; the kit\'s picture is used.'); pic = 'kit/docs/img/bench-card.jpg'; info = picInfo(pic); }
     if (info && K.image) {
       if (!info.type) console.warn('warning: the preview card\'s picture ' + pic + ' is neither PNG nor JPEG; LinkedIn and others show those only.');
       else if (info.w < 1200 || info.h < 627) console.warn('warning: the preview card\'s picture ' + pic + ' is ' + info.w + ' × ' + info.h + '; a card wants 1200 × 627 or more.');
@@ -295,6 +298,8 @@ if (!NOLOG) {
       // the bench's own picture, if it has one: not the kit's picture of a bench, which the shelves replace here
       const benchImage = /kit\/docs\/img\/bench-card\./.test(tag('image')) ? '' : tag('image');
       const ownImage = K.image || benchImage, image = abs(ownImage || 'kit/docs/img/library-card.jpg');
+      // its size, read from the file where the picture is the bench's own (an address under the bench's, or a path)
+      const own = ownImage ? picInfo(ownImage.indexOf(root) === 0 ? ownImage.slice(root.length) : ownImage) : null;
       const out = '<!doctype html>\n<!-- Written by the kit\'s tools/release.js: edit library.card in js/config.js, not this. -->\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
         '<title>' + attr(title) + '</title>\n' +
         (desc ? '<meta name="description" content="' + attr(desc) + '">\n' : '') +
@@ -302,7 +307,8 @@ if (!NOLOG) {
         (desc ? '<meta property="og:description" content="' + attr(desc) + '">\n' : '') +
         '<meta property="og:type" content="website">\n<meta property="og:url" content="' + attr(root + 'library/') + '">\n' +
         '<meta property="og:image" content="' + attr(image) + '">\n' +
-        (ownImage ? '' : '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n') +
+        (!ownImage ? '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
+          : own && own.w ? '<meta property="og:image:width" content="' + own.w + '">\n<meta property="og:image:height" content="' + own.h + '">\n' : '') +
         '<meta property="og:image:alt" content="' + attr(title) + '">\n' +
         '<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="' + attr(title) + '">\n' +
         (desc ? '<meta name="twitter:description" content="' + attr(desc) + '">\n' : '') +
